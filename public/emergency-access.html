@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mission Control - Emergency Access</title>
+    <style>
+        body { 
+            font-family: 'Inter', Arial, sans-serif; 
+            background: #1a1a2e; 
+            color: white; 
+            padding: 50px; 
+            text-align: center; 
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #16213e;
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid #2d2d44;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .btn { 
+            background: #8b5cf6; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 10px; 
+            text-decoration: none; 
+            display: inline-block;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { 
+            background: #7c3aed; 
+            transform: translateY(-2px);
+        }
+        .btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+        }
+        h1 { color: #8b5cf6; margin-bottom: 1rem; }
+        .token-display {
+            background: #2d2d44;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #fcd34d;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 14px;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+        .status.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fcd34d;
+        }
+        .method {
+            background: #2d2d44;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+        .method h3 {
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Mission Control - Emergency Access</h1>
+        <p>Multiple methods to access your AI command center</p>
+        
+        <div id="status-container"></div>
+        
+        <div class="method">
+            <h3>Method 1: Automatic Access</h3>
+            <p>Get authenticated token and redirect automatically</p>
+            <button class="btn" id="auto-access-btn" onclick="automaticAccess()">🎯 Auto Access Dashboard</button>
+        </div>
+        
+        <div class="method">
+            <h3>Method 2: Manual Token</h3>
+            <p>Get access token and copy the URL manually</p>
+            <button class="btn" id="manual-token-btn" onclick="getManualToken()">🔑 Get Access Token</button>
+            <div id="token-display" style="display: none;">
+                <p><strong>Your Access URL:</strong></p>
+                <div class="token-display" id="access-url"></div>
+                <button class="btn" onclick="copyToClipboard()">📋 Copy URL</button>
+                <button class="btn" onclick="openDashboard()">🚀 Open Dashboard</button>
+            </div>
+        </div>
+        
+        <div class="method">
+            <h3>Method 3: Direct Login</h3>
+            <p>Go to standard login page</p>
+            <a href="/login" class="btn">🔐 Standard Login Page</a>
+        </div>
+        
+        <div class="method">
+            <h3>Method 4: Network Direct</h3>
+            <p>Local network access (office WiFi only)</p>
+            <button class="btn" onclick="tryNetworkAccess()">🏢 Network Access</button>
+        </div>
+        
+        <div id="debug-info" style="margin-top: 2rem; font-size: 12px; color: #6b7280;">
+            <p><strong>Debug Info:</strong></p>
+            <p>Host: <span id="current-host"></span></p>
+            <p>Protocol: <span id="current-protocol"></span></p>
+            <p>User Agent: <span id="user-agent"></span></p>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        // Initialize page
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('current-host').textContent = window.location.host;
+            document.getElementById('current-protocol').textContent = window.location.protocol;
+            document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+            
+            checkServerHealth();
+        });
+        
+        async function checkServerHealth() {
+            const statusContainer = document.getElementById('status-container');
+            
+            try {
+                const response = await fetch('/health');
+                const health = await response.json();
+                
+                statusContainer.innerHTML = `
+                    <div class="status success">
+                        ✅ Server Status: ${health.status} | Version: ${health.version} | Security: ${health.security}
+                    </div>
+                `;
+            } catch (error) {
+                statusContainer.innerHTML = `
+                    <div class="status error">
+                        ❌ Server Health Check Failed: ${error.message}
+                        <br>This might be a network issue or the server might be down.
+                    </div>
+                `;
+            }
+        }
+        
+        async function automaticAccess() {
+            const button = document.getElementById('auto-access-btn');
+            const originalText = button.innerHTML;
+            
+            try {
+                button.innerHTML = '🔄 Authenticating...';
+                button.disabled = true;
+                
+                const token = await getAuthToken();
+                
+                if (token) {
+                    button.innerHTML = '✅ Redirecting...';
+                    setTimeout(() => {
+                        window.location.href = `/?token=${token}`;
+                    }, 1000);
+                }
+                
+            } catch (error) {
+                button.innerHTML = '❌ Failed';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 3000);
+                
+                showError('Automatic Access Failed', error.message);
+            }
+        }
+        
+        async function getManualToken() {
+            const button = document.getElementById('manual-token-btn');
+            const originalText = button.innerHTML;
+            
+            try {
+                button.innerHTML = '🔄 Getting token...';
+                button.disabled = true;
+                
+                const token = await getAuthToken();
+                
+                if (token) {
+                    currentToken = token;
+                    const accessUrl = `${window.location.origin}/?token=${token}`;
+                    
+                    document.getElementById('access-url').textContent = accessUrl;
+                    document.getElementById('token-display').style.display = 'block';
+                    
+                    button.innerHTML = '✅ Token Generated';
+                    
+                    showSuccess('Token Generated Successfully', 'Copy the URL above or click "Open Dashboard"');
+                }
+                
+            } catch (error) {
+                button.innerHTML = '❌ Failed';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 3000);
+                
+                showError('Token Generation Failed', error.message);
+            }
+        }
+        
+        async function getAuthToken() {
+            const response = await fetch('/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: 'colby',
+                    password: 'MissionControl2026!'
+                }),
+                credentials: 'same-origin'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success || !result.token) {
+                throw new Error(result.message || 'No token received');
+            }
+            
+            return result.token;
+        }
+        
+        function copyToClipboard() {
+            const url = document.getElementById('access-url').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                showSuccess('Copied!', 'URL copied to clipboard');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showSuccess('Copied!', 'URL copied to clipboard');
+            });
+        }
+        
+        function openDashboard() {
+            if (currentToken) {
+                window.open(`/?token=${currentToken}`, '_blank');
+            }
+        }
+        
+        function tryNetworkAccess() {
+            const networkUrls = [
+                'http://192.168.1.29:9999/emergency-access.html',
+                'http://localhost:9999/emergency-access.html',
+                'http://127.0.0.1:9999/emergency-access.html'
+            ];
+            
+            showWarning('Network Access', `Trying local network URLs:<br>${networkUrls.join('<br>')}`);
+            
+            networkUrls.forEach(url => {
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                }, 500);
+            });
+        }
+        
+        function showStatus(type, title, message) {
+            const statusContainer = document.getElementById('status-container');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = `<strong>${title}:</strong><br>${message}`;
+            statusContainer.appendChild(statusDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.parentNode.removeChild(statusDiv);
+                }
+            }, 10000);
+        }
+        
+        function showSuccess(title, message) {
+            showStatus('success', title, message);
+        }
+        
+        function showError(title, message) {
+            showStatus('error', title, message);
+        }
+        
+        function showWarning(title, message) {
+            showStatus('warning', title, message);
+        }
+    </script>
+</body>
+</html>
