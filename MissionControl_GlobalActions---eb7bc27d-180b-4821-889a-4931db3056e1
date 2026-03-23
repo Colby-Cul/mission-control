@@ -1,0 +1,790 @@
+import { useState, useRef, useEffect } from "react";
+
+// ── Simulated agent routing data ──
+const AGENTS = [
+  { id: "task-master", name: "Task Master", icon: "clipboard", color: "#6366f1", status: "online" },
+  { id: "bot-manager", name: "Bot Manager", icon: "bot", color: "#10b981", status: "online" },
+  { id: "code-reviewer", name: "Code Reviewer", icon: "code", color: "#0ea5e9", status: "online" },
+  { id: "fleet-monitor", name: "Fleet Monitor", icon: "activity", color: "#f59e0b", status: "online" },
+  { id: "doc-generator", name: "Doc Generator", icon: "file-text", color: "#ec4899", status: "busy" },
+  { id: "alert-engine", name: "Alert Engine", icon: "bell", color: "#ef4444", status: "online" },
+];
+
+const PROJECT_TYPES = [
+  "Build something new",
+  "Fix a problem or bug",
+  "Improve how something works",
+  "Connect to another tool or service",
+  "Redesign or update the look and feel",
+  "Research or explore an idea",
+  "Security or compliance work",
+  "Write or update documentation",
+  "Data, reports, or analytics",
+  "Internal tooling or automation",
+];
+
+const PRIORITY_OPTIONS = [
+  { value: "working", label: "Working on it", color: "#fdab3d", desc: "Actively being worked on" },
+  { value: "stuck", label: "Stuck", color: "#df2f4a", desc: "Blocked, needs attention" },
+  { value: "done", label: "Done", color: "#00c875", desc: "Completed and verified" },
+];
+
+const TEAM_OPTIONS = [
+  "Let the agent decide",
+  "Behind-the-scenes (servers, databases, logic)",
+  "User-facing (what people see and interact with)",
+  "Mobile app",
+  "Infrastructure and deployment",
+  "Testing and quality",
+  "Design and visuals",
+  "Everyone / cross-team",
+];
+
+const TIMELINE_OPTIONS = [
+  "A few days",
+  "About a week",
+  "A couple of weeks",
+  "About a month",
+  "A few months",
+  "Long-term / ongoing",
+  "Not sure yet",
+];
+
+const SERVICE_OPTIONS = [
+  "Not sure / let the agent figure it out",
+  "Login, accounts, and permissions",
+  "Bot management and deployment",
+  "Monitoring and health checks",
+  "Alerts and notifications",
+  "Reports, dashboards, and analytics",
+  "Connections to other tools (Slack, Monday, etc.)",
+  "The main web dashboard",
+  "The mobile app",
+  "Command-line tools",
+  "Infrastructure and servers",
+  "Something brand new",
+];
+
+const COMPLEXITY_OPTIONS = [
+  { value: "trivial", label: "Quick win", desc: "Simple change, should take minutes to hours" },
+  { value: "small", label: "Small task", desc: "Straightforward, a day or two of work" },
+  { value: "medium", label: "Medium project", desc: "Has a few moving parts, takes about a week" },
+  { value: "large", label: "Big project", desc: "Significant effort, multiple people or weeks" },
+  { value: "epic", label: "Major initiative", desc: "Large scope, will need to be broken into phases" },
+];
+
+// ── Icons (inline SVG) ──
+function PlusIcon({ size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+}
+function CheckIcon({ size = 16 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+}
+function XIcon({ size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+}
+function FolderIcon({ size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
+}
+function ListIcon({ size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+}
+function SendIcon({ size = 18 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+}
+function ChevronIcon({ size = 16, direction = "down" }) {
+  const rotation = direction === "up" ? "rotate(180)" : "";
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" transform={rotation}><polyline points="6 9 12 15 18 9"/></svg>;
+}
+function BoltIcon({ size = 16 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/></svg>;
+}
+function RocketIcon({ size = 20 }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>;
+}
+
+// ── Custom dropdown ──
+function Dropdown({ label, options, value, onChange, placeholder, renderOption }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = typeof options[0] === "string"
+    ? options.find((o) => o === value)
+    : options.find((o) => o.value === value);
+
+  return (
+    <div className="mb-4" ref={ref}>
+      <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">{label}</label>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-left hover:border-gray-500 transition-colors focus:outline-none focus:border-indigo-500"
+      >
+        <span className={value ? "text-white" : "text-gray-500"}>
+          {selected
+            ? (typeof selected === "string" ? selected : selected.label)
+            : placeholder || "Select..."}
+        </span>
+        <ChevronIcon direction={open ? "up" : "down"} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-2xl max-h-56 overflow-y-auto" style={{ width: ref.current?.offsetWidth }}>
+          {options.map((opt, i) => {
+            const val = typeof opt === "string" ? opt : opt.value;
+            const lab = typeof opt === "string" ? opt : opt.label;
+            const isSelected = val === value;
+            return (
+              <button
+                key={i}
+                onClick={() => { onChange(val); setOpen(false); }}
+                className={`w-full text-left px-4 py-2.5 hover:bg-gray-700 transition-colors flex items-center justify-between ${isSelected ? "bg-gray-700" : ""}`}
+              >
+                <div>
+                  {renderOption ? renderOption(opt) : (
+                    <>
+                      <div className="text-sm text-white">{lab}</div>
+                      {typeof opt === "object" && opt.desc && (
+                        <div className="text-xs text-gray-500 mt-0.5">{opt.desc}</div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {isSelected && <span className="text-indigo-400"><CheckIcon /></span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Quick Task Modal ──
+function QuickTaskModal({ onClose }) {
+  const [taskName, setTaskName] = useState("");
+  const [priority, setPriority] = useState("");
+  const [service, setService] = useState("");
+  const [assignAgent, setAssignAgent] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-8 text-center">
+          <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckIcon size={32} />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Task Routed</h3>
+          <p className="text-gray-400 mb-1">"{taskName}"</p>
+          <p className="text-sm text-gray-500 mb-6">
+            Delegated to <span className="text-indigo-400 font-medium">{AGENTS.find(a => a.id === assignAgent)?.name || "Task Master"}</span> for processing
+          </p>
+          <button onClick={onClose} className="px-6 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors">
+            Done
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400">
+              <BoltIcon size={18} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Quick Add Task</h3>
+              <p className="text-xs text-gray-500">Routed to the appropriate agent automatically</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
+            <XIcon />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5">
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">Task Name</label>
+            <input
+              type="text"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              placeholder="e.g. Fix the bot status not updating on the dashboard"
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+
+          <div className="relative">
+            <Dropdown
+              label="Priority"
+              options={PRIORITY_OPTIONS}
+              value={priority}
+              onChange={setPriority}
+              placeholder="Select priority level"
+              renderOption={(opt) => (
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: opt.color }} />
+                  <div>
+                    <span className="text-sm text-white">{opt.label}</span>
+                    <span className="text-xs text-gray-500 ml-2">{opt.desc}</span>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+
+          <div className="relative">
+            <Dropdown
+              label="Service / Component"
+              options={SERVICE_OPTIONS}
+              value={service}
+              onChange={setService}
+              placeholder="What part of the system? (optional)"
+            />
+          </div>
+
+          <div className="relative">
+            <Dropdown
+              label="Route to Agent"
+              options={AGENTS.filter(a => a.status === "online").map(a => ({ value: a.id, label: a.name, desc: a.status }))}
+              value={assignAgent}
+              onChange={setAssignAgent}
+              placeholder="Auto-assign (let Task Master decide)"
+              renderOption={(opt) => {
+                const agent = AGENTS.find(a => a.id === opt.value);
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-sm text-white">{opt.label}</span>
+                    <span className="text-xs text-gray-500">online</span>
+                  </div>
+                );
+              }}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">Description (optional)</label>
+            <textarea
+              placeholder="Any extra details, links, or context (optional)..."
+              rows={2}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800 bg-gray-900/50 rounded-b-2xl">
+          <p className="text-xs text-gray-600">Task will be added to the active sprint board</p>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-4 py-2 text-gray-400 hover:text-white transition-colors text-sm">
+              Cancel
+            </button>
+            <button
+              onClick={() => taskName.trim() && setSubmitted(true)}
+              disabled={!taskName.trim()}
+              className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              <SendIcon size={14} />
+              Route Task
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── New Project Questionnaire Modal ──
+function NewProjectModal({ onClose }) {
+  const [step, setStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    type: "",
+    priority: "",
+    team: "",
+    timeline: "",
+    complexity: "",
+    services: "",
+    successCriteria: "",
+    dependencies: "",
+  });
+
+  const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
+  const totalSteps = 3;
+  // Only name and description are required
+  const canNext = step === 1 ? (form.name.trim() && form.description.trim()) : true;
+  const canSubmit = form.name.trim() && form.description.trim();
+
+  // Collect filled optional fields for the summary
+  const filledOptionals = [
+    form.type && { label: "Type", value: form.type },
+    form.priority && { label: "Priority", value: PRIORITY_OPTIONS.find(p => p.value === form.priority)?.label },
+    form.services && { label: "Service", value: form.services },
+    form.team && { label: "Team", value: form.team },
+    form.timeline && { label: "Timeline", value: form.timeline },
+    form.complexity && { label: "Complexity", value: COMPLEXITY_OPTIONS.find(c => c.value === form.complexity)?.label },
+    form.dependencies && { label: "Dependencies", value: form.dependencies },
+    form.successCriteria && { label: "Success Criteria", value: form.successCriteria.length > 60 ? form.successCriteria.substring(0, 60) + "..." : form.successCriteria },
+  ].filter(Boolean);
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg p-8 text-center">
+          <div className="w-20 h-20 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
+            <RocketIcon size={36} />
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-2">Project Created</h3>
+          <p className="text-gray-400 mb-2">"{form.name}"</p>
+          <p className="text-sm text-gray-500 mb-6">Routed to Task Master for delegation and board setup.</p>
+
+          <div className="bg-gray-800 rounded-xl p-4 text-left mb-4">
+            <div className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">Vision / Description</div>
+            <p className="text-sm text-gray-300 leading-relaxed">{form.description}</p>
+          </div>
+
+          {filledOptionals.length > 0 && (
+            <div className="bg-gray-800 rounded-xl p-4 text-left mb-6 space-y-2">
+              <div className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">Optional Details Provided</div>
+              {filledOptionals.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-gray-500">{item.label}</span>
+                  <span className="text-white">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 mb-6">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-gray-400">Task Master is analyzing your description, creating the project board, and assigning agents...</span>
+            </div>
+          </div>
+
+          <button onClick={onClose} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors font-medium">
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center text-emerald-400">
+              <RocketIcon size={18} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">New Project</h3>
+              <p className="text-xs text-gray-500">
+                {step === 1 ? "Name & Vision (required)" : step === 2 ? "Classification (optional)" : "Resourcing & Scope (optional)"}
+                {" "}&mdash; Step {step} of {totalSteps}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
+            <XIcon />
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-1 bg-gray-800">
+          <div className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-500" style={{ width: `${(step / totalSteps) * 100}%` }} />
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 min-h-[340px]">
+          {step === 1 && (
+            <>
+              <div className="mb-4">
+                <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">
+                  Project Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => update("name", e.target.value)}
+                  placeholder="e.g. Mission Control Cost Analytics Module"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                  autoFocus
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">
+                  Project Description / Vision <span className="text-red-400">*</span>
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  placeholder={"Tell the agent what you want built. Be as detailed or as brief as you want.\n\ne.g. Build a real-time cost analytics dashboard that tracks API model spend across all Open Claw sub-agents. Should show daily, weekly, monthly, and yearly cost breakdowns with toggle filtering. Include a graph showing cost by sub-agent over time..."}
+                  rows={7}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors resize-none leading-relaxed"
+                />
+                <p className="text-xs text-gray-600 mt-1.5">This is sent directly to Task Master for project scoping and task breakdown. The more detail you provide, the better the agent can plan.</p>
+              </div>
+
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3">
+                <p className="text-xs text-gray-500">
+                  <span className="text-indigo-400 font-medium">Tip:</span> You can submit right from this step with just the name and description. Steps 2 and 3 let you optionally specify project type, priority, team, timeline, and more — but Task Master can infer these from your description if you prefer.
+                </p>
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 mb-5">
+                <p className="text-xs text-gray-500">All fields on this step are <span className="text-gray-300 font-medium">optional</span>. Skip any that don't apply — Task Master will figure it out from your description.</p>
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Project Type"
+                  options={PROJECT_TYPES}
+                  value={form.type}
+                  onChange={(v) => update("type", v)}
+                  placeholder="Select type (optional)"
+                />
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Priority"
+                  options={PRIORITY_OPTIONS}
+                  value={form.priority}
+                  onChange={(v) => update("priority", v)}
+                  placeholder="Select priority (optional)"
+                  renderOption={(opt) => (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: opt.color }} />
+                      <div>
+                        <span className="text-sm text-white">{opt.label}</span>
+                        <span className="text-xs text-gray-500 ml-2">— {opt.desc}</span>
+                      </div>
+                    </div>
+                  )}
+                />
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Primary Service / Component"
+                  options={SERVICE_OPTIONS}
+                  value={form.services}
+                  onChange={(v) => update("services", v)}
+                  placeholder="Select service (optional)"
+                />
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Complexity"
+                  options={COMPLEXITY_OPTIONS}
+                  value={form.complexity}
+                  onChange={(v) => update("complexity", v)}
+                  placeholder="Select complexity (optional)"
+                />
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div className="bg-gray-800/40 border border-gray-700/50 rounded-lg p-3 mb-5">
+                <p className="text-xs text-gray-500">All fields on this step are <span className="text-gray-300 font-medium">optional</span>. Add as much or as little as you want.</p>
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Team Assignment"
+                  options={TEAM_OPTIONS}
+                  value={form.team}
+                  onChange={(v) => update("team", v)}
+                  placeholder="Select team (optional)"
+                />
+              </div>
+
+              <div className="relative">
+                <Dropdown
+                  label="Estimated Timeline"
+                  options={TIMELINE_OPTIONS}
+                  value={form.timeline}
+                  onChange={(v) => update("timeline", v)}
+                  placeholder="Select timeline (optional)"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">Dependencies</label>
+                <input
+                  type="text"
+                  value={form.dependencies}
+                  onChange={(e) => update("dependencies", e.target.value)}
+                  placeholder="e.g. Requires auth-service to be complete first (optional)"
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1.5 font-medium">Success Criteria</label>
+                <textarea
+                  value={form.successCriteria}
+                  onChange={(e) => update("successCriteria", e.target.value)}
+                  placeholder="How do we know this project is done? (optional)"
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                />
+              </div>
+
+              {/* Preview card */}
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">Agent Routing Preview</div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                    <span className="text-sm text-gray-300">Task Master</span>
+                    <span className="text-xs text-gray-600">→ creates board & sprints</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-sm text-gray-300">{form.team || "Assigned Team"}</span>
+                    <span className="text-xs text-gray-600">→ receives tasks</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800 bg-gray-900/50 rounded-b-2xl">
+          <div className="flex gap-1.5">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all ${
+                  i < step ? "w-8 bg-indigo-500" : "w-4 bg-gray-700"
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex gap-3">
+            {step > 1 && (
+              <button onClick={() => setStep(step - 1)} className="px-4 py-2 text-gray-400 hover:text-white transition-colors text-sm">
+                Back
+              </button>
+            )}
+            {step < totalSteps && (
+              <button
+                onClick={() => canNext && setStep(step + 1)}
+                disabled={!canNext}
+                className="px-5 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+              >
+                Add More Details
+              </button>
+            )}
+            <button
+              onClick={() => canSubmit && setSubmitted(true)}
+              disabled={!canSubmit}
+              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            >
+              <RocketIcon size={16} />
+              Create Project
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main App with persistent floating buttons ──
+export default function MissionControlGlobalActions() {
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const fabRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (fabRef.current && !fabRef.current.contains(e.target)) setFabOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-950 text-white">
+      {/* Top nav bar */}
+      <div className="fixed top-0 left-0 right-0 z-30 bg-gray-950/95 backdrop-blur border-b border-gray-800">
+        <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-white text-lg">Mission Control</span>
+            </div>
+            <div className="flex bg-gray-900 border border-gray-800 rounded-lg p-0.5 ml-4">
+              {["dashboard", "fleet", "infra", "costs", "projects"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all capitalize ${
+                    activeTab === tab ? "bg-indigo-600 text-white" : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Inline action buttons for desktop */}
+            <button
+              onClick={() => setShowTaskModal(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:text-white hover:border-indigo-500 transition-all"
+            >
+              <PlusIcon size={16} />
+              <span>Add Task</span>
+            </button>
+            <button
+              onClick={() => setShowProjectModal(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-indigo-600 rounded-lg text-sm text-white hover:bg-indigo-500 transition-all font-medium"
+            >
+              <RocketIcon size={16} />
+              <span>New Project</span>
+            </button>
+
+            {/* User */}
+            <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">CC</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Page content placeholder */}
+      <div className="pt-16 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {activeTab === "dashboard" && "Dashboard"}
+              {activeTab === "fleet" && "Bot Fleet"}
+              {activeTab === "infra" && "Infrastructure"}
+              {activeTab === "costs" && "Cost Analytics"}
+              {activeTab === "projects" && "Projects"}
+            </h1>
+            <p className="text-gray-400">
+              {activeTab === "dashboard" && "Enterprise overview — bot fleet, infrastructure, and business metrics"}
+              {activeTab === "fleet" && "Monitor and manage all Open Claw bots"}
+              {activeTab === "infra" && "Server health, containers, and CI/CD pipelines"}
+              {activeTab === "costs" && "API model usage, cost tracking, and forecasting"}
+              {activeTab === "projects" && "Project boards, sprints, and task management"}
+            </p>
+          </div>
+
+          {/* Sample content cards */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { label: "Active Bots", value: "24", delta: "+2 today", color: "indigo" },
+              { label: "Open Tasks", value: "47", delta: "12 in progress", color: "sky" },
+              { label: "API Spend (Today)", value: "$42.18", delta: "+12% vs yesterday", color: "emerald" },
+            ].map((kpi) => (
+              <div key={kpi.label} className="bg-gray-900 border border-gray-800 rounded-xl p-5 relative overflow-hidden">
+                <div className={`absolute top-0 left-0 w-full h-1 bg-${kpi.color}-500`} />
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">{kpi.label}</div>
+                <div className="text-2xl font-bold text-white mb-1">{kpi.value}</div>
+                <div className="text-xs text-gray-500">{kpi.delta}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Placeholder panels */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 h-64 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-gray-600 mb-2">
+                  <ListIcon size={32} />
+                </div>
+                <p className="text-gray-500 text-sm">Dashboard widgets render here</p>
+                <p className="text-gray-600 text-xs mt-1">Charts, tables, and real-time feeds</p>
+              </div>
+            </div>
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 h-64 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-gray-600 mb-2">
+                  <FolderIcon size={32} />
+                </div>
+                <p className="text-gray-500 text-sm">Agent activity feed renders here</p>
+                <p className="text-gray-600 text-xs mt-1">Live updates from all sub-agents</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════ */}
+      {/* PERSISTENT FLOATING ACTION BUTTON (mobile + always visible) */}
+      {/* ═══════════════════════════════════════════ */}
+      <div className="fixed bottom-6 right-6 z-40" ref={fabRef}>
+        {/* Expanded menu */}
+        {fabOpen && (
+          <div className="absolute bottom-16 right-0 mb-2 space-y-2 animate-fade-in">
+            <button
+              onClick={() => { setShowProjectModal(true); setFabOpen(false); }}
+              className="flex items-center gap-3 bg-emerald-600 text-white pl-4 pr-5 py-3 rounded-xl shadow-lg hover:bg-emerald-500 transition-all whitespace-nowrap group"
+            >
+              <RocketIcon size={18} />
+              <div className="text-left">
+                <div className="text-sm font-semibold">New Project</div>
+                <div className="text-xs text-emerald-200 opacity-80">Guided questionnaire</div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setShowTaskModal(true); setFabOpen(false); }}
+              className="flex items-center gap-3 bg-indigo-600 text-white pl-4 pr-5 py-3 rounded-xl shadow-lg hover:bg-indigo-500 transition-all whitespace-nowrap group"
+            >
+              <BoltIcon size={18} />
+              <div className="text-left">
+                <div className="text-sm font-semibold">Quick Task</div>
+                <div className="text-xs text-indigo-200 opacity-80">Route to agent instantly</div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* FAB button */}
+        <button
+          onClick={() => setFabOpen(!fabOpen)}
+          className={`w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 ${
+            fabOpen
+              ? "bg-gray-700 rotate-45"
+              : "bg-gradient-to-br from-indigo-600 to-emerald-500 hover:from-indigo-500 hover:to-emerald-400"
+          }`}
+        >
+          <PlusIcon size={24} />
+        </button>
+      </div>
+
+      {/* Modals */}
+      {showTaskModal && <QuickTaskModal onClose={() => setShowTaskModal(false)} />}
+      {showProjectModal && <NewProjectModal onClose={() => setShowProjectModal(false)} />}
+    </div>
+  );
+}
