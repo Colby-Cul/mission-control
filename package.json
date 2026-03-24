@@ -1,24 +1,48 @@
 {
-  "name": "mission-control",
+  "name": "mission-control-dashboard",
   "version": "1.0.0",
-  "description": "",
-  "main": "dashboard.js",
+  "description": "OpenClaw Mission Control Dashboard - Agent Management and Operations",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
+    "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix",
+    "start": "vite --host 0.0.0.0 --port 3000"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.79.0",
-    "axios": "^1.13.6",
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.3.1",
-    "helmet": "^8.1.0",
-    "openai": "^6.31.0",
-    "ws": "^8.19.0"
-  }
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "recharts": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.4.23",
+    "tailwindcss": "^3.3.0",
+    "vite": "^4.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "react",
+    "dashboard",
+    "agent-management",
+    "mission-control",
+    "openclaw"
+  ],
+  "author": "Jarvis - Task Master",
+  "license": "MIT"
 }
