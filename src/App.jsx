@@ -232,6 +232,7 @@ const NAV_ITEMS = [
   { id: "docs", label: "Docs Hub", icon: icons.docs },
   { id: "files", label: "Workspace Files", icon: icons.files },
   { id: "system", label: "System Monitor", icon: icons.system },
+  { id: "rentals", label: "Rentals", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg> },
 ];
 
 // ═══════════════════════════════════════
@@ -1565,6 +1566,236 @@ const SystemScreen = () => (
   </div>
 );
 
+// ═══════════════════════════════════════
+// SCREEN: RENTALS CALENDAR (Lodgify)
+// ═══════════════════════════════════════
+const RENTAL_PROPS = {
+  533203: { name: "Graeagle Cabin", short: "Graeagle", color: "#10b981", icon: "🏠" },
+  746614: { name: "Northstar Luxury", short: "Northstar", color: "#6366f1", icon: "🏔️" },
+};
+
+const RentalsScreen = () => {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [viewMonth, setViewMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const [tab, setTab] = useState("calendar");
+  const [filterProp, setFilterProp] = useState("all");
+
+  // Fetch bookings from Lodgify API (proxied or direct)
+  useEffect(() => {
+    // For now, use static data embedded at build time
+    // TODO: wire to API proxy endpoint
+    setBookings(window.__LODGIFY_BOOKINGS || []);
+    setLoading(false);
+  }, []);
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const filtered = useMemo(() => {
+    let b = bookings.filter(x => x.status === "Booked" || x.status === "Open");
+    if (filterProp !== "all") b = b.filter(x => String(x.property_id) === filterProp);
+    return b;
+  }, [bookings, filterProp]);
+
+  // Calendar helpers
+  const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0).getDate();
+  const firstDow = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1).getDay();
+  const monthLabel = viewMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const prevMonth = () => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1));
+  const nextMonth = () => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1));
+  const goToday = () => setViewMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+
+  // Build calendar grid with booking overlays
+  const calendarDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < firstDow; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), d);
+      date.setHours(0,0,0,0);
+      const dateStr = date.toISOString().split("T")[0];
+      const dayBookings = filtered.filter(b => {
+        return dateStr >= b.arrival && dateStr < b.departure;
+      });
+      days.push({ day: d, date, dateStr, bookings: dayBookings, isToday: date.getTime() === today.getTime() });
+    }
+    return days;
+  }, [viewMonth, filtered, daysInMonth, firstDow, today]);
+
+  // Upcoming check-ins (next 14 days)
+  const upcoming = useMemo(() => {
+    const cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() + 14);
+    const cutoffStr = cutoff.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+    return filtered
+      .filter(b => b.arrival >= todayStr && b.arrival <= cutoffStr)
+      .sort((a, b) => a.arrival.localeCompare(b.arrival));
+  }, [filtered, today]);
+
+  // KPI calcs
+  const totalRevenue = filtered.reduce((s, b) => s + (b.total_amount || 0), 0);
+  const bookedCount = filtered.filter(b => b.status === "Booked").length;
+  const openCount = filtered.filter(b => b.status === "Open").length;
+  const avgNightly = filtered.length > 0
+    ? filtered.reduce((s, b) => {
+        const nights = Math.max(1, Math.round((new Date(b.departure) - new Date(b.arrival)) / 86400000));
+        return s + (b.total_amount || 0) / nights;
+      }, 0) / filtered.length
+    : 0;
+
+  if (loading) return <div style={{ padding: 40, color: C.muted }}>Loading Lodgify data...</div>;
+  if (error) return <div style={{ padding: 40, color: C.red }}>{error}</div>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <SectionTitle>🏡 Pineside Cabins — Rentals</SectionTitle>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Tab active={filterProp === "all"} onClick={() => setFilterProp("all")}>All Properties</Tab>
+          {Object.entries(RENTAL_PROPS).map(([id, p]) => (
+            <Tab key={id} active={filterProp === id} onClick={() => setFilterProp(id)}>{p.icon} {p.short}</Tab>
+          ))}
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        <KPI label="Confirmed Bookings" value={bookedCount} color={C.green} />
+        <KPI label="Pending / Open" value={openCount} color={C.amber} />
+        <KPI label="Total Pipeline" value={`$${(totalRevenue / 1000).toFixed(0)}K`} color={C.cyan} />
+        <KPI label="Avg $/Night" value={`$${avgNightly.toFixed(0)}`} color={C.accent} />
+      </div>
+
+      {/* View tabs */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <Tab active={tab === "calendar"} onClick={() => setTab("calendar")}>Calendar</Tab>
+        <Tab active={tab === "list"} onClick={() => setTab("list")}>All Bookings</Tab>
+        <Tab active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</Tab>
+      </div>
+
+      {tab === "calendar" && (
+        <Card>
+          {/* Month nav */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <button onClick={prevMonth} style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 14 }}>←</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 18, fontWeight: 700 }}>{monthLabel}</span>
+              <button onClick={goToday} style={{ background: C.accent + "22", color: C.accentLight, border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600 }}>Today</button>
+            </div>
+            <button onClick={nextMonth} style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontSize: 14 }}>→</button>
+          </div>
+
+          {/* Day headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 4 }}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
+              <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: C.muted, padding: 4 }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+            {calendarDays.map((cell, i) => (
+              <div key={i} style={{
+                minHeight: 80, background: cell ? (cell.isToday ? C.accent + "11" : C.surface) : "transparent",
+                borderRadius: 6, padding: cell ? 4 : 0,
+                border: cell?.isToday ? `1px solid ${C.accent}44` : `1px solid ${C.border}22`,
+              }}>
+                {cell && (
+                  <>
+                    <div style={{ fontSize: 12, fontWeight: cell.isToday ? 700 : 500, color: cell.isToday ? C.accentLight : C.muted, marginBottom: 2 }}>{cell.day}</div>
+                    {cell.bookings.slice(0, 3).map((b, bi) => {
+                      const prop = RENTAL_PROPS[b.property_id] || { color: C.muted, icon: "🏠" };
+                      const isCheckin = b.arrival === cell.dateStr;
+                      const isCheckout = b.departure === cell.dateStr;
+                      return (
+                        <div key={bi} title={`${b.guest?.name || "Guest"} — ${prop.name}\n${b.arrival} → ${b.departure}\n$${(b.total_amount||0).toLocaleString()}`} style={{
+                          fontSize: 10, padding: "1px 4px", borderRadius: 3, marginBottom: 1,
+                          background: prop.color + "33", color: prop.color,
+                          borderLeft: isCheckin ? `3px solid ${prop.color}` : "none",
+                          borderRight: isCheckout ? `3px solid ${C.red}` : "none",
+                          whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                          fontWeight: isCheckin ? 700 : 400,
+                        }}>
+                          {isCheckin ? "▶ " : ""}{b.guest?.name || "Guest"}
+                        </div>
+                      );
+                    })}
+                    {cell.bookings.length > 3 && <div style={{ fontSize: 9, color: C.muted }}>+{cell.bookings.length - 3} more</div>}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 11, color: C.muted }}>
+            {Object.values(RENTAL_PROPS).map(p => (
+              <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: p.color + "55" }} />
+                {p.icon} {p.name}
+              </div>
+            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}><span style={{ borderLeft: `3px solid ${C.green}`, height: 10 }} /> Check-in</div>
+          </div>
+        </Card>
+      )}
+
+      {tab === "list" && (
+        <Table columns={["Guest", "Property", "Check-in", "Check-out", "Nights", "Guests", "Total", "Source", "Status"]}
+          rows={filtered.sort((a,b) => a.arrival.localeCompare(b.arrival)).map(b => {
+            const prop = RENTAL_PROPS[b.property_id] || { name: "Unknown", color: C.muted, icon: "🏠" };
+            const nights = Math.round((new Date(b.departure) - new Date(b.arrival)) / 86400000);
+            const guestCount = (b.rooms || []).reduce((s, r) => s + (r.people || 0), 0);
+            const source = (b.source || "Direct").replace("Integration", "");
+            return [
+              <span style={{ fontWeight: 600 }}>{b.guest?.name || "Unknown"}</span>,
+              <span style={{ color: prop.color }}>{prop.icon} {prop.short || prop.name}</span>,
+              b.arrival,
+              b.departure,
+              `${nights}n`,
+              guestCount,
+              <span style={{ fontWeight: 600, color: C.green }}>${(b.total_amount || 0).toLocaleString()}</span>,
+              <Badge color={C.muted}>{source}</Badge>,
+              <Badge color={b.status === "Booked" ? C.green : C.amber}>{b.status}</Badge>,
+            ];
+          })}
+        />
+      )}
+
+      {tab === "upcoming" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {upcoming.length === 0 && <Card><span style={{ color: C.muted }}>No check-ins in the next 14 days.</span></Card>}
+          {upcoming.map(b => {
+            const prop = RENTAL_PROPS[b.property_id] || { name: "Unknown", color: C.muted, icon: "🏠" };
+            const nights = Math.round((new Date(b.departure) - new Date(b.arrival)) / 86400000);
+            const guestCount = (b.rooms || []).reduce((s, r) => s + (r.people || 0), 0);
+            const arrDate = new Date(b.arrival + "T00:00:00");
+            const daysUntil = Math.round((arrDate - today) / 86400000);
+            return (
+              <Card key={b.id} style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 10, background: prop.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>{prop.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>{b.guest?.name || "Unknown"}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{prop.name} · {nights}n · {guestCount} guests · {(b.source || "Direct").replace("Integration", "")}</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: C.green }}>${(b.total_amount || 0).toLocaleString()}</div>
+                  <Badge color={daysUntil === 0 ? C.green : daysUntil === 1 ? C.amber : C.muted}>
+                    {daysUntil === 0 ? "TODAY" : daysUntil === 1 ? "TOMORROW" : `in ${daysUntil}d`}
+                  </Badge>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ScreenPlaceholder = ({ name }) => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 400, color: C.muted, fontSize: 18 }}>
     Loading {name}...
@@ -1597,7 +1828,7 @@ function App() {
     floor: TheFloorScreen, projects: ProjectsScreen, tasks: TasksScreen,
     finance: FinanceScreen, forge: ForgeScreen, skills: SkillLabScreen,
     activity: ActivityScreen, sessions: SessionsScreen, memory: MemoryScreen,
-    docs: DocsScreen, files: FilesScreen, system: SystemScreen,
+    docs: DocsScreen, files: FilesScreen, system: SystemScreen, rentals: RentalsScreen,
   };
 
   const ActiveScreen = SCREENS[page] || HomeScreen;
