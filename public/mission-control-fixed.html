@@ -185,6 +185,143 @@
             display: block;
         }
 
+        /* ORG CHART STYLES */
+        .org-chart-container {
+            padding: 1rem;
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .org-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 1000px;
+        }
+
+        .org-level {
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            margin: 2rem 0;
+            gap: 3rem;
+            width: 100%;
+        }
+
+        .org-department {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .dept-header {
+            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+            min-width: 180px;
+        }
+
+        .dept-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .dept-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .dept-agents {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .agent-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 0.75rem;
+            min-width: 160px;
+            text-align: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+            border-color: #8b5cf6;
+        }
+
+        .agent-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #06b6d4, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin: 0 auto 0.5rem;
+        }
+
+        .agent-name {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .agent-role {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .agent-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.7rem;
+            color: #8b5cf6;
+        }
+
+        .agent-status .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .org-connector {
+            position: absolute;
+            background: #4b5563;
+            z-index: 0;
+        }
+
+        .connector-vertical {
+            width: 2px;
+            height: 20px;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-1px);
+        }
+
+        .connector-horizontal {
+            height: 2px;
+            top: -10px;
+        }
+
         /* LOADING INDICATOR */
         .loading {
             display: flex;
@@ -700,6 +837,10 @@
                     <span>Agents</span>
                     <span class="nav-badge success" id="agents-badge">0</span>
                 </button>
+                <button class="nav-item" data-section="team-org">
+                    <i class="fas fa-sitemap"></i>
+                    <span>Team Org Chart</span>
+                </button>
                 <button class="nav-item" data-section="skills">
                     <i class="fas fa-brain"></i>
                     <span>Skills</span>
@@ -818,6 +959,20 @@
                 <div class="loading">
                     <i class="fas fa-spinner"></i>
                     Loading agents...
+                </div>
+            </div>
+
+            <!-- TEAM ORG CHART SECTION -->
+            <div class="content-section" id="team-org-section">
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="color: #f1f5f9; margin-bottom: 0.5rem;">Team Organization Chart</h2>
+                    <p style="color: #9ca3af;">Visual hierarchy of agents and departments</p>
+                </div>
+                <div class="org-chart-container" id="org-chart-container">
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        Loading organization chart...
+                    </div>
                 </div>
             </div>
 
@@ -1091,6 +1246,9 @@
                         break;
                     case 'agents':
                         this.renderAgents(sectionElement, data);
+                        break;
+                    case 'team-org':
+                        this.renderTeamOrgChart(sectionElement, data);
                         break;
                     case 'skills':
                         this.renderSkills(sectionElement, data);
@@ -1398,6 +1556,70 @@
                                 </div>
                             </div>
                         `).join('') : '<p style="color: #9ca3af;">No performance trends available</p>'}
+                    </div>
+                `;
+            }
+
+            renderTeamOrgChart(element, data) {
+                const { agents = [], departments = {} } = data;
+                
+                // Organize agents by department
+                const orgData = {
+                    'Executive': [],
+                    'Operations': [],
+                    'Marketing': [],
+                    'Business': [],
+                    'Accounting': [],
+                    'Technical': []
+                };
+
+                // Group agents by department
+                agents.forEach(agent => {
+                    const dept = agent.department || 'Technical';
+                    if (orgData[dept]) {
+                        orgData[dept].push(agent);
+                    } else {
+                        orgData['Technical'].push(agent);
+                    }
+                });
+
+                const container = element.querySelector('#org-chart-container') || element;
+                container.innerHTML = `
+                    <div class="org-chart">
+                        <div class="org-level">
+                            ${Object.entries(orgData).map(([deptName, deptAgents]) => `
+                                <div class="org-department">
+                                    <div class="dept-header">
+                                        <div class="dept-title">${deptName}</div>
+                                        <div class="dept-subtitle">${deptAgents.length} agent${deptAgents.length !== 1 ? 's' : ''}</div>
+                                    </div>
+                                    <div class="dept-agents">
+                                        ${deptAgents.map(agent => `
+                                            <div class="agent-card">
+                                                <div class="agent-avatar">
+                                                    ${agent.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                                                </div>
+                                                <div class="agent-name">${agent.name}</div>
+                                                <div class="agent-role">${agent.model || 'AI Agent'}</div>
+                                                <div class="agent-status">
+                                                    <div class="status-dot status-${agent.status === 'ready' ? 'active' : agent.status === 'busy' ? 'working' : 'ready'}"></div>
+                                                    ${agent.status || 'ready'}
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                        ${deptAgents.length === 0 ? `
+                                            <div class="agent-card" style="opacity: 0.5; border-style: dashed;">
+                                                <div class="agent-avatar" style="background: #4b5563;">
+                                                    <i class="fas fa-plus" style="font-size: 0.7rem;"></i>
+                                                </div>
+                                                <div class="agent-name">No agents</div>
+                                                <div class="agent-role">assigned</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
             }
