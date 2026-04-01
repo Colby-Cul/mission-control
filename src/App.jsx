@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { MissionControlDataProvider } from './context/MissionControlDataContext';
 import {
@@ -21,10 +21,24 @@ import {
   Settings
 } from './pages';
 
+function normalizeBasePath(baseUrl) {
+  if (!baseUrl || baseUrl === "/") {
+    return "/";
+  }
+
+  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+}
+
 function App() {
+  const basePath = normalizeBasePath(import.meta.env.BASE_URL || "/mission-control/");
+  const routerMode = String(import.meta.env.VITE_ROUTER_MODE || "").toLowerCase();
+  const useBrowserRouter = routerMode === "browser";
+  const Router = useBrowserRouter ? BrowserRouter : HashRouter;
+  const routerProps = useBrowserRouter ? { basename: basePath } : {};
+
   return (
     <MissionControlDataProvider>
-      <Router basename="/mission-control">
+      <Router {...routerProps}>
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />

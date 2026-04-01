@@ -55,7 +55,7 @@ const Settings = () => {
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>OpenClaw Gateway</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              Used for `/health` and `/api/status` polling.
+              Used for `/health` and `/api/status` polling. Prefer a deployed gateway URL instead of localhost-only browser config.
             </div>
           </div>
 
@@ -75,7 +75,7 @@ const Settings = () => {
               type="password"
               value={draft.gatewayToken}
               onChange={(event) => setDraft((current) => ({ ...current, gatewayToken: event.target.value }))}
-              placeholder="Optional bearer token for /api/status"
+              placeholder="Optional bearer token for protected gateway status"
               style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
             />
           </label>
@@ -95,7 +95,7 @@ const Settings = () => {
           </div>
 
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Proxy URL</span>
+            <span style={{ fontSize: 12, color: C.muted }}>Proxy Endpoint</span>
             <input
               value={draft.mondayProxyUrl || ""}
               onChange={(event) => setDraft((current) => ({ ...current, mondayProxyUrl: event.target.value }))}
@@ -105,12 +105,12 @@ const Settings = () => {
           </label>
 
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>API Token</span>
+            <span style={{ fontSize: 12, color: C.muted }}>Direct API Token</span>
             <input
               type="password"
               value={draft.mondayToken}
               onChange={(event) => setDraft((current) => ({ ...current, mondayToken: event.target.value }))}
-              placeholder="Monday API token"
+              placeholder="Local fallback only; avoid exposing browser secrets in production"
               style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
             />
           </label>
@@ -136,15 +136,15 @@ const Settings = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Save configuration</div>
           <div style={{ fontSize: 12, color: C.muted }}>
-            Values are persisted in browser local storage and reused across dashboard pages.
+            Values are persisted in browser local storage. Deploy defaults can also come from Vite env vars.
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             onClick={() => setDraft({
               gatewayUrl: defaults.gatewayUrl,
-              gatewayToken: "",
-              mondayProxyUrl: defaults.mondayProxyUrl,
+              gatewayToken: defaults.gatewayToken || "",
+              mondayProxyUrl: defaults.mondayProxyUrl || "",
               mondayToken: "",
               mondayBoardId: defaults.mondayBoardId
             })}
@@ -167,7 +167,7 @@ const Settings = () => {
           Gateway: {snapshot.healthError || config.gatewayUrl}
         </div>
         <div style={{ padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, fontSize: 12, color: C.text }}>
-          Monday: {snapshot.monday?.name || snapshot.mondayError || config.mondayProxyUrl || `Board ${config.mondayBoardId || defaults.mondayBoardId}`}
+          Monday: {snapshot.monday?.name || snapshot.mondayError || (config.mondayProxyUrl ? `${config.mondayProxyUrl} · Board ${config.mondayBoardId || defaults.mondayBoardId}` : `Board ${config.mondayBoardId || defaults.mondayBoardId}`)}
         </div>
       </Card>
     </div>

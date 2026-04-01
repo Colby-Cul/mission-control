@@ -51,7 +51,7 @@ const ActivityFeed = () => {
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Activity Feed</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Unified timeline from OpenClaw gateway status and Monday.com updates.
+            Unified timeline from the configured OpenClaw gateway and Monday.com updates.
           </div>
         </div>
         <button

@@ -94,7 +94,7 @@ const Home = () => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         <KPI label="Gateway Health" value={metrics.healthStatus} sub={snapshot.health?.version ? `version ${snapshot.health.version}` : snapshot.healthError || config.gatewayUrl} color={statusColor(metrics.healthStatus)} />
         <KPI label="Agents Online" value={agents.length ? `${metrics.onlineAgents}/${agents.length}` : "--"} sub={agents.length ? `${metrics.busyAgents} busy` : "Waiting for /api/status"} color={C.green} />
-        <KPI label="Monday Tasks" value={mondayItems.length || "--"} sub={mondayItems.length ? `${metrics.completedTasks} completed` : snapshot.mondayError || "Configure a token in Settings"} color={C.amber} />
+        <KPI label="Monday Tasks" value={mondayItems.length || "--"} sub={mondayItems.length ? `${metrics.completedTasks} completed` : snapshot.mondayError || "Configure a proxy or token in Settings"} color={C.amber} />
         <KPI label="Active Work" value={snapshot.status || mondayItems.length ? metrics.activeTasks : "--"} sub={snapshot.status?.session?.activeSessions ? `${metrics.activeSessions} live sessions` : "OpenClaw + Monday rollup"} color={C.purple} />
         <KPI label="Refresh Cadence" value={`${pollIntervalMs / 1000}s`} sub={snapshot.loading ? "Polling now" : "Automatic polling enabled"} color={C.cyan} />
       </div>
@@ -111,7 +111,7 @@ const Home = () => {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
             <SourceStatus label="Gateway /health" value={snapshot.health ? "connected" : "offline"} color={snapshot.health ? C.green : C.red} note={snapshot.healthError || config.gatewayUrl} />
             <SourceStatus label="Gateway /api/status" value={metrics.detailStatus} color={statusColor(metrics.detailStatus)} note={snapshot.statusError || "Detailed bot status is available."} />
-            <SourceStatus label="Monday board" value={metrics.mondayStatus} color={statusColor(metrics.mondayStatus)} note={snapshot.monday?.name || snapshot.mondayError || `Board ${config.mondayBoardId || "not set"}`} />
+            <SourceStatus label="Monday board" value={metrics.mondayStatus} color={statusColor(metrics.mondayStatus)} note={snapshot.monday?.name || snapshot.mondayError || (config.mondayProxyUrl ? `${config.mondayProxyUrl} · Board ${config.mondayBoardId || "not set"}` : `Board ${config.mondayBoardId || "not set"}`)} />
           </div>
         </Card>
 
@@ -192,7 +192,7 @@ const Home = () => {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Monday Focus Queue</div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-                Most recently updated items from the configured Monday board.
+                Most recently updated items from the configured Monday board source.
               </div>
             </div>
             {snapshot.monday ? <Badge color={C.accent}>{snapshot.monday.name}</Badge> : null}
@@ -217,7 +217,7 @@ const Home = () => {
             </div>
           ) : (
             <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.mondayError || "No Monday tasks yet. Add the API token and board id in Settings to populate this panel."}
+              {snapshot.mondayError || "No Monday tasks yet. Add a proxy endpoint or local fallback token and board id in Settings to populate this panel."}
             </div>
           )}
         </Card>

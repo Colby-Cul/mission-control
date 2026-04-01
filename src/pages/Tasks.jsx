@@ -66,7 +66,7 @@ const Tasks = () => {
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Tasks</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Live Monday.com task feed merged into Mission Control.
+            Live Monday.com task feed merged into Mission Control, preferably through a public proxy endpoint.
           </div>
         </div>
         <button
@@ -123,7 +123,7 @@ const Tasks = () => {
             </div>
           ) : (
             <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.mondayError || "No Monday tasks available. Configure the board in Settings and refresh the feed."}
+              {snapshot.mondayError || "No Monday tasks available. Configure a proxy endpoint or local fallback token in Settings and refresh the feed."}
             </div>
           )}
         </div>

@@ -95,11 +95,41 @@ async function fetchJson(url, options = {}) {
 }
 
 function buildProxyUrl(baseUrl, mondayBoardId) {
-  const url = new URL(baseUrl);
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost";
+  const url = new URL(baseUrl, origin);
   if (mondayBoardId && !url.searchParams.has("boardId")) {
     url.searchParams.set("boardId", mondayBoardId);
   }
   return url.toString();
+}
+
+function normalizeMondayBoardPayload(payload, boardId) {
+  if (!payload) {
+    return null;
+  }
+
+  if (payload?.data?.boards?.[0]) {
+    return payload.data.boards[0];
+  }
+
+  if (Array.isArray(payload?.boards)) {
+    return payload.boards[0] || null;
+  }
+
+  if (payload?.board) {
+    return payload.board;
+  }
+
+  if (payload?.items_page || Array.isArray(payload?.items)) {
+    return {
+      id: payload.id || boardId,
+      name: payload.name || "Monday board",
+      updated_at: payload.updated_at || null,
+      items_page: payload.items_page || { items: payload.items || [] }
+    };
+  }
+
+  return payload;
 }
 
 async function fetchMondayDirect(mondayToken, mondayBoardId) {
@@ -175,16 +205,18 @@ async function fetchMondayBoard(config, gatewayHeaders, mondayProxyHeaders) {
 
   const proxyUrl = config.mondayProxyUrl.trim();
   if (proxyUrl) {
-    return fetchJson(buildProxyUrl(proxyUrl, boardId), {
+    const payload = await fetchJson(buildProxyUrl(proxyUrl, boardId), {
       headers: mondayProxyHeaders
     });
+    return normalizeMondayBoardPayload(payload, boardId);
   }
 
   const baseUrl = config.gatewayUrl.trim().replace(/\/+$/, "");
   if (baseUrl) {
-    return fetchJson(`${baseUrl}/api/monday/board?boardId=${encodeURIComponent(boardId)}`, {
+    const payload = await fetchJson(`${baseUrl}/api/monday/board?boardId=${encodeURIComponent(boardId)}`, {
       headers: gatewayHeaders
     });
+    return normalizeMondayBoardPayload(payload, boardId);
   }
 
   return fetchMondayDirect(config.mondayToken.trim(), boardId);
