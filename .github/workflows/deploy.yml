@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Mission Control
 
 on:
   push:
@@ -24,26 +24,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-        env:
-          MISSION_CONTROL_GATEWAY_URL: ${{ secrets.MISSION_CONTROL_GATEWAY_URL }}
-          MISSION_CONTROL_GATEWAY_TOKEN: ${{ secrets.MISSION_CONTROL_GATEWAY_TOKEN }}
-          MISSION_CONTROL_MONDAY_PROXY_URL: ${{ secrets.MISSION_CONTROL_MONDAY_PROXY_URL }}
-          MISSION_CONTROL_MONDAY_PROXY_TOKEN: ${{ secrets.MISSION_CONTROL_MONDAY_PROXY_TOKEN }}
-          MISSION_CONTROL_MONDAY_TOKEN: ${{ secrets.MISSION_CONTROL_MONDAY_TOKEN }}
-          MISSION_CONTROL_MONDAY_BOARD_ID: ${{ secrets.MISSION_CONTROL_MONDAY_BOARD_ID }}
-          VITE_MISSION_CONTROL_GATEWAY_URL: ${{ secrets.VITE_MISSION_CONTROL_GATEWAY_URL }}
-          VITE_MISSION_CONTROL_GATEWAY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_GATEWAY_TOKEN }}
-          VITE_MISSION_CONTROL_MONDAY_PROXY_URL: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_PROXY_URL }}
-          VITE_MISSION_CONTROL_MONDAY_PROXY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_PROXY_TOKEN }}
-          VITE_MISSION_CONTROL_MONDAY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_TOKEN }}
-          VITE_MISSION_CONTROL_MONDAY_BOARD_ID: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_BOARD_ID }}
-      - run: cp lodgify-data.js dist/lodgify-data.js
-      - run: cp src/data/live-data.json dist/live-data.json
+      - run: cp src/data/live-data.json dist/live-data.json 2>/dev/null || true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  deploy:
+  deploy-pages:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -52,3 +38,22 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  deploy-vercel:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: cp src/data/live-data.json dist/live-data.json 2>/dev/null || true
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
