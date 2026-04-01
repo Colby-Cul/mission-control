@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T13:16:48.091745Z",
+  "generatedAt": "2026-04-01T13:23:25.322188Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -9,7 +9,7 @@
       "id": "main",
       "name": "main",
       "model": "openai/gpt-4o",
-      "sessionCount": 509
+      "sessionCount": 512
     },
     {
       "id": "worker",
@@ -33,23 +33,23 @@
   "cronJobs": [
     {
       "name": "monday-monitor",
-      "enabled": false,
+      "enabled": true,
       "lastStatus": "ok"
     },
     {
       "name": "discord-monitor",
-      "enabled": false,
+      "enabled": true,
       "lastStatus": "ok"
     },
     {
       "name": "monday-operations-monitor",
-      "enabled": false,
+      "enabled": true,
       "lastStatus": "ok"
     },
     {
       "name": "task-master-weekly-workload-audit",
       "enabled": true,
-      "lastStatus": "error"
+      "lastStatus": "ok"
     },
     {
       "name": "task-master-biweekly-sprint-planning",
@@ -73,12 +73,12 @@
     },
     {
       "name": "mission-control-task-updates",
-      "enabled": false,
+      "enabled": true,
       "lastStatus": "ok"
     },
     {
       "name": "working-on-tracker",
-      "enabled": false,
+      "enabled": true,
       "lastStatus": "ok"
     },
     {
@@ -100,6 +100,21 @@
       "name": "mission-control-builder",
       "enabled": true,
       "lastStatus": "ok"
+    },
+    {
+      "name": "mc-coding-agent",
+      "enabled": true,
+      "lastStatus": "never"
+    },
+    {
+      "name": "agent-health-watchdog",
+      "enabled": true,
+      "lastStatus": "never"
+    },
+    {
+      "name": "victoria-morning-briefing",
+      "enabled": true,
+      "lastStatus": "never"
     }
   ],
   "skills": [
@@ -154,6 +169,24 @@
   ],
   "acpSessions": [
     {
+      "id": "e1e46990-2db4-4b40-b3ac-433a9447894c",
+      "sizeBytes": 3564,
+      "lastModified": "2026-04-01T06:21:03.670914",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/e1e46990-2db4-4b40-b3ac-433a9447894c.jsonl"
+    },
+    {
+      "id": "2a1a75f2-0868-48d1-bcef-7bffb62c895c",
+      "sizeBytes": 4674,
+      "lastModified": "2026-04-01T06:20:58.215792",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/2a1a75f2-0868-48d1-bcef-7bffb62c895c.jsonl"
+    },
+    {
+      "id": "3831118c-8c25-448d-aa46-333a6e678b8f",
+      "sizeBytes": 2925,
+      "lastModified": "2026-04-01T06:20:06.428540",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/3831118c-8c25-448d-aa46-333a6e678b8f.jsonl"
+    },
+    {
       "id": "0f3d8e8b-1c91-401c-9472-7e3f058f0d63",
       "sizeBytes": 6933,
       "lastModified": "2026-04-01T04:50:59.387816",
@@ -194,24 +227,6 @@
       "sizeBytes": 899,
       "lastModified": "2026-03-31T20:41:16.786995",
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/865b3aa9-8e96-4c71-bd48-5ec4113f21d3.jsonl"
-    },
-    {
-      "id": "9368831a-4ee0-4382-8eb1-d2a69e9a29bd",
-      "sizeBytes": 5890,
-      "lastModified": "2026-03-31T15:35:18.878964",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9368831a-4ee0-4382-8eb1-d2a69e9a29bd.jsonl"
-    },
-    {
-      "id": "d0fd84b0-2ae0-4f45-af55-f7eea412498d",
-      "sizeBytes": 6673,
-      "lastModified": "2026-03-31T15:34:48.022902",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d0fd84b0-2ae0-4f45-af55-f7eea412498d.jsonl"
-    },
-    {
-      "id": "f800bddd-6ff4-4cc2-8954-c2b808c7841d",
-      "sizeBytes": 9971,
-      "lastModified": "2026-03-31T15:27:30.999404",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/f800bddd-6ff4-4cc2-8954-c2b808c7841d.jsonl"
     }
   ],
   "workerNode": {

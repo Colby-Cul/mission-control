@@ -22,21 +22,6 @@ function statusColor(status) {
   }
 }
 
-function priorityColor(priority) {
-  switch (priority) {
-    case "critical":
-      return C.red;
-    case "high":
-      return C.amber;
-    case "medium":
-      return C.cyan;
-    case "low":
-      return C.green;
-    default:
-      return C.muted;
-  }
-}
-
 function formatDateTime(value) {
   if (!value) {
     return "No update";
@@ -55,10 +40,33 @@ function formatDateTime(value) {
   });
 }
 
+function formatBytes(value) {
+  const size = Number(value);
+  if (!Number.isFinite(size) || size < 0) {
+    return "—";
+  }
+
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 const Tasks = () => {
-  const { mondayItems, snapshot, metrics, refresh } = useMissionControlData();
-  const doneCount = mondayItems.filter((item) => ["done", "complete", "completed"].includes(item.status)).length;
-  const ownerCount = new Set(mondayItems.map((item) => item.owner).filter(Boolean)).size;
+  const { acpSessions, snapshot, refresh } = useMissionControlData();
+  const totalBytes = acpSessions.reduce((sum, session) => sum + (session.sizeBytes || 0), 0);
+  const latestSession = acpSessions.reduce((latest, session) => {
+    if (!latest) {
+      return session;
+    }
+
+    return new Date(session.lastModified || 0).getTime() > new Date(latest.lastModified || 0).getTime() ? session : latest;
+  }, null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -66,7 +74,7 @@ const Tasks = () => {
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Tasks</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Live Monday.com task feed merged into Mission Control, preferably through a public proxy endpoint.
+            Real completed ACP sessions loaded from the bundled live data snapshot.
           </div>
         </div>
         <button
@@ -78,44 +86,42 @@ const Tasks = () => {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI label="Board Status" value={metrics.mondayStatus} sub={snapshot.monday?.name || "Monday board"} color={statusColor(metrics.mondayStatus)} />
-        <KPI label="Loaded Items" value={mondayItems.length || "--"} sub={mondayItems.length ? `${doneCount} complete` : "Waiting for Monday"} color={C.accent} />
-        <KPI label="Owners" value={ownerCount || "--"} sub={ownerCount ? "Distinct assignees on feed" : "No owners detected"} color={C.cyan} />
+        <KPI label="Completed Tasks" value={acpSessions.length || "--"} sub={acpSessions.length ? "ACP sessions in snapshot" : "No completed sessions"} color={C.green} />
+        <KPI label="Transcript Storage" value={acpSessions.length ? formatBytes(totalBytes) : "--"} sub={acpSessions.length ? "Combined transcript size" : "No transcript files"} color={C.accent} />
+        <KPI label="Latest Completion" value={latestSession ? formatDateTime(latestSession.lastModified) : "--"} sub={snapshot.lastUpdated ? `Snapshot ${formatDateTime(snapshot.lastUpdated)}` : "No snapshot timestamp"} color={C.cyan} />
       </div>
 
       <Card>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Monday Board Queue</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Completed ACP Sessions</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              Showing the latest items returned by the configured board query.
+              Each row is a real session record from `src/data/live-data.json`.
             </div>
           </div>
 
-          {mondayItems.length ? (
+          {acpSessions.length ? (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
                 <thead>
                   <tr style={{ textAlign: "left", borderBottom: `1px solid ${C.border}` }}>
                     <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Task</th>
                     <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Status</th>
-                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Priority</th>
-                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Owner</th>
-                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Group</th>
-                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Due</th>
-                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Updated</th>
+                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Session ID</th>
+                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Transcript Path</th>
+                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Size</th>
+                    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>Completed</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {mondayItems.map((item) => (
-                    <tr key={item.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text, fontWeight: 600 }}>{item.name}</td>
-                      <td style={{ padding: "14px 10px" }}><Badge color={statusColor(item.status)}>{item.status}</Badge></td>
-                      <td style={{ padding: "14px 10px" }}><Badge color={priorityColor(item.priority)}>{item.priority}</Badge></td>
-                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{item.owner}</td>
-                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{item.group}</td>
-                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{item.dueDate || "—"}</td>
-                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{formatDateTime(item.updatedAt)}</td>
+                  {acpSessions.map((session) => (
+                    <tr key={session.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text, fontWeight: 600 }}>ACP Session Complete</td>
+                      <td style={{ padding: "14px 10px" }}><Badge color={statusColor(session.status)}>{session.status}</Badge></td>
+                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text, fontFamily: "monospace" }}>{session.id}</td>
+                      <td style={{ padding: "14px 10px", fontSize: 12, color: C.text, fontFamily: "monospace", wordBreak: "break-all" }}>{session.transcriptPath || "—"}</td>
+                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{formatBytes(session.sizeBytes)}</td>
+                      <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>{formatDateTime(session.lastModified)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -123,7 +129,7 @@ const Tasks = () => {
             </div>
           ) : (
             <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.mondayError || "No Monday tasks available. Configure a proxy endpoint or local fallback token in Settings and refresh the feed."}
+              No ACP sessions were found in `src/data/live-data.json`.
             </div>
           )}
         </div>

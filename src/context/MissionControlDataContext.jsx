@@ -38,32 +38,32 @@ const MissionControlDataContext = createContext(null);
 const KNOWN_AGENT_METADATA = {
   main: {
     name: "Jarvis",
-    role: "Chief of Staff",
-    model: "OpenClaw gateway",
+    role: "chief of staff",
+    model: "GPT-4o",
     initials: "JV",
     color: "#6366f1",
     ring: "#818cf8"
   },
   worker: {
     name: "Worker",
-    role: "Implementation Agent",
-    model: "OpenClaw worker",
+    role: "implementation",
+    model: "GPT-4o",
     initials: "WK",
     color: "#10b981",
     ring: "#34d399"
   },
   validation: {
     name: "Validator",
-    role: "QA and Verification",
-    model: "OpenClaw validator",
+    role: "QA",
+    model: "GPT-4o",
     initials: "VL",
     color: "#0ea5e9",
     ring: "#38bdf8"
   },
   "executive-assistant": {
     name: "Victoria",
-    role: "Executive Assistant",
-    model: "OpenClaw assistant",
+    role: "executive assistant",
+    model: "GPT-4o-mini",
     initials: "VA",
     color: "#8b5cf6",
     ring: "#a78bfa"
@@ -485,6 +485,17 @@ function normalizeSkill(skill, index) {
   };
 }
 
+function normalizeAcpSession(session, index) {
+  return {
+    id: session?.id || `acp-session-${index + 1}`,
+    sizeBytes: toNumber(session?.sizeBytes),
+    lastModified: session?.lastModified || null,
+    transcriptPath: session?.transcriptPath || "",
+    status: "completed",
+    raw: session
+  };
+}
+
 function normalizeBundledSnapshot(payload) {
   const statusPayload = normalizeGatewayStatusPayload(payload?.status || payload?.gatewayStatus);
   const mondayPayload = normalizeMondayBoardPayload(payload?.monday || payload?.mondayBoard, payload?.config?.mondayBoardId || DEFAULT_MONDAY_BOARD_ID);
@@ -498,9 +509,14 @@ function normalizeBundledSnapshot(payload) {
     statusError: payload?.statusError || payload?.status?.error || null,
     mondayError: payload?.mondayError || payload?.monday?.error || null,
     lastUpdated: payload?.generatedAt || payload?.lastUpdated || null,
-    sessionInventory: Array.isArray(payload?.sessionsByAgent) ? payload.sessionsByAgent : [],
+    sessionInventory: Array.isArray(payload?.agents)
+      ? payload.agents
+      : Array.isArray(payload?.sessionsByAgent)
+        ? payload.sessionsByAgent
+        : [],
     cronJobs: Array.isArray(payload?.cronJobs) ? payload.cronJobs : [],
     skills: Array.isArray(payload?.skills) ? payload.skills : [],
+    acpSessions: Array.isArray(payload?.acpSessions) ? payload.acpSessions.map(normalizeAcpSession) : [],
     sourceLabel: payload?.generatedAt ? "bundled snapshot" : "runtime"
   };
 }
@@ -517,6 +533,7 @@ function buildDerivedData(snapshot, config) {
     : [];
   const cronJobs = Array.isArray(snapshot.cronJobs) ? snapshot.cronJobs : [];
   const skills = Array.isArray(snapshot.skills) ? snapshot.skills.map(normalizeSkill) : [];
+  const acpSessions = Array.isArray(snapshot.acpSessions) ? snapshot.acpSessions : [];
 
   const onlineAgents = agents.filter((agent) => ["online", "running", "active", "busy", "healthy", "ok"].includes(agent.status)).length;
   const busyAgents = agents.filter((agent) => agent.status === "busy").length;
@@ -554,6 +571,7 @@ function buildDerivedData(snapshot, config) {
   return {
     agents,
     mondayItems,
+    acpSessions,
     activities,
     cronJobs,
     skills,

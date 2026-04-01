@@ -1,6 +1,6 @@
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
-import { useMissionControlData } from "../context/MissionControlDataContext";
+import liveData from "../data/live-data.json";
 
 function formatDateTime(value) {
   if (!value) {
@@ -29,41 +29,44 @@ function statusColor(status) {
     case "running":
     case "active":
     case "connected":
-    case "done":
-    case "complete":
-    case "completed":
+    case "live":
       return C.green;
-    case "busy":
     case "warning":
     case "degraded":
-    case "working on it":
-    case "stuck":
+    case "busy":
       return C.amber;
     case "offline":
     case "error":
     case "failed":
     case "stopped":
-    case "unreachable":
+    case "disconnected":
       return C.red;
     default:
       return C.cyan;
   }
 }
 
-function SourceStatus({ label, value, note, color }) {
+function DetailStat({ label, value, note, color }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <span style={{ fontSize: 12, color: C.muted }}>{label}</span>
         <Badge color={color}>{value}</Badge>
       </div>
-      <span style={{ fontSize: 12, color: C.text }}>{note}</span>
+      {note ? <span style={{ fontSize: 12, color: C.text }}>{note}</span> : null}
     </div>
   );
 }
 
 const Home = () => {
-  const { config, snapshot, agents, mondayItems, activities, metrics, pollIntervalMs, refresh } = useMissionControlData();
+  const gatewayStatus = liveData.gateway?.status || (liveData.gateway?.ok ? "connected" : "offline");
+  const agentCount = liveData.agents?.length || 0;
+  const totalSessions = (liveData.agents || []).reduce((sum, agent) => sum + (agent.sessionCount || 0), 0);
+  const activeCronJobs = (liveData.cronJobs || []).filter((job) => job.enabled).length;
+  const workerStatus = liveData.workerNode?.connected ? "connected" : "disconnected";
+  const workerHost = liveData.workerNode?.hostname || "Unknown host";
+  const boardCount = liveData.mondayBoards?.length || 0;
+  const skillCount = liveData.skills?.length || 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -71,155 +74,110 @@ const Home = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: C.text, margin: 0 }}>Command Deck</h1>
-            <Badge color={statusColor(metrics.healthStatus)}>{metrics.healthStatus}</Badge>
-            <Badge color={statusColor(metrics.mondayStatus)}>{metrics.mondayStatus}</Badge>
+            <Badge color={statusColor(gatewayStatus)}>{gatewayStatus}</Badge>
+            <Badge color={statusColor(workerStatus)}>{workerStatus}</Badge>
           </div>
           <div style={{ color: C.muted, fontSize: 14 }}>
-            Live Mission Control feed across the OpenClaw gateway and Monday.com board activity.
+            Real OpenClaw runtime state from the generated live data snapshot.
           </div>
           <div style={{ color: C.muted, fontSize: 12 }}>
-            Last update: {formatDateTime(snapshot.lastUpdated)}
+            Generated: {formatDateTime(liveData.generatedAt)}
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            onClick={refresh}
-            style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer" }}
-          >
-            Refresh Feed
-          </button>
         </div>
       </Card>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI label="Gateway Health" value={metrics.healthStatus} sub={snapshot.health?.version ? `version ${snapshot.health.version}` : snapshot.healthError || config.gatewayUrl} color={statusColor(metrics.healthStatus)} />
-        <KPI label="Agents Online" value={agents.length ? `${metrics.onlineAgents}/${agents.length}` : "--"} sub={agents.length ? `${metrics.busyAgents} busy` : "Waiting for /api/status"} color={C.green} />
-        <KPI label="Monday Tasks" value={mondayItems.length || "--"} sub={mondayItems.length ? `${metrics.completedTasks} completed` : snapshot.mondayError || "Configure a proxy or token in Settings"} color={C.amber} />
-        <KPI label="Active Work" value={snapshot.status || mondayItems.length ? metrics.activeTasks : "--"} sub={snapshot.status?.session?.activeSessions ? `${metrics.activeSessions} live sessions` : "OpenClaw + Monday rollup"} color={C.purple} />
-        <KPI label="Refresh Cadence" value={`${pollIntervalMs / 1000}s`} sub={snapshot.loading ? "Polling now" : "Automatic polling enabled"} color={C.cyan} />
+        <KPI label="Gateway Status" value={gatewayStatus} sub={liveData.gateway?.ok ? "Gateway responding" : "Gateway unavailable"} color={statusColor(gatewayStatus)} />
+        <KPI label="Agent Count" value={agentCount} sub={`${totalSessions} total sessions`} color={C.green} />
+        <KPI label="Active Cron Jobs" value={activeCronJobs} sub={`${liveData.cronJobs?.length || 0} configured jobs`} color={C.amber} />
+        <KPI label="Worker Node" value={workerStatus} sub={workerHost} color={statusColor(workerStatus)} />
+        <KPI label="Installed Skills" value={skillCount} sub="Loaded into runtime" color={C.cyan} />
+        <KPI label="Monday Boards" value={boardCount} sub="Boards visible to Mission Control" color={C.purple} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr)", gap: 16 }}>
         <Card style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Source Health</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Runtime Health</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              GitHub Pages should point at a public gateway or Monday proxy. Direct Monday tokens remain a local fallback.
+              Snapshot of the gateway, worker node, jobs, skills, and Monday.com integration.
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-            <SourceStatus label="Gateway /health" value={snapshot.health ? "connected" : "offline"} color={snapshot.health ? C.green : C.red} note={snapshot.healthError || config.gatewayUrl} />
-            <SourceStatus label="Gateway /api/status" value={metrics.detailStatus} color={statusColor(metrics.detailStatus)} note={snapshot.statusError || "Detailed bot status is available."} />
-            <SourceStatus label="Monday board" value={metrics.mondayStatus} color={statusColor(metrics.mondayStatus)} note={snapshot.monday?.name || snapshot.mondayError || (config.mondayProxyUrl ? `${config.mondayProxyUrl} · Board ${config.mondayBoardId || "not set"}` : `Board ${config.mondayBoardId || "not set"}`)} />
+            <DetailStat label="Gateway" value={gatewayStatus} color={statusColor(gatewayStatus)} note={liveData.gateway?.ok ? "Gateway health check is passing." : "Gateway health check is failing."} />
+            <DetailStat label="Worker Node" value={workerStatus} color={statusColor(workerStatus)} note={workerHost} />
+            <DetailStat label="Cron Jobs" value={`${activeCronJobs} active`} color={activeCronJobs ? C.green : C.red} note={`${liveData.cronJobs?.length || 0} total scheduled jobs`} />
+            <DetailStat label="Skills" value={`${skillCount} installed`} color={C.cyan} note="Skill inventory from the live runtime snapshot." />
           </div>
         </Card>
 
         <Card style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Recent Activity</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Agents</div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              Monday item updates are merged with gateway agent status in one live timeline.
+              Four real agents currently tracked by OpenClaw.
             </div>
           </div>
 
-          {activities.length ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {activities.slice(0, 6).map((activity) => (
-                <div key={activity.id} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{activity.title}</div>
-                      <Badge color={activity.source === "monday" ? C.accent : C.cyan}>{activity.source}</Badge>
-                    </div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{activity.description}</div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <Badge color={statusColor(activity.status)}>{activity.status}</Badge>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>{formatDateTime(activity.at)}</div>
-                  </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {(liveData.agents || []).map((agent) => (
+              <div key={agent.id} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{agent.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{agent.model}</div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.healthError || snapshot.mondayError || "No activity yet. Connect the gateway and Monday board to start the unified feed."}
-            </div>
-          )}
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <Badge color={C.green}>{agent.sessionCount} sessions</Badge>
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1.2fr) minmax(320px, 1fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr)", gap: 16 }}>
         <Card>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>OpenClaw Agents</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Cron Jobs</div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-                Live bot inventory from the configured OpenClaw gateway status endpoint.
+                Enabled status and last result from the live scheduler payload.
               </div>
             </div>
-            {snapshot.loading ? <Badge color={C.cyan}>Refreshing</Badge> : null}
-          </div>
 
-          {agents.length ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {agents.map((agent) => (
-                <div key={agent.id} style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, background: C.surface }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{agent.name}</div>
-                      <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{agent.role}</div>
-                    </div>
-                    <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {(liveData.cronJobs || []).slice(0, 8).map((job) => (
+                <div key={job.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{job.name}</div>
+                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Last status: {job.lastStatus}</div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12, fontSize: 12 }}>
-                    <div style={{ color: C.muted }}>Model: <span style={{ color: C.text }}>{agent.model}</span></div>
-                    <div style={{ color: C.muted }}>Sessions: <span style={{ color: C.text }}>{agent.sessions}</span></div>
-                    <div style={{ color: C.muted }}>Cost: <span style={{ color: C.text }}>{agent.cost || "n/a"}</span></div>
-                  </div>
+                  <Badge color={job.enabled ? C.green : C.red}>{job.enabled ? "enabled" : "disabled"}</Badge>
                 </div>
               ))}
             </div>
-          ) : (
-            <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.statusError || snapshot.healthError || "No live agent payload yet. Start the gateway or provide a token if /api/status is protected."}
-            </div>
-          )}
+          </div>
         </Card>
 
         <Card>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Monday Focus Queue</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Monday Boards</div>
               <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-                Most recently updated items from the configured Monday board source.
+                Live board inventory visible to Mission Control.
               </div>
             </div>
-            {snapshot.monday ? <Badge color={C.accent}>{snapshot.monday.name}</Badge> : null}
-          </div>
 
-          {mondayItems.length ? (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {mondayItems.slice(0, 6).map((item) => (
-                <div key={item.id} style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{item.name}</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-                      {item.group} · {item.owner} · {item.dueDate || "No due date"}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <Badge color={statusColor(item.status)}>{item.status}</Badge>
-                    <div style={{ fontSize: 11, color: C.muted, marginTop: 6 }}>{formatDateTime(item.updatedAt)}</div>
-                  </div>
+              {(liveData.mondayBoards || []).slice(0, 8).map((board) => (
+                <div key={board.id} style={{ padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{board.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Board ID: {board.id}</div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div style={{ padding: 18, borderRadius: 12, background: C.surface, border: `1px dashed ${C.border}`, color: C.muted, fontSize: 13 }}>
-              {snapshot.mondayError || "No Monday tasks yet. Add a proxy endpoint or local fallback token and board id in Settings to populate this panel."}
-            </div>
-          )}
+          </div>
         </Card>
       </div>
     </div>

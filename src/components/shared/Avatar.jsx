@@ -4,7 +4,21 @@ const Avatar = ({ agent, size = 32 }) => {
   const a = typeof agent === "string" ? AGENTS.find(x => x.id === agent) : agent;
   if (!a) return null;
   
-  const statusColor = a.status === "online" ? C.green : a.status === "busy" ? C.amber : "#64748b";
+  const status = String(a.status || "").toLowerCase();
+  const statusColor =
+    status === "online" || status === "connected" || status === "active" || status === "running"
+      ? C.green
+      : status === "busy" || status === "warning"
+        ? C.amber
+        : "#64748b";
+  const initials = a.initials || String(a.name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "AG";
+  const primary = a.color || C.accent;
+  const secondary = a.ring || C.accentLight;
   
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
@@ -12,7 +26,7 @@ const Avatar = ({ agent, size = 32 }) => {
         width: size,
         height: size,
         borderRadius: "50%",
-        background: `linear-gradient(135deg, ${a.color}, ${a.ring})`,
+        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -20,7 +34,7 @@ const Avatar = ({ agent, size = 32 }) => {
         fontWeight: 700,
         color: "white",
       }}>
-        {a.initials}
+        {initials}
       </div>
       <div style={{
         position: "absolute",

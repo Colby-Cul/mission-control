@@ -19,10 +19,10 @@ export const C = {
 
 // ── Real Agent Data (from OpenClaw runtime) ──
 export const AGENTS = [
-  { id: "main", name: "Jarvis", initials: "JV", color: "#6366f1", ring: "#818cf8", dept: "Operations", model: "GPT-4o", role: "Chief of Staff", status: "online", sessions: 500 },
-  { id: "worker", name: "Worker", initials: "WK", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "GPT-4o", role: "Implementation Agent", status: "online", sessions: 4 },
-  { id: "validation", name: "Validator", initials: "VL", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "GPT-4o", role: "QA & Verification", status: "online", sessions: 1 },
-  { id: "executive-assistant", name: "Victoria", initials: "VA", color: "#8b5cf6", ring: "#a78bfa", dept: "Executive", model: "GPT-4o-mini", role: "Executive Assistant", status: "online", sessions: 6 },
+  { id: "main", name: "Jarvis", initials: "JV", color: "#6366f1", ring: "#818cf8", dept: "Operations", model: "GPT-4o", role: "chief of staff", status: "online", sessions: 510 },
+  { id: "worker", name: "Worker", initials: "WK", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "GPT-4o", role: "implementation", status: "online", sessions: 4 },
+  { id: "validation", name: "Validator", initials: "VL", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "GPT-4o", role: "QA", status: "online", sessions: 1 },
+  { id: "executive-assistant", name: "Victoria", initials: "VA", color: "#8b5cf6", ring: "#a78bfa", dept: "Executive", model: "GPT-4o-mini", role: "executive assistant", status: "online", sessions: 6 },
 ];
 
 export const DEPARTMENTS = ["Operations", "Engineering", "Executive"];
