@@ -2,6 +2,19 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT="$SCRIPT_DIR/live-data.json"
+PUBLIC_OUTPUT="$(cd "$SCRIPT_DIR/../.." && pwd)/public/live-data.json"
+
+# Skip in CI — no OpenClaw runtime available
+if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
+  echo "CI detected — skipping live data generation (using committed snapshot)"
+  exit 0
+fi
+
+# Skip if OpenClaw is not installed
+if [ ! -d "$HOME/.openclaw" ]; then
+  echo "No OpenClaw runtime found — skipping"
+  exit 0
+fi
 
 python3 << 'PYEOF' > "$OUTPUT"
 import json, os, re
@@ -266,3 +279,9 @@ print(json.dumps(data, indent=2))
 PYEOF
 
 echo "Generated: $OUTPUT ($(wc -c < "$OUTPUT" | tr -d ' ') bytes)"
+
+# Also copy to public/ for Vite to serve as static file
+if [ -f "$OUTPUT" ] && [ -d "$(dirname "$PUBLIC_OUTPUT")" ]; then
+  cp "$OUTPUT" "$PUBLIC_OUTPUT"
+  echo "Copied to: $PUBLIC_OUTPUT"
+fi

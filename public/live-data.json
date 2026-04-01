@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T22:12:36Z",
+  "generatedAt": "2026-04-01T22:17:40Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -9,7 +9,7 @@
       "id": "main",
       "name": "main",
       "model": "openai/gpt-4o",
-      "sessionCount": 623
+      "sessionCount": 624
     },
     {
       "id": "worker",
@@ -32,17 +32,47 @@
   ],
   "acpSessions": [
     {
+      "id": "2957bce4-9001-4be6-8",
+      "sessionId": "2957bce4-9001-4be6-8bc1-d6372bdf8673",
+      "agent": "main",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "status": "done",
+      "startTime": "2026-04-01T22:15:59Z",
+      "endTime": "2026-04-01T22:16:21Z",
+      "tokens": 34807,
+      "model": "gpt-4o-mini",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/2957bce4-9001-4be6-8bc1-d6372bdf8673.jsonl",
+      "sizeBytes": 10866,
+      "isCron": true,
+      "spawns": 0
+    },
+    {
+      "id": "spawn-final-17750763",
+      "sessionId": "spawn-final-1775076327",
+      "agent": "main",
+      "task": "Delegate to ACP: list .jsx files in /Users/jarvisculbertson/mission-control/src/pages/ with l",
+      "status": "delegated",
+      "startTime": "2026-04-01T22:15:46Z",
+      "endTime": "2026-04-01T22:15:53Z",
+      "tokens": 45895,
+      "model": "gpt-4o",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/spawn-final-1775076327.jsonl",
+      "sizeBytes": 3718,
+      "isCron": false,
+      "spawns": 1
+    },
+    {
       "id": "47acdd51-eab1-4ad5-b",
       "sessionId": "47acdd51-eab1-4ad5-b157-503e42faa5d7",
       "agent": "main",
       "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
       "status": "done",
-      "startTime": "2026-04-01T22:10:47Z",
-      "endTime": "2026-04-01T22:12:36Z",
-      "tokens": 473138,
+      "startTime": "2026-04-01T22:10:53Z",
+      "endTime": "2026-04-01T22:13:51Z",
+      "tokens": 621534,
       "model": "gpt-4o-mini",
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/47acdd51-eab1-4ad5-b157-503e42faa5d7.jsonl",
-      "sizeBytes": 54630,
+      "sizeBytes": 89008,
       "isCron": true,
       "spawns": 0
     },
@@ -135,21 +165,6 @@
       "sizeBytes": 10917,
       "isCron": true,
       "spawns": 0
-    },
-    {
-      "id": "spawn-final-17750763",
-      "sessionId": "spawn-final-1775076327",
-      "agent": "main",
-      "task": "Delegate to ACP: list .jsx files in /Users/jarvisculbertson/mission-control/src/pages/ with l",
-      "status": "delegated",
-      "startTime": "2026-04-01T21:45:42Z",
-      "endTime": "2026-04-01T21:45:50Z",
-      "tokens": 45895,
-      "model": "gpt-4o",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/spawn-final-1775076327.jsonl",
-      "sizeBytes": 3718,
-      "isCron": false,
-      "spawns": 1
     },
     {
       "id": "9f33427c-e194-4044-8",
@@ -737,21 +752,6 @@
       "spawns": 0
     },
     {
-      "id": "73d764d8-c4f6-4df7-a",
-      "sessionId": "73d764d8-c4f6-4df7-acf7-3c35582be60d",
-      "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
-      "status": "done",
-      "startTime": "2026-04-01T18:54:48Z",
-      "endTime": "2026-04-01T18:55:10Z",
-      "tokens": 53359,
-      "model": "gpt-4o-mini",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/73d764d8-c4f6-4df7-acf7-3c35582be60d.jsonl",
-      "sizeBytes": 11090,
-      "isCron": true,
-      "spawns": 0
-    },
-    {
       "id": "d8fade84-1679-40a9-b",
       "sessionId": "d8fade84-1679-40a9-b76f-bd1e02b7eb6e",
       "agent": "codex",
@@ -1320,7 +1320,7 @@
       "enabled": true,
       "lastStatus": "error",
       "schedule": "every",
-      "consecutiveErrors": 2
+      "consecutiveErrors": 3
     },
     {
       "name": "task-master-daily-health-check",
@@ -1428,7 +1428,7 @@
   },
   "metrics": {
     "totalSessions": 78,
-    "totalTokens": 6511906,
+    "totalTokens": 6641750,
     "activeProjects": 4,
     "cronJobsEnabled": 17,
     "cronJobsErroring": 2
