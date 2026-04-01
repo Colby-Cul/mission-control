@@ -11,6 +11,7 @@ import {
   Finance,
   TheForge,
   SkillLab,
+  ApiSkills,
   ActivityFeed,
   Sessions,
   Memory,
@@ -50,6 +51,7 @@ function App() {
             <Route path="finance" element={<Finance />} />
             <Route path="forge" element={<TheForge />} />
             <Route path="skills" element={<SkillLab />} />
+            <Route path="api-skills" element={<ApiSkills />} />
             <Route path="activity" element={<ActivityFeed />} />
             <Route path="sessions" element={<Sessions />} />
             <Route path="memory" element={<Memory />} />

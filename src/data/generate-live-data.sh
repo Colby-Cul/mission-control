@@ -4,15 +4,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT="$SCRIPT_DIR/live-data.json"
 PUBLIC_OUTPUT="$(cd "$SCRIPT_DIR/../.." && pwd)/public/live-data.json"
 
-# Skip in CI — no OpenClaw runtime available
 if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
-  echo "CI detected — skipping live data generation (using committed snapshot)"
+  echo "CI detected — skipping live data generation"
   exit 0
 fi
-
-# Skip if OpenClaw is not installed
 if [ ! -d "$HOME/.openclaw" ]; then
-  echo "No OpenClaw runtime found — skipping"
+  echo "No OpenClaw runtime — skipping"
   exit 0
 fi
 
@@ -24,7 +21,28 @@ from datetime import datetime, timezone
 openclaw = Path.home() / '.openclaw'
 data = {"generatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
 
-# --- Gateway health ---
+# Pricing per 1M tokens
+PRICING = {
+    'gpt-4o': {'input': 2.50, 'output': 10.00},
+    'gpt-4o-mini': {'input': 0.15, 'output': 0.60},
+    'gpt-5.4': {'input': 2.50, 'output': 10.00},
+    'claude-opus-4': {'input': 15.00, 'output': 75.00},
+    'claude-opus-4-6': {'input': 15.00, 'output': 75.00},
+    'claude-sonnet-4': {'input': 3.00, 'output': 15.00},
+    'claude-sonnet-4-6': {'input': 3.00, 'output': 15.00},
+    'claude-haiku-4-5': {'input': 0.80, 'output': 4.00},
+    'codex': {'input': 2.50, 'output': 10.00},
+    'acp-runtime': {'input': 0, 'output': 0},
+}
+
+def calc_cost(model, input_tokens, output_tokens):
+    model_lower = (model or '').lower().replace(' ', '-')
+    for key, price in PRICING.items():
+        if key in model_lower:
+            return round((input_tokens * price['input'] + output_tokens * price['output']) / 1_000_000, 4)
+    return 0.0
+
+# Gateway health
 try:
     import urllib.request
     resp = urllib.request.urlopen('http://127.0.0.1:18789/health', timeout=5)
@@ -32,7 +50,7 @@ try:
 except Exception as e:
     data['gateway'] = {'ok': False, 'error': str(e)}
 
-# --- Real agents ---
+# Real agents
 config_path = openclaw / 'openclaw.json'
 agents = []
 if config_path.exists():
@@ -45,99 +63,117 @@ if config_path.exists():
         agents.append({'id': aid, 'name': a.get('name', aid), 'model': a.get('model', '?'), 'sessionCount': sc})
 data['agents'] = agents
 
-# --- ACP Sessions (real task data) ---
+# ACP Sessions with enhanced fields
 acp_tasks = []
-
-# Scan main agent sessions for spawn calls and their results
 main_sessions = openclaw / 'agents' / 'main' / 'sessions'
 if main_sessions.exists():
-    session_files = sorted(main_sessions.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:50]
-    for sf in session_files:
+    for sf in sorted(main_sessions.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:60]:
         try:
             lines = sf.read_text().strip().split('\n')
             task_desc = ''
-            session_key = sf.stem
             spawns = []
+            total_input = 0
+            total_output = 0
             total_tokens = 0
             model_used = ''
+            models_seen = set()
             is_cron = False
+            parent_session = None
+            first_ts = None
+            last_ts = None
 
             for line in lines:
                 d = json.loads(line)
                 if d.get('type') == 'message':
                     msg = d.get('message', {})
+                    ts = msg.get('timestamp')
+                    if ts and not first_ts:
+                        first_ts = ts
+                    if ts:
+                        last_ts = ts
+
                     if msg.get('role') == 'user':
                         content = msg.get('content', [])
                         if isinstance(content, list):
                             for c in content:
                                 if isinstance(c, dict) and c.get('type') == 'text' and not task_desc:
                                     text = c['text']
-                                    # Extract task from cron prefix or user message
                                     if text.startswith('[cron:'):
                                         is_cron = True
                                         m = re.match(r'\[cron:[^\]]+\]\s*(.*)', text)
-                                        if m:
-                                            task_desc = m.group(1).strip()[:120]
+                                        if m: task_desc = m.group(1).strip()[:150]
                                     elif not text.startswith('Conversation info') and not text.startswith('Sender') and not text.startswith('A new session'):
-                                        task_desc = text[:120]
-                                        # Strip timestamp prefix
+                                        task_desc = text[:150]
                                         m2 = re.match(r'\[.*?\]\s*(.*)', task_desc)
-                                        if m2:
-                                            task_desc = m2.group(1)
+                                        if m2: task_desc = m2.group(1)
+
                     if msg.get('role') == 'assistant':
                         content = msg.get('content', [])
                         if isinstance(content, list):
                             for c in content:
                                 if isinstance(c, dict) and c.get('type') == 'toolCall' and c.get('name') == 'sessions_spawn':
                                     args = c.get('arguments', {})
-                                    spawns.append({
-                                        'task': args.get('task', '')[:120],
-                                        'runtime': args.get('runtime', ''),
-                                        'cwd': args.get('cwd', ''),
-                                    })
+                                    spawns.append({'task': args.get('task', '')[:150], 'cwd': args.get('cwd', '')})
                         usage = msg.get('usage', {})
-                        total_tokens += usage.get('totalTokens', 0)
-                        if not model_used and msg.get('model'):
-                            model_used = msg.get('model', '')
+                        inp = usage.get('input', 0) or usage.get('inputTokens', 0)
+                        out = usage.get('output', 0) or usage.get('outputTokens', 0)
+                        total_input += inp
+                        total_output += out
+                        total_tokens += usage.get('totalTokens', 0) or (inp + out)
+                        m = msg.get('model', '')
+                        if m:
+                            models_seen.add(m)
+                            if not model_used: model_used = m
 
             if not task_desc and not spawns:
                 continue
 
             mtime = datetime.fromtimestamp(sf.stat().st_mtime, tz=timezone.utc)
-            ctime_ts = sf.stat().st_mtime - (sf.stat().st_size / 500)  # rough start estimate
-            
-            status = 'done'
-            if spawns:
-                status = 'delegated'
-            
+            cost = calc_cost(model_used, total_input, total_output)
+            status = 'delegated' if spawns else 'done'
+
             entry = {
-                'id': session_key[:20],
-                'sessionId': session_key,
+                'id': sf.stem[:20],
+                'sessionId': sf.stem,
                 'agent': 'main',
                 'task': task_desc or (spawns[0]['task'] if spawns else 'Unknown task'),
                 'status': status,
-                'startTime': datetime.fromtimestamp(ctime_ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                'dateCreated': first_ts if isinstance(first_ts, (int, float)) and first_ts > 1e9 else mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                'dateFinished': last_ts if isinstance(last_ts, (int, float)) and last_ts > 1e9 else (mtime.strftime("%Y-%m-%dT%H:%M:%SZ") if status == 'done' else None),
+                'startTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 'endTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                'inputTokens': total_input,
+                'outputTokens': total_output,
                 'tokens': total_tokens,
                 'model': model_used,
+                'modelsUsed': sorted(models_seen),
+                'totalCost': cost,
                 'transcriptPath': str(sf),
                 'sizeBytes': sf.stat().st_size,
                 'isCron': is_cron,
                 'spawns': len(spawns),
+                'parentSession': parent_session,
             }
+            # Estimated completion for in-progress
+            if status == 'delegated' and total_tokens > 0:
+                avg_tokens_per_min = total_tokens / max(1, (sf.stat().st_size / 500))
+                entry['estCostToCompletion'] = round(cost * 0.3, 4)
+                entry['estTimeToCompletion'] = '~15 min'
+
             acp_tasks.append(entry)
         except Exception:
             continue
 
-# Also scan codex sessions
+# Codex sessions
 codex_dir = openclaw / 'agents' / 'codex' / 'sessions'
 if codex_dir.exists():
     for sf in sorted(codex_dir.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
         try:
             lines = sf.read_text().strip().split('\n')
             task_desc = ''
-            total_tokens = 0
+            total_input = total_output = total_tokens = 0
             model_used = 'codex'
+            models_seen = set()
             for line in lines:
                 d = json.loads(line)
                 if d.get('type') == 'message':
@@ -147,89 +183,69 @@ if codex_dir.exists():
                         if isinstance(content, list):
                             for c in content:
                                 if isinstance(c, dict) and c.get('type') == 'text' and not task_desc:
-                                    task_desc = c['text'][:120]
+                                    task_desc = c['text'][:150]
                         usage = msg.get('usage', {})
-                        total_tokens += usage.get('totalTokens', 0)
-            
+                        inp = usage.get('input', 0)
+                        out = usage.get('output', 0)
+                        total_input += inp; total_output += out
+                        total_tokens += usage.get('totalTokens', 0) or (inp + out)
+                        m = msg.get('model', '')
+                        if m: models_seen.add(m)
+                        if m and not model_used: model_used = m
+
             mtime = datetime.fromtimestamp(sf.stat().st_mtime, tz=timezone.utc)
             acp_tasks.append({
-                'id': sf.stem[:20],
-                'sessionId': sf.stem,
-                'agent': 'codex',
-                'task': task_desc or 'ACP Codex execution',
-                'status': 'done',
+                'id': sf.stem[:20], 'sessionId': sf.stem, 'agent': 'codex',
+                'task': task_desc or 'ACP Codex execution', 'status': 'done',
+                'dateCreated': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                'dateFinished': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 'startTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 'endTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                'tokens': total_tokens,
-                'model': model_used,
-                'transcriptPath': str(sf),
-                'sizeBytes': sf.stat().st_size,
-                'isCron': False,
-                'spawns': 0,
+                'inputTokens': total_input, 'outputTokens': total_output,
+                'tokens': total_tokens, 'model': model_used,
+                'modelsUsed': sorted(models_seen),
+                'totalCost': calc_cost(model_used, total_input, total_output),
+                'transcriptPath': str(sf), 'sizeBytes': sf.stat().st_size,
+                'isCron': False, 'spawns': 0, 'parentSession': None,
             })
         except Exception:
             continue
 
-# Sort by endTime descending
 acp_tasks.sort(key=lambda t: t.get('endTime', ''), reverse=True)
-data['acpSessions'] = acp_tasks[:80]  # Cap at 80 most recent
+data['acpSessions'] = acp_tasks[:100]
 
-# --- Projects (derived from real state) ---
+# Projects with cost/model/agent metadata
+def make_project(pid, name, sessions, assigned_agents):
+    total_cost = sum(t.get('totalCost', 0) for t in sessions)
+    all_models = sorted(set(m for t in sessions for m in t.get('modelsUsed', [])))
+    all_agents = sorted(set(t.get('agent', '') for t in sessions) | set(assigned_agents))
+    done = [t for t in sessions if t['status'] == 'done']
+    active = [t for t in sessions if t['status'] != 'done']
+    est_cost = sum(t.get('estCostToCompletion', 0) for t in active)
+    return {
+        'id': pid, 'name': name, 'status': 'active' if active else 'done',
+        'agents': all_agents, 'taskCount': len(sessions), 'doneCount': len(done),
+        'activeCount': len(active), 'totalCost': round(total_cost, 4),
+        'modelsUsed': all_models, 'agentsWorkedOn': all_agents,
+        'estCostToCompletion': round(est_cost, 4) if active else None,
+        'estTimeToCompletion': f'~{len(active) * 15} min' if active else None,
+    }
+
 projects = []
-# Mission Control project
 mc_sessions = [t for t in acp_tasks if 'mission' in t.get('task','').lower() or 'mission-control' in t.get('transcriptPath','').lower()]
-projects.append({
-    'id': 'mission-control',
-    'name': 'Mission Control Dashboard',
-    'status': 'active',
-    'agents': ['main', 'worker'],
-    'taskCount': len(mc_sessions),
-    'doneCount': len([t for t in mc_sessions if t['status'] == 'done']),
-    'activeCount': len([t for t in mc_sessions if t['status'] == 'delegated']),
-})
+projects.append(make_project('mission-control', 'Mission Control Dashboard', mc_sessions, ['main', 'worker']))
 
-# Monday.com integration project
-monday_sessions = [t for t in acp_tasks if 'monday' in t.get('task','').lower()]
-if monday_sessions:
-    projects.append({
-        'id': 'monday-integration',
-        'name': 'Monday.com Integration',
-        'status': 'active',
-        'agents': ['main'],
-        'taskCount': len(monday_sessions),
-        'doneCount': len([t for t in monday_sessions if t['status'] == 'done']),
-        'activeCount': 0,
-    })
-
-# System operations (cron jobs)
 cron_sessions = [t for t in acp_tasks if t.get('isCron')]
 if cron_sessions:
-    projects.append({
-        'id': 'system-ops',
-        'name': 'System Operations (Cron)',
-        'status': 'active',
-        'agents': ['main'],
-        'taskCount': len(cron_sessions),
-        'doneCount': len(cron_sessions),
-        'activeCount': 0,
-    })
+    projects.append(make_project('system-ops', 'System Operations', cron_sessions, ['main']))
 
-# General coding delegations
 coding_sessions = [t for t in acp_tasks if t.get('spawns', 0) > 0 and t not in mc_sessions]
 if coding_sessions:
-    projects.append({
-        'id': 'coding-delegations',
-        'name': 'ACP Coding Delegations',
-        'status': 'active',
-        'agents': ['main', 'worker', 'validation'],
-        'taskCount': len(coding_sessions),
-        'doneCount': len([t for t in coding_sessions if t['status'] == 'done']),
-        'activeCount': len([t for t in coding_sessions if t['status'] == 'delegated']),
-    })
+    projects.append(make_project('coding', 'ACP Coding Delegations', coding_sessions, ['main', 'worker']))
 
 data['projects'] = projects
 
-# --- Cron jobs ---
+# Cron jobs
 cron_path = openclaw / 'cron' / 'jobs.json'
 if cron_path.exists():
     with open(cron_path) as f:
@@ -237,10 +253,10 @@ if cron_path.exists():
     data['cronJobs'] = [{'name': j.get('name'), 'enabled': j.get('enabled'),
         'lastStatus': j.get('state',{}).get('lastStatus','never'),
         'schedule': j.get('schedule',{}).get('expr', j.get('schedule',{}).get('kind','?')),
-        'consecutiveErrors': j.get('state',{}).get('consecutiveErrors', 0)}
+        'consecutiveErrors': j.get('state',{}).get('consecutiveErrors',0)}
         for j in cron.get('jobs',[])]
 
-# --- Skills ---
+# Skills
 skills = []
 sd = openclaw / 'skills'
 if sd.exists():
@@ -250,14 +266,12 @@ if sd.exists():
             name = d.name
             try:
                 for line in sm.read_text().split('\n'):
-                    if line.startswith('name:'):
-                        name = line.split(':',1)[1].strip()
-                        break
+                    if line.startswith('name:'): name = line.split(':',1)[1].strip(); break
             except: pass
             skills.append({'id': d.name, 'name': name})
 data['skills'] = skills
 
-# --- Worker node ---
+# Worker node
 try:
     import subprocess
     r = subprocess.run(['ssh','-o','ConnectTimeout=3','jarvis-worker@Jarvis-Worker.local','hostname'],
@@ -266,22 +280,67 @@ try:
 except Exception as e:
     data['workerNode'] = {'connected': False, 'error': str(e)}
 
-# --- Summary metrics ---
+# API credentials inventory (for API Skills page — last 5 chars only)
+apis = []
+def mask_key(key):
+    if not key or len(key) < 6: return '•••••'
+    return '•' * (len(key) - 5) + key[-5:]
+
+# Check auth-profiles.json
+auth_path = openclaw / 'agents' / 'main' / 'agent' / 'auth-profiles.json'
+if auth_path.exists():
+    with open(auth_path) as f:
+        ap = json.load(f)
+    for pid, profile in ap.get('profiles', {}).items():
+        provider = profile.get('provider', pid.split(':')[0])
+        key = profile.get('key', profile.get('access', ''))
+        apis.append({
+            'id': pid, 'provider': provider,
+            'maskedKey': mask_key(key) if key else None,
+            'status': 'active' if key else 'missing',
+            'lastUpdated': datetime.fromtimestamp(auth_path.stat().st_mtime).isoformat(),
+        })
+
+# Check channel tokens in openclaw.json
+if config_path.exists():
+    channels = config.get('channels', {})
+    for ch_name, ch_config in channels.items():
+        token = ch_config.get('botToken', ch_config.get('appToken', ''))
+        if token:
+            apis.append({
+                'id': f'channel:{ch_name}', 'provider': ch_name,
+                'maskedKey': mask_key(token),
+                'status': 'active',
+                'lastUpdated': datetime.fromtimestamp(config_path.stat().st_mtime).isoformat(),
+            })
+
+# Monday.com token
+monday_path = Path.home() / '.monday_token'
+if monday_path.exists():
+    token = monday_path.read_text().strip()
+    apis.append({
+        'id': 'monday-com', 'provider': 'monday.com',
+        'maskedKey': mask_key(token),
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(monday_path.stat().st_mtime).isoformat(),
+    })
+
+data['apiCredentials'] = apis
+
+# Metrics
 data['metrics'] = {
     'totalSessions': len(acp_tasks),
     'totalTokens': sum(t.get('tokens', 0) for t in acp_tasks),
-    'activeProjects': len(projects),
+    'totalCost': round(sum(t.get('totalCost', 0) for t in acp_tasks), 2),
+    'activeProjects': len([p for p in projects if p['status'] == 'active']),
     'cronJobsEnabled': len([j for j in data.get('cronJobs',[]) if j.get('enabled')]),
-    'cronJobsErroring': len([j for j in data.get('cronJobs',[]) if j.get('consecutiveErrors',0) > 0]),
 }
 
 print(json.dumps(data, indent=2))
 PYEOF
 
 echo "Generated: $OUTPUT ($(wc -c < "$OUTPUT" | tr -d ' ') bytes)"
-
-# Also copy to public/ for Vite to serve as static file
-if [ -f "$OUTPUT" ] && [ -d "$(dirname "$PUBLIC_OUTPUT")" ]; then
+if [ -d "$(dirname "$PUBLIC_OUTPUT")" ]; then
   cp "$OUTPUT" "$PUBLIC_OUTPUT"
   echo "Copied to: $PUBLIC_OUTPUT"
 fi

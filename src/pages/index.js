@@ -7,6 +7,7 @@ export { default as Tasks } from './Tasks';
 export { default as Finance } from './Finance';
 export { default as TheForge } from './TheForge';
 export { default as SkillLab } from './SkillLab';
+export { default as ApiSkills } from './ApiSkills';
 export { default as ActivityFeed } from './ActivityFeed';
 export { default as Sessions } from './Sessions';
 export { default as Memory } from './Memory';

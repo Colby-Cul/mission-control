@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T22:17:40Z",
+  "generatedAt": "2026-04-01T23:17:19Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -9,7 +9,7 @@
       "id": "main",
       "name": "main",
       "model": "openai/gpt-4o",
-      "sessionCount": 624
+      "sessionCount": 635
     },
     {
       "id": "worker",
@@ -32,79 +32,440 @@
   ],
   "acpSessions": [
     {
-      "id": "2957bce4-9001-4be6-8",
-      "sessionId": "2957bce4-9001-4be6-8bc1-d6372bdf8673",
-      "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "id": "a49ad6bf-ca29-46cc-9",
+      "sessionId": "a49ad6bf-ca29-46cc-9efe-867eeab43d16",
+      "agent": "codex",
+      "task": "I\u2019m updating `src/pages/Projects.jsx` to surface the extra project metrics from `useMissionControlData().projects`, then I\u2019ll run a build to verify no",
       "status": "done",
-      "startTime": "2026-04-01T22:15:59Z",
-      "endTime": "2026-04-01T22:16:21Z",
-      "tokens": 34807,
+      "dateCreated": "2026-04-01T23:17:02Z",
+      "dateFinished": "2026-04-01T23:17:02Z",
+      "startTime": "2026-04-01T23:17:02Z",
+      "endTime": "2026-04-01T23:17:02Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "tokens": 0,
+      "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/a49ad6bf-ca29-46cc-9efe-867eeab43d16.jsonl",
+      "sizeBytes": 3375,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "885bc63f-962b-4744-b",
+      "sessionId": "885bc63f-962b-4744-b6bc-6e105e6de362",
+      "agent": "codex",
+      "task": "I\u2019m checking the existing app structure first so I can add the new `ApiSkills` page consistently, wire the route/nav in the right places, and verify h",
+      "status": "done",
+      "dateCreated": "2026-04-01T23:17:02Z",
+      "dateFinished": "2026-04-01T23:17:02Z",
+      "startTime": "2026-04-01T23:17:02Z",
+      "endTime": "2026-04-01T23:17:02Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "tokens": 0,
+      "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/885bc63f-962b-4744-b6bc-6e105e6de362.jsonl",
+      "sizeBytes": 3783,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "mc-views-1775085315",
+      "sessionId": "mc-views-1775085315",
+      "agent": "main",
+      "task": "CHIEF-OF-STAFF DELEGATION \u2014 3 ACP sessions needed:",
+      "status": "delegated",
+      "dateCreated": 1775085317388,
+      "dateFinished": 1775085329465,
+      "startTime": "2026-04-01T23:15:31Z",
+      "endTime": "2026-04-01T23:15:31Z",
+      "inputTokens": 23932,
+      "outputTokens": 502,
+      "tokens": 46706,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0649,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/mc-views-1775085315.jsonl",
+      "sizeBytes": 10178,
+      "isCron": false,
+      "spawns": 3,
+      "parentSession": null,
+      "estCostToCompletion": 0.0195,
+      "estTimeToCompletion": "~15 min"
+    },
+    {
+      "id": "062d4da5-caab-4a71-8",
+      "sessionId": "062d4da5-caab-4a71-8635-36d41f227505",
+      "agent": "main",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
+      "status": "done",
+      "dateCreated": 1775084490537,
+      "dateFinished": 1775084498025,
+      "startTime": "2026-04-01T23:01:45Z",
+      "endTime": "2026-04-01T23:01:45Z",
+      "inputTokens": 35826,
+      "outputTokens": 160,
+      "tokens": 52882,
       "model": "gpt-4o-mini",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/2957bce4-9001-4be6-8bc1-d6372bdf8673.jsonl",
-      "sizeBytes": 10866,
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0912,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/062d4da5-caab-4a71-8635-36d41f227505.jsonl",
+      "sizeBytes": 13062,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "e154364b-267f-41ac-a",
+      "sessionId": "e154364b-267f-41ac-ae6b-4158b0430da6",
+      "agent": "main",
+      "task": "Agent health check. Run these commands and report status:",
+      "status": "done",
+      "dateCreated": 1775084465791,
+      "dateFinished": 1775084478168,
+      "startTime": "2026-04-01T23:01:27Z",
+      "endTime": "2026-04-01T23:01:27Z",
+      "inputTokens": 34384,
+      "outputTokens": 163,
+      "tokens": 34547,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0876,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/e154364b-267f-41ac-ae6b-4158b0430da6.jsonl",
+      "sizeBytes": 5798,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "4239fe36-cb0c-41bc-b",
+      "sessionId": "4239fe36-cb0c-41bc-b40b-40e897b88fbd",
+      "agent": "main",
+      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update",
+      "status": "done",
+      "dateCreated": 1775084447690,
+      "dateFinished": 1775084455581,
+      "startTime": "2026-04-01T23:01:02Z",
+      "endTime": "2026-04-01T23:01:02Z",
+      "inputTokens": 82109,
+      "outputTokens": 134,
+      "tokens": 82243,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.2066,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/4239fe36-cb0c-41bc-b40b-40e897b88fbd.jsonl",
+      "sizeBytes": 321456,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "knowledge-check-1775",
+      "sessionId": "knowledge-check-1775083809",
+      "agent": "main",
+      "task": "What do you know about the Mission Control dashboard? How do you update its data? What is excluded from it?",
+      "status": "done",
+      "dateCreated": 1775083812379,
+      "dateFinished": 1775083812433,
+      "startTime": "2026-04-01T22:50:20Z",
+      "endTime": "2026-04-01T22:50:20Z",
+      "inputTokens": 22674,
+      "outputTokens": 202,
+      "tokens": 22876,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0587,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/knowledge-check-1775083809.jsonl",
+      "sizeBytes": 2536,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "01f844e2-f762-4673-a",
+      "sessionId": "01f844e2-f762-4673-a64c-91e0c6b08ebc",
+      "agent": "main",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
+      "status": "done",
+      "dateCreated": 1775083567290,
+      "dateFinished": 1775083590592,
+      "startTime": "2026-04-01T22:46:41Z",
+      "endTime": "2026-04-01T22:46:41Z",
+      "inputTokens": 17899,
+      "outputTokens": 162,
+      "tokens": 52237,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0464,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/01f844e2-f762-4673-a64c-91e0c6b08ebc.jsonl",
+      "sizeBytes": 11173,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "spawn-final-17750763",
       "sessionId": "spawn-final-1775076327",
       "agent": "main",
-      "task": "Delegate to ACP: list .jsx files in /Users/jarvisculbertson/mission-control/src/pages/ with l",
+      "task": "Delegate to ACP: list .jsx files in /Users/jarvisculbertson/mission-control/src/pages/ with line counts.",
       "status": "delegated",
-      "startTime": "2026-04-01T22:15:46Z",
-      "endTime": "2026-04-01T22:15:53Z",
+      "dateCreated": 1775076329345,
+      "dateFinished": 1775076339682,
+      "startTime": "2026-04-01T22:45:49Z",
+      "endTime": "2026-04-01T22:45:49Z",
+      "inputTokens": 23533,
+      "outputTokens": 90,
       "tokens": 45895,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0597,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/spawn-final-1775076327.jsonl",
       "sizeBytes": 3718,
       "isCron": false,
-      "spawns": 1
+      "spawns": 1,
+      "parentSession": null,
+      "estCostToCompletion": 0.0179,
+      "estTimeToCompletion": "~15 min"
+    },
+    {
+      "id": "80a8c80d-849d-4a55-8",
+      "sessionId": "80a8c80d-849d-4a55-84a7-ed3bbc2438b5",
+      "agent": "main",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
+      "status": "done",
+      "dateCreated": 1775083360384,
+      "dateFinished": 1775083489145,
+      "startTime": "2026-04-01T22:44:53Z",
+      "endTime": "2026-04-01T22:44:53Z",
+      "inputTokens": 31555,
+      "outputTokens": 4966,
+      "tokens": 283049,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.1285,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/80a8c80d-849d-4a55-84a7-ed3bbc2438b5.jsonl",
+      "sizeBytes": 117287,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "9f5cf1af-430f-494a-a",
+      "sessionId": "9f5cf1af-430f-494a-a218-b75a2a3a9885",
+      "agent": "main",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
+      "status": "done",
+      "dateCreated": 1775082667288,
+      "dateFinished": 1775082688660,
+      "startTime": "2026-04-01T22:31:33Z",
+      "endTime": "2026-04-01T22:31:33Z",
+      "inputTokens": 35179,
+      "outputTokens": 180,
+      "tokens": 52255,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0897,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/9f5cf1af-430f-494a-a218-b75a2a3a9885.jsonl",
+      "sizeBytes": 11140,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "b2a1ab38-dfba-4903-b",
+      "sessionId": "b2a1ab38-dfba-4903-b7ce-763d36dfdb1b",
+      "agent": "main",
+      "task": "Agent health check. Run these commands and report status:",
+      "status": "done",
+      "dateCreated": 1775082647680,
+      "dateFinished": 1775082657529,
+      "startTime": "2026-04-01T22:31:04Z",
+      "endTime": "2026-04-01T22:31:04Z",
+      "inputTokens": 17302,
+      "outputTokens": 164,
+      "tokens": 34362,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0449,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/b2a1ab38-dfba-4903-b7ce-763d36dfdb1b.jsonl",
+      "sizeBytes": 5794,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "6c2396d8-c588-4e7f-9",
+      "sessionId": "6c2396d8-c588-4e7f-9cef-53e63ce32913",
+      "agent": "main",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
+      "status": "done",
+      "dateCreated": 1775082287883,
+      "dateFinished": 1775082455602,
+      "startTime": "2026-04-01T22:27:39Z",
+      "endTime": "2026-04-01T22:27:39Z",
+      "inputTokens": 84567,
+      "outputTokens": 6606,
+      "tokens": 458277,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.2775,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/6c2396d8-c588-4e7f-9cef-53e63ce32913.jsonl",
+      "sizeBytes": 110207,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "9f99d75e-81e1-408c-b",
+      "sessionId": "9f99d75e-81e1-408c-ba60-fb6719e9b0ba",
+      "agent": "main",
+      "task": "Mission Control auto-update cycle:",
+      "status": "done",
+      "dateCreated": 1775082146088,
+      "dateFinished": 1775082146108,
+      "startTime": "2026-04-01T22:22:35Z",
+      "endTime": "2026-04-01T22:22:35Z",
+      "inputTokens": 16993,
+      "outputTokens": 167,
+      "tokens": 17160,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0442,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/9f99d75e-81e1-408c-ba60-fb6719e9b0ba.jsonl",
+      "sizeBytes": 2850,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "2957bce4-9001-4be6-8",
+      "sessionId": "2957bce4-9001-4be6-8bc1-d6372bdf8673",
+      "agent": "main",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
+      "status": "done",
+      "dateCreated": 1775081762148,
+      "dateFinished": 1775081773447,
+      "startTime": "2026-04-01T22:16:21Z",
+      "endTime": "2026-04-01T22:16:21Z",
+      "inputTokens": 17792,
+      "outputTokens": 119,
+      "tokens": 34807,
+      "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0457,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/2957bce4-9001-4be6-8bc1-d6372bdf8673.jsonl",
+      "sizeBytes": 10866,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "47acdd51-eab1-4ad5-b",
       "sessionId": "47acdd51-eab1-4ad5-b157-503e42faa5d7",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T22:10:53Z",
+      "dateCreated": 1775081387877,
+      "dateFinished": 1775081625975,
+      "startTime": "2026-04-01T22:13:51Z",
       "endTime": "2026-04-01T22:13:51Z",
+      "inputTokens": 50725,
+      "outputTokens": 3129,
       "tokens": 621534,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.1581,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/47acdd51-eab1-4ad5-b157-503e42faa5d7.jsonl",
       "sizeBytes": 89008,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "47d09e1b-9347-4f78-9",
       "sessionId": "47d09e1b-9347-4f78-9ade-8245ce5df671",
       "agent": "main",
-      "task": "Check all active tasks across Monday.com boards and any local task tracking. Summarize completed tasks, newly created ta",
+      "task": "Check all active tasks across Monday.com boards and any local task tracking. Summarize completed tasks, newly created tasks, and status changes since ",
       "status": "done",
-      "startTime": "2026-04-01T22:06:54Z",
+      "dateCreated": 1775081214569,
+      "dateFinished": 1775081241800,
+      "startTime": "2026-04-01T22:07:25Z",
       "endTime": "2026-04-01T22:07:25Z",
+      "inputTokens": 17919,
+      "outputTokens": 296,
       "tokens": 100519,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0478,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/47d09e1b-9347-4f78-9ade-8245ce5df671.jsonl",
       "sizeBytes": 15489,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "982be8b9-ad35-432f-b",
       "sessionId": "982be8b9-ad35-432f-bd7a-4315a7564173",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T22:01:04Z",
+      "dateCreated": 1775080862146,
+      "dateFinished": 1775080883776,
+      "startTime": "2026-04-01T22:01:30Z",
       "endTime": "2026-04-01T22:01:30Z",
+      "inputTokens": 18011,
+      "outputTokens": 175,
       "tokens": 52618,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0468,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/982be8b9-ad35-432f-bd7a-4315a7564173.jsonl",
       "sizeBytes": 13144,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "10eed2f3-8976-4043-8",
@@ -112,89 +473,143 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T22:00:47Z",
+      "dateCreated": 1775080847589,
+      "dateFinished": 1775080856315,
+      "startTime": "2026-04-01T22:00:58Z",
       "endTime": "2026-04-01T22:00:58Z",
+      "inputTokens": 17302,
+      "outputTokens": 152,
       "tokens": 34350,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0448,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/10eed2f3-8976-4043-83d9-d9924c2c0c43.jsonl",
       "sizeBytes": 5740,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "1e6914d2-c4c9-401e-a",
       "sessionId": "1e6914d2-c4c9-401e-aa70-196dac19eb48",
       "agent": "main",
-      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test messag",
+      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update",
       "status": "done",
-      "startTime": "2026-04-01T22:00:25Z",
+      "dateCreated": 1775080805792,
+      "dateFinished": 1775080837196,
+      "startTime": "2026-04-01T22:00:46Z",
       "endTime": "2026-04-01T22:00:46Z",
+      "inputTokens": 50112,
+      "outputTokens": 322,
       "tokens": 66434,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.1285,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/1e6914d2-c4c9-401e-aa70-196dac19eb48.jsonl",
       "sizeBytes": 10520,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "0dc2fc50-e068-4c12-9",
       "sessionId": "0dc2fc50-e068-4c12-9b9f-ce67442be036",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T21:50:33Z",
+      "dateCreated": 1775080487868,
+      "dateFinished": 1775080800925,
+      "startTime": "2026-04-01T22:00:03Z",
       "endTime": "2026-04-01T22:00:03Z",
+      "inputTokens": 71985,
+      "outputTokens": 14931,
       "tokens": 830980,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.3293,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/0dc2fc50-e068-4c12-9b9f-ce67442be036.jsonl",
       "sizeBytes": 284689,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "fe0c1b20-8ce2-461a-8",
       "sessionId": "fe0c1b20-8ce2-461a-88de-e75acc2e7f53",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T21:45:55Z",
+      "dateCreated": 1775079947809,
+      "dateFinished": 1775079967766,
+      "startTime": "2026-04-01T21:46:17Z",
       "endTime": "2026-04-01T21:46:17Z",
+      "inputTokens": 35179,
+      "outputTokens": 121,
       "tokens": 52196,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0892,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/fe0c1b20-8ce2-461a-88de-e75acc2e7f53.jsonl",
       "sizeBytes": 10917,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "9f33427c-e194-4044-8",
       "sessionId": "9f33427c-e194-4044-8cba-27e0a13c6615",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T21:39:24Z",
+      "dateCreated": 1775079587865,
+      "dateFinished": 1775079634434,
+      "startTime": "2026-04-01T21:40:43Z",
       "endTime": "2026-04-01T21:40:43Z",
+      "inputTokens": 20733,
+      "outputTokens": 481,
       "tokens": 112990,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0566,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/9f33427c-e194-4044-8cba-27e0a13c6615.jsonl",
       "sizeBytes": 39419,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "5fb6e30e-637a-46ef-b",
       "sessionId": "5fb6e30e-637a-46ef-bc7d-a801d5e5fbe1",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T21:30:51Z",
+      "dateCreated": 1775079047523,
+      "dateFinished": 1775079066673,
+      "startTime": "2026-04-01T21:31:13Z",
       "endTime": "2026-04-01T21:31:13Z",
+      "inputTokens": 17899,
+      "outputTokens": 155,
       "tokens": 52230,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0463,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/5fb6e30e-637a-46ef-bc7d-a801d5e5fbe1.jsonl",
       "sizeBytes": 11134,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "cb98aa57-f297-418f-9",
@@ -202,44 +617,71 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T21:27:37Z",
+      "dateCreated": 1775078854310,
+      "dateFinished": 1775078863268,
+      "startTime": "2026-04-01T21:27:48Z",
       "endTime": "2026-04-01T21:27:48Z",
+      "inputTokens": 17302,
+      "outputTokens": 150,
       "tokens": 34348,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0448,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/cb98aa57-f297-418f-9ae5-2aad20d41291.jsonl",
       "sizeBytes": 5756,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "70e88fb8-2b5c-4693-a",
       "sessionId": "70e88fb8-2b5c-4693-aa1a-1ea4084bba69",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T21:23:41Z",
+      "dateCreated": 1775078687867,
+      "dateFinished": 1775078740963,
+      "startTime": "2026-04-01T21:25:49Z",
       "endTime": "2026-04-01T21:25:49Z",
+      "inputTokens": 44271,
+      "outputTokens": 1160,
       "tokens": 362999,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.1223,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/70e88fb8-2b5c-4693-aa1a-1ea4084bba69.jsonl",
       "sizeBytes": 63684,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "bf8e9730-528c-43ac-b",
       "sessionId": "bf8e9730-528c-43ac-b49b-87ece6082e19",
       "agent": "main",
-      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages ",
+      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages need fixes, delegate to ACP Co",
       "status": "done",
-      "startTime": "2026-04-01T21:22:19Z",
+      "dateCreated": 1775078546125,
+      "dateFinished": 1775078554675,
+      "startTime": "2026-04-01T21:22:37Z",
       "endTime": "2026-04-01T21:22:37Z",
+      "inputTokens": 18576,
+      "outputTokens": 382,
       "tokens": 52238,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0503,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/bf8e9730-528c-43ac-b49b-87ece6082e19.jsonl",
       "sizeBytes": 9405,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "297f52ee-85a7-43ea-a",
@@ -247,74 +689,119 @@
       "agent": "main",
       "task": "You are the Mission Control autonomous coding coordinator. CWD: /Users/jarvisculbertson/mission-control",
       "status": "done",
-      "startTime": "2026-04-01T21:21:00Z",
+      "dateCreated": 1775078462935,
+      "dateFinished": 1775078472213,
+      "startTime": "2026-04-01T21:21:14Z",
       "endTime": "2026-04-01T21:21:14Z",
+      "inputTokens": 18355,
+      "outputTokens": 127,
       "tokens": 51634,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0472,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/297f52ee-85a7-43ea-afe0-dce536be95b4.jsonl",
       "sizeBytes": 6666,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "82ccd41e-1e58-4ca1-8",
       "sessionId": "82ccd41e-1e58-4ca1-8653-09fec00906a3",
       "agent": "main",
-      "task": "Monitor Monday.com task boards and operational status. Check for completed tasks, identify blockers, and report departme",
+      "task": "Monitor Monday.com task boards and operational status. Check for completed tasks, identify blockers, and report department progress. Workspace: 147204",
       "status": "done",
-      "startTime": "2026-04-01T21:18:56Z",
+      "dateCreated": 1775078330564,
+      "dateFinished": 1775078357210,
+      "startTime": "2026-04-01T21:19:32Z",
       "endTime": "2026-04-01T21:19:32Z",
+      "inputTokens": 34835,
+      "outputTokens": 428,
       "tokens": 67903,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0914,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/82ccd41e-1e58-4ca1-8653-09fec00906a3.jsonl",
       "sizeBytes": 18094,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "fc709b1d-8daf-4a93-8",
       "sessionId": "fc709b1d-8daf-4a93-89e9-f7838ee45e27",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T21:15:48Z",
+      "dateCreated": 1775078147704,
+      "dateFinished": 1775078165930,
+      "startTime": "2026-04-01T21:16:15Z",
       "endTime": "2026-04-01T21:16:15Z",
+      "inputTokens": 18011,
+      "outputTokens": 179,
       "tokens": 52622,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0468,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/fc709b1d-8daf-4a93-89e9-f7838ee45e27.jsonl",
       "sizeBytes": 13202,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "183d6bd4-94e1-4ad8-9",
       "sessionId": "183d6bd4-94e1-4ad8-9511-d86925722e63",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T21:08:44Z",
+      "dateCreated": 1775077787842,
+      "dateFinished": 1775077844007,
+      "startTime": "2026-04-01T21:10:49Z",
       "endTime": "2026-04-01T21:10:49Z",
+      "inputTokens": 23366,
+      "outputTokens": 908,
       "tokens": 291538,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0675,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/183d6bd4-94e1-4ad8-9511-d86925722e63.jsonl",
       "sizeBytes": 62620,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "f1052520-02a4-42fc-a",
       "sessionId": "f1052520-02a4-42fc-a4c5-155e62868349",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T21:00:50Z",
+      "dateCreated": 1775077247524,
+      "dateFinished": 1775077256951,
+      "startTime": "2026-04-01T21:01:08Z",
       "endTime": "2026-04-01T21:01:08Z",
+      "inputTokens": 34504,
+      "outputTokens": 130,
       "tokens": 34634,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0876,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/f1052520-02a4-42fc-a4c5-155e62868349.jsonl",
       "sizeBytes": 8950,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "7c3609d2-78b7-441b-a",
@@ -322,134 +809,221 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T20:57:42Z",
+      "dateCreated": 1775077054244,
+      "dateFinished": 1775077066556,
+      "startTime": "2026-04-01T20:57:54Z",
       "endTime": "2026-04-01T20:57:54Z",
+      "inputTokens": 32278,
+      "outputTokens": 163,
       "tokens": 34361,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0823,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/7c3609d2-78b7-441b-a6e2-b3121ce6daca.jsonl",
       "sizeBytes": 5810,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "d296d8ca-1630-4a0d-b",
       "sessionId": "d296d8ca-1630-4a0d-bfa3-468a7d255b2d",
       "agent": "main",
-      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test messag",
+      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update",
       "status": "done",
-      "startTime": "2026-04-01T20:57:00Z",
+      "dateCreated": 1775076994355,
+      "dateFinished": 1775077041885,
+      "startTime": "2026-04-01T20:57:30Z",
       "endTime": "2026-04-01T20:57:30Z",
+      "inputTokens": 17587,
+      "outputTokens": 391,
       "tokens": 99514,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0479,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/d296d8ca-1630-4a0d-bfa3-468a7d255b2d.jsonl",
       "sizeBytes": 14998,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "1c8c3def-5626-4e58-b",
       "sessionId": "1c8c3def-5626-4e58-b31e-6bc6622dcc8a",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T20:54:51Z",
+      "dateCreated": 1775076887838,
+      "dateFinished": 1775076960575,
+      "startTime": "2026-04-01T20:56:06Z",
       "endTime": "2026-04-01T20:56:06Z",
+      "inputTokens": 54763,
+      "outputTokens": 1509,
       "tokens": 73552,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.152,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/1c8c3def-5626-4e58-b31e-6bc6622dcc8a.jsonl",
       "sizeBytes": 37549,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "9e8a2440-ee81-4c7e-b",
       "sessionId": "9e8a2440-ee81-4c7e-b4cd-fcd54b2ab84d",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T20:45:46Z",
+      "dateCreated": 1775076347802,
+      "dateFinished": 1775076364759,
+      "startTime": "2026-04-01T20:46:09Z",
       "endTime": "2026-04-01T20:46:09Z",
+      "inputTokens": 34795,
+      "outputTokens": 150,
       "tokens": 52225,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0885,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/9e8a2440-ee81-4c7e-b4cd-fcd54b2ab84d.jsonl",
       "sizeBytes": 11077,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "576a537c-97de-4703-a",
       "sessionId": "576a537c-97de-4703-aa5b-45af2a4ab53d",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T20:41:23Z",
+      "dateCreated": 1775075987912,
+      "dateFinished": 1775076319397,
+      "startTime": "2026-04-01T20:45:43Z",
       "endTime": "2026-04-01T20:45:43Z",
+      "inputTokens": 91537,
+      "outputTokens": 7288,
       "tokens": 379017,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.3017,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/576a537c-97de-4703-aa5b-45af2a4ab53d.jsonl",
       "sizeBytes": 129941,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "spawn-v3-1775076271",
       "sessionId": "spawn-v3-1775076271",
       "agent": "main",
-      "task": "Delegate this coding task to ACP Codex: list all .jsx files in /Users/jarvisculbertson/missio",
+      "task": "Delegate this coding task to ACP Codex: list all .jsx files in /Users/jarvisculbertson/mission-control/src/pages/ and repor",
       "status": "delegated",
-      "startTime": "2026-04-01T20:44:30Z",
+      "dateCreated": 1775076273242,
+      "dateFinished": 1775076280181,
+      "startTime": "2026-04-01T20:44:42Z",
       "endTime": "2026-04-01T20:44:42Z",
+      "inputTokens": 46634,
+      "outputTokens": 214,
       "tokens": 69120,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.1187,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/spawn-v3-1775076271.jsonl",
       "sizeBytes": 5935,
       "isCron": false,
-      "spawns": 2
+      "spawns": 2,
+      "parentSession": null,
+      "estCostToCompletion": 0.0356,
+      "estTimeToCompletion": "~15 min"
     },
     {
       "id": "spawn-proof-17750762",
       "sessionId": "spawn-proof-1775076207",
       "agent": "main",
-      "task": "Spawn a Claude Code agent to inspect the Mission Control repo at /Users/jarvisculbertson/miss",
+      "task": "Spawn a Claude Code agent to inspect the Mission Control repo at /Users/jarvisculbertson/mission-control. Task: list all .j",
       "status": "delegated",
-      "startTime": "2026-04-01T20:43:31Z",
+      "dateCreated": 1775076209284,
+      "dateFinished": 1775076212760,
+      "startTime": "2026-04-01T20:43:38Z",
       "endTime": "2026-04-01T20:43:38Z",
+      "inputTokens": 45767,
+      "outputTokens": 96,
       "tokens": 45863,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.1154,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/spawn-proof-1775076207.jsonl",
       "sizeBytes": 3469,
       "isCron": false,
-      "spawns": 1
+      "spawns": 1,
+      "parentSession": null,
+      "estCostToCompletion": 0.0346,
+      "estTimeToCompletion": "~15 min"
     },
     {
       "id": "1f278042-b9ee-4ddd-8",
       "sessionId": "1f278042-b9ee-4ddd-835e-0679a40d6df9",
       "agent": "main",
-      "task": "[media attached: /Users/jarvisculbertson/.openclaw/media/inbound/file_198---04fbe505-0113-4188-ad47-56c0e473a11f.jpg (im",
+      "task": "[media attached: /Users/jarvisculbertson/.openclaw/media/inbound/file_198---04fbe505-0113-4188-ad47-56c0e473a11f.jpg (image/jpeg) | /Users/jarvisculbe",
       "status": "delegated",
-      "startTime": "2026-04-01T20:31:59Z",
+      "dateCreated": 1775068657524,
+      "dateFinished": 1775076014078,
+      "startTime": "2026-04-01T20:40:21Z",
       "endTime": "2026-04-01T20:40:21Z",
+      "inputTokens": 120115,
+      "outputTokens": 1530,
       "tokens": 556973,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.3156,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/1f278042-b9ee-4ddd-835e-0679a40d6df9.jsonl",
       "sizeBytes": 251423,
       "isCron": false,
-      "spawns": 2
+      "spawns": 2,
+      "parentSession": null,
+      "estCostToCompletion": 0.0947,
+      "estTimeToCompletion": "~15 min"
     },
     {
       "id": "58a09b55-f814-4b37-8",
       "sessionId": "58a09b55-f814-4b37-81bd-d6178a6cb471",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T20:27:33Z",
+      "dateCreated": 1775075253273,
+      "dateFinished": 1775075260543,
+      "startTime": "2026-04-01T20:27:49Z",
       "endTime": "2026-04-01T20:27:49Z",
+      "inputTokens": 35133,
+      "outputTokens": 147,
       "tokens": 35280,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0893,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/58a09b55-f814-4b37-81bd-d6178a6cb471.jsonl",
       "sizeBytes": 7966,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "afa3e733-0a02-4ea2-b",
@@ -457,89 +1031,145 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T20:26:47Z",
+      "dateCreated": 1775075199868,
+      "dateFinished": 1775075209953,
+      "startTime": "2026-04-01T20:26:59Z",
       "endTime": "2026-04-01T20:26:59Z",
+      "inputTokens": 34950,
+      "outputTokens": 184,
       "tokens": 35134,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0892,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/afa3e733-0a02-4ea2-b846-5610a720f2f1.jsonl",
       "sizeBytes": 5851,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "b3ba3052-3329-4683-a",
       "sessionId": "b3ba3052-3329-4683-afcb-99b078df228b",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T20:24:12Z",
+      "dateCreated": 1775075087812,
+      "dateFinished": 1775075101200,
+      "startTime": "2026-04-01T20:25:05Z",
       "endTime": "2026-04-01T20:25:05Z",
+      "inputTokens": 20012,
+      "outputTokens": 599,
       "tokens": 73347,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.056,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/b3ba3052-3329-4683-afcb-99b078df228b.jsonl",
       "sizeBytes": 26556,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "mc-v1-sprint-1775049",
       "sessionId": "mc-v1-sprint-1775049460",
       "agent": "main",
-      "task": "DELEGATION: Spawn 3 separate ACP Codex sessions for Mission Control V1 at /Users/jarvisculber",
+      "task": "DELEGATION: Spawn 3 separate ACP Codex sessions for Mission Control V1 at /Users/jarvisculbertson/mission-control. Each ses",
       "status": "delegated",
-      "startTime": "2026-04-01T20:20:54Z",
+      "dateCreated": 1775049462855,
+      "dateFinished": 1775075045329,
+      "startTime": "2026-04-01T20:24:07Z",
       "endTime": "2026-04-01T20:24:07Z",
+      "inputTokens": 398388,
+      "outputTokens": 2138,
       "tokens": 1001102,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 1.0173,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/mc-v1-sprint-1775049460.jsonl",
       "sizeBytes": 96487,
       "isCron": false,
-      "spawns": 3
+      "spawns": 3,
+      "parentSession": null,
+      "estCostToCompletion": 0.3052,
+      "estTimeToCompletion": "~15 min"
     },
     {
       "id": "ae5885b3-4c92-4693-9",
       "sessionId": "ae5885b3-4c92-4693-9aa9-56292426bebe",
       "agent": "main",
-      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages ",
+      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages need fixes, delegate to ACP Co",
       "status": "done",
-      "startTime": "2026-04-01T20:22:26Z",
+      "dateCreated": 1775074946085,
+      "dateFinished": 1775074946103,
+      "startTime": "2026-04-01T20:22:32Z",
       "endTime": "2026-04-01T20:22:32Z",
+      "inputTokens": 17396,
+      "outputTokens": 176,
       "tokens": 17572,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0452,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/ae5885b3-4c92-4693-9aa9-56292426bebe.jsonl",
       "sizeBytes": 2990,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "ac816693-b9b2-49da-8",
       "sessionId": "ac816693-b9b2-49da-8c38-09f5d992c7c4",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T20:12:43Z",
+      "dateCreated": 1775074353262,
+      "dateFinished": 1775074376992,
+      "startTime": "2026-04-01T20:13:05Z",
       "endTime": "2026-04-01T20:13:05Z",
+      "inputTokens": 18259,
+      "outputTokens": 159,
       "tokens": 53362,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0472,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/ac816693-b9b2-49da-8c38-09f5d992c7c4.jsonl",
       "sizeBytes": 11105,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "8e60448b-a2cd-45a7-8",
       "sessionId": "8e60448b-a2cd-45a7-848f-a3763d38cde5",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T20:09:41Z",
+      "dateCreated": 1775074187844,
+      "dateFinished": 1775074332243,
+      "startTime": "2026-04-01T20:12:30Z",
       "endTime": "2026-04-01T20:12:30Z",
+      "inputTokens": 69476,
+      "outputTokens": 3625,
       "tokens": 273165,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.2099,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/8e60448b-a2cd-45a7-848f-a3763d38cde5.jsonl",
       "sizeBytes": 84738,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "489f6023-2832-421d-b",
@@ -547,74 +1177,119 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T19:56:44Z",
+      "dateCreated": 1775073399859,
+      "dateFinished": 1775073408359,
+      "startTime": "2026-04-01T19:56:55Z",
       "endTime": "2026-04-01T19:56:55Z",
+      "inputTokens": 17670,
+      "outputTokens": 152,
       "tokens": 35102,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0457,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/489f6023-2832-421d-b036-0fe68cbc510c.jsonl",
       "sizeBytes": 5761,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "78c9f24e-5655-4d63-9",
       "sessionId": "78c9f24e-5655-4d63-9eb5-c7686d535cad",
       "agent": "main",
-      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test messag",
+      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update",
       "status": "done",
-      "startTime": "2026-04-01T19:45:56Z",
+      "dateCreated": 1775073362555,
+      "dateFinished": 1775073383070,
+      "startTime": "2026-04-01T19:56:33Z",
       "endTime": "2026-04-01T19:56:33Z",
+      "inputTokens": 130202,
+      "outputTokens": 232,
       "tokens": 163330,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.3278,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/78c9f24e-5655-4d63-9eb5-c7686d535cad.jsonl",
       "sizeBytes": 318547,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "e35b4828-326d-4c27-9",
       "sessionId": "e35b4828-326d-4c27-9372-4f028c023e47",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T19:55:39Z",
+      "dateCreated": 1775073343911,
+      "dateFinished": 1775073354294,
+      "startTime": "2026-04-01T19:56:01Z",
       "endTime": "2026-04-01T19:56:01Z",
+      "inputTokens": 35923,
+      "outputTokens": 164,
       "tokens": 53367,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0914,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/e35b4828-326d-4c27-9372-4f028c023e47.jsonl",
       "sizeBytes": 11168,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "5918cc64-9ab7-45cb-8",
       "sessionId": "5918cc64-9ab7-45cb-844e-26a121a23f10",
       "agent": "main",
-      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.",
+      "task": "You are the Working On It tracker. Read your instructions at ~/.openclaw/workspace/anthropic/scripts/working-on-tracker.md and follow them exactly. Us",
       "status": "done",
-      "startTime": "2026-04-01T19:54:15Z",
+      "dateCreated": 1775073287837,
+      "dateFinished": 1775073325424,
+      "startTime": "2026-04-01T19:55:41Z",
       "endTime": "2026-04-01T19:55:41Z",
+      "inputTokens": 41353,
+      "outputTokens": 1319,
       "tokens": 94512,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.1166,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/5918cc64-9ab7-45cb-844e-26a121a23f10.jsonl",
       "sizeBytes": 43042,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "b961b86f-2e5b-4704-8",
       "sessionId": "b961b86f-2e5b-4704-8109-f367b6e9cc9d",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T19:39:42Z",
+      "dateCreated": 1775072389936,
+      "dateFinished": 1775072397445,
+      "startTime": "2026-04-01T19:40:00Z",
       "endTime": "2026-04-01T19:40:00Z",
+      "inputTokens": 35256,
+      "outputTokens": 138,
       "tokens": 35394,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0895,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/b961b86f-2e5b-4704-8109-f367b6e9cc9d.jsonl",
       "sizeBytes": 9048,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "fefd7450-0050-4340-a",
@@ -622,104 +1297,167 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T19:26:36Z",
+      "dateCreated": 1775071599889,
+      "dateFinished": 1775071605083,
+      "startTime": "2026-04-01T19:26:47Z",
       "endTime": "2026-04-01T19:26:47Z",
+      "inputTokens": 17670,
+      "outputTokens": 172,
       "tokens": 35122,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0459,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/fefd7450-0050-4340-acf7-b34a00954708.jsonl",
       "sizeBytes": 5830,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "ac712acb-94f5-4587-a",
       "sessionId": "ac712acb-94f5-4587-ad20-58331d6c2721",
       "agent": "main",
-      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test messag",
+      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update",
       "status": "done",
-      "startTime": "2026-04-01T19:24:44Z",
+      "dateCreated": 1775071523141,
+      "dateFinished": 1775071537025,
+      "startTime": "2026-04-01T19:25:43Z",
       "endTime": "2026-04-01T19:25:43Z",
+      "inputTokens": 21963,
+      "outputTokens": 181,
       "tokens": 55040,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0567,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/ac712acb-94f5-4587-ad20-58331d6c2721.jsonl",
       "sizeBytes": 29502,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "03636888-3dfe-4158-9",
       "sessionId": "03636888-3dfe-4158-9bba-a913d9462a99",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T19:24:57Z",
+      "dateCreated": 1775071489937,
+      "dateFinished": 1775071506635,
+      "startTime": "2026-04-01T19:25:20Z",
       "endTime": "2026-04-01T19:25:20Z",
+      "inputTokens": 35539,
+      "outputTokens": 175,
       "tokens": 53378,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0906,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/03636888-3dfe-4158-9bba-a913d9462a99.jsonl",
       "sizeBytes": 11217,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "6f624dc3-a36b-497d-9",
       "sessionId": "6f624dc3-a36b-497d-9bfb-5af74e6afd31",
       "agent": "main",
-      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages ",
+      "task": "Mission Control V1 maintenance: 1) Run bash src/data/generate-live-data.sh to refresh real runtime data 2) If any pages need fixes, delegate to ACP Co",
       "status": "done",
-      "startTime": "2026-04-01T19:22:26Z",
+      "dateCreated": 1775071346064,
+      "dateFinished": 1775071359626,
+      "startTime": "2026-04-01T19:22:44Z",
       "endTime": "2026-04-01T19:22:44Z",
+      "inputTokens": 35677,
+      "outputTokens": 255,
       "tokens": 53212,
       "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0917,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/6f624dc3-a36b-497d-9bfb-5af74e6afd31.jsonl",
       "sizeBytes": 8984,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "839b9c74-c671-4af1-a",
       "sessionId": "839b9c74-c671-4af1-ae0e-3a297395fbcc",
       "agent": "main",
-      "task": "Monitor Monday.com task boards and operational status. Check for completed tasks, identify blockers, and report departme",
+      "task": "Monitor Monday.com task boards and operational status. Check for completed tasks, identify blockers, and report department progress. Workspace: 147204",
       "status": "done",
-      "startTime": "2026-04-01T19:18:45Z",
+      "dateCreated": 1775071130600,
+      "dateFinished": 1775071150222,
+      "startTime": "2026-04-01T19:19:19Z",
       "endTime": "2026-04-01T19:19:19Z",
+      "inputTokens": 34616,
+      "outputTokens": 404,
       "tokens": 51276,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0906,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/839b9c74-c671-4af1-ae0e-3a297395fbcc.jsonl",
       "sizeBytes": 16792,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "734d48e0-d05d-41fa-b",
       "sessionId": "734d48e0-d05d-41fa-b1ad-0c8087f2d784",
       "agent": "main",
-      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and",
+      "task": "Check Monday.com Jarvis Project Management workspace status. Use monday-com skill to verify API health, count boards and items, report any issues. Bri",
       "status": "done",
-      "startTime": "2026-04-01T19:09:40Z",
+      "dateCreated": 1775070589932,
+      "dateFinished": 1775070599580,
+      "startTime": "2026-04-01T19:10:02Z",
       "endTime": "2026-04-01T19:10:02Z",
+      "inputTokens": 18259,
+      "outputTokens": 188,
       "tokens": 53391,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0475,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/734d48e0-d05d-41fa-b1ad-0c8087f2d784.jsonl",
       "sizeBytes": 11249,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "43d1b502-12d6-4521-a",
       "sessionId": "43d1b502-12d6-4521-ae02-a68eb5892a9a",
       "agent": "main",
-      "task": "Check all active tasks across Monday.com boards and any local task tracking. Summarize completed tasks, newly created ta",
+      "task": "Check all active tasks across Monday.com boards and any local task tracking. Summarize completed tasks, newly created tasks, and status changes since ",
       "status": "done",
-      "startTime": "2026-04-01T19:07:00Z",
+      "dateCreated": 1775070414594,
+      "dateFinished": 1775070428296,
+      "startTime": "2026-04-01T19:07:15Z",
       "endTime": "2026-04-01T19:07:15Z",
+      "inputTokens": 16993,
+      "outputTokens": 117,
       "tokens": 33494,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0437,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/43d1b502-12d6-4521-ae02-a68eb5892a9a.jsonl",
       "sizeBytes": 7582,
       "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "bc464b51-be47-4f25-a",
@@ -727,194 +1465,287 @@
       "agent": "main",
       "task": "Agent health check. Run these commands and report status:",
       "status": "done",
-      "startTime": "2026-04-01T18:56:44Z",
+      "dateCreated": 1775069799818,
+      "dateFinished": 1775069809175,
+      "startTime": "2026-04-01T18:56:56Z",
       "endTime": "2026-04-01T18:56:56Z",
+      "inputTokens": 17670,
+      "outputTokens": 170,
       "tokens": 35120,
       "model": "gpt-4o-mini",
+      "modelsUsed": [
+        "gpt-4o-mini"
+      ],
+      "totalCost": 0.0459,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/bc464b51-be47-4f25-a57a-f4f1e868fed7.jsonl",
       "sizeBytes": 5812,
       "isCron": true,
-      "spawns": 0
-    },
-    {
-      "id": "5f749c90-b589-4319-b",
-      "sessionId": "5f749c90-b589-4319-b784-9aa0e7ba3e58",
-      "agent": "main",
-      "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test messag",
-      "status": "done",
-      "startTime": "2026-04-01T18:56:01Z",
-      "endTime": "2026-04-01T18:56:38Z",
-      "tokens": 137956,
-      "model": "gpt-4o-mini",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/5f749c90-b589-4319-b784-9aa0e7ba3e58.jsonl",
-      "sizeBytes": 18543,
-      "isCron": true,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "d8fade84-1679-40a9-b",
       "sessionId": "d8fade84-1679-40a9-b76f-bd1e02b7eb6e",
       "agent": "codex",
-      "task": "I\u2019m checking the build path first so I can identify the specific placeholder data or failing code the build is surfacing",
+      "task": "I\u2019m checking the build path first so I can identify the specific placeholder data or failing code the build is surfacing, then I\u2019ll patch the smallest",
       "status": "done",
+      "dateCreated": "2026-04-01T17:23:19Z",
+      "dateFinished": "2026-04-01T17:23:19Z",
       "startTime": "2026-04-01T17:23:19Z",
       "endTime": "2026-04-01T17:23:19Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d8fade84-1679-40a9-b76f-bd1e02b7eb6e.jsonl",
       "sizeBytes": 3293,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "6da009dc-abf9-4019-9",
       "sessionId": "6da009dc-abf9-4019-9488-e57888b86403",
       "agent": "codex",
-      "task": "I\u2019m treating this as a repo-level instruction for the current task: if I find page issues that require code changes, I\u2019l",
+      "task": "I\u2019m treating this as a repo-level instruction for the current task: if I find page issues that require code changes, I\u2019ll route that work through ACP ",
       "status": "done",
+      "dateCreated": "2026-04-01T16:22:32Z",
+      "dateFinished": "2026-04-01T16:22:32Z",
       "startTime": "2026-04-01T16:22:32Z",
       "endTime": "2026-04-01T16:22:32Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/6da009dc-abf9-4019-9488-e57888b86403.jsonl",
       "sizeBytes": 1931,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "e1e46990-2db4-4b40-b",
       "sessionId": "e1e46990-2db4-4b40-b3ac-433a9447894c",
       "agent": "codex",
-      "task": "I\u2019m updating `Tasks.jsx` to render the real ACP sessions from `src/data/live-data.json` and remove placeholders, then I\u2019",
+      "task": "I\u2019m updating `Tasks.jsx` to render the real ACP sessions from `src/data/live-data.json` and remove placeholders, then I\u2019ll run the build to verify it.",
       "status": "done",
+      "dateCreated": "2026-04-01T13:21:03Z",
+      "dateFinished": "2026-04-01T13:21:03Z",
       "startTime": "2026-04-01T13:21:03Z",
       "endTime": "2026-04-01T13:21:03Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/e1e46990-2db4-4b40-b3ac-433a9447894c.jsonl",
       "sizeBytes": 3564,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "2a1a75f2-0868-48d1-b",
       "sessionId": "2a1a75f2-0868-48d1-bcef-7bffb62c895c",
       "agent": "codex",
-      "task": "I\u2019m checking the current `Team.jsx` implementation and the live data source first, so I can replace any placeholder agen",
+      "task": "I\u2019m checking the current `Team.jsx` implementation and the live data source first, so I can replace any placeholder agent data with the real OpenClaw ",
       "status": "done",
+      "dateCreated": "2026-04-01T13:20:58Z",
+      "dateFinished": "2026-04-01T13:20:58Z",
       "startTime": "2026-04-01T13:20:58Z",
       "endTime": "2026-04-01T13:20:58Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/2a1a75f2-0868-48d1-bcef-7bffb62c895c.jsonl",
       "sizeBytes": 4674,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "3831118c-8c25-448d-a",
       "sessionId": "3831118c-8c25-448d-aa46-333a6e678b8f",
       "agent": "codex",
-      "task": "I\u2019m checking the existing `Home.jsx` and the live data shape first, then I\u2019ll wire the page to the generated JSON and ve",
+      "task": "I\u2019m checking the existing `Home.jsx` and the live data shape first, then I\u2019ll wire the page to the generated JSON and verify with a build.`rg` isn\u2019t a",
       "status": "done",
+      "dateCreated": "2026-04-01T13:20:06Z",
+      "dateFinished": "2026-04-01T13:20:06Z",
       "startTime": "2026-04-01T13:20:06Z",
       "endTime": "2026-04-01T13:20:06Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/3831118c-8c25-448d-aa46-333a6e678b8f.jsonl",
       "sizeBytes": 2925,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "0f3d8e8b-1c91-401c-9",
       "sessionId": "0f3d8e8b-1c91-401c-9472-7e3f058f0d63",
       "agent": "codex",
-      "task": "I\u2019m inspecting the dashboard code and current integrations first so I can identify what \u201cpending improvements\u201d and broke",
+      "task": "I\u2019m inspecting the dashboard code and current integrations first so I can identify what \u201cpending improvements\u201d and broken data paths exist before edit",
       "status": "done",
+      "dateCreated": "2026-04-01T11:50:59Z",
+      "dateFinished": "2026-04-01T11:50:59Z",
       "startTime": "2026-04-01T11:50:59Z",
       "endTime": "2026-04-01T11:50:59Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/0f3d8e8b-1c91-401c-9472-7e3f058f0d63.jsonl",
       "sizeBytes": 6933,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "2cbd4ad1-d09b-4d51-8",
       "sessionId": "2cbd4ad1-d09b-4d51-8f90-31aee2b13c4b",
       "agent": "codex",
-      "task": "I\u2019m checking the dashboard repo state first so I can see whether there\u2019s already a broken build or obvious gap around li",
+      "task": "I\u2019m checking the dashboard repo state first so I can see whether there\u2019s already a broken build or obvious gap around live OpenClaw/Monday data before",
       "status": "done",
+      "dateCreated": "2026-04-01T07:54:09Z",
+      "dateFinished": "2026-04-01T07:54:09Z",
       "startTime": "2026-04-01T07:54:09Z",
       "endTime": "2026-04-01T07:54:09Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/2cbd4ad1-d09b-4d51-8f90-31aee2b13c4b.jsonl",
       "sizeBytes": 10544,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "34d4e009-ce02-4d91-8",
       "sessionId": "34d4e009-ce02-4d91-86d7-379a7783775e",
       "agent": "codex",
-      "task": "I\u2019m treating this as an implementation task in the Mission Control codebase. First I\u2019ll inspect the dashboard, data flow",
+      "task": "I\u2019m treating this as an implementation task in the Mission Control codebase. First I\u2019ll inspect the dashboard, data flow, and any existing OpenClaw or",
       "status": "done",
+      "dateCreated": "2026-04-01T05:49:35Z",
+      "dateFinished": "2026-04-01T05:49:35Z",
       "startTime": "2026-04-01T05:49:35Z",
       "endTime": "2026-04-01T05:49:35Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/34d4e009-ce02-4d91-86d7-379a7783775e.jsonl",
       "sizeBytes": 4719,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "9bfed6ec-33cd-41a1-8",
       "sessionId": "9bfed6ec-33cd-41a1-8d17-cb7b88a198df",
       "agent": "codex",
-      "task": "Inspecting `/Users/jarvisculbertson/mission-control/src/pages/` for `.jsx` files now. After that I\u2019ll return the file li",
+      "task": "Inspecting `/Users/jarvisculbertson/mission-control/src/pages/` for `.jsx` files now. After that I\u2019ll return the file list directly.`rg` isn\u2019t install",
       "status": "done",
+      "dateCreated": "2026-04-01T04:21:30Z",
+      "dateFinished": "2026-04-01T04:21:30Z",
       "startTime": "2026-04-01T04:21:30Z",
       "endTime": "2026-04-01T04:21:30Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9bfed6ec-33cd-41a1-8d17-cb7b88a198df.jsonl",
       "sizeBytes": 2320,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "bd414bdf-5512-453b-9",
       "sessionId": "bd414bdf-5512-453b-90ed-125f764ffd87",
       "agent": "codex",
-      "task": "I\u2019m creating the generator script in `src/data`, then I\u2019ll run it once and validate the produced JSON against the live O",
+      "task": "I\u2019m creating the generator script in `src/data`, then I\u2019ll run it once and validate the produced JSON against the live OpenClaw state sources you spec",
       "status": "done",
+      "dateCreated": "2026-04-01T04:03:24Z",
+      "dateFinished": "2026-04-01T04:03:24Z",
       "startTime": "2026-04-01T04:03:24Z",
       "endTime": "2026-04-01T04:03:24Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/bd414bdf-5512-453b-90ed-125f764ffd87.jsonl",
       "sizeBytes": 18839,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "b445a379-d335-4d47-9",
       "sessionId": "b445a379-d335-4d47-9989-3b631fabdad8",
       "agent": "codex",
-      "task": "I\u2019m inspecting the React+Vite app and the existing Home/CommandDeck implementation first, then I\u2019ll trace how it should ",
+      "task": "I\u2019m inspecting the React+Vite app and the existing Home/CommandDeck implementation first, then I\u2019ll trace how it should talk to the OpenClaw gateway a",
       "status": "done",
+      "dateCreated": "2026-04-01T03:48:07Z",
+      "dateFinished": "2026-04-01T03:48:07Z",
       "startTime": "2026-04-01T03:48:07Z",
       "endTime": "2026-04-01T03:48:07Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/b445a379-d335-4d47-9989-3b631fabdad8.jsonl",
       "sizeBytes": 5688,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "865b3aa9-8e96-4c71-b",
@@ -922,284 +1753,407 @@
       "agent": "codex",
       "task": "Running the shell command you gave so I can return the actual output.`hello from ACP Codex`",
       "status": "done",
+      "dateCreated": "2026-04-01T03:41:16Z",
+      "dateFinished": "2026-04-01T03:41:16Z",
       "startTime": "2026-04-01T03:41:16Z",
       "endTime": "2026-04-01T03:41:16Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/865b3aa9-8e96-4c71-bd48-5ec4113f21d3.jsonl",
       "sizeBytes": 899,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "9368831a-4ee0-4382-8",
       "sessionId": "9368831a-4ee0-4382-8eb1-d2a69e9a29bd",
       "agent": "codex",
-      "task": "Inspecting the Mission Control workspace to identify the repo shape, scripts, and any existing run instructions before I",
+      "task": "Inspecting the Mission Control workspace to identify the repo shape, scripts, and any existing run instructions before I recommend a startup path.`rg`",
       "status": "done",
+      "dateCreated": "2026-03-31T22:35:18Z",
+      "dateFinished": "2026-03-31T22:35:18Z",
       "startTime": "2026-03-31T22:35:18Z",
       "endTime": "2026-03-31T22:35:18Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9368831a-4ee0-4382-8eb1-d2a69e9a29bd.jsonl",
       "sizeBytes": 5890,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "d0fd84b0-2ae0-4f45-a",
       "sessionId": "d0fd84b0-2ae0-4f45-af55-f7eea412498d",
       "agent": "codex",
-      "task": "Validating the current Mission Control state after recent changes. I\u2019m locating the app, checking repo status, and readi",
+      "task": "Validating the current Mission Control state after recent changes. I\u2019m locating the app, checking repo status, and reading the relevant test/build set",
       "status": "done",
+      "dateCreated": "2026-03-31T22:34:48Z",
+      "dateFinished": "2026-03-31T22:34:48Z",
       "startTime": "2026-03-31T22:34:48Z",
       "endTime": "2026-03-31T22:34:48Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d0fd84b0-2ae0-4f45-af55-f7eea412498d.jsonl",
       "sizeBytes": 6673,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "f800bddd-6ff4-4cc2-8",
       "sessionId": "f800bddd-6ff4-4cc2-8954-c2b808c7841d",
       "agent": "codex",
-      "task": "Validating the Mission Control workspace first. I\u2019m checking the repo state and any local instructions that define what ",
+      "task": "Validating the Mission Control workspace first. I\u2019m checking the repo state and any local instructions that define what \u201cvalidation\u201d needs to prove.Th",
       "status": "done",
+      "dateCreated": "2026-03-31T22:27:30Z",
+      "dateFinished": "2026-03-31T22:27:30Z",
       "startTime": "2026-03-31T22:27:30Z",
       "endTime": "2026-03-31T22:27:30Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/f800bddd-6ff4-4cc2-8954-c2b808c7841d.jsonl",
       "sizeBytes": 9971,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "2076be6f-e496-42cf-a",
       "sessionId": "2076be6f-e496-42cf-a718-834dfd579d76",
       "agent": "codex",
-      "task": "I\u2019m treating this as a Mission Control coding task and starting by locating the project structure and any local task con",
+      "task": "I\u2019m treating this as a Mission Control coding task and starting by locating the project structure and any local task context so I can identify the con",
       "status": "done",
+      "dateCreated": "2026-03-31T22:26:24Z",
+      "dateFinished": "2026-03-31T22:26:24Z",
       "startTime": "2026-03-31T22:26:24Z",
       "endTime": "2026-03-31T22:26:24Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/2076be6f-e496-42cf-a718-834dfd579d76.jsonl",
       "sizeBytes": 2143,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "9e6c8384-945b-4dc0-b",
       "sessionId": "9e6c8384-945b-4dc0-bfb1-85c5824c23a9",
       "agent": "codex",
-      "task": "I\u2019m creating `proof-test.py` in the workspace root, then I\u2019ll run it to capture the exact command output and report the ",
+      "task": "I\u2019m creating `proof-test.py` in the workspace root, then I\u2019ll run it to capture the exact command output and report the diff cleanly.`rg` isn\u2019t instal",
       "status": "done",
+      "dateCreated": "2026-03-31T22:12:32Z",
+      "dateFinished": "2026-03-31T22:12:32Z",
       "startTime": "2026-03-31T22:12:32Z",
       "endTime": "2026-03-31T22:12:32Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9e6c8384-945b-4dc0-bfb1-85c5824c23a9.jsonl",
       "sizeBytes": 13724,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "448b2ed1-9bfb-4a88-8",
       "sessionId": "448b2ed1-9bfb-4a88-840e-bda5403ce862",
       "agent": "codex",
-      "task": "Validating the existing `proof-test.py` only. I\u2019m checking the file contents, counting asserts, running it, and locating",
+      "task": "Validating the existing `proof-test.py` only. I\u2019m checking the file contents, counting asserts, running it, and locating the on-disk transcript path f",
       "status": "done",
+      "dateCreated": "2026-03-31T22:12:32Z",
+      "dateFinished": "2026-03-31T22:12:32Z",
       "startTime": "2026-03-31T22:12:32Z",
       "endTime": "2026-03-31T22:12:32Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/448b2ed1-9bfb-4a88-840e-bda5403ce862.jsonl",
       "sizeBytes": 5292,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "a5fc21cd-d261-4f05-9",
       "sessionId": "a5fc21cd-d261-4f05-9310-28c78e50b2b2",
       "agent": "codex",
-      "task": "Running `python3 proof-test.py` in the current workspace and capturing the exact output, including the assert case resul",
+      "task": "Running `python3 proof-test.py` in the current workspace and capturing the exact output, including the assert case results. After that I\u2019ll report cha",
       "status": "done",
+      "dateCreated": "2026-03-31T22:11:38Z",
+      "dateFinished": "2026-03-31T22:11:38Z",
       "startTime": "2026-03-31T22:11:38Z",
       "endTime": "2026-03-31T22:11:38Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/a5fc21cd-d261-4f05-9310-28c78e50b2b2.jsonl",
       "sizeBytes": 10372,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "d2820f4b-3716-43ea-8",
       "sessionId": "d2820f4b-3716-43ea-86a5-07f8f2a2fd59",
       "agent": "codex",
-      "task": "I\u2019m checking the workspace state first so I can add only the requested file and verify the exact diff cleanly.The repo i",
+      "task": "I\u2019m checking the workspace state first so I can add only the requested file and verify the exact diff cleanly.The repo is already dirty, so I\u2019m isolat",
       "status": "done",
+      "dateCreated": "2026-03-31T22:11:27Z",
+      "dateFinished": "2026-03-31T22:11:27Z",
       "startTime": "2026-03-31T22:11:27Z",
       "endTime": "2026-03-31T22:11:27Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d2820f4b-3716-43ea-86a5-07f8f2a2fd59.jsonl",
       "sizeBytes": 3136,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "41ae3d84-1bee-4667-8",
       "sessionId": "41ae3d84-1bee-4667-8e4e-f93e9a97af37",
       "agent": "codex",
-      "task": "I\u2019m checking the workspace first so I can place `proof-test.py` correctly and avoid trampling anything unrelated. After ",
+      "task": "I\u2019m checking the workspace first so I can place `proof-test.py` correctly and avoid trampling anything unrelated. After that I\u2019ll add the file with th",
       "status": "done",
+      "dateCreated": "2026-03-31T22:11:12Z",
+      "dateFinished": "2026-03-31T22:11:12Z",
       "startTime": "2026-03-31T22:11:12Z",
       "endTime": "2026-03-31T22:11:12Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/41ae3d84-1bee-4667-8e4e-f93e9a97af37.jsonl",
       "sizeBytes": 2787,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "d0e0ebcb-02da-4fd2-9",
       "sessionId": "d0e0ebcb-02da-4fd2-9eb9-f7a285c2b9b5",
       "agent": "codex",
-      "task": "Running `python3 proof-test.py` in `/Users/jarvisculbertson/.openclaw/workspace/anthropic` and capturing the exact comma",
+      "task": "Running `python3 proof-test.py` in `/Users/jarvisculbertson/.openclaw/workspace/anthropic` and capturing the exact command output for the requested co",
       "status": "done",
+      "dateCreated": "2026-03-31T22:11:02Z",
+      "dateFinished": "2026-03-31T22:11:02Z",
       "startTime": "2026-03-31T22:11:02Z",
       "endTime": "2026-03-31T22:11:02Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d0e0ebcb-02da-4fd2-9eb9-f7a285c2b9b5.jsonl",
       "sizeBytes": 1846,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "38bfed12-05b9-4575-a",
       "sessionId": "38bfed12-05b9-4575-a385-0c1780850303",
       "agent": "codex",
-      "task": "Creating `proof-test.py` with the palindrome function and inline asserts. I\u2019m checking the workspace first so I don\u2019t co",
+      "task": "Creating `proof-test.py` with the palindrome function and inline asserts. I\u2019m checking the workspace first so I don\u2019t collide with anything, then I\u2019ll",
       "status": "done",
+      "dateCreated": "2026-03-31T22:07:19Z",
+      "dateFinished": "2026-03-31T22:07:19Z",
       "startTime": "2026-03-31T22:07:19Z",
       "endTime": "2026-03-31T22:07:19Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/38bfed12-05b9-4575-a385-0c1780850303.jsonl",
       "sizeBytes": 3219,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "3b91f0fa-01fb-4e77-9",
       "sessionId": "3b91f0fa-01fb-4e77-9500-dc19080f5a4e",
       "agent": "codex",
-      "task": "Creating `proof-test.py` in the current workspace with a small palindrome helper and three test cases. I\u2019m checking the ",
+      "task": "Creating `proof-test.py` in the current workspace with a small palindrome helper and three test cases. I\u2019m checking the repo root first so I place the",
       "status": "done",
+      "dateCreated": "2026-03-31T22:04:44Z",
+      "dateFinished": "2026-03-31T22:04:44Z",
       "startTime": "2026-03-31T22:04:44Z",
       "endTime": "2026-03-31T22:04:44Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/3b91f0fa-01fb-4e77-9500-dc19080f5a4e.jsonl",
       "sizeBytes": 1522,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "c5bdd1f3-1e5b-45b9-8",
       "sessionId": "c5bdd1f3-1e5b-45b9-88a8-5aa1268c57b8",
       "agent": "codex",
-      "task": "I\u2019m loading the workspace context first per `AGENTS.md`, then I\u2019ll inspect `src/routes/api-routes.js` and verify whether",
+      "task": "I\u2019m loading the workspace context first per `AGENTS.md`, then I\u2019ll inspect `src/routes/api-routes.js` and verify whether the comment line is present w",
       "status": "done",
+      "dateCreated": "2026-03-31T21:06:45Z",
+      "dateFinished": "2026-03-31T21:06:45Z",
       "startTime": "2026-03-31T21:06:45Z",
       "endTime": "2026-03-31T21:06:45Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/c5bdd1f3-1e5b-45b9-88a8-5aa1268c57b8.jsonl",
       "sizeBytes": 1821,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "bf6e48fb-7c8a-45cb-9",
       "sessionId": "bf6e48fb-7c8a-45cb-9f3c-106949ec7e1e",
       "agent": "codex",
-      "task": "I\u2019m loading the workspace context required by `AGENTS.md` first, then I\u2019ll run the requested Node test and report the re",
+      "task": "I\u2019m loading the workspace context required by `AGENTS.md` first, then I\u2019ll run the requested Node test and report the result.The required workspace fi",
       "status": "done",
+      "dateCreated": "2026-03-31T21:06:36Z",
+      "dateFinished": "2026-03-31T21:06:36Z",
       "startTime": "2026-03-31T21:06:36Z",
       "endTime": "2026-03-31T21:06:36Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/bf6e48fb-7c8a-45cb-9f3c-106949ec7e1e.jsonl",
       "sizeBytes": 1264,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "6ac28c8f-7324-442c-8",
       "sessionId": "6ac28c8f-7324-442c-8029-095938acf715",
       "agent": "codex",
-      "task": "I\u2019m loading the required workspace context first, then I\u2019ll inspect `src/routes/api-routes.js` and update the comment if",
+      "task": "I\u2019m loading the required workspace context first, then I\u2019ll inspect `src/routes/api-routes.js` and update the comment if it doesn\u2019t match the exact re",
       "status": "done",
+      "dateCreated": "2026-03-31T21:01:01Z",
+      "dateFinished": "2026-03-31T21:01:01Z",
       "startTime": "2026-03-31T21:01:01Z",
       "endTime": "2026-03-31T21:01:01Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/6ac28c8f-7324-442c-8029-095938acf715.jsonl",
       "sizeBytes": 2032,
       "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     },
     {
       "id": "09c95f0f-bf56-44d8-a",
       "sessionId": "09c95f0f-bf56-44d8-a957-f9ee5481acc7",
       "agent": "codex",
-      "task": "I\u2019m checking the workspace for the live validation path and the task artifacts first, then I\u2019ll run the validator agains",
+      "task": "I\u2019m checking the workspace for the live validation path and the task artifacts first, then I\u2019ll run the validator against the existing implementation ",
       "status": "done",
+      "dateCreated": "2026-03-31T20:57:48Z",
+      "dateFinished": "2026-03-31T20:57:48Z",
       "startTime": "2026-03-31T20:57:48Z",
       "endTime": "2026-03-31T20:57:48Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
       "tokens": 0,
       "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/09c95f0f-bf56-44d8-a957-f9ee5481acc7.jsonl",
       "sizeBytes": 3251,
       "isCron": false,
-      "spawns": 0
-    },
-    {
-      "id": "c55b569f-578b-471e-9",
-      "sessionId": "c55b569f-578b-471e-9d9d-f4a29070373a",
-      "agent": "codex",
-      "task": "I\u2019m treating this as a delegation task, not a hands-on coding task. First step is to inspect the local instructions and ",
-      "status": "done",
-      "startTime": "2026-03-31T20:57:26Z",
-      "endTime": "2026-03-31T20:57:26Z",
-      "tokens": 0,
-      "model": "codex",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/c55b569f-578b-471e-9d9d-f4a29070373a.jsonl",
-      "sizeBytes": 2400,
-      "isCron": false,
-      "spawns": 0
-    },
-    {
-      "id": "af5b5b13-fdb4-4d57-8",
-      "sessionId": "af5b5b13-fdb4-4d57-8daa-5a27eb5ce07c",
-      "agent": "codex",
-      "task": "I\u2019m loading the workspace context required by `AGENTS.md` first, then I\u2019ll run `node --test test/api-routes.logging.test",
-      "status": "done",
-      "startTime": "2026-03-31T20:24:00Z",
-      "endTime": "2026-03-31T20:24:00Z",
-      "tokens": 0,
-      "model": "codex",
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/af5b5b13-fdb4-4d57-8daa-5a27eb5ce07c.jsonl",
-      "sizeBytes": 1896,
-      "isCron": false,
-      "spawns": 0
+      "spawns": 0,
+      "parentSession": null
     }
   ],
   "projects": [
@@ -1208,91 +2162,78 @@
       "name": "Mission Control Dashboard",
       "status": "active",
       "agents": [
+        "codex",
         "main",
         "worker"
       ],
-      "taskCount": 18,
-      "doneCount": 15,
-      "activeCount": 3
-    },
-    {
-      "id": "monday-integration",
-      "name": "Monday.com Integration",
-      "status": "active",
-      "agents": [
-        "main"
+      "taskCount": 22,
+      "doneCount": 18,
+      "activeCount": 4,
+      "totalCost": 2.4159,
+      "modelsUsed": [
+        "acp-runtime",
+        "gpt-4o",
+        "gpt-4o-mini"
       ],
-      "taskCount": 17,
-      "doneCount": 17,
-      "activeCount": 0
+      "agentsWorkedOn": [
+        "codex",
+        "main",
+        "worker"
+      ],
+      "estCostToCompletion": 0.3933,
+      "estTimeToCompletion": "~60 min"
     },
     {
       "id": "system-ops",
-      "name": "System Operations (Cron)",
-      "status": "active",
+      "name": "System Operations",
+      "status": "done",
       "agents": [
         "main"
       ],
-      "taskCount": 43,
-      "doneCount": 43,
-      "activeCount": 0
+      "taskCount": 51,
+      "doneCount": 51,
+      "activeCount": 0,
+      "totalCost": 4.9604,
+      "modelsUsed": [
+        "gpt-4o",
+        "gpt-4o-mini"
+      ],
+      "agentsWorkedOn": [
+        "main"
+      ],
+      "estCostToCompletion": null,
+      "estTimeToCompletion": null
     },
     {
-      "id": "coding-delegations",
+      "id": "coding",
       "name": "ACP Coding Delegations",
       "status": "active",
       "agents": [
         "main",
-        "worker",
-        "validation"
+        "worker"
       ],
       "taskCount": 2,
       "doneCount": 0,
-      "activeCount": 2
+      "activeCount": 2,
+      "totalCost": 0.3805,
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "agentsWorkedOn": [
+        "main",
+        "worker"
+      ],
+      "estCostToCompletion": 0.1142,
+      "estTimeToCompletion": "~30 min"
     }
   ],
   "cronJobs": [
-    {
-      "name": "monday-monitor",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "every",
-      "consecutiveErrors": 0
-    },
     {
       "name": "discord-monitor",
       "enabled": true,
       "lastStatus": "error",
       "schedule": "every",
-      "consecutiveErrors": 7
-    },
-    {
-      "name": "monday-operations-monitor",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "every",
-      "consecutiveErrors": 0
-    },
-    {
-      "name": "task-master-weekly-workload-audit",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "0 10 * * 1",
-      "consecutiveErrors": 0
-    },
-    {
-      "name": "task-master-biweekly-sprint-planning",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "0 14 * * 2",
-      "consecutiveErrors": 0
-    },
-    {
-      "name": "task-master-weekly-sprint-boundary-check",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "0 17 * * 5",
-      "consecutiveErrors": 0
+      "consecutiveErrors": 8
     },
     {
       "name": "daily-system-audit",
@@ -1306,27 +2247,6 @@
       "enabled": true,
       "lastStatus": "ok",
       "schedule": "0 3 * * *",
-      "consecutiveErrors": 0
-    },
-    {
-      "name": "mission-control-task-updates",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "every",
-      "consecutiveErrors": 0
-    },
-    {
-      "name": "working-on-tracker",
-      "enabled": true,
-      "lastStatus": "error",
-      "schedule": "every",
-      "consecutiveErrors": 3
-    },
-    {
-      "name": "task-master-daily-health-check",
-      "enabled": true,
-      "lastStatus": "ok",
-      "schedule": "every",
       "consecutiveErrors": 0
     },
     {
@@ -1426,11 +2346,62 @@
     "connected": true,
     "hostname": "Jarvis-Worker.local"
   },
+  "apiCredentials": [
+    {
+      "id": "anthropic:default",
+      "provider": "anthropic",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022t5AAA",
+      "status": "active",
+      "lastUpdated": "2026-04-01T16:15:31.959589"
+    },
+    {
+      "id": "openai:default",
+      "provider": "openai",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022Y2G4A",
+      "status": "active",
+      "lastUpdated": "2026-04-01T16:15:31.959589"
+    },
+    {
+      "id": "ollama:default",
+      "provider": "ollama",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022local",
+      "status": "active",
+      "lastUpdated": "2026-04-01T16:15:31.959589"
+    },
+    {
+      "id": "openai-codex:default",
+      "provider": "openai-codex",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022JY3xs",
+      "status": "active",
+      "lastUpdated": "2026-04-01T16:15:31.959589"
+    },
+    {
+      "id": "channel:telegram",
+      "provider": "telegram",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022TPTjo",
+      "status": "active",
+      "lastUpdated": "2026-04-01T13:45:03.845885"
+    },
+    {
+      "id": "channel:slack",
+      "provider": "slack",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20223VChY",
+      "status": "active",
+      "lastUpdated": "2026-04-01T13:45:03.845885"
+    },
+    {
+      "id": "monday-com",
+      "provider": "monday.com",
+      "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022gp8D8",
+      "status": "active",
+      "lastUpdated": "2026-03-20T19:24:15.345554"
+    }
+  ],
   "metrics": {
-    "totalSessions": 78,
-    "totalTokens": 6641750,
-    "activeProjects": 4,
-    "cronJobsEnabled": 17,
-    "cronJobsErroring": 2
+    "totalSessions": 88,
+    "totalTokens": 7640388,
+    "totalCost": 6.71,
+    "activeProjects": 2,
+    "cronJobsEnabled": 9
   }
 }
