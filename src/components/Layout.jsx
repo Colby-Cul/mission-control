@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { C, PROJECTS } from '../data/constants';
+import { C, PROJECTS } from '../data/constants'; // PROJECTS used as fallback
 import { icons, NAV_ITEMS } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
@@ -9,7 +9,7 @@ import { useMissionControlData } from '../context/MissionControlDataContext';
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { agents, activities, mondayItems } = useMissionControlData();
+  const { agents, activities, mondayItems, projects, acpSessions } = useMissionControlData();
   const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,19 +32,15 @@ const Layout = () => {
   }, []);
 
   const currentLabel = NAV_ITEMS.find(n => n.id === currentPage)?.label || "Home";
-  const searchableProjects = mondayItems.length
-    ? Array.from(new Map(
-      mondayItems.map(item => [
-        `${item.boardName}:${item.group}`,
-        {
-          id: `${item.boardName}:${item.group}`,
-          name: `${item.boardName} / ${item.group}`,
-          color: C.accent
-        }
-      ])
-    ).values())
+  const searchableProjects = projects.length
+    ? projects.map(p => ({ id: p.id, name: p.name, color: C.accent }))
     : PROJECTS;
-  const searchableTasks = mondayItems;
+  const searchableTasks = acpSessions.slice(0, 20).map(s => ({
+    id: s.sessionId || s.id,
+    name: s.task || "ACP Session",
+    status: s.status || "done",
+    priority: s.isCron ? "low" : "medium"
+  }));
 
   const handleNavigation = (pageId) => {
     if (pageId === 'home') {
@@ -328,43 +324,43 @@ const Layout = () => {
         </div>
 
         {/* Floating Action Buttons */}
-        <div style={{ 
-          position: "fixed", 
-          bottom: 24, 
-          right: 24, 
-          display: "flex", 
-          gap: 8, 
-          zIndex: 50 
+        <div style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          display: "flex",
+          gap: 8,
+          zIndex: 50
         }}>
-          <button style={{ 
-            background: C.accent, 
-            color: "#fff", 
-            border: "none", 
-            borderRadius: 12, 
-            padding: "10px 18px", 
-            fontSize: 13, 
-            fontWeight: 600, 
-            cursor: "pointer", 
-            boxShadow: "0 4px 16px rgba(99,102,241,0.4)", 
-            display: "flex", 
-            alignItems: "center", 
-            gap: 6 
+          <button onClick={() => navigate("/tasks")} style={{
+            background: C.accent,
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            padding: "10px 18px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6
           }}>
             + Add Task
           </button>
-          <button style={{ 
-            background: C.purple, 
-            color: "#fff", 
-            border: "none", 
-            borderRadius: 12, 
-            padding: "10px 18px", 
-            fontSize: 13, 
-            fontWeight: 600, 
-            cursor: "pointer", 
-            boxShadow: "0 4px 16px rgba(139,92,246,0.4)", 
-            display: "flex", 
-            alignItems: "center", 
-            gap: 6 
+          <button onClick={() => navigate("/projects")} style={{
+            background: C.purple,
+            color: "#fff",
+            border: "none",
+            borderRadius: 12,
+            padding: "10px 18px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(139,92,246,0.4)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6
           }}>
             + New Project
           </button>

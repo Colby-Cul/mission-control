@@ -487,12 +487,20 @@ function normalizeSkill(skill, index) {
 
 function normalizeAcpSession(session, index) {
   return {
-    id: session?.id || `acp-session-${index + 1}`,
+    id: session?.id || session?.sessionId || `acp-session-${index + 1}`,
+    sessionId: session?.sessionId || session?.id || "",
+    agent: session?.agent || "unknown",
+    task: session?.task || "ACP Session",
+    status: session?.status || "done",
+    startTime: session?.startTime || session?.lastModified || null,
+    endTime: session?.endTime || session?.lastModified || null,
+    tokens: toNumber(session?.tokens),
+    model: session?.model || "",
     sizeBytes: toNumber(session?.sizeBytes),
-    lastModified: session?.lastModified || null,
+    lastModified: session?.lastModified || session?.endTime || null,
     transcriptPath: session?.transcriptPath || "",
-    status: "completed",
-    raw: session
+    isCron: Boolean(session?.isCron),
+    spawns: toNumber(session?.spawns),
   };
 }
 
