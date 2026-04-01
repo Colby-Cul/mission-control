@@ -5,10 +5,10 @@ OUTPUT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/live-data.json"
 python3 << 'PYEOF' > "$OUTPUT"
 import json, os, subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 openclaw = Path.home() / '.openclaw'
-data = {"generatedAt": datetime.utcnow().isoformat() + "Z"}
+data = {"generatedAt": datetime.now(UTC).isoformat().replace("+00:00", "Z")}
 
 # Gateway health
 try:
