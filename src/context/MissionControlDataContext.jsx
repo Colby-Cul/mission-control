@@ -630,17 +630,30 @@ export function MissionControlDataProvider({ children }) {
         setSnapshot((current) => ({ ...current, loading: true }));
       }
 
+      // Fetch the runtime live-data.json (deployed alongside the app)
+      const liveDataUrl = `${window.location.origin}${import.meta.env.BASE_URL || "/"}live-data.json`;
       const tasks = [
         baseUrl ? fetchJson(`${baseUrl}/health`) : Promise.reject(new Error("Gateway URL is empty.")),
         baseUrl ? fetchJson(`${baseUrl}/api/status`, { headers: gatewayHeaders }) : Promise.reject(new Error("Gateway URL is empty.")),
-        fetchMondayBoard(config, gatewayHeaders, mondayProxyHeaders)
+        fetchMondayBoard(config, gatewayHeaders, mondayProxyHeaders),
+        fetchJson(liveDataUrl).catch(() => null)
       ];
 
-      const [healthResult, statusResult, mondayResult] = await Promise.allSettled(tasks);
+      const [healthResult, statusResult, mondayResult, liveDataResult] = await Promise.allSettled(tasks);
 
       if (cancelled) {
         return;
       }
+
+      // If live-data.json was fetched successfully, merge its session/project data
+      const liveData = liveDataResult.status === "fulfilled" && liveDataResult.value ? liveDataResult.value : null;
+      const liveAcpSessions = liveData && Array.isArray(liveData.acpSessions)
+        ? liveData.acpSessions.map(normalizeAcpSession)
+        : null;
+      const liveProjects = liveData && Array.isArray(liveData.projects) ? liveData.projects : null;
+      const liveCronJobs = liveData && Array.isArray(liveData.cronJobs) ? liveData.cronJobs : null;
+      const liveSkills = liveData && Array.isArray(liveData.skills) ? liveData.skills : null;
+      const liveMetrics = liveData?.metrics || null;
 
       setSnapshot((current) => ({
         ...current,
@@ -648,11 +661,17 @@ export function MissionControlDataProvider({ children }) {
         health: healthResult.status === "fulfilled" ? healthResult.value : current.health,
         status: statusResult.status === "fulfilled" ? normalizeGatewayStatusPayload(statusResult.value) : current.status,
         monday: mondayResult.status === "fulfilled" ? mondayResult.value : current.monday,
+        // Merge live-data.json fields if available
+        ...(liveAcpSessions ? { acpSessions: liveAcpSessions } : {}),
+        ...(liveProjects ? { projects: liveProjects } : {}),
+        ...(liveCronJobs ? { cronJobs: liveCronJobs } : {}),
+        ...(liveSkills ? { skills: liveSkills } : {}),
+        ...(liveMetrics ? { liveMetrics } : {}),
         healthError: healthResult.status === "rejected" ? healthResult.reason?.message || "Health check failed." : null,
         statusError: statusResult.status === "rejected" ? statusResult.reason?.message || "Status request failed." : null,
         mondayError: mondayResult.status === "rejected" ? mondayResult.reason?.message || "Monday request failed." : null,
         lastUpdated: new Date().toISOString(),
-        sourceLabel:
+        sourceLabel: liveData ? "live snapshot" :
           healthResult.status === "fulfilled" ||
           statusResult.status === "fulfilled" ||
           mondayResult.status === "fulfilled"

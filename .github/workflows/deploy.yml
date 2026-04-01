@@ -38,6 +38,7 @@ jobs:
           VITE_MISSION_CONTROL_MONDAY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_TOKEN }}
           VITE_MISSION_CONTROL_MONDAY_BOARD_ID: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_BOARD_ID }}
       - run: cp lodgify-data.js dist/lodgify-data.js
+      - run: cp src/data/live-data.json dist/live-data.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
