@@ -517,6 +517,8 @@ function normalizeBundledSnapshot(payload) {
     cronJobs: Array.isArray(payload?.cronJobs) ? payload.cronJobs : [],
     skills: Array.isArray(payload?.skills) ? payload.skills : [],
     acpSessions: Array.isArray(payload?.acpSessions) ? payload.acpSessions.map(normalizeAcpSession) : [],
+    projects: Array.isArray(payload?.projects) ? payload.projects : [],
+    liveMetrics: payload?.metrics || {},
     sourceLabel: payload?.generatedAt ? "bundled snapshot" : "runtime"
   };
 }
@@ -575,12 +577,14 @@ function buildDerivedData(snapshot, config) {
     activities,
     cronJobs,
     skills,
+    projects: snapshot.projects || [],
+    liveMetrics: snapshot.liveMetrics || {},
     metrics: {
       onlineAgents,
       busyAgents,
-      totalTasks,
-      completedTasks,
-      activeTasks,
+      totalTasks: totalTasks || acpSessions.length,
+      completedTasks: completedTasks || acpSessions.filter(s => s.status === "done").length,
+      activeTasks: activeTasks || acpSessions.filter(s => s.status === "delegated").length,
       activeSessions,
       healthStatus,
       detailStatus,

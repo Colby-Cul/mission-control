@@ -4,9 +4,7 @@ import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
 const Projects = () => {
-  const { snapshot, refresh } = useMissionControlData();
-  const projects = snapshot?.projects || [];
-  const acpSessions = snapshot?.acpSessions || [];
+  const { projects, acpSessions, refresh } = useMissionControlData();
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
 
