@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import bundledSnapshot from "../data/live-data.json";
+
 const ENV = typeof import.meta !== "undefined" ? import.meta.env || {} : {};
 const DEFAULT_GATEWAY_URL = String(
   ENV.VITE_MISSION_CONTROL_GATEWAY_URL ||
@@ -33,6 +35,49 @@ const STORAGE_KEYS = {
 
 const MissionControlDataContext = createContext(null);
 
+const KNOWN_AGENT_METADATA = {
+  main: {
+    name: "Jarvis",
+    role: "Chief of Staff",
+    model: "OpenClaw gateway",
+    initials: "JV",
+    color: "#6366f1",
+    ring: "#818cf8"
+  },
+  worker: {
+    name: "Worker",
+    role: "Implementation Agent",
+    model: "OpenClaw worker",
+    initials: "WK",
+    color: "#10b981",
+    ring: "#34d399"
+  },
+  validation: {
+    name: "Validator",
+    role: "QA and Verification",
+    model: "OpenClaw validator",
+    initials: "VL",
+    color: "#0ea5e9",
+    ring: "#38bdf8"
+  },
+  "executive-assistant": {
+    name: "Victoria",
+    role: "Executive Assistant",
+    model: "OpenClaw assistant",
+    initials: "VA",
+    color: "#8b5cf6",
+    ring: "#a78bfa"
+  },
+  codex: {
+    name: "Codex",
+    role: "Coding Agent",
+    model: "GPT-5",
+    initials: "CX",
+    color: "#14b8a6",
+    ring: "#2dd4bf"
+  }
+};
+
 function readStoredValue(key, fallback = "") {
   if (typeof window === "undefined") {
     return fallback;
@@ -49,6 +94,22 @@ function toNumber(value, fallback = 0) {
 function normalizeStatus(status, fallback = "unknown") {
   const value = String(status || fallback).trim().toLowerCase();
   return value || fallback;
+}
+
+function titleize(value) {
+  return String(value || "")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getInitials(name) {
+  const parts = String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  return parts.map((part) => part.charAt(0).toUpperCase()).join("") || "AG";
 }
 
 function formatMoney(value) {
@@ -108,6 +169,10 @@ function normalizeMondayBoardPayload(payload, boardId) {
     return null;
   }
 
+  if (payload?.error && !payload?.data && !payload?.boards && !payload?.board && !payload?.items_page && !Array.isArray(payload?.items)) {
+    return null;
+  }
+
   if (payload?.data?.boards?.[0]) {
     return payload.data.boards[0];
   }
@@ -127,6 +192,22 @@ function normalizeMondayBoardPayload(payload, boardId) {
       updated_at: payload.updated_at || null,
       items_page: payload.items_page || { items: payload.items || [] }
     };
+  }
+
+  return payload;
+}
+
+function normalizeGatewayStatusPayload(payload) {
+  if (!payload) {
+    return null;
+  }
+
+  if (payload?.error && !payload?.status && !Array.isArray(payload?.bots) && !payload?.metrics) {
+    return null;
+  }
+
+  if (payload?.status) {
+    return payload.status;
   }
 
   return payload;
@@ -224,23 +305,46 @@ async function fetchMondayBoard(config, gatewayHeaders, mondayProxyHeaders) {
 
 function normalizeAgent(agent, index) {
   const name = agent?.name || agent?.id || `Agent ${index + 1}`;
+  const known = KNOWN_AGENT_METADATA[agent?.id] || {};
 
   return {
     id: agent?.id || name,
     name,
-    role: agent?.role || agent?.department || agent?.dept || "OpenClaw agent",
-    model: agent?.model || agent?.provider || "Unknown model",
+    role: agent?.role || agent?.department || agent?.dept || known.role || "OpenClaw agent",
+    model: agent?.model || agent?.provider || known.model || "Unknown model",
     status: normalizeStatus(agent?.status || agent?.state || agent?.health),
     sessions: toNumber(agent?.sessions || agent?.sessionCount || agent?.activeSessions),
     cost: formatMoney(agent?.costDay || agent?.cost || agent?.totalCost),
+    initials: agent?.initials || known.initials || getInitials(name),
+    color: agent?.color || known.color || "#0ea5e9",
+    ring: agent?.ring || known.ring || "#38bdf8",
     raw: agent
   };
 }
 
+function normalizeSessionInventoryAgent(entry, index) {
+  const id = String(entry?.agent || entry?.id || `agent-${index + 1}`).trim();
+  const known = KNOWN_AGENT_METADATA[id] || {};
+  const name = known.name || titleize(id);
+  const sessionCount = toNumber(entry?.sessionCount || entry?.sessions);
+
+  return {
+    id,
+    name,
+    role: known.role || "OpenClaw agent",
+    model: known.model || "Session snapshot",
+    status: sessionCount > 0 ? "active" : "idle",
+    sessions: sessionCount,
+    cost: null,
+    initials: known.initials || getInitials(name),
+    color: known.color || "#0ea5e9",
+    ring: known.ring || "#38bdf8",
+    raw: entry
+  };
+}
+
 function pickColumn(item, matcher) {
-  return (
-    item?.column_values?.find((column) => matcher(column)) || null
-  );
+  return item?.column_values?.find((column) => matcher(column)) || null;
 }
 
 function parseMondayPriority(item) {
@@ -358,40 +462,92 @@ function createMondayActivities(mondayItems) {
   }));
 }
 
+function createCronActivities(cronJobs) {
+  return cronJobs.slice(0, 6).map((job) => ({
+    id: `cron-${job.name}`,
+    source: "cron",
+    title: job.name || "Scheduled job",
+    description: job.enabled ? "Enabled cron job" : "Disabled cron job",
+    status: normalizeStatus(job.lastStatus || (job.enabled ? "enabled" : "disabled"), "unknown"),
+    at: job.lastRunAt || job.updatedAt || null
+  }));
+}
+
+function normalizeSkill(skill, index) {
+  return {
+    id: skill?.id || `skill-${index + 1}`,
+    name: skill?.name || `Skill ${index + 1}`,
+    version: skill?.version || "1.0",
+    path: skill?.path || "",
+    usage: toNumber(skill?.usage),
+    score: toNumber(skill?.score),
+    grade: skill?.grade || "-"
+  };
+}
+
+function normalizeBundledSnapshot(payload) {
+  const statusPayload = normalizeGatewayStatusPayload(payload?.status || payload?.gatewayStatus);
+  const mondayPayload = normalizeMondayBoardPayload(payload?.monday || payload?.mondayBoard, payload?.config?.mondayBoardId || DEFAULT_MONDAY_BOARD_ID);
+
+  return {
+    loading: false,
+    health: payload?.health || null,
+    status: statusPayload || null,
+    monday: mondayPayload,
+    healthError: payload?.healthError || null,
+    statusError: payload?.statusError || payload?.status?.error || null,
+    mondayError: payload?.mondayError || payload?.monday?.error || null,
+    lastUpdated: payload?.generatedAt || payload?.lastUpdated || null,
+    sessionInventory: Array.isArray(payload?.sessionsByAgent) ? payload.sessionsByAgent : [],
+    cronJobs: Array.isArray(payload?.cronJobs) ? payload.cronJobs : [],
+    skills: Array.isArray(payload?.skills) ? payload.skills : [],
+    sourceLabel: payload?.generatedAt ? "bundled snapshot" : "runtime"
+  };
+}
+
 function buildDerivedData(snapshot, config) {
   const agents = Array.isArray(snapshot.status?.bots)
     ? snapshot.status.bots.map(normalizeAgent)
-    : [];
+    : Array.isArray(snapshot.sessionInventory) && snapshot.sessionInventory.length
+      ? snapshot.sessionInventory.map(normalizeSessionInventoryAgent)
+      : [];
   const metrics = snapshot.status?.metrics || {};
   const mondayItems = Array.isArray(snapshot.monday?.items_page?.items)
     ? snapshot.monday.items_page.items.map((item) => normalizeMondayItem(item, snapshot.monday.name || "Monday board"))
     : [];
+  const cronJobs = Array.isArray(snapshot.cronJobs) ? snapshot.cronJobs : [];
+  const skills = Array.isArray(snapshot.skills) ? snapshot.skills.map(normalizeSkill) : [];
 
   const onlineAgents = agents.filter((agent) => ["online", "running", "active", "busy", "healthy", "ok"].includes(agent.status)).length;
   const busyAgents = agents.filter((agent) => agent.status === "busy").length;
   const totalTasks = mondayItems.length || toNumber(metrics.totalTasks);
   const completedTasks = mondayItems.filter((item) => ["done", "complete", "completed"].includes(item.status)).length || toNumber(metrics.completedTasks);
   const activeTasks = Math.max(totalTasks - completedTasks, 0);
-  const activeSessions = toNumber(snapshot.status?.session?.activeSessions);
+  const activeSessions = toNumber(snapshot.status?.session?.activeSessions || agents.reduce((sum, agent) => sum + agent.sessions, 0));
   const mondayConfigured = Boolean(
     config.mondayBoardId &&
-    (config.mondayProxyUrl || config.gatewayUrl || config.mondayToken)
+    (config.mondayProxyUrl || config.gatewayUrl || config.mondayToken || mondayItems.length)
   );
   const healthStatus = snapshot.health?.status || (snapshot.health ? "ok" : "offline");
-  const detailStatus =
-    snapshot.status ? "connected" : snapshot.statusError?.includes("401") || snapshot.statusError?.includes("403") ? "auth required" : "unavailable";
-  const mondayStatus =
-    mondayConfigured
-      ? snapshot.monday
-        ? "connected"
-        : snapshot.mondayError
-          ? "error"
-          : "connecting"
-      : "not configured";
+  const detailStatus = snapshot.status
+    ? "connected"
+    : snapshot.statusError?.includes("401") || snapshot.statusError?.includes("403")
+      ? "auth required"
+      : agents.length
+        ? "snapshot"
+        : "unavailable";
+  const mondayStatus = mondayConfigured
+    ? snapshot.monday
+      ? "connected"
+      : snapshot.mondayError
+        ? "error"
+        : "connecting"
+    : "not configured";
 
   const gatewayActivities = createGatewayActivities(agents, snapshot.health, snapshot.status);
   const mondayActivities = createMondayActivities(mondayItems);
-  const activities = [...mondayActivities, ...gatewayActivities]
+  const cronActivities = createCronActivities(cronJobs);
+  const activities = [...mondayActivities, ...gatewayActivities, ...cronActivities]
     .sort((left, right) => new Date(right.at || 0).getTime() - new Date(left.at || 0).getTime())
     .slice(0, 18);
 
@@ -399,6 +555,8 @@ function buildDerivedData(snapshot, config) {
     agents,
     mondayItems,
     activities,
+    cronJobs,
+    skills,
     metrics: {
       onlineAgents,
       busyAgents,
@@ -413,6 +571,8 @@ function buildDerivedData(snapshot, config) {
   };
 }
 
+const INITIAL_BUNDLED_SNAPSHOT = normalizeBundledSnapshot(bundledSnapshot);
+
 export function MissionControlDataProvider({ children }) {
   const [config, setConfig] = useState({
     gatewayUrl: readStoredValue(STORAGE_KEYS.gatewayUrl, DEFAULT_GATEWAY_URL),
@@ -421,16 +581,7 @@ export function MissionControlDataProvider({ children }) {
     mondayToken: readStoredValue(STORAGE_KEYS.mondayToken, DEFAULT_MONDAY_TOKEN),
     mondayBoardId: readStoredValue(STORAGE_KEYS.mondayBoardId, DEFAULT_MONDAY_BOARD_ID)
   });
-  const [snapshot, setSnapshot] = useState({
-    loading: true,
-    health: null,
-    status: null,
-    monday: null,
-    healthError: null,
-    statusError: null,
-    mondayError: null,
-    lastUpdated: null
-  });
+  const [snapshot, setSnapshot] = useState(INITIAL_BUNDLED_SNAPSHOT);
   const [refreshTick, setRefreshTick] = useState(0);
 
   useEffect(() => {
@@ -461,16 +612,23 @@ export function MissionControlDataProvider({ children }) {
         return;
       }
 
-      setSnapshot({
+      setSnapshot((current) => ({
+        ...current,
         loading: false,
-        health: healthResult.status === "fulfilled" ? healthResult.value : null,
-        status: statusResult.status === "fulfilled" ? statusResult.value : null,
-        monday: mondayResult.status === "fulfilled" ? mondayResult.value : null,
+        health: healthResult.status === "fulfilled" ? healthResult.value : current.health,
+        status: statusResult.status === "fulfilled" ? normalizeGatewayStatusPayload(statusResult.value) : current.status,
+        monday: mondayResult.status === "fulfilled" ? mondayResult.value : current.monday,
         healthError: healthResult.status === "rejected" ? healthResult.reason?.message || "Health check failed." : null,
         statusError: statusResult.status === "rejected" ? statusResult.reason?.message || "Status request failed." : null,
         mondayError: mondayResult.status === "rejected" ? mondayResult.reason?.message || "Monday request failed." : null,
-        lastUpdated: new Date().toISOString()
-      });
+        lastUpdated: new Date().toISOString(),
+        sourceLabel:
+          healthResult.status === "fulfilled" ||
+          statusResult.status === "fulfilled" ||
+          mondayResult.status === "fulfilled"
+            ? "live"
+            : current.sourceLabel
+      }));
     };
 
     run();

@@ -1,7 +1,21 @@
 {
+  "generatedAt": "2026-04-01T11:49:01Z",
+  "config": {
+    "gatewayUrl": "http://127.0.0.1:18789",
+    "mondayProxyUrl": "",
+    "mondayBoardId": "18404980498"
+  },
   "health": {
     "ok": true,
     "status": "live"
+  },
+  "status": {
+    "error": "failed to reach gateway status endpoint",
+    "url": "http://127.0.0.1:18789/api/status"
+  },
+  "monday": {
+    "error": "failed to reach monday source",
+    "boardId": "18404980498"
   },
   "sessionsByAgent": [
     {
@@ -18,7 +32,7 @@
     },
     {
       "agent": "codex",
-      "sessionCount": 71
+      "sessionCount": 75
     },
     {
       "agent": "communication-bot",
@@ -42,7 +56,7 @@
     },
     {
       "agent": "main",
-      "sessionCount": 501
+      "sessionCount": 508
     },
     {
       "agent": "monday-com",
@@ -146,7 +160,7 @@
     {
       "name": "mission-control-builder",
       "enabled": true,
-      "lastStatus": null
+      "lastStatus": "ok"
     }
   ],
   "skills": [

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { C, AGENTS, ACTIVITIES, PROJECTS, TASKS_DATA } from '../data/constants';
+import { C, PROJECTS } from '../data/constants';
 import { icons, NAV_ITEMS } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
+import { useMissionControlData } from '../context/MissionControlDataContext';
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const currentPage = location.pathname.slice(1) || 'home';
+  const { agents, activities, mondayItems } = useMissionControlData();
+  const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -30,6 +32,19 @@ const Layout = () => {
   }, []);
 
   const currentLabel = NAV_ITEMS.find(n => n.id === currentPage)?.label || "Home";
+  const searchableProjects = mondayItems.length
+    ? Array.from(new Map(
+      mondayItems.map(item => [
+        `${item.boardName}:${item.group}`,
+        {
+          id: `${item.boardName}:${item.group}`,
+          name: `${item.boardName} / ${item.group}`,
+          color: C.accent
+        }
+      ])
+    ).values())
+    : PROJECTS;
+  const searchableTasks = mondayItems;
 
   const handleNavigation = (pageId) => {
     if (pageId === 'home') {
@@ -262,8 +277,8 @@ const Layout = () => {
                 boxShadow: "0 8px 32px rgba(0,0,0,0.5)" 
               }}>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Notifications</div>
-                {ACTIVITIES.slice(0, 5).map(a => {
-                  const ag = AGENTS.find(x => x.id === a.agent);
+                {activities.length ? activities.slice(0, 5).map(a => {
+                  const ag = agents.find(x => x.id === a.agent || x.id === a.id?.replace("gateway-agent-", ""));
                   return (
                     <div key={a.id} style={{ 
                       display: "flex", 
@@ -275,13 +290,17 @@ const Layout = () => {
                     }}>
                       <Avatar agent={ag} size={22} />
                       <div style={{ flex: 1 }}>
-                        <span style={{ color: C.text, fontWeight: 500 }}>{ag?.name}</span>
-                        <span style={{ color: C.muted }}> {a.action} — {a.target}</span>
+                        <span style={{ color: C.text, fontWeight: 500 }}>{ag?.name || a.source}</span>
+                        <span style={{ color: C.muted }}> {a.description || a.title}</span>
                       </div>
-                      <span style={{ color: C.muted, fontSize: 10 }}>{a.time}</span>
+                      <span style={{ color: C.muted, fontSize: 10 }}>{a.status}</span>
                     </div>
                   );
-                })}
+                }) : (
+                  <div style={{ color: C.muted, fontSize: 12, padding: "6px 0" }}>
+                    No live notifications yet.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -414,7 +433,7 @@ const Layout = () => {
             <div style={{ padding: 8, maxHeight: 320, overflowY: "auto" }}>
               {searchQuery.length > 0 ? (
                 <>
-                  {AGENTS.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())).map(a => (
+                  {agents.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())).map(a => (
                     <button 
                       key={a.id} 
                       onClick={() => handleNavigation("team")} 
@@ -438,7 +457,7 @@ const Layout = () => {
                       <Badge color={C.cyan}>Agent</Badge>
                     </button>
                   ))}
-                  {PROJECTS.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
+                  {searchableProjects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (
                     <button 
                       key={p.id} 
                       onClick={() => handleNavigation("projects")} 
@@ -467,7 +486,7 @@ const Layout = () => {
                       <Badge color={C.purple}>Project</Badge>
                     </button>
                   ))}
-                  {TASKS_DATA.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5).map(t => (
+                  {searchableTasks.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5).map(t => (
                     <button 
                       key={t.id} 
                       onClick={() => handleNavigation("tasks")} 

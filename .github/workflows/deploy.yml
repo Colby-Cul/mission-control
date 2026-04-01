@@ -23,7 +23,20 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx vite build
+      - run: npm run build
+        env:
+          MISSION_CONTROL_GATEWAY_URL: ${{ secrets.MISSION_CONTROL_GATEWAY_URL }}
+          MISSION_CONTROL_GATEWAY_TOKEN: ${{ secrets.MISSION_CONTROL_GATEWAY_TOKEN }}
+          MISSION_CONTROL_MONDAY_PROXY_URL: ${{ secrets.MISSION_CONTROL_MONDAY_PROXY_URL }}
+          MISSION_CONTROL_MONDAY_PROXY_TOKEN: ${{ secrets.MISSION_CONTROL_MONDAY_PROXY_TOKEN }}
+          MISSION_CONTROL_MONDAY_TOKEN: ${{ secrets.MISSION_CONTROL_MONDAY_TOKEN }}
+          MISSION_CONTROL_MONDAY_BOARD_ID: ${{ secrets.MISSION_CONTROL_MONDAY_BOARD_ID }}
+          VITE_MISSION_CONTROL_GATEWAY_URL: ${{ secrets.VITE_MISSION_CONTROL_GATEWAY_URL }}
+          VITE_MISSION_CONTROL_GATEWAY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_GATEWAY_TOKEN }}
+          VITE_MISSION_CONTROL_MONDAY_PROXY_URL: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_PROXY_URL }}
+          VITE_MISSION_CONTROL_MONDAY_PROXY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_PROXY_TOKEN }}
+          VITE_MISSION_CONTROL_MONDAY_TOKEN: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_TOKEN }}
+          VITE_MISSION_CONTROL_MONDAY_BOARD_ID: ${{ secrets.VITE_MISSION_CONTROL_MONDAY_BOARD_ID }}
       - run: cp lodgify-data.js dist/lodgify-data.js
       - uses: actions/upload-pages-artifact@v3
         with:
