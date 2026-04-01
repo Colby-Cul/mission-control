@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 set -euo pipefail
 OUTPUT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/live-data.json"
 
