@@ -1,94 +1,33 @@
 {
-  "generatedAt": "2026-04-01T11:49:01Z",
-  "config": {
-    "gatewayUrl": "http://127.0.0.1:18789",
-    "mondayProxyUrl": "",
-    "mondayBoardId": "18404980498"
-  },
-  "health": {
+  "generatedAt": "2026-04-01T13:16:48.091745Z",
+  "gateway": {
     "ok": true,
     "status": "live"
   },
-  "status": {
-    "error": "failed to reach gateway status endpoint",
-    "url": "http://127.0.0.1:18789/api/status"
-  },
-  "monday": {
-    "error": "failed to reach monday source",
-    "boardId": "18404980498"
-  },
-  "sessionsByAgent": [
+  "agents": [
     {
-      "agent": "acp-defaultagent",
-      "sessionCount": 0
+      "id": "main",
+      "name": "main",
+      "model": "openai/gpt-4o",
+      "sessionCount": 509
     },
     {
-      "agent": "analytics-bot",
-      "sessionCount": 0
-    },
-    {
-      "agent": "assistant",
-      "sessionCount": 0
-    },
-    {
-      "agent": "codex",
-      "sessionCount": 75
-    },
-    {
-      "agent": "communication-bot",
-      "sessionCount": 0
-    },
-    {
-      "agent": "default",
-      "sessionCount": 0
-    },
-    {
-      "agent": "execassistant",
-      "sessionCount": 0
-    },
-    {
-      "agent": "executive-assistant",
-      "sessionCount": 6
-    },
-    {
-      "agent": "infrastructure-bot",
-      "sessionCount": 0
-    },
-    {
-      "agent": "main",
-      "sessionCount": 508
-    },
-    {
-      "agent": "monday-com",
-      "sessionCount": 0
-    },
-    {
-      "agent": "monday-com-agent",
-      "sessionCount": 0
-    },
-    {
-      "agent": "openai-gpt-4o-mini",
-      "sessionCount": 0
-    },
-    {
-      "agent": "task-master",
-      "sessionCount": 0
-    },
-    {
-      "agent": "taskmaster",
-      "sessionCount": 0
-    },
-    {
-      "agent": "validation",
-      "sessionCount": 1
-    },
-    {
-      "agent": "worker",
+      "id": "worker",
+      "name": "worker",
+      "model": "openai/gpt-4o",
       "sessionCount": 4
     },
     {
-      "agent": "your_discord_monitor_agent_id",
-      "sessionCount": 0
+      "id": "validation",
+      "name": "validation",
+      "model": "openai/gpt-4o",
+      "sessionCount": 1
+    },
+    {
+      "id": "executive-assistant",
+      "name": "Victoria",
+      "model": "openai/gpt-4o-mini",
+      "sessionCount": 6
     }
   ],
   "cronJobs": [
@@ -150,12 +89,12 @@
     {
       "name": "Review Mission Control",
       "enabled": true,
-      "lastStatus": null
+      "lastStatus": "never"
     },
     {
       "name": "Weekly Planning Meeting - Operations",
       "enabled": true,
-      "lastStatus": null
+      "lastStatus": "never"
     },
     {
       "name": "mission-control-builder",
@@ -165,52 +104,160 @@
   ],
   "skills": [
     {
-      "name": "agent-browser",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/agent-browser/SKILL.md"
+      "id": "agent-browser",
+      "name": "agent-browser"
     },
     {
-      "name": "agentmail",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/agentmail/SKILL.md"
+      "id": "agentmail",
+      "name": "agentmail"
     },
     {
-      "name": "enterprise-architecture-audit",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/enterprise-architecture-audit/SKILL.md"
+      "id": "enterprise-architecture-audit",
+      "name": "enterprise-architecture-audit"
     },
     {
-      "name": "macos-ui-control",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/macos-ui-control/SKILL.md"
+      "id": "macos-ui-control",
+      "name": "macos-ui-control"
     },
     {
-      "name": "monday-com",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/monday-com/SKILL.md"
+      "id": "monday-com",
+      "name": "monday-com"
     },
     {
-      "name": "prompt-guard",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/prompt-guard/SKILL.md"
+      "id": "prompt-guard",
+      "name": "prompt-guard"
     },
     {
-      "name": "session-hygiene",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/session-hygiene/SKILL.md"
+      "id": "session-hygiene",
+      "name": "session-hygiene"
     },
     {
-      "name": "slack",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/slack/SKILL.md"
+      "id": "slack",
+      "name": "slack"
     },
     {
-      "name": "task-master",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/task-master/SKILL.md"
+      "id": "task-master",
+      "name": "task-master"
     },
     {
-      "name": "task-master",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/task-master-updated/SKILL.md"
+      "id": "task-master-updated",
+      "name": "task-master"
     },
     {
-      "name": "Travel Planning",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/travel-planning/SKILL.md"
+      "id": "travel-planning",
+      "name": "Travel Planning"
     },
     {
-      "name": "web-search-exa",
-      "path": "/Users/jarvisculbertson/.openclaw/skills/web-search-exa/SKILL.md"
+      "id": "web-search-exa",
+      "name": "web-search-exa"
+    }
+  ],
+  "acpSessions": [
+    {
+      "id": "0f3d8e8b-1c91-401c-9472-7e3f058f0d63",
+      "sizeBytes": 6933,
+      "lastModified": "2026-04-01T04:50:59.387816",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/0f3d8e8b-1c91-401c-9472-7e3f058f0d63.jsonl"
+    },
+    {
+      "id": "2cbd4ad1-d09b-4d51-8f90-31aee2b13c4b",
+      "sizeBytes": 10544,
+      "lastModified": "2026-04-01T00:54:09.371158",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/2cbd4ad1-d09b-4d51-8f90-31aee2b13c4b.jsonl"
+    },
+    {
+      "id": "34d4e009-ce02-4d91-86d7-379a7783775e",
+      "sizeBytes": 4719,
+      "lastModified": "2026-03-31T22:49:35.430054",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/34d4e009-ce02-4d91-86d7-379a7783775e.jsonl"
+    },
+    {
+      "id": "9bfed6ec-33cd-41a1-8d17-cb7b88a198df",
+      "sizeBytes": 2320,
+      "lastModified": "2026-03-31T21:21:30.763808",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9bfed6ec-33cd-41a1-8d17-cb7b88a198df.jsonl"
+    },
+    {
+      "id": "bd414bdf-5512-453b-90ed-125f764ffd87",
+      "sizeBytes": 18839,
+      "lastModified": "2026-03-31T21:03:24.416811",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/bd414bdf-5512-453b-90ed-125f764ffd87.jsonl"
+    },
+    {
+      "id": "b445a379-d335-4d47-9989-3b631fabdad8",
+      "sizeBytes": 5688,
+      "lastModified": "2026-03-31T20:48:07.607271",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/b445a379-d335-4d47-9989-3b631fabdad8.jsonl"
+    },
+    {
+      "id": "865b3aa9-8e96-4c71-bd48-5ec4113f21d3",
+      "sizeBytes": 899,
+      "lastModified": "2026-03-31T20:41:16.786995",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/865b3aa9-8e96-4c71-bd48-5ec4113f21d3.jsonl"
+    },
+    {
+      "id": "9368831a-4ee0-4382-8eb1-d2a69e9a29bd",
+      "sizeBytes": 5890,
+      "lastModified": "2026-03-31T15:35:18.878964",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/9368831a-4ee0-4382-8eb1-d2a69e9a29bd.jsonl"
+    },
+    {
+      "id": "d0fd84b0-2ae0-4f45-af55-f7eea412498d",
+      "sizeBytes": 6673,
+      "lastModified": "2026-03-31T15:34:48.022902",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d0fd84b0-2ae0-4f45-af55-f7eea412498d.jsonl"
+    },
+    {
+      "id": "f800bddd-6ff4-4cc2-8954-c2b808c7841d",
+      "sizeBytes": 9971,
+      "lastModified": "2026-03-31T15:27:30.999404",
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/f800bddd-6ff4-4cc2-8954-c2b808c7841d.jsonl"
+    }
+  ],
+  "workerNode": {
+    "connected": true,
+    "hostname": "Jarvis-Worker.local"
+  },
+  "mondayBoards": [
+    {
+      "id": "18404983544",
+      "name": "Subitems of MISSION-CTRL \u2014 Mission Control System Deployment"
+    },
+    {
+      "id": "18404980498",
+      "name": "MISSION-CTRL \u2014 OpenClaw Mission Control Dashboard"
+    },
+    {
+      "id": "18404920175",
+      "name": "MISSION-CTRL \u2014 Mission Control System Deployment"
+    },
+    {
+      "id": "18404909852",
+      "name": "Mission Control \u2014 Menu Review & Recommendations"
+    },
+    {
+      "id": "18404909120",
+      "name": "Mission Control \u2014 Feature Reference (from Video)"
+    },
+    {
+      "id": "18404907887",
+      "name": "Mission Control \u2014 Feature Requirements"
+    },
+    {
+      "id": "18404905418",
+      "name": "Mission Control - Project ATLAS"
+    },
+    {
+      "id": "18404875938",
+      "name": "Jarvis Workspace Audit Report \u2014 March 21, 2026"
+    },
+    {
+      "id": "18404875461",
+      "name": "\ud83c\udfe2 Autonomous Bot Organization HQ"
+    },
+    {
+      "id": "18404875459",
+      "name": "\ud83e\udd16 Research Agents Intelligence"
     }
   ]
 }
