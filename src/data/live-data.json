@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T11:49:42Z",
+  "generatedAt": "2026-04-02T11:50:49Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -9,7 +9,7 @@
       "id": "main",
       "name": "main",
       "model": "openai/gpt-4o",
-      "sessionCount": 707
+      "sessionCount": 708
     },
     {
       "id": "worker",
@@ -31,6 +31,30 @@
     }
   ],
   "acpSessions": [
+    {
+      "id": "b112bd59-11d8-49f9-a",
+      "sessionId": "b112bd59-11d8-49f9-a8f2-75107b80703b",
+      "agent": "main",
+      "task": "Mission Control auto-update cycle:",
+      "status": "done",
+      "dateCreated": 1775130646440,
+      "dateFinished": 1775130646470,
+      "startTime": "2026-04-02T11:50:49Z",
+      "endTime": "2026-04-02T11:50:49Z",
+      "inputTokens": 17292,
+      "outputTokens": 67,
+      "tokens": 17359,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0439,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/b112bd59-11d8-49f9-a8f2-75107b80703b.jsonl",
+      "sizeBytes": 2621,
+      "isCron": true,
+      "spawns": 0,
+      "parentSession": null
+    },
     {
       "id": "str-research-1775130",
       "sessionId": "str-research-1775130431",
@@ -1480,30 +1504,6 @@
       "parentSession": null
     },
     {
-      "id": "c41f7567-98d9-45fe-9",
-      "sessionId": "c41f7567-98d9-45fe-93c4-5c4092c58d70",
-      "agent": "main",
-      "task": "Agent health check. Run these commands and report status:",
-      "status": "done",
-      "dateCreated": 1775099002337,
-      "dateFinished": 1775099010108,
-      "startTime": "2026-04-02T03:03:33Z",
-      "endTime": "2026-04-02T03:03:33Z",
-      "inputTokens": 17770,
-      "outputTokens": 144,
-      "tokens": 34170,
-      "model": "gpt-4o-mini",
-      "modelsUsed": [
-        "gpt-4o-mini"
-      ],
-      "totalCost": 0.0459,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/c41f7567-98d9-45fe-93c4-5c4092c58d70.jsonl",
-      "sizeBytes": 5744,
-      "isCron": true,
-      "spawns": 0,
-      "parentSession": null
-    },
-    {
       "id": "423455ee-76b1-4211-8",
       "sessionId": "423455ee-76b1-4211-8140-7272629de90e",
       "agent": "codex",
@@ -2210,10 +2210,10 @@
         "main",
         "worker"
       ],
-      "taskCount": 46,
-      "doneCount": 44,
+      "taskCount": 47,
+      "doneCount": 45,
       "activeCount": 2,
-      "totalCost": 3.6524,
+      "totalCost": 3.6963,
       "modelsUsed": [
         "acp-runtime",
         "gpt-4o",
@@ -2237,7 +2237,7 @@
       "taskCount": 53,
       "doneCount": 52,
       "activeCount": 1,
-      "totalCost": 4.5706,
+      "totalCost": 4.5686,
       "modelsUsed": [
         "gpt-4o",
         "gpt-4o-mini"
@@ -2447,8 +2447,8 @@
   ],
   "metrics": {
     "totalSessions": 90,
-    "totalTokens": 4647812,
-    "totalCost": 5.93,
+    "totalTokens": 4631001,
+    "totalCost": 5.92,
     "activeProjects": 3,
     "cronJobsEnabled": 9
   }
