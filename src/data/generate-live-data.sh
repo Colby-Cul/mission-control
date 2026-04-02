@@ -277,15 +277,19 @@ if cron_path.exists():
 skills = []
 sd = openclaw / 'skills'
 if sd.exists():
+    seen_names = set()
     for d in sorted(sd.iterdir()):
         sm = d / 'SKILL.md'
-        if sm.exists():
+        if sm.exists() and sm.is_file():  # skip broken symlinks
             name = d.name
             try:
                 for line in sm.read_text().split('\n'):
                     if line.startswith('name:'): name = line.split(':',1)[1].strip(); break
             except: pass
-            skills.append({'id': d.name, 'name': name})
+            # Deduplicate by name — keep the first occurrence
+            if name not in seen_names:
+                seen_names.add(name)
+                skills.append({'id': d.name, 'name': name})
 data['skills'] = skills
 
 # Worker node
