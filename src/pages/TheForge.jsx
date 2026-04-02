@@ -1,46 +1,44 @@
+import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-import { priorityColor, statusColor } from "./liveViewUtils";
+
+const STAGES = ["sourced", "evaluating", "building", "testing", "launched"];
 
 const TheForge = () => {
-  const { mondayItems } = useMissionControlData();
-  const backlog = mondayItems
-    .filter((item) => !["done", "complete", "completed"].includes(item.status))
-    .sort((left, right) => {
-      const priorityRank = { critical: 4, high: 3, medium: 2, low: 1, unspecified: 0 };
-      return (priorityRank[right.priority] || 0) - (priorityRank[left.priority] || 0);
-    });
+  const { projects = [], acpSessions = [] } = useMissionControlData();
+  const [newIdea, setNewIdea] = useState("");
+  const ideas = projects.filter(p => p.status === "active").map(p => ({
+    ...p, stage: p.doneCount > 0 ? "building" : "evaluating",
+    score: Math.min(99, Math.round((p.doneCount / Math.max(p.taskCount, 1)) * 100)),
+  }));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>The Forge</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI label="Backlog" value={backlog.length || "--"} sub="Open Monday work items" color={C.accent} />
-        <KPI label="Critical" value={backlog.filter((item) => item.priority === "critical").length || "--"} sub="Needs immediate attention" color={C.red} />
+      <div style={{ fontSize: 13, color: C.muted }}>Business idea pipeline — source, evaluate, build, launch</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+        <KPI label="Ideas" value={ideas.length} sub="In pipeline" color={C.accent} />
+        <KPI label="Building" value={ideas.filter(i => i.stage === "building").length} sub="Active" color={C.green} />
+        <KPI label="Evaluating" value={ideas.filter(i => i.stage === "evaluating").length} sub="Under review" color={C.amber} />
       </div>
       <Card>
-        {backlog.length ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {backlog.slice(0, 12).map((item) => (
-              <div key={item.id} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", gap: 14, alignItems: "center", padding: "14px 0", borderBottom: `1px solid ${C.border}` }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{item.name}</div>
-                  <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{item.boardName} / {item.group} / {item.owner}</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Pipeline</div>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${STAGES.length}, 1fr)`, gap: 8 }}>
+          {STAGES.map(stage => (
+            <div key={stage} style={{ padding: 8, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, minHeight: 100 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>{stage}</div>
+              {ideas.filter(i => i.stage === stage).map(idea => (
+                <div key={idea.id} style={{ padding: 8, borderRadius: 6, background: C.bg, border: `1px solid ${C.border}`, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{idea.name}</div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{idea.score}% · {idea.taskCount} tasks</div>
                 </div>
-                <Badge color={priorityColor(item.priority)}>{item.priority}</Badge>
-                <Badge color={statusColor(item.status)}>{item.status}</Badge>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ padding: 40, textAlign: "center", color: C.muted }}>
-            No forge backlog available. Monday tasks may be fully complete or not connected.
-          </div>
-        )}
+              ))}
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
 };
-
 export default TheForge;
