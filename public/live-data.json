@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T23:20:57Z",
+  "generatedAt": "2026-04-02T23:33:04Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -9,7 +9,7 @@
       "id": "main",
       "name": "main",
       "model": "openai/gpt-4o",
-      "sessionCount": 678
+      "sessionCount": 679
     },
     {
       "id": "worker",
@@ -28,9 +28,139 @@
       "name": "Victoria",
       "model": "openai/gpt-4o-mini",
       "sessionCount": 6
+    },
+    {
+      "id": "cfo",
+      "name": "CFO",
+      "model": "openai/gpt-4o",
+      "sessionCount": 0
+    },
+    {
+      "id": "fin-researcher",
+      "name": "Financial Researcher",
+      "model": "openai/gpt-4o",
+      "sessionCount": 0
+    },
+    {
+      "id": "tax-advisor",
+      "name": "Strategic Tax Advisor",
+      "model": "openai/gpt-4o",
+      "sessionCount": 0
+    },
+    {
+      "id": "crypto-analyst",
+      "name": "Crypto Investment Analyst",
+      "model": "openai/gpt-4o",
+      "sessionCount": 0
+    },
+    {
+      "id": "stock-analyst",
+      "name": "Stock Analyst",
+      "model": "openai/gpt-4o",
+      "sessionCount": 0
     }
   ],
   "acpSessions": [
+    {
+      "id": "manual-1775172784",
+      "sessionId": "",
+      "agent": "cfo",
+      "task": "CFO: Connect to QuickBooks and verify access",
+      "status": "pending",
+      "dateCreated": "2026-04-02T23:33:04Z",
+      "dateFinished": null,
+      "startTime": "2026-04-02T23:33:04Z",
+      "endTime": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "tokens": 0,
+      "model": "",
+      "modelsUsed": [],
+      "totalCost": 0,
+      "transcriptPath": "",
+      "sizeBytes": 0,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null,
+      "priority": "high",
+      "description": "Connect to QuickBooks for all business accounts and verify access"
+    },
+    {
+      "id": "4b8baa68-630c-4e79-b",
+      "sessionId": "4b8baa68-630c-4e79-b9d9-d248ff142d50",
+      "agent": "codex",
+      "task": "Creating `/tmp/delegation-test.txt` and capturing exact proof now. I need an escalated shell command because the current sandbox is read-only and the ",
+      "status": "done",
+      "dateCreated": "2026-04-02T23:23:43Z",
+      "dateFinished": "2026-04-02T23:23:43Z",
+      "startTime": "2026-04-02T23:23:43Z",
+      "endTime": "2026-04-02T23:23:43Z",
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "tokens": 0,
+      "model": "codex",
+      "modelsUsed": [
+        "acp-runtime"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/4b8baa68-630c-4e79-b9d9-d248ff142d50.jsonl",
+      "sizeBytes": 2289,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null
+    },
+    {
+      "id": "deleg-enforce-177517",
+      "sessionId": "deleg-enforce-1775172184",
+      "agent": "main",
+      "task": "Create a file at /tmp/delegation-test.txt containing \"Hello from delegation\". This is a coding task.",
+      "status": "delegated",
+      "dateCreated": 1775172187162,
+      "dateFinished": 1775172210337,
+      "startTime": "2026-04-02T23:23:30Z",
+      "endTime": "2026-04-02T23:23:30Z",
+      "inputTokens": 23752,
+      "outputTokens": 282,
+      "tokens": 68450,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o",
+        "gpt-5.4"
+      ],
+      "totalCost": 0.0622,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/deleg-enforce-1775172184.jsonl",
+      "sizeBytes": 16564,
+      "isCron": false,
+      "spawns": 1,
+      "parentSession": null,
+      "estCostToCompletion": 0.0187,
+      "estTimeToCompletion": "~15 min"
+    },
+    {
+      "id": "delegation-test-1775",
+      "sessionId": "delegation-test-1775172157",
+      "agent": "main",
+      "task": "List every tool name you have access to. Just the names, one per line.",
+      "status": "done",
+      "dateCreated": 1775172159772,
+      "dateFinished": 1775172165535,
+      "startTime": "2026-04-02T23:22:48Z",
+      "endTime": "2026-04-02T23:22:48Z",
+      "inputTokens": 21270,
+      "outputTokens": 56,
+      "tokens": 21326,
+      "model": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o",
+        "gpt-5.4"
+      ],
+      "totalCost": 0.0537,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/delegation-test-1775172157.jsonl",
+      "sizeBytes": 3018,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null
+    },
     {
       "id": "c3f59bee-cb38-4529-b",
       "sessionId": "c3f59bee-cb38-4529-b187-e5578e55e890",
@@ -38,20 +168,20 @@
       "task": "Mission Control auto-update cycle:",
       "status": "done",
       "dateCreated": 1775172046493,
-      "dateFinished": 1775172055970,
-      "startTime": "2026-04-02T23:20:57Z",
-      "endTime": "2026-04-02T23:20:57Z",
-      "inputTokens": 9,
-      "outputTokens": 154,
-      "tokens": 48145,
+      "dateFinished": 1775172061462,
+      "startTime": "2026-04-02T23:21:04Z",
+      "endTime": "2026-04-02T23:21:04Z",
+      "inputTokens": 21,
+      "outputTokens": 310,
+      "tokens": 97418,
       "model": "gpt-4o",
       "modelsUsed": [
         "claude-sonnet-4-20250514",
         "gpt-4o"
       ],
-      "totalCost": 0.0016,
+      "totalCost": 0.0032,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/c3f59bee-cb38-4529-b187-e5578e55e890.jsonl",
-      "sizeBytes": 5486,
+      "sizeBytes": 10857,
       "isCron": true,
       "spawns": 0,
       "parentSession": null
@@ -1484,54 +1614,6 @@
       "parentSession": null
     },
     {
-      "id": "85452eca-639a-4506-9",
-      "sessionId": "85452eca-639a-4506-9bae-e329fc589030",
-      "agent": "main",
-      "task": "Agent health check. Run these commands and report status:",
-      "status": "done",
-      "dateCreated": 1775144391140,
-      "dateFinished": 1775144402525,
-      "startTime": "2026-04-02T15:40:11Z",
-      "endTime": "2026-04-02T15:40:11Z",
-      "inputTokens": 34796,
-      "outputTokens": 162,
-      "tokens": 34958,
-      "model": "gpt-4o-mini",
-      "modelsUsed": [
-        "gpt-4o-mini"
-      ],
-      "totalCost": 0.0886,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/85452eca-639a-4506-9bae-e329fc589030.jsonl",
-      "sizeBytes": 5743,
-      "isCron": true,
-      "spawns": 0,
-      "parentSession": null
-    },
-    {
-      "id": "0af888a5-a000-4edb-b",
-      "sessionId": "0af888a5-a000-4edb-b097-d53b2d09ee15",
-      "agent": "main",
-      "task": "Mission Control auto-update cycle:",
-      "status": "done",
-      "dateCreated": 1775143246495,
-      "dateFinished": 1775143253440,
-      "startTime": "2026-04-02T15:20:55Z",
-      "endTime": "2026-04-02T15:20:55Z",
-      "inputTokens": 18035,
-      "outputTokens": 202,
-      "tokens": 52925,
-      "model": "gpt-4o",
-      "modelsUsed": [
-        "gpt-4o"
-      ],
-      "totalCost": 0.0471,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/0af888a5-a000-4edb-b097-d53b2d09ee15.jsonl",
-      "sizeBytes": 9130,
-      "isCron": true,
-      "spawns": 0,
-      "parentSession": null
-    },
-    {
       "id": "24575b8e-50f9-47eb-9",
       "sessionId": "24575b8e-50f9-47eb-9d60-e20d1cac6d54",
       "agent": "codex",
@@ -2178,30 +2260,6 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": null
-    },
-    {
-      "id": "d2820f4b-3716-43ea-8",
-      "sessionId": "d2820f4b-3716-43ea-86a5-07f8f2a2fd59",
-      "agent": "codex",
-      "task": "I\u2019m checking the workspace state first so I can add only the requested file and verify the exact diff cleanly.The repo is already dirty, so I\u2019m isolat",
-      "status": "done",
-      "dateCreated": "2026-03-31T22:11:27Z",
-      "dateFinished": "2026-03-31T22:11:27Z",
-      "startTime": "2026-03-31T22:11:27Z",
-      "endTime": "2026-03-31T22:11:27Z",
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "tokens": 0,
-      "model": "codex",
-      "modelsUsed": [
-        "acp-runtime"
-      ],
-      "totalCost": 0.0,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/codex/sessions/d2820f4b-3716-43ea-86a5-07f8f2a2fd59.jsonl",
-      "sizeBytes": 3136,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": null
     }
   ],
   "projects": [
@@ -2214,10 +2272,10 @@
         "main",
         "worker"
       ],
-      "taskCount": 46,
-      "doneCount": 45,
+      "taskCount": 45,
+      "doneCount": 44,
       "activeCount": 1,
-      "totalCost": 0.7532,
+      "totalCost": 0.7077,
       "modelsUsed": [
         "acp-runtime",
         "claude-sonnet-4-20250514",
@@ -2240,10 +2298,10 @@
       "agents": [
         "main"
       ],
-      "taskCount": 50,
-      "doneCount": 50,
+      "taskCount": 48,
+      "doneCount": 48,
       "activeCount": 0,
-      "totalCost": 0.8934,
+      "totalCost": 0.7593,
       "modelsUsed": [
         "claude-sonnet-4-20250514",
         "gpt-4o",
@@ -2286,10 +2344,10 @@
         "main",
         "worker"
       ],
-      "taskCount": 4,
+      "taskCount": 5,
       "doneCount": 0,
-      "activeCount": 4,
-      "totalCost": 3.2285,
+      "activeCount": 5,
+      "totalCost": 3.2907,
       "modelsUsed": [
         "delivery-mirror",
         "gpt-4o",
@@ -2299,8 +2357,8 @@
         "main",
         "worker"
       ],
-      "estCostToCompletion": 0.9685,
-      "estTimeToCompletion": "~60 min"
+      "estCostToCompletion": 0.9872,
+      "estTimeToCompletion": "~75 min"
     },
     {
       "id": "guest-welcome-book",
@@ -2455,42 +2513,42 @@
       "provider": "anthropic",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022t5AAA",
       "status": "active",
-      "lastUpdated": "2026-04-02T16:20:53.210571"
+      "lastUpdated": "2026-04-02T16:23:30.354716"
     },
     {
       "id": "openai:default",
       "provider": "openai",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022Y2G4A",
       "status": "active",
-      "lastUpdated": "2026-04-02T16:20:53.210571"
+      "lastUpdated": "2026-04-02T16:23:30.354716"
     },
     {
       "id": "ollama:default",
       "provider": "ollama",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022local",
       "status": "active",
-      "lastUpdated": "2026-04-02T16:20:53.210571"
+      "lastUpdated": "2026-04-02T16:23:30.354716"
     },
     {
       "id": "openai-codex:default",
       "provider": "openai-codex",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022JY3xs",
       "status": "active",
-      "lastUpdated": "2026-04-02T16:20:53.210571"
+      "lastUpdated": "2026-04-02T16:23:30.354716"
     },
     {
       "id": "channel:telegram",
       "provider": "telegram",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022TPTjo",
       "status": "active",
-      "lastUpdated": "2026-04-02T15:48:18.895294"
+      "lastUpdated": "2026-04-02T16:31:29.379428"
     },
     {
       "id": "channel:slack",
       "provider": "slack",
       "maskedKey": "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20223VChY",
       "status": "active",
-      "lastUpdated": "2026-04-02T15:48:18.895294"
+      "lastUpdated": "2026-04-02T16:31:29.379428"
     },
     {
       "id": "monday-com",
@@ -2501,9 +2559,9 @@
     }
   ],
   "metrics": {
-    "totalSessions": 88,
-    "totalTokens": 11808139,
-    "totalCost": 6.34,
+    "totalSessions": 89,
+    "totalTokens": 11859305,
+    "totalCost": 6.32,
     "activeProjects": 3,
     "cronJobsEnabled": 9
   }
