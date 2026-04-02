@@ -1,52 +1,153 @@
+import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
-import { C } from "../data/constants";
+import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-import { statusColor } from "./liveViewUtils";
+
+const DEPARTMENTS = [
+  { id: "all", name: "All Departments" },
+  { id: "ops", name: "Operations", agents: ["main", "executive-assistant"] },
+  { id: "eng", name: "Engineering", agents: ["worker", "validation"] },
+];
+
+function statusColor(s) {
+  const v = String(s || "").toLowerCase();
+  if (["online","connected","active","running","ok"].includes(v)) return C.green;
+  if (["busy","warning"].includes(v)) return C.amber;
+  if (["offline","error","blocked"].includes(v)) return C.red;
+  return C.cyan;
+}
+
+function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
+function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
+
+const HUMAN_RATE = 75; // $/hr equivalent
 
 const TheFloor = () => {
-  const { agents, cronJobs, metrics } = useMissionControlData();
-  const recentJobs = cronJobs.slice(0, 6);
+  const { agents, acpSessions = [], cronJobs = [], metrics } = useMissionControlData();
+  const [dept, setDept] = useState("all");
+
+  const allAgents = AGENTS.map(ca => {
+    const live = agents.find(a => a.id === ca.id);
+    return { ...ca, ...(live || {}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online" };
+  });
+
+  const filteredAgents = dept === "all" ? allAgents : allAgents.filter(a => {
+    const d = DEPARTMENTS.find(dd => dd.id === dept);
+    return d?.agents?.includes(a.id);
+  });
+
+  // Calculate per-agent stats from sessions
+  const agentStats = filteredAgents.map(agent => {
+    const sessions = acpSessions.filter(s => s.agent === agent.id);
+    const totalCost = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
+    const totalTokens = sessions.reduce((sum, s) => sum + (s.tokens || 0), 0);
+    const done = sessions.filter(s => s.status === "done").length;
+    const total = sessions.length;
+    const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+    const grade = completionRate >= 90 ? "A" : completionRate >= 75 ? "B" : completionRate >= 60 ? "C" : completionRate >= 40 ? "D" : "F";
+    const currentTask = sessions.find(s => s.status !== "done" && s.status !== "completed");
+    const hoursActive = total * 0.15; // rough estimate: 9 min avg per session
+    const humanCost = hoursActive * HUMAN_RATE;
+    return { ...agent, totalCost, totalTokens, done, total, completionRate, grade, currentTask, hoursActive, humanCost };
+  });
+
+  const totalBotCost = agentStats.reduce((s, a) => s + a.totalCost, 0);
+  const totalHumanCost = agentStats.reduce((s, a) => s + a.humanCost, 0);
+  const savings = totalHumanCost - totalBotCost;
+  const topPerformer = [...agentStats].sort((a, b) => b.completionRate - a.completionRate)[0];
+  const bottomPerformer = [...agentStats].sort((a, b) => a.completionRate - b.completionRate)[0];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>The Floor</h1>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI label="Agents Online" value={agents.length ? `${metrics.onlineAgents}/${agents.length}` : "--"} sub={`${metrics.busyAgents} busy`} color={C.green} />
-        <KPI label="Scheduler Jobs" value={cronJobs.length || "--"} sub="Operational floor load" color={C.accent} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>The Floor</h1>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>Agent workstations · Real-time department view</div>
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {DEPARTMENTS.map(d => (
+            <button key={d.id} onClick={() => setDept(d.id)} style={{ background: dept === d.id ? C.accent : C.surface, color: dept === d.id ? "#fff" : C.muted, border: `1px solid ${dept === d.id ? C.accent : C.border}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              {d.name}
+            </button>
+          ))}
+        </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr)", gap: 16 }}>
-        <Card>
-          {agents.length ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {agents.map((agent) => (
-                <div key={agent.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{agent.name}</div>
-                    <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{agent.role}</div>
-                  </div>
-                  <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+        <KPI label="Agents" value={filteredAgents.length} sub={`${filteredAgents.filter(a => a.status === "online").length} online`} color={C.accent} />
+        <KPI label="Bot Cost" value={fmtCost(totalBotCost)} sub="Total API spend" color={C.purple} />
+        <KPI label="Human Equiv" value={fmtCost(totalHumanCost)} sub={`@$${HUMAN_RATE}/hr`} color={C.amber} />
+        <KPI label="Net Savings" value={fmtCost(savings)} sub={savings > 0 ? "AI cost advantage" : "Over budget"} color={savings > 0 ? C.green : C.red} />
+        <KPI label="Cron Jobs" value={cronJobs.length} sub={`${cronJobs.filter(j => j.enabled).length} active`} color={C.cyan} />
+      </div>
+
+      {/* Agent Workstations Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
+        {agentStats.map(agent => (
+          <Card key={agent.id}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: agent.color || C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 15, border: `3px solid ${statusColor(agent.status)}` }}>
+                  {agent.initials || agent.name?.slice(0, 2).toUpperCase()}
                 </div>
-              ))}
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{agent.name}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{agent.role || agent.dept || "Agent"} · {agent.model}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: agent.grade === "A" ? C.green : agent.grade === "B" ? C.cyan : agent.grade === "C" ? C.amber : C.red }}>{agent.grade}</div>
+                <div style={{ fontSize: 10, color: C.muted }}>{agent.completionRate}% done</div>
+              </div>
             </div>
-          ) : (
-            <div style={{ padding: 40, textAlign: "center", color: C.muted }}>
-              No live floor roster available.
+
+            {agent.currentTask && (
+              <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: C.amber + "11", border: `1px solid ${C.amber}33` }}>
+                <div style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>Working on:</div>
+                <div style={{ fontSize: 12, color: C.text, marginTop: 2 }}>{(agent.currentTask.task || "").slice(0, 70)}</div>
+              </div>
+            )}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 12 }}>
+              <div><div style={{ fontSize: 10, color: C.muted }}>Tasks</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{agent.total}</div></div>
+              <div><div style={{ fontSize: 10, color: C.muted }}>Done</div><div style={{ fontSize: 16, fontWeight: 700, color: C.green }}>{agent.done}</div></div>
+              <div><div style={{ fontSize: 10, color: C.muted }}>Cost</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{fmtCost(agent.totalCost)}</div></div>
+              <div><div style={{ fontSize: 10, color: C.muted }}>Tokens</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{fmtTokens(agent.totalTokens)}</div></div>
+            </div>
+
+            <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: C.bg }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
+                <span style={{ color: C.muted }}>Opportunity cost ({agent.hoursActive.toFixed(1)}h × ${HUMAN_RATE}/hr)</span>
+                <span style={{ color: C.green, fontWeight: 600 }}>{fmtCost(agent.humanCost - agent.totalCost)} saved</span>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Performance Rankings */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <Card>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>Top Performer</div>
+          {topPerformer && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.green, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700 }}>{topPerformer.initials}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{topPerformer.name}</div>
+                <div style={{ fontSize: 12, color: C.green }}>{topPerformer.completionRate}% completion · {topPerformer.done}/{topPerformer.total} tasks</div>
+              </div>
             </div>
           )}
         </Card>
         <Card>
-          {recentJobs.length ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {recentJobs.map((job) => (
-                <div key={job.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 13, color: C.text }}>{job.name}</div>
-                  <Badge color={statusColor(job.lastStatus || (job.enabled ? "enabled" : "disabled"))}>{job.lastStatus || (job.enabled ? "enabled" : "disabled")}</Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ padding: 40, textAlign: "center", color: C.muted }}>
-              No scheduler data available.
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>Needs Attention</div>
+          {bottomPerformer && bottomPerformer.id !== topPerformer?.id && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.red, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700 }}>{bottomPerformer.initials}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{bottomPerformer.name}</div>
+                <div style={{ fontSize: 12, color: C.red }}>{bottomPerformer.completionRate}% completion · {bottomPerformer.done}/{bottomPerformer.total} tasks</div>
+              </div>
             </div>
           )}
         </Card>
