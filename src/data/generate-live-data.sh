@@ -239,9 +239,26 @@ cron_sessions = [t for t in acp_tasks if t.get('isCron')]
 if cron_sessions:
     projects.append(make_project('system-ops', 'System Operations', cron_sessions, ['main']))
 
-coding_sessions = [t for t in acp_tasks if t.get('spawns', 0) > 0 and t not in mc_sessions]
+str_sessions = [t for t in acp_tasks if any(kw in t.get('task','').lower() for kw in ['str ', 'str-business', 'lodgify', 'pineside', 'graeagle', 'northstar', 'rental', 'airbnb', 'booking.com'])]
+if str_sessions:
+    projects.append(make_project('str-website', 'STR Website - Pineside Cabins', str_sessions, ['main', 'worker']))
+
+coding_sessions = [t for t in acp_tasks if t.get('spawns', 0) > 0 and t not in mc_sessions and t not in str_sessions]
 if coding_sessions:
     projects.append(make_project('coding', 'ACP Coding Delegations', coding_sessions, ['main', 'worker']))
+
+# Also load any manually-added projects from a sidecar file
+import os as _os
+manual_projects_path = _os.path.join(_os.path.dirname(_os.path.abspath('/dev/null')), str(Path.home() / 'mission-control/src/data/manual-projects.json'))
+try:
+    manual_path = Path.home() / 'mission-control/src/data/manual-projects.json'
+    if manual_path.exists():
+        with open(manual_path) as _f:
+            for mp in json.load(_f):
+                if not any(p['id'] == mp.get('id') for p in projects):
+                    projects.append(mp)
+except Exception:
+    pass
 
 data['projects'] = projects
 
