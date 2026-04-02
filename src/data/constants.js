@@ -28,6 +28,7 @@ export const AGENTS = [
   { id: "fin-researcher", name: "Financial Researcher", initials: "FR", color: "#2DD4BF", ring: "#5EEAD4", dept: "Finance", model: "GPT-4o", role: "Financial Researcher", status: "online", sessions: 0 },
   { id: "tax-advisor", name: "Tax Advisor", initials: "TA", color: "#1E3A5F", ring: "#3B6B9E", dept: "Finance", model: "GPT-4o", role: "Strategic Tax Advisor", status: "online", sessions: 0 },
   { id: "crypto-analyst", name: "Crypto Analyst", initials: "CA", color: "#F59E0B", ring: "#FBBF24", dept: "Finance", model: "GPT-4o", role: "Crypto Investment Analyst", status: "online", sessions: 0 },
+  { id: "bookkeeper", name: "Bookkeeper", initials: "BK", color: "#6366F1", ring: "#818CF8", dept: "Finance", model: "GPT-4o", role: "Bookkeeper", status: "online", sessions: 0 },
   { id: "stock-analyst", name: "Stock Analyst", initials: "SA", color: "#10B981", ring: "#34D399", dept: "Finance", model: "GPT-4o", role: "Stock Analyst", status: "online", sessions: 0 },
 ];
 
