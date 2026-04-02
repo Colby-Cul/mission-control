@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T21:50:56Z",
+  "generatedAt": "2026-04-02T22:00:49Z",
   "gateway": {
     "ok": true,
     "status": "live"
@@ -31,6 +31,30 @@
     }
   ],
   "acpSessions": [
+    {
+      "id": "manual-1775167249",
+      "sessionId": "",
+      "agent": "worker",
+      "task": "Configure DNS for CaliforniaLuxuryStays.com",
+      "status": "blocked",
+      "dateCreated": "2026-04-02T22:00:49Z",
+      "dateFinished": null,
+      "startTime": "2026-04-02T22:00:49Z",
+      "endTime": null,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "tokens": 0,
+      "model": "",
+      "modelsUsed": [],
+      "totalCost": 0,
+      "transcriptPath": "",
+      "sizeBytes": 0,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": null,
+      "priority": "high",
+      "description": "Point CaliforniaLuxuryStays.com (registered on GoDaddy) to hosting provider. Set up path-based routing for /welcome and /checkout pages."
+    },
     {
       "id": "701a57d2-cf24-4541-9",
       "sessionId": "701a57d2-cf24-4541-9f8f-5e3d621d19c0",
@@ -2182,6 +2206,29 @@
   ],
   "projects": [
     {
+      "id": "guest-welcome-book",
+      "name": "Guest Welcome Book & Checkout Guide System",
+      "status": "blocked",
+      "agents": [
+        "main",
+        "worker"
+      ],
+      "taskCount": 0,
+      "doneCount": 0,
+      "activeCount": 0,
+      "totalCost": 0,
+      "modelsUsed": [],
+      "agentsWorkedOn": [
+        "main",
+        "worker"
+      ],
+      "estCostToCompletion": null,
+      "estTimeToCompletion": null,
+      "description": "Dynamic web-based welcome books and checkout guides for Graeagle and Northstar STR properties. Delivered via email + SMS 30 minutes before guest check-in. Separate checkout guide sent morning of departure. Hosted on CaliforniaLuxuryStays.com. BLOCKED until STR Website Build is complete. Previous coding agents timed out on this build.",
+      "priority": "high",
+      "createdAt": "2026-04-02T22:00:30Z"
+    },
+    {
       "id": "mission-control",
       "name": "Mission Control Dashboard",
       "status": "done",
@@ -2452,7 +2499,7 @@
     }
   ],
   "metrics": {
-    "totalSessions": 88,
+    "totalSessions": 89,
     "totalTokens": 9131922,
     "totalCost": 4.89,
     "activeProjects": 2,
