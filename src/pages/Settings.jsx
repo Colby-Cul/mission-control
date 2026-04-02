@@ -1,174 +1,163 @@
 import { useEffect, useState } from "react";
-
-import { Badge, Card } from "../components/shared";
+import { useNavigate } from "react-router-dom";
+import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import settingsData from "../data/settings.json";
 
-function statusColor(status) {
-  switch (String(status || "").toLowerCase()) {
-    case "connected":
-    case "ok":
-    case "healthy":
-      return C.green;
-    case "auth required":
-    case "warning":
-    case "not configured":
-      return C.amber;
-    case "error":
-    case "offline":
-      return C.red;
-    default:
-      return C.cyan;
-  }
+function statusColor(s) {
+  const v = String(s || "").toLowerCase();
+  if (["connected","ok","healthy","live"].includes(v)) return C.green;
+  if (["warning","auth required","not configured"].includes(v)) return C.amber;
+  if (["error","offline"].includes(v)) return C.red;
+  return C.cyan;
 }
 
+const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+
 const Settings = () => {
+  const navigate = useNavigate();
   const { config, defaults, snapshot, metrics, setConfig, refresh } = useMissionControlData();
   const [draft, setDraft] = useState(config);
+  const [theme, setTheme] = useState(() => localStorage.getItem("mc-theme") || "dark");
+  const [displayName, setDisplayName] = useState(settingsData.displayName || "");
+  const [timezone, setTimezone] = useState(settingsData.timezone || "America/Los_Angeles");
+  const [syncResult, setSyncResult] = useState(null);
+  const [notifications, setNotifications] = useState(settingsData.notifications || {});
 
-  useEffect(() => {
-    setDraft(config);
-  }, [config]);
+  useEffect(() => { setDraft(config); }, [config]);
+  useEffect(() => { localStorage.setItem("mc-theme", theme); }, [theme]);
 
-  const saveSettings = () => {
-    setConfig({
-      gatewayUrl: draft.gatewayUrl.trim() || defaults.gatewayUrl,
-      gatewayToken: draft.gatewayToken.trim(),
-      mondayProxyUrl: draft.mondayProxyUrl.trim() || defaults.mondayProxyUrl,
-      mondayToken: draft.mondayToken.trim(),
-      mondayBoardId: draft.mondayBoardId.trim() || defaults.mondayBoardId
-    });
+  const saveGateway = () => {
+    setConfig({ ...draft, gatewayUrl: draft.gatewayUrl.trim() || defaults.gatewayUrl, gatewayToken: draft.gatewayToken.trim() });
     refresh();
+  };
+
+  const triggerSync = async () => {
+    setSyncResult(null);
+    try {
+      const resp = await fetch(`${MC_API()}/sync`, { method: "POST" });
+      const data = await resp.json();
+      setSyncResult(data.ok ? { ok: true, msg: "Sync complete" } : { ok: false, msg: data.error });
+    } catch (e) {
+      setSyncResult({ ok: false, msg: `Run: bash ~/.openclaw/scripts/mc-sync.sh refresh` });
+    }
+    setTimeout(() => { setSyncResult(null); refresh(); }, 3000);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Settings</h1>
-        <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-          Configure the live sources that drive Mission Control.
-        </div>
-      </div>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Settings</h1>
+      <div style={{ fontSize: 13, color: C.muted }}>Configuration, integrations, and preferences</div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(320px, 1fr) minmax(320px, 1fr)", gap: 16 }}>
-        <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>OpenClaw Gateway</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              Used for `/health` and `/api/status` polling. Prefer a deployed gateway URL instead of localhost-only browser config.
+      {/* User Profile */}
+      <Card>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>User Profile</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>Display Name</span>
+            <input value={displayName} onChange={e => setDisplayName(e.target.value)} style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px" }} />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>Timezone</span>
+            <select value={timezone} onChange={e => setTimezone(e.target.value)} style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px" }}>
+              <option value="America/Los_Angeles">Pacific (LA)</option>
+              <option value="America/Denver">Mountain</option>
+              <option value="America/Chicago">Central</option>
+              <option value="America/New_York">Eastern</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>Theme</span>
+            <div style={{ display: "flex", gap: 4 }}>
+              {["dark", "light"].map(t => (
+                <button key={t} onClick={() => setTheme(t)} style={{ flex: 1, background: theme === t ? C.accent : C.surface, color: theme === t ? "#fff" : C.muted, border: `1px solid ${theme === t ? C.accent : C.border}`, borderRadius: 8, padding: "8px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
             </div>
-          </div>
-
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Gateway URL</span>
-            <input
-              value={draft.gatewayUrl}
-              onChange={(event) => setDraft((current) => ({ ...current, gatewayUrl: event.target.value }))}
-              placeholder={defaults.gatewayUrl}
-              style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
-            />
           </label>
-
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Gateway Token</span>
-            <input
-              type="password"
-              value={draft.gatewayToken}
-              onChange={(event) => setDraft((current) => ({ ...current, gatewayToken: event.target.value }))}
-              placeholder="Optional bearer token for protected gateway status"
-              style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
-            />
-          </label>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Gateway status</span>
-            <Badge color={statusColor(metrics.detailStatus)}>{metrics.detailStatus}</Badge>
-          </div>
-        </Card>
-
-        <Card style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Monday.com</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
-              Prefer a public proxy or gateway endpoint for GitHub Pages. Direct API token use is a browser-local fallback.
-            </div>
-          </div>
-
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Proxy Endpoint</span>
-            <input
-              value={draft.mondayProxyUrl || ""}
-              onChange={(event) => setDraft((current) => ({ ...current, mondayProxyUrl: event.target.value }))}
-              placeholder={defaults.mondayProxyUrl || "https://your-gateway.example.com/api/monday/board"}
-              style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
-            />
-          </label>
-
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Direct API Token</span>
-            <input
-              type="password"
-              value={draft.mondayToken}
-              onChange={(event) => setDraft((current) => ({ ...current, mondayToken: event.target.value }))}
-              placeholder="Local fallback only; avoid exposing browser secrets in production"
-              style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
-            />
-          </label>
-
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Board ID</span>
-            <input
-              value={draft.mondayBoardId}
-              onChange={(event) => setDraft((current) => ({ ...current, mondayBoardId: event.target.value }))}
-              placeholder={defaults.mondayBoardId}
-              style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 12px", outline: "none" }}
-            />
-          </label>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>Monday status</span>
-            <Badge color={statusColor(metrics.mondayStatus)}>{metrics.mondayStatus}</Badge>
-          </div>
-        </Card>
-      </div>
-
-      <Card style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Save configuration</div>
-          <div style={{ fontSize: 12, color: C.muted }}>
-            Values are persisted in browser local storage. Deploy defaults can also come from Vite env vars.
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            onClick={() => setDraft({
-              gatewayUrl: defaults.gatewayUrl,
-              gatewayToken: defaults.gatewayToken || "",
-              mondayProxyUrl: defaults.mondayProxyUrl || "",
-              mondayToken: "",
-              mondayBoardId: defaults.mondayBoardId
-            })}
-            style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer" }}
-          >
-            Reset Draft
-          </button>
-          <button
-            onClick={saveSettings}
-            style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer" }}
-          >
-            Save and Refresh
-          </button>
         </div>
       </Card>
 
-      <Card style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Connection Notes</div>
-        <div style={{ padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, fontSize: 12, color: C.text }}>
-          Gateway: {snapshot.healthError || config.gatewayUrl}
+      {/* Gateway Config */}
+      <Card>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>OpenClaw Gateway</div>
+          <Badge color={statusColor(metrics.detailStatus)}>{metrics.detailStatus || "unknown"}</Badge>
         </div>
-        <div style={{ padding: "12px 14px", borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, fontSize: 12, color: C.text }}>
-          Monday: {snapshot.monday?.name || snapshot.mondayError || (config.mondayProxyUrl ? `${config.mondayProxyUrl} · Board ${config.mondayBoardId || defaults.mondayBoardId}` : `Board ${config.mondayBoardId || defaults.mondayBoardId}`)}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>Gateway URL</span>
+            <input value={draft.gatewayUrl} onChange={e => setDraft(d => ({ ...d, gatewayUrl: e.target.value }))} placeholder={defaults.gatewayUrl} style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px" }} />
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>Gateway Token</span>
+            <input type="password" value={draft.gatewayToken} onChange={e => setDraft(d => ({ ...d, gatewayToken: e.target.value }))} placeholder="Bearer token" style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 10px" }} />
+          </label>
         </div>
+        <button onClick={saveGateway} style={{ marginTop: 12, background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 600, cursor: "pointer" }}>Save & Refresh</button>
+      </Card>
+
+      {/* Notification Preferences */}
+      <Card>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Notification Preferences</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }}>
+          {[
+            { key: "taskBlocked", label: "Task Blocked" },
+            { key: "cronFailed", label: "Cron Job Failed" },
+            { key: "apiKeyExpiring", label: "API Key Expiring" },
+            { key: "newTaskAssigned", label: "New Task Assigned" },
+            { key: "projectStatusChanged", label: "Project Status Changed" },
+          ].map(({ key, label }) => (
+            <label key={key} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, cursor: "pointer" }}>
+              <input type="checkbox" checked={notifications[key] !== false} onChange={e => setNotifications(n => ({ ...n, [key]: e.target.checked }))} />
+              <span style={{ fontSize: 13, color: C.text }}>{label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {/* Integration Links */}
+      <Card>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Integrations</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8 }}>
+          <button onClick={() => navigate("/api-skills")} style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, cursor: "pointer", textAlign: "left" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>API Keys</div>
+            <div style={{ fontSize: 11, color: C.muted }}>Manage connected API credentials</div>
+          </button>
+          <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Local API Server</div>
+            <div style={{ fontSize: 11, color: C.muted }}>http://localhost:7070</div>
+          </div>
+          <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Vercel</div>
+            <div style={{ fontSize: 11, color: C.muted }}>mission-control-peach-omega.vercel.app</div>
+          </div>
+          <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Tailscale</div>
+            <div style={{ fontSize: 11, color: C.muted }}>jarviss-mac-mini.tail8f7461.ts.net</div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card>
+        <div style={{ fontSize: 14, fontWeight: 600, color: C.red, marginBottom: 12 }}>Danger Zone</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button onClick={triggerSync} style={{ background: C.amber + "22", color: C.amber, border: `1px solid ${C.amber}33`, borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>
+            Force mc-sync
+          </button>
+          <button onClick={() => { localStorage.clear(); window.location.reload(); }} style={{ background: C.red + "22", color: C.red, border: `1px solid ${C.red}33`, borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>
+            Clear Local Cache
+          </button>
+        </div>
+        {syncResult && (
+          <div style={{ marginTop: 8, padding: 8, borderRadius: 6, background: syncResult.ok ? C.green + "22" : C.red + "22", color: syncResult.ok ? C.green : C.red, fontSize: 12 }}>
+            {syncResult.msg}
+          </div>
+        )}
       </Card>
     </div>
   );
