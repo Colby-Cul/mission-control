@@ -631,12 +631,15 @@ export function MissionControlDataProvider({ children }) {
       }
 
       // Fetch the runtime live-data.json (deployed alongside the app)
-      const liveDataUrl = `${window.location.origin}${import.meta.env.BASE_URL || "/"}live-data.json`;
+      // Use the current page origin + base path, trying both with and without /mission-control/ prefix
+      const basePath = import.meta.env.BASE_URL || "/";
+      const liveDataUrl = `${window.location.origin}${basePath}live-data.json`;
+      const fallbackLiveDataUrl = `${window.location.origin}/live-data.json`;
       const tasks = [
         baseUrl ? fetchJson(`${baseUrl}/health`) : Promise.reject(new Error("Gateway URL is empty.")),
         baseUrl ? fetchJson(`${baseUrl}/api/status`, { headers: gatewayHeaders }) : Promise.reject(new Error("Gateway URL is empty.")),
         fetchMondayBoard(config, gatewayHeaders, mondayProxyHeaders),
-        fetchJson(liveDataUrl).catch(() => null)
+        fetchJson(liveDataUrl).catch(() => fetchJson(fallbackLiveDataUrl)).catch(() => null)
       ];
 
       const [healthResult, statusResult, mondayResult, liveDataResult] = await Promise.allSettled(tasks);
