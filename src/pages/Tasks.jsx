@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
+import taskTemplates from "../data/task-templates.json";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
 const VIEW_STORAGE_KEY = "mission-control.tasks.view-mode";
 const VIEW_MODES = ["list", "kanban", "gitt"];
+const TASK_SUB_TABS = [
+  { key: "my-tasks", label: "My Tasks" },
+  { key: "blocked-queue", label: "Blocked Queue" },
+  { key: "recently-completed", label: "Recently Completed" },
+  { key: "task-templates", label: "Task Templates" }
+];
 const SORTABLE_COLUMNS = [
   { key: "task", label: "Task" },
   { key: "agent", label: "Agent" },
@@ -198,6 +205,31 @@ function ViewToggle({ viewMode, setViewMode }) {
   );
 }
 
+function TaskSubTabs({ activeTab, setActiveTab }) {
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {TASK_SUB_TABS.map((tab) => (
+        <button
+          key={tab.key}
+          onClick={() => setActiveTab(tab.key)}
+          style={{
+            background: activeTab === tab.key ? "rgba(59,130,246,0.18)" : C.surface,
+            color: activeTab === tab.key ? C.text : C.muted,
+            border: `1px solid ${activeTab === tab.key ? C.accent : C.border}`,
+            borderRadius: 10,
+            padding: "8px 14px",
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer"
+          }}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function SortableHeader({ column, sort, onSort }) {
   return (
     <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>
@@ -277,10 +309,15 @@ function renderEmptyState(message) {
   );
 }
 
+function getTaskTimestamp(task) {
+  return new Date(task.dateFinished || task.dateCreated || 0).getTime();
+}
+
 const Tasks = () => {
   const { acpSessions, snapshot, refresh } = useMissionControlData();
   const [filter, setFilter] = useState("all");
   const [viewMode, setViewMode] = useState(readStoredView);
+  const [activeTab, setActiveTab] = useState("my-tasks");
   const [sort, setSort] = useState({ key: "dateCreated", direction: "desc" });
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState("");
@@ -303,9 +340,34 @@ const Tasks = () => {
     return sessions.filter((session) => session.agent === filter || session.status === filter || session.lane === filter);
   }, [filter, sessions]);
 
+  const blockedQueue = useMemo(() => {
+    return sessions.filter((session) => String(session.status || "").toLowerCase() === "blocked");
+  }, [sessions]);
+
+  const recentlyCompleted = useMemo(() => {
+    return sessions
+      .filter((session) => session.lane === "done")
+      .sort((left, right) => getTaskTimestamp(right) - getTaskTimestamp(left))
+      .slice(0, 30);
+  }, [sessions]);
+
+  const visibleSessions = useMemo(() => {
+    switch (activeTab) {
+      case "blocked-queue":
+        return blockedQueue;
+      case "recently-completed":
+        return recentlyCompleted;
+      case "task-templates":
+        return [];
+      case "my-tasks":
+      default:
+        return filtered;
+    }
+  }, [activeTab, blockedQueue, filtered, recentlyCompleted]);
+
   const sorted = useMemo(() => {
-    return [...filtered].sort((left, right) => compareTasks(left, right, sort));
-  }, [filtered, sort]);
+    return [...visibleSessions].sort((left, right) => compareTasks(left, right, sort));
+  }, [visibleSessions, sort]);
 
   const kanbanGroups = useMemo(() => {
     return KANBAN_COLUMNS.reduce((acc, column) => {
@@ -316,8 +378,8 @@ const Tasks = () => {
 
   const gittTimeline = useMemo(() => {
     return [...sorted].sort((left, right) => {
-      const leftTime = new Date(left.dateCreated || left.dateFinished || 0).getTime();
-      const rightTime = new Date(right.dateCreated || right.dateFinished || 0).getTime();
+      const leftTime = getTaskTimestamp(left);
+      const rightTime = getTaskTimestamp(right);
       return rightTime - leftTime;
     });
   }, [sorted]);
@@ -369,13 +431,29 @@ const Tasks = () => {
     setSubmitting(false);
   };
 
+  const tabTitle = activeTab === "blocked-queue"
+    ? `Blocked Queue (${visibleSessions.length})`
+    : activeTab === "recently-completed"
+      ? `Recently Completed (${visibleSessions.length})`
+      : activeTab === "task-templates"
+        ? `Task Templates (${taskTemplates.length})`
+        : `ACP Sessions (${visibleSessions.length})`;
+
+  const tabDescription = activeTab === "blocked-queue"
+    ? "Sessions currently marked blocked."
+    : activeTab === "recently-completed"
+      ? "Latest 30 completed tasks."
+      : activeTab === "task-templates"
+        ? "Reusable task definitions from the bundled templates file."
+        : `Real ACP sessions from OpenClaw runtime — ${sessions.length} total across all agents.`;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Tasks</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Real ACP sessions from OpenClaw runtime — {sessions.length} total across all agents.
+            {tabDescription}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -394,6 +472,8 @@ const Tasks = () => {
           </button>
         </div>
       </div>
+
+      <TaskSubTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {showAddTask && (
         <Card>
@@ -471,39 +551,97 @@ const Tasks = () => {
         <KPI label="Transcript Size" value={formatBytes(totalBytes)} sub="Combined transcripts" color={C.pink} />
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {["all", "done", "inprogress", "blocked", "main", "codex"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              background: filter === f ? C.accent : C.surface,
-              color: filter === f ? "#fff" : C.muted,
-              border: `1px solid ${filter === f ? C.accent : C.border}`,
-              borderRadius: 8,
-              padding: "6px 14px",
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-          >
-            {f === "all" ? "All" : f === "inprogress" ? "In Progress" : f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
-        ))}
-      </div>
+      {activeTab === "my-tasks" && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {["all", "done", "inprogress", "blocked", "main", "codex"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                background: filter === f ? C.accent : C.surface,
+                color: filter === f ? "#fff" : C.muted,
+                border: `1px solid ${filter === f ? C.accent : C.border}`,
+                borderRadius: 8,
+                padding: "6px 14px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer"
+              }}
+            >
+              {f === "all" ? "All" : f === "inprogress" ? "In Progress" : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <Card>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              ACP Sessions ({filtered.length})
+              {tabTitle}
             </div>
             <div style={{ fontSize: 12, color: C.muted }}>
               Source updated {formatDateTime(snapshot?.lastUpdated)}
             </div>
           </div>
 
-          {viewMode === "list" && (
+          {activeTab === "task-templates" && (
+            taskTemplates.length ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+                {taskTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    style={{
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 14,
+                      background: "linear-gradient(135deg, rgba(31,41,55,0.98), rgba(17,24,39,0.92))",
+                      padding: 14,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 10
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                      <div>
+                        <div style={{ color: C.text, fontSize: 14, fontWeight: 700 }}>{template.name}</div>
+                        <div style={{ color: C.muted, fontSize: 11, fontFamily: "monospace", marginTop: 4 }}>{template.id}</div>
+                      </div>
+                      <Badge color={template.priority === "critical" ? C.red : template.priority === "high" ? C.amber : template.priority === "low" ? C.teal : C.accent}>
+                        {template.priority}
+                      </Badge>
+                    </div>
+                    <div style={{ color: C.muted, fontSize: 13, lineHeight: 1.5 }}>{template.description}</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <Badge color={template.agent === "worker" ? C.purple : C.accent}>{template.agent}</Badge>
+                      <button
+                        onClick={() => {
+                          setShowAddTask(true);
+                          setNewTask(template.name);
+                          setNewTaskDesc(template.description || "");
+                          setNewAgent(template.agent || "main");
+                          setNewPriority(template.priority || "normal");
+                        }}
+                        style={{
+                          background: C.green,
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "7px 12px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer"
+                        }}
+                      >
+                        Use Template
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : renderEmptyState("No task templates are available.")
+          )}
+
+          {activeTab !== "task-templates" && viewMode === "list" && (
             sorted.length ? (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1180 }}>
@@ -540,10 +678,10 @@ const Tasks = () => {
                   </tbody>
                 </table>
               </div>
-            ) : renderEmptyState("No sessions match the current filter.")
+            ) : renderEmptyState(activeTab === "blocked-queue" ? "No blocked sessions right now." : "No sessions match the current selection.")
           )}
 
-          {viewMode === "kanban" && (
+          {activeTab !== "task-templates" && viewMode === "kanban" && (
             sorted.length ? (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, alignItems: "start" }}>
                 {KANBAN_COLUMNS.map((column) => (
@@ -576,10 +714,10 @@ const Tasks = () => {
                   </div>
                 ))}
               </div>
-            ) : renderEmptyState("No sessions match the current filter.")
+            ) : renderEmptyState(activeTab === "blocked-queue" ? "No blocked sessions right now." : "No sessions match the current selection.")
           )}
 
-          {viewMode === "gitt" && (
+          {activeTab !== "task-templates" && viewMode === "gitt" && (
             gittTimeline.length ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 {gittTimeline.map((task, index) => {
@@ -677,7 +815,7 @@ const Tasks = () => {
                   );
                 })}
               </div>
-            ) : renderEmptyState("No sessions match the current filter.")
+            ) : renderEmptyState(activeTab === "blocked-queue" ? "No blocked sessions right now." : "No sessions match the current selection.")
           )}
         </div>
       </Card>
