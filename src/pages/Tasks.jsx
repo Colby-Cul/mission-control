@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import taskTemplates from "../data/task-templates.json";
@@ -14,6 +15,7 @@ const TASK_SUB_TABS = [
 ];
 const SORTABLE_COLUMNS = [
   { key: "task", label: "Task" },
+  { key: "projectName", label: "Project" },
   { key: "agent", label: "Agent" },
   { key: "status", label: "Status" },
   { key: "model", label: "Model" },
@@ -163,6 +165,8 @@ function normalizeTask(session, index) {
     id: session?.id || session?.sessionId || `task-${index + 1}`,
     sessionId: session?.sessionId || session?.id || "",
     task: session?.task || "ACP Session",
+    projectId: session?.projectId || "",
+    projectName: session?.projectName || "",
     agent: session?.agent || "unknown",
     status: session?.status || "unknown",
     model: session?.model || "—",
@@ -257,6 +261,8 @@ function SortableHeader({ column, sort, onSort }) {
 }
 
 function TaskChip({ task }) {
+  const navigate = useNavigate();
+
   return (
     <div
       style={{
@@ -276,6 +282,22 @@ function TaskChip({ task }) {
         </div>
       </div>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {task.projectName ? (
+          <button
+            onClick={() => navigate(`/projects?project=${encodeURIComponent(task.projectId)}`)}
+            style={{
+              background: "transparent",
+              border: `1px solid ${C.border}`,
+              borderRadius: 999,
+              color: C.text,
+              cursor: "pointer",
+              fontSize: 11,
+              padding: "2px 8px"
+            }}
+          >
+            {task.projectName}
+          </button>
+        ) : null}
         <Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge>
         <Badge color={statusColor(task.status)}>{task.status}</Badge>
       </div>
@@ -314,6 +336,7 @@ function getTaskTimestamp(task) {
 }
 
 const Tasks = () => {
+  const navigate = useNavigate();
   const { acpSessions, snapshot, refresh } = useMissionControlData();
   const [filter, setFilter] = useState("all");
   const [viewMode, setViewMode] = useState(readStoredView);
@@ -661,6 +684,23 @@ const Tasks = () => {
                             {task.sessionId ? task.sessionId.slice(0, 16) : "unsynced"}
                           </div>
                         </td>
+                        <td style={{ padding: "14px 10px", fontSize: 13, color: C.text }}>
+                          {task.projectName ? (
+                            <button
+                              onClick={() => navigate(`/projects?project=${encodeURIComponent(task.projectId)}`)}
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                color: C.accent,
+                                cursor: "pointer",
+                                fontSize: 13,
+                                padding: 0
+                              }}
+                            >
+                              {task.projectName}
+                            </button>
+                          ) : ""}
+                        </td>
                         <td style={{ padding: "14px 10px" }}>
                           <Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge>
                         </td>
@@ -787,6 +827,22 @@ const Tasks = () => {
                             </div>
                           </div>
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {task.projectName ? (
+                              <button
+                                onClick={() => navigate(`/projects?project=${encodeURIComponent(task.projectId)}`)}
+                                style={{
+                                  background: "transparent",
+                                  border: `1px solid ${C.border}`,
+                                  borderRadius: 999,
+                                  color: C.text,
+                                  cursor: "pointer",
+                                  fontSize: 11,
+                                  padding: "2px 8px"
+                                }}
+                              >
+                                {task.projectName}
+                              </button>
+                            ) : null}
                             <Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge>
                             <Badge color={statusColor(task.status)}>{task.status}</Badge>
                             <Badge color={C.teal}>{task.model}</Badge>

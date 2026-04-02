@@ -104,6 +104,14 @@ function titleize(value) {
     .join(" ");
 }
 
+function slugify(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function getInitials(name) {
   const parts = String(name || "")
     .split(/\s+/)
@@ -486,6 +494,8 @@ function normalizeSkill(skill, index) {
 }
 
 function normalizeAcpSession(session, index) {
+  const numericTotalCost = Number(session?.totalCost ?? session?.cost);
+
   return {
     id: session?.id || session?.sessionId || `acp-session-${index + 1}`,
     sessionId: session?.sessionId || session?.id || "",
@@ -496,12 +506,84 @@ function normalizeAcpSession(session, index) {
     endTime: session?.endTime || session?.lastModified || null,
     tokens: toNumber(session?.tokens),
     model: session?.model || "",
+    modelsUsed: Array.isArray(session?.modelsUsed)
+      ? session.modelsUsed
+      : session?.model
+        ? [session.model]
+        : [],
+    inputTokens: toNumber(session?.inputTokens),
+    outputTokens: toNumber(session?.outputTokens),
+    totalCost: Number.isFinite(numericTotalCost) ? numericTotalCost : 0,
     sizeBytes: toNumber(session?.sizeBytes),
     lastModified: session?.lastModified || session?.endTime || null,
     transcriptPath: session?.transcriptPath || "",
     isCron: Boolean(session?.isCron),
     spawns: toNumber(session?.spawns),
+    parentSession: session?.parentSession || "",
+    projectId: session?.projectId || session?.project || "",
   };
+}
+
+function buildProjectMatchers(projects) {
+  const aliasMap = new Map();
+
+  projects.forEach((project) => {
+    const register = (value) => {
+      const alias = slugify(value);
+      if (alias && !aliasMap.has(alias)) {
+        aliasMap.set(alias, project.id);
+      }
+    };
+
+    register(project.id);
+    register(project.name);
+
+    String(project.name || "")
+      .split(/[^a-zA-Z0-9]+/)
+      .filter((token) => token.length >= 4)
+      .forEach(register);
+  });
+
+  return aliasMap;
+}
+
+function inferProjectIdForSession(session, projects, projectMatchers) {
+  const directProjectId = session?.projectId || session?.project || "";
+  if (directProjectId && projects.some((project) => project.id === directProjectId)) {
+    return directProjectId;
+  }
+
+  const haystack = `${session?.task || ""} ${session?.transcriptPath || ""}`.toLowerCase();
+  if (!haystack.trim()) {
+    return "";
+  }
+
+  if (haystack.includes("mission-control") || haystack.includes("mission control")) {
+    return "mission-control";
+  }
+
+  if (session?.isCron) {
+    return "system-ops";
+  }
+
+  if (["str ", "str-business", "lodgify", "pineside", "graeagle", "northstar", "rental", "airbnb", "booking.com"].some((keyword) => haystack.includes(keyword))) {
+    return "str-website";
+  }
+
+  for (const [alias, projectId] of projectMatchers.entries()) {
+    if (alias && haystack.includes(alias.replace(/-/g, " "))) {
+      return projectId;
+    }
+    if (alias && haystack.includes(alias)) {
+      return projectId;
+    }
+  }
+
+  if (session?.spawns > 0 && projects.some((project) => project.id === "coding")) {
+    return "coding";
+  }
+
+  return "";
 }
 
 function normalizeBundledSnapshot(payload) {
@@ -543,7 +625,40 @@ function buildDerivedData(snapshot, config) {
     : [];
   const cronJobs = Array.isArray(snapshot.cronJobs) ? snapshot.cronJobs : [];
   const skills = Array.isArray(snapshot.skills) ? snapshot.skills.map(normalizeSkill) : [];
-  const acpSessions = Array.isArray(snapshot.acpSessions) ? snapshot.acpSessions : [];
+  const rawAcpSessions = Array.isArray(snapshot.acpSessions) ? snapshot.acpSessions : [];
+  const rawProjects = Array.isArray(snapshot.projects) ? snapshot.projects : [];
+  const projectMatchers = buildProjectMatchers(rawProjects);
+  const acpSessions = rawAcpSessions.map((session) => {
+    const projectId = inferProjectIdForSession(session, rawProjects, projectMatchers);
+    const project = projectId ? rawProjects.find((entry) => entry.id === projectId) || null : null;
+
+    return {
+      ...session,
+      projectId,
+      projectName: project?.name || "",
+      projectStatus: project?.status || ""
+    };
+  });
+  const projects = rawProjects.map((project) => {
+    const sessions = acpSessions.filter((session) => session.projectId === project.id);
+    const derivedTaskCount = sessions.length;
+    const derivedDoneCount = sessions.filter((session) => ["done", "complete", "completed", "success"].includes(normalizeStatus(session.status))).length;
+    const derivedActiveCount = Math.max(derivedTaskCount - derivedDoneCount, 0);
+    const derivedTotalCost = sessions.reduce((sum, session) => sum + toNumber(session.totalCost), 0);
+    const modelsUsed = Array.from(new Set(sessions.flatMap((session) => session.modelsUsed || []).filter(Boolean)));
+    const agentsWorkedOn = Array.from(new Set(sessions.map((session) => session.agent).filter(Boolean)));
+
+    return {
+      ...project,
+      taskCount: project.taskCount ?? derivedTaskCount,
+      doneCount: project.doneCount ?? derivedDoneCount,
+      activeCount: project.activeCount ?? derivedActiveCount,
+      totalCost: Number.isFinite(Number(project.totalCost)) ? Number(project.totalCost) : derivedTotalCost,
+      modelsUsed: Array.isArray(project.modelsUsed) && project.modelsUsed.length ? project.modelsUsed : modelsUsed,
+      agentsWorkedOn: Array.isArray(project.agentsWorkedOn) && project.agentsWorkedOn.length ? project.agentsWorkedOn : agentsWorkedOn,
+      sessions
+    };
+  });
 
   const onlineAgents = agents.filter((agent) => ["online", "running", "active", "busy", "healthy", "ok"].includes(agent.status)).length;
   const busyAgents = agents.filter((agent) => agent.status === "busy").length;
@@ -585,7 +700,7 @@ function buildDerivedData(snapshot, config) {
     activities,
     cronJobs,
     skills,
-    projects: snapshot.projects || [],
+    projects,
     liveMetrics: snapshot.liveMetrics || {},
     metrics: {
       onlineAgents,
