@@ -47,11 +47,42 @@ const Projects = () => {
   const totalEstCost = projects.reduce((sum, p) => sum + (p.estCostToCompletion || 0), 0);
   const activeProjects = projects.filter((p) => p.status === "active").length;
 
-  const handleNewProject = () => {
+  const [newProjectDesc, setNewProjectDesc] = useState("");
+  const [newProjectAgent, setNewProjectAgent] = useState("main");
+  const [newProjectPriority, setNewProjectPriority] = useState("normal");
+  const [projectSubmitting, setProjectSubmitting] = useState(false);
+  const [projectResult, setProjectResult] = useState(null);
+
+  const handleNewProject = async () => {
     if (!newProjectName.trim()) return;
-    alert(`Run: openclaw agent --agent main --message "Create a new project: ${newProjectName}"`);
-    setNewProjectName("");
-    setShowNewProject(false);
+    setProjectSubmitting(true);
+    setProjectResult(null);
+    const MC_API = localStorage.getItem("mc-api-url") || "http://localhost:7070";
+    try {
+      const resp = await fetch(`${MC_API}/project`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newProjectName,
+          description: newProjectDesc,
+          agents: [newProjectAgent],
+          priority: newProjectPriority,
+          status: "active",
+        }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        setProjectResult({ ok: true, message: `Project "${newProjectName}" created and synced.` });
+        setNewProjectName("");
+        setNewProjectDesc("");
+        setTimeout(() => refresh(), 1000);
+      } else {
+        setProjectResult({ ok: false, message: `Error: ${data.error}` });
+      }
+    } catch (e) {
+      setProjectResult({ ok: false, message: `API unreachable. Run: openclaw agent --agent main --message "Create project: ${newProjectName}"` });
+    }
+    setProjectSubmitting(false);
   };
 
   return (
@@ -77,13 +108,37 @@ const Projects = () => {
 
       {showNewProject && (
         <Card>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input value={newProjectName} onChange={e => setNewProjectName(e.target.value)} placeholder="Project name..."
-              style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }} />
-            <button onClick={handleNewProject}
-              style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 600, cursor: "pointer" }}>
-              Create
-            </button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>New Project</div>
+            <input value={newProjectName} onChange={e => setNewProjectName(e.target.value)} placeholder="Project name (required)"
+              style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }} />
+            <textarea value={newProjectDesc} onChange={e => setNewProjectDesc(e.target.value)} placeholder="Description (required)" rows={2}
+              style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13, resize: "vertical" }} />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <select value={newProjectAgent} onChange={e => setNewProjectAgent(e.target.value)}
+                style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }}>
+                <option value="main">Jarvis (main)</option>
+                <option value="worker">Worker</option>
+                <option value="validation">Validator</option>
+                <option value="executive-assistant">Victoria</option>
+              </select>
+              <select value={newProjectPriority} onChange={e => setNewProjectPriority(e.target.value)}
+                style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }}>
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+              <button onClick={handleNewProject} disabled={projectSubmitting || !newProjectName.trim()}
+                style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 600, cursor: "pointer", opacity: projectSubmitting ? 0.5 : 1 }}>
+                {projectSubmitting ? "Creating..." : "Create Project"}
+              </button>
+            </div>
+            {projectResult && (
+              <div style={{ padding: 12, borderRadius: 8, background: projectResult.ok ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", border: `1px solid ${projectResult.ok ? C.green : C.red}`, color: C.text, fontSize: 12, fontFamily: "monospace" }}>
+                {projectResult.message}
+              </div>
+            )}
           </div>
         </Card>
       )}

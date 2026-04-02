@@ -284,7 +284,9 @@ const Tasks = () => {
   const [sort, setSort] = useState({ key: "dateCreated", direction: "desc" });
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
   const [newAgent, setNewAgent] = useState("main");
+  const [newPriority, setNewPriority] = useState("normal");
   const [submitting, setSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState(null);
 
@@ -339,13 +341,30 @@ const Tasks = () => {
     if (!newTask.trim()) return;
     setSubmitting(true);
     setSubmitResult(null);
+    const MC_API = localStorage.getItem("mc-api-url") || "http://localhost:7070";
     try {
-      setSubmitResult({
-        ok: true,
-        message: `Run: openclaw agent --agent ${newAgent} --message "${newTask.replace(/"/g, '\\"')}"`
+      const resp = await fetch(`${MC_API}/task`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newTask,
+          description: newTaskDesc || "",
+          agent: newAgent,
+          priority: newPriority,
+          status: "pending",
+        }),
       });
+      const data = await resp.json();
+      if (data.ok) {
+        setSubmitResult({ ok: true, message: `Task created: "${newTask}" → assigned to ${newAgent}. Synced to Mission Control.` });
+        setNewTask("");
+        setNewTaskDesc("");
+        setTimeout(() => refresh(), 1000);
+      } else {
+        setSubmitResult({ ok: false, message: `Server error: ${data.error}. Fallback: run openclaw agent --agent ${newAgent} --message "${newTask}"` });
+      }
     } catch (e) {
-      setSubmitResult({ ok: false, message: String(e) });
+      setSubmitResult({ ok: false, message: `API unreachable (${MC_API}). Run manually: openclaw agent --agent ${newAgent} --message "${newTask.replace(/"/g, '\\"')}"` });
     }
     setSubmitting(false);
   };
@@ -383,10 +402,17 @@ const Tasks = () => {
             <input
               value={newTask}
               onChange={(e) => setNewTask(e.target.value)}
-              placeholder="Describe the task..."
+              placeholder="Task name (required)"
               style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }}
             />
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <textarea
+              value={newTaskDesc}
+              onChange={(e) => setNewTaskDesc(e.target.value)}
+              placeholder="Description (optional)"
+              rows={2}
+              style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13, resize: "vertical" }}
+            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <select
                 value={newAgent}
                 onChange={(e) => setNewAgent(e.target.value)}
@@ -396,6 +422,16 @@ const Tasks = () => {
                 <option value="worker">Worker</option>
                 <option value="validation">Validator</option>
                 <option value="executive-assistant">Victoria</option>
+              </select>
+              <select
+                value={newPriority}
+                onChange={(e) => setNewPriority(e.target.value)}
+                style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.text, fontSize: 13 }}
+              >
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
               </select>
               <button
                 onClick={handleAddTask}
