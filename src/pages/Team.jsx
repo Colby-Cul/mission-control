@@ -6,6 +6,7 @@ import { useMissionControlData } from '../context/MissionControlDataContext';
 const SQUADS = [
   { id: "ops", name: "Operations", agents: ["main", "executive-assistant"], color: C.accent },
   { id: "eng", name: "Engineering", agents: ["worker", "validation"], color: C.green },
+  { id: "fin", name: "Finance", agents: ["cfo", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
 ];
 
 function statusColor(s) {

@@ -23,9 +23,15 @@ export const AGENTS = [
   { id: "worker", name: "Worker", initials: "WK", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "GPT-4o", role: "implementation", status: "online", sessions: 4 },
   { id: "validation", name: "Validator", initials: "VL", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "GPT-4o", role: "QA", status: "online", sessions: 1 },
   { id: "executive-assistant", name: "Victoria", initials: "VA", color: "#8b5cf6", ring: "#a78bfa", dept: "Executive", model: "GPT-4o-mini", role: "executive assistant", status: "online", sessions: 6 },
+
+  { id: "cfo", name: "CFO", initials: "CF", color: "#D4AF37", ring: "#F5D060", dept: "Finance", model: "GPT-4o", role: "Chief Financial Officer", status: "online", sessions: 0 },
+  { id: "fin-researcher", name: "Financial Researcher", initials: "FR", color: "#2DD4BF", ring: "#5EEAD4", dept: "Finance", model: "GPT-4o", role: "Financial Researcher", status: "online", sessions: 0 },
+  { id: "tax-advisor", name: "Tax Advisor", initials: "TA", color: "#1E3A5F", ring: "#3B6B9E", dept: "Finance", model: "GPT-4o", role: "Strategic Tax Advisor", status: "online", sessions: 0 },
+  { id: "crypto-analyst", name: "Crypto Analyst", initials: "CA", color: "#F59E0B", ring: "#FBBF24", dept: "Finance", model: "GPT-4o", role: "Crypto Investment Analyst", status: "online", sessions: 0 },
+  { id: "stock-analyst", name: "Stock Analyst", initials: "SA", color: "#10B981", ring: "#34D399", dept: "Finance", model: "GPT-4o", role: "Stock Analyst", status: "online", sessions: 0 },
 ];
 
-export const DEPARTMENTS = ["Operations", "Engineering", "Executive"];
+export const DEPARTMENTS = ["Operations", "Engineering", "Executive", "Finance"];
 
 // ── Real Projects ──
 export const PROJECTS = [
