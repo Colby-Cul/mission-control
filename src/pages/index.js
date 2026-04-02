@@ -15,4 +15,6 @@ export { default as DocsHub } from './DocsHub';
 export { default as WorkspaceFiles } from './WorkspaceFiles';
 export { default as SystemMonitor } from './SystemMonitor';
 export { default as Rentals } from './Rentals';
+export { default as IncidentRoom } from './IncidentRoom';
+export { default as IntegrationsHub } from './IntegrationsHub';
 export { default as Settings } from './Settings';

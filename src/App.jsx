@@ -19,6 +19,8 @@ import {
   WorkspaceFiles,
   SystemMonitor,
   Rentals,
+  IncidentRoom,
+  IntegrationsHub,
   Settings
 } from './pages';
 
@@ -59,6 +61,8 @@ function App() {
             <Route path="files" element={<WorkspaceFiles />} />
             <Route path="system" element={<SystemMonitor />} />
             <Route path="rentals" element={<Rentals />} />
+            <Route path="incidents" element={<IncidentRoom />} />
+            <Route path="integrations" element={<IntegrationsHub />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

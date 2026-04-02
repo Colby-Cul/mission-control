@@ -92,6 +92,60 @@ const Home = () => {
         </div>
       </div>
 
+      {/* System Health Strip */}
+      <div style={{ display: "flex", gap: 2, height: 6, borderRadius: 3, overflow: "hidden" }}>
+        <div style={{ flex: 3, background: gatewayOk ? C.green : C.red }} title="Gateway" />
+        <div style={{ flex: 2, background: workerConnected ? C.green : C.red }} title="Worker" />
+        <div style={{ flex: 3, background: errorCrons === 0 ? C.green : C.amber }} title="Cron Jobs" />
+        <div style={{ flex: 2, background: blockedTasks === 0 ? C.green : C.red }} title="Blocked Tasks" />
+      </div>
+
+      {/* Exec Mood Ring + Daily Briefing */}
+      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 12 }}>
+        {/* Mood Ring */}
+        <Card>
+          {(() => {
+            const uptimeScore = gatewayOk && workerConnected ? 30 : gatewayOk ? 15 : 0;
+            const taskScore = acpSessions.length > 0 ? Math.min(30, Math.round((doneTasks / Math.max(acpSessions.length, 1)) * 30)) : 0;
+            const burnScore = totalCost < 10 ? 20 : totalCost < 50 ? 10 : 0;
+            const projectScore = activeProjects > 0 ? 10 : 0;
+            const errorScore = errorCrons === 0 && blockedTasks === 0 ? 10 : errorCrons > 2 ? 0 : 5;
+            const total = uptimeScore + taskScore + burnScore + projectScore + errorScore;
+            const color = total >= 80 ? C.green : total >= 50 ? C.amber : C.red;
+            return (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Org Health</div>
+                <div style={{ fontSize: 48, fontWeight: 800, color, lineHeight: 1 }}>{total}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>/ 100</div>
+                <div style={{ marginTop: 8, fontSize: 10, color: C.muted }}>
+                  Uptime {uptimeScore} · Tasks {taskScore} · Burn {burnScore} · Projects {projectScore} · Errors {errorScore}
+                </div>
+              </div>
+            );
+          })()}
+        </Card>
+
+        {/* Daily Briefing */}
+        <Card>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>📋 Daily Briefing</div>
+          <div style={{ fontSize: 12, color: C.text, lineHeight: 1.6 }}>
+            <div>• <strong>{acpSessions.length}</strong> total sessions, <strong>{doneTasks}</strong> completed, <strong>{activeTasks}</strong> active{blockedTasks > 0 && <span style={{ color: C.red }}>, <strong>{blockedTasks} blocked</strong></span>}</div>
+            <div>• <strong>{projects.length}</strong> projects ({activeProjects} active) · API spend: <strong>{fmtCost(totalCost)}</strong></div>
+            <div>• {enabledCrons} cron jobs running{errorCrons > 0 ? <span style={{ color: C.amber }}>, {errorCrons} with errors</span> : <span style={{ color: C.green }}>, all healthy</span>}</div>
+            <div>• Gateway: {gatewayOk ? "✅ live" : "❌ down"} · Worker: {workerConnected ? "✅ connected" : "❌ offline"}</div>
+            {blockedTasks > 0 && <div style={{ color: C.red, marginTop: 4 }}>⚠️ {blockedTasks} task(s) need attention</div>}
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button onClick={() => navigate("/tasks")} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>+ New Task</button>
+        <button onClick={() => navigate("/projects")} style={{ background: C.purple, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>+ New Project</button>
+        <button onClick={() => navigate("/team")} style={{ background: C.green, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>Agent Status</button>
+        <button onClick={() => navigate("/incidents")} style={{ background: C.red, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>Incidents</button>
+      </div>
+
       {/* Primary KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
         <KPI label="Total Sessions" value={acpSessions.length || "—"} sub="All ACP sessions" color={C.accent} />
