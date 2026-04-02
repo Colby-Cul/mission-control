@@ -43,12 +43,17 @@ export const NAV_ITEMS = [
   { id: "finance", label: "Finance", icon: icons.finance },
   { id: "forge", label: "The Forge", icon: icons.forge },
   { id: "skills", label: "Skill Lab", icon: icons.skills },
-  { id: "api-skills", label: "API Skills", icon: icons.apiSkills },
   { id: "activity", label: "Activity Feed", icon: icons.activity },
   { id: "sessions", label: "Sessions", icon: icons.sessions },
-  { id: "memory", label: "Memory", icon: icons.memory },
+  { id: "memory", label: "Memory & Knowledge", icon: icons.memory },
   { id: "docs", label: "Docs Hub", icon: icons.docs },
   { id: "files", label: "Workspace Files", icon: icons.files },
   { id: "system", label: "System Monitor", icon: icons.system },
   { id: "rentals", label: "Rentals", icon: icons.rentals },
 ];
+
+// Settings nav item (pinned to sidebar bottom)
+export const SETTINGS_NAV = { id: "settings", label: "Settings", icon: icons.settings };
+
+// API Skills merged into Settings (accessible from Settings page)
+export const API_SKILLS_NAV = { id: "api-skills", label: "API Skills", icon: icons.apiSkills };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { C, PROJECTS } from '../data/constants'; // PROJECTS used as fallback
-import { icons, NAV_ITEMS } from './Icons';
+import { icons, NAV_ITEMS, SETTINGS_NAV } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
 import { useMissionControlData } from '../context/MissionControlDataContext';
