@@ -115,7 +115,7 @@ const Projects = () => {
   const totalDone = projects.reduce((sum, p) => sum + (p.doneCount || 0), 0);
   const totalActive = projects.reduce((sum, p) => sum + (p.activeCount || 0), 0);
   const totalCost = projects.reduce((sum, p) => sum + (p.totalCost || 0), 0);
-  const totalEstCost = projects.reduce((sum, p) => sum + (p.estCostToCompletion || 0), 0);
+  const totalEstCost = projects.reduce((sum, p) => sum + (p.estimatedCostToCompletion || 0), 0);
   const activeProjects = projects.filter((p) => p.status === "active").length;
 
   const handleSelectProject = (projectId, view = "kanban") => {
@@ -305,8 +305,8 @@ const Projects = () => {
               <KPI label="Total Tasks" value={selectedProject.taskCount || detail.sessions.length || "—"} color={C.cyan} />
               <KPI label="Completed" value={selectedProject.doneCount || "0"} color={C.green} />
               <KPI label="In Progress" value={selectedProject.activeCount || "0"} color={C.amber} />
-              <KPI label="Models" value={selectedProject.modelsUsed?.length || "0"} color={C.purple} />
-              <KPI label="ETA" value={selectedProject.estTimeToCompletion || "—"} color={C.teal} />
+              <KPI label="Models" value={selectedProject.apiModelsUsed?.length || selectedProject.modelsUsed?.length || "0"} color={C.purple} />
+              <KPI label="ETA" value={selectedProject.estimatedTimeToCompletion || "—"} color={C.teal} />
             </div>
           </Card>
 
@@ -497,10 +497,10 @@ const Projects = () => {
                           <div style={{ textAlign: "right" }}>
                             <div style={{ fontSize: 11, color: C.muted }}>Est. to completion</div>
                             <div style={{ fontSize: 16, color: C.green, fontWeight: 700 }}>
-                              {formatUsd(project.estCostToCompletion)}
+                              {formatUsd(project.estimatedCostToCompletion)}
                             </div>
                             <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
-                              {project.estTimeToCompletion || "No ETA"}
+                              {project.estimatedTimeToCompletion || "No ETA"}
                             </div>
                           </div>
                         </div>
@@ -509,8 +509,8 @@ const Projects = () => {
                       <div style={{ marginTop: 14 }}>
                         <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Models</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                          {(project.modelsUsed || []).length ? (
-                            project.modelsUsed.map((model) => (
+                          {(project.apiModelsUsed || project.modelsUsed || []).length ? (
+                            (project.apiModelsUsed || project.modelsUsed || []).map((model) => (
                               <Badge key={model} color={model.includes("mini") ? C.cyan : model.includes("runtime") ? C.amber : C.purple}>
                                 {formatModelLabel(model)}
                               </Badge>
@@ -518,6 +518,15 @@ const Projects = () => {
                           ) : (
                             <Badge color={C.border}>No models reported</Badge>
                           )}
+                        </div>
+                      </div>
+
+                      <div style={{ marginTop: 14 }}>
+                        <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Agents That Worked On It</div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {workedAgents.length ? workedAgents.map((agent) => (
+                            <Avatar key={agent.id} agent={agent} size={28} />
+                          )) : <Badge color={C.border}>No agents reported</Badge>}
                         </div>
                       </div>
 

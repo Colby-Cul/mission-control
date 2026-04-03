@@ -9,7 +9,7 @@ import { useMissionControlData } from '../context/MissionControlDataContext';
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { agents, activities, mondayItems, projects, acpSessions } = useMissionControlData();
+  const { agents, activities, projects, acpSessions } = useMissionControlData();
   const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
