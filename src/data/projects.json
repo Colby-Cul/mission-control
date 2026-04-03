@@ -3,23 +3,25 @@
     "id": "coding",
     "name": "ACP Coding Delegations",
     "status": "active",
-    "taskCount": 4,
+    "taskCount": 5,
     "doneCount": 0,
-    "activeCount": 4,
-    "totalCost": 4.4301,
+    "activeCount": 5,
+    "totalCost": 4.4843,
     "apiModelsUsed": [
       "claude-haiku-4-5-20251001",
       "claude-sonnet-4-6",
       "delivery-mirror",
       "gpt-4o",
-      "gpt-4o-mini"
+      "gpt-4o-mini",
+      "gpt-5.4"
     ],
     "modelsUsed": [
       "claude-haiku-4-5-20251001",
       "claude-sonnet-4-6",
       "delivery-mirror",
       "gpt-4o",
-      "gpt-4o-mini"
+      "gpt-4o-mini",
+      "gpt-5.4"
     ],
     "agentsWorkedOn": [
       "designer",
@@ -32,7 +34,7 @@
       "main"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~60 min",
+    "estimatedTimeToCompletion": "~75 min",
     "sessions": [
       {
         "id": "8167bc3d-5d4a-43f4-9",
@@ -108,25 +110,58 @@
         "dateFinished": null,
         "startTime": "2026-04-03T02:02:55.893Z",
         "endTime": null,
-        "inputTokens": 64,
-        "outputTokens": 38412,
-        "cachedInputTokens": 1517818,
-        "tokens": 1882027,
+        "inputTokens": 69,
+        "outputTokens": 38921,
+        "cachedInputTokens": 1672863,
+        "tokens": 2115573,
         "model": "claude-sonnet-4-6",
         "apiModelUsed": "claude-haiku-4-5-20251001, claude-sonnet-4-6",
         "modelsUsed": [
           "claude-haiku-4-5-20251001",
           "claude-sonnet-4-6"
         ],
-        "totalCost": 1.0317,
+        "totalCost": 1.0859,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/d2f5f7d2-80f6-4c91-8e46-bea39b0bf462.jsonl",
-        "sizeBytes": 515890,
+        "sizeBytes": 522156,
         "isCron": false,
         "spawns": 1,
         "parentSession": "heartbeat",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
         "estimatedTimeToCompletion": "~6.2 hr"
+      },
+      {
+        "id": "c6138809-3daa-4d52-8",
+        "sessionId": "c6138809-3daa-4d52-8fac-638b8099096a",
+        "agent": "main",
+        "task": "Continue where you left off. The previous model attempt failed or timed out.",
+        "status": "in_progress",
+        "lane": "inprogress",
+        "dateCreated": "2026-03-30T00:34:20.914Z",
+        "dateFinished": null,
+        "startTime": "2026-03-30T00:34:20.914Z",
+        "endTime": null,
+        "inputTokens": 507380,
+        "outputTokens": 5195,
+        "cachedInputTokens": 579783,
+        "tokens": 1092358,
+        "model": "delivery-mirror",
+        "apiModelUsed": "claude-sonnet-4-6, delivery-mirror, gpt-4o, gpt-5.4",
+        "modelsUsed": [
+          "claude-sonnet-4-6",
+          "delivery-mirror",
+          "gpt-4o",
+          "gpt-5.4"
+        ],
+        "totalCost": 0.0,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/c6138809-3daa-4d52-8fac-638b8099096a.jsonl",
+        "sizeBytes": 325900,
+        "isCron": false,
+        "spawns": 1,
+        "parentSession": "discord:channel:1485163052604199013",
+        "projectId": "coding",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~40.3 hr"
       },
       {
         "id": "a004d65f-4a20-4d92-b",
@@ -164,10 +199,10 @@
     "id": "mission-control",
     "name": "Mission Control Dashboard",
     "status": "active",
-    "taskCount": 50,
+    "taskCount": 49,
     "doneCount": 0,
-    "activeCount": 50,
-    "totalCost": 1.6995,
+    "activeCount": 49,
+    "totalCost": 1.6919,
     "apiModelsUsed": [
       "claude-sonnet-4-6"
     ],
@@ -181,7 +216,7 @@
       "main"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~750 min",
+    "estimatedTimeToCompletion": "~735 min",
     "sessions": [
       {
         "id": "81ab912e-3702-4f24-8",
@@ -331,7 +366,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~13 min"
+        "estimatedTimeToCompletion": "~14 min"
       },
       {
         "id": "8948805d-5f04-4d1b-8",
@@ -361,7 +396,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~18 min"
+        "estimatedTimeToCompletion": "~19 min"
       },
       {
         "id": "eee06228-460e-4b10-a",
@@ -451,7 +486,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~34 min"
+        "estimatedTimeToCompletion": "~35 min"
       },
       {
         "id": "774f9b09-91fc-4843-8",
@@ -481,7 +516,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~39 min"
+        "estimatedTimeToCompletion": "~40 min"
       },
       {
         "id": "ee891e5e-9257-46ae-9",
@@ -511,7 +546,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~39 min"
+        "estimatedTimeToCompletion": "~40 min"
       },
       {
         "id": "96034b45-a239-4d43-a",
@@ -631,7 +666,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~55 min"
+        "estimatedTimeToCompletion": "~56 min"
       },
       {
         "id": "e79a031c-1689-4fbf-a",
@@ -811,7 +846,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1.4 hr"
+        "estimatedTimeToCompletion": "~1.5 hr"
       },
       {
         "id": "af2272a5-f637-4a75-8",
@@ -1081,7 +1116,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~2.1 hr"
+        "estimatedTimeToCompletion": "~2.2 hr"
       },
       {
         "id": "e502c9db-468e-4484-b",
@@ -1381,7 +1416,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~2.8 hr"
+        "estimatedTimeToCompletion": "~2.9 hr"
       },
       {
         "id": "10e456cf-d966-4f97-8",
@@ -1622,36 +1657,6 @@
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
         "estimatedTimeToCompletion": "~3.4 hr"
-      },
-      {
-        "id": "1e5ace7d-5ac2-4c04-a",
-        "sessionId": "1e5ace7d-5ac2-4c04-a006-10a734c48049",
-        "agent": "main",
-        "task": "[Subagent Context] You are running as a subagent (depth 1/1). Results auto-announce to your requester; do not busy-poll for status.\n\n[Subagent Task]: Run the Mission Control auto-update cycle:\n1. cd /Users/jarvisculbertson/mission-control && bash src/data/generate-live-data.sh\n2. npm run build\n3. If build succeeds: git add -A && git commit -m 'Auto-update: refresh live data' && git push origin master\n4. Return the full output of each step so results can be reported.\n\nReturn plain text results.",
-        "status": "in_progress",
-        "lane": "inprogress",
-        "dateCreated": "2026-04-03T09:50:53.637Z",
-        "dateFinished": null,
-        "startTime": "2026-04-03T09:50:53.637Z",
-        "endTime": null,
-        "inputTokens": 3,
-        "outputTokens": 508,
-        "cachedInputTokens": 0,
-        "tokens": 18805,
-        "model": "claude-sonnet-4-6",
-        "apiModelUsed": "claude-sonnet-4-6",
-        "modelsUsed": [
-          "claude-sonnet-4-6"
-        ],
-        "totalCost": 0.0076,
-        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/1e5ace7d-5ac2-4c04-a006-10a734c48049.jsonl",
-        "sizeBytes": 5680,
-        "isCron": false,
-        "spawns": 0,
-        "parentSession": "",
-        "projectId": "mission-control",
-        "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1.8 hr"
       },
       {
         "id": "a4b1d3c5-559d-491c-b",
