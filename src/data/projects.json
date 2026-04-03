@@ -235,7 +235,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~8 min"
+        "estimatedTimeToCompletion": "~9 min"
       },
       {
         "id": "262b82e3-5f3a-40b5-8",
@@ -265,7 +265,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~13 min"
+        "estimatedTimeToCompletion": "~14 min"
       },
       {
         "id": "6e83be19-ec2f-4e7f-b",
@@ -355,7 +355,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~29 min"
+        "estimatedTimeToCompletion": "~30 min"
       },
       {
         "id": "e502c9db-468e-4484-b",
@@ -415,7 +415,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~34 min"
+        "estimatedTimeToCompletion": "~35 min"
       },
       {
         "id": "facf05b0-e772-4f19-9",
@@ -505,7 +505,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~50 min"
+        "estimatedTimeToCompletion": "~51 min"
       },
       {
         "id": "4f9a1a30-bca8-4c22-9",
@@ -535,7 +535,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~55 min"
+        "estimatedTimeToCompletion": "~56 min"
       },
       {
         "id": "337c8116-a6ae-4e91-b",
@@ -745,7 +745,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1.4 hr"
+        "estimatedTimeToCompletion": "~1.5 hr"
       },
       {
         "id": "ba487da4-da5a-4fab-9",
@@ -775,7 +775,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1.4 hr"
+        "estimatedTimeToCompletion": "~1.5 hr"
       },
       {
         "id": "f6c64b6b-c404-4714-8",
@@ -1135,7 +1135,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~2.1 hr"
+        "estimatedTimeToCompletion": "~2.2 hr"
       },
       {
         "id": "62fbecc4-83b3-4150-8",
@@ -1435,7 +1435,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~2.8 hr"
+        "estimatedTimeToCompletion": "~2.9 hr"
       },
       {
         "id": "762d66c5-48ca-4403-8",
@@ -1705,7 +1705,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~4.2 hr"
+        "estimatedTimeToCompletion": "~4.3 hr"
       }
     ]
   },
@@ -1713,23 +1713,56 @@
     "id": "str-website",
     "name": "STR Website - Pineside Cabins",
     "status": "active",
-    "agents": [
-      "main",
-      "coding-agent",
-      "designer"
-    ],
-    "taskCount": 0,
+    "taskCount": 1,
     "doneCount": 0,
-    "activeCount": 0,
-    "totalCost": 0,
-    "modelsUsed": [],
-    "agentsWorkedOn": [
-      "main",
-      "coding-agent"
+    "activeCount": 1,
+    "totalCost": 0.0305,
+    "apiModelsUsed": [
+      "claude-sonnet-4-6"
     ],
-    "description": "Next.js website for luxury short-term rental properties (Graeagle Cabin + Northstar Luxury)",
-    "priority": "high",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "modelsUsed": [
+      "claude-sonnet-4-6"
+    ],
+    "agentsWorkedOn": [
+      "main"
+    ],
+    "agents": [
+      "main"
+    ],
+    "estimatedCostToCompletion": 0.0,
+    "estimatedTimeToCompletion": "~15 min",
+    "sessions": [
+      {
+        "id": "d60e764b-41a2-41c9-a",
+        "sessionId": "d60e764b-41a2-41c9-af89-1a1e0cf84f8a",
+        "agent": "main",
+        "task": "Prepare a concise morning briefing for Colby. Check: Discord activity overnight, any urgent Monday.com tasks, Lodgify bookings for today/tomorrow, system health status. Format as bullet points, max 10 lines. Send to Telegram.",
+        "status": "blocked",
+        "lane": "blocked",
+        "dateCreated": "2026-04-03T15:00:00.682Z",
+        "dateFinished": null,
+        "startTime": "2026-04-03T15:00:00.682Z",
+        "endTime": null,
+        "inputTokens": 6,
+        "outputTokens": 811,
+        "cachedInputTokens": 60948,
+        "tokens": 82766,
+        "model": "claude-sonnet-4-6",
+        "apiModelUsed": "claude-sonnet-4-6",
+        "modelsUsed": [
+          "claude-sonnet-4-6"
+        ],
+        "totalCost": 0.0305,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/d60e764b-41a2-41c9-af89-1a1e0cf84f8a.jsonl",
+        "sizeBytes": 12459,
+        "isCron": false,
+        "spawns": 0,
+        "parentSession": "",
+        "projectId": "str-website",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~1 min"
+      }
+    ]
   },
   {
     "id": "guest-welcome-book",
