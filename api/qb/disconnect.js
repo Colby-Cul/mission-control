@@ -42,9 +42,17 @@ module.exports = async function handler(req, res) {
       realmId: realmId || null,
     });
   } catch (error) {
+    console.error("QuickBooks token revocation failed", {
+      intuitTid: error.intuitTid || null,
+      statusCode: error.statusCode || 500,
+      message: error.message,
+      details: error.details || null,
+    });
+
     return sendJson(res, error.statusCode || 500, {
       error: error.message,
       details: error.details || null,
+      intuitTid: error.intuitTid || null,
     });
   }
 };

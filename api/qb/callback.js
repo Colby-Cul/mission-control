@@ -82,9 +82,19 @@ module.exports = async function handler(req, res) {
       tokens: connectionRecord,
     });
   } catch (exchangeError) {
+    console.error("QuickBooks token exchange failed", {
+      intuitTid: exchangeError.intuitTid || null,
+      statusCode: exchangeError.statusCode || 500,
+      message: exchangeError.message,
+      details: exchangeError.details || null,
+      realmId: realmId || null,
+      companyId: state?.companyId || null,
+    });
+
     return sendJson(res, exchangeError.statusCode || 500, {
       error: exchangeError.message,
       details: exchangeError.details || null,
+      intuitTid: exchangeError.intuitTid || null,
     });
   }
 };

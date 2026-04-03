@@ -122,6 +122,21 @@ function redirect(res, location) {
   res.end();
 }
 
+function getIntuitTid(response) {
+  return response.headers.get("intuit_tid") || null;
+}
+
+async function parseQuickBooksResponse(response) {
+  const intuitTid = getIntuitTid(response);
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {}
+
+  return { data, intuitTid };
+}
+
 async function exchangeCodeForTokens(code) {
   const { clientId, clientSecret, redirectUri } = requireClientConfig();
   const body = new URLSearchParams({
@@ -141,12 +156,13 @@ async function exchangeCodeForTokens(code) {
     body,
   });
 
-  const data = await response.json();
+  const { data, intuitTid } = await parseQuickBooksResponse(response);
 
   if (!response.ok) {
     const error = new Error(data.error_description || data.error || "Token exchange failed");
     error.statusCode = response.status;
     error.details = data;
+    error.intuitTid = intuitTid;
     throw error;
   }
 
@@ -167,19 +183,16 @@ async function revokeToken(token) {
     },
     body,
   });
+  const { data, intuitTid } = await parseQuickBooksResponse(response);
 
   if (response.status === 200) {
     return { revoked: true };
   }
 
-  let data = {};
-  try {
-    data = await response.json();
-  } catch {}
-
   const error = new Error(data.error_description || data.error || "Token revocation failed");
   error.statusCode = response.status;
   error.details = data;
+  error.intuitTid = intuitTid;
   throw error;
 }
 
