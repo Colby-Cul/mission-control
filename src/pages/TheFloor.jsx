@@ -22,9 +22,17 @@ function statusColor(s) {
 function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
 function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
 
-function getAgentActivity(agent, sessions) {
-  const active = sessions.find(s => s.agent === agent.id && s.status !== "done" && s.status !== "completed");
-  if (active) return { type: "task", label: (active.task || "Active task").slice(0, 60), color: C.amber };
+function getAgentActivity(agent, allSessions) {
+  const agentSessions = allSessions.filter(s => s.agent === agent.id);
+  const active = agentSessions.find(s => s.status !== "done" && s.status !== "completed");
+  if (active) return { type: "active", label: (active.task || "Active task").slice(0, 60), color: C.amber };
+  if (agentSessions.length > 0) {
+    const latest = agentSessions[0];
+    const task = (latest.task || "").slice(0, 60);
+    const isLearning = /learning|study|research|self-improv|doctorate/i.test(task);
+    if (isLearning) return { type: "learning", label: task, color: C.purple };
+    return { type: "done", label: task, color: C.green };
+  }
   return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
 }
 
@@ -161,7 +169,7 @@ const TheFloor = () => {
                 <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: activity.color + "11", border: `1px solid ${activity.color}22`, display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 7, height: 7, borderRadius: "50%", background: activity.color, boxShadow: `0 0 6px ${activity.color}`, flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontSize: 11, color: activity.color, fontWeight: 600 }}>{activity.type === "task" ? "Working on:" : "Status:"}</div>
+                    <div style={{ fontSize: 11, color: activity.color, fontWeight: 600 }}>{activity.type === "active" ? "Working on:" : activity.type === "done" ? "Last task:" : activity.type === "learning" ? "Learning:" : "Status:"}</div>
                     <div style={{ fontSize: 12, color: C.text, marginTop: 1 }}>{activity.label}</div>
                   </div>
                 </div>

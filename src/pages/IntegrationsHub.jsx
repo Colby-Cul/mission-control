@@ -6,21 +6,20 @@ import { useMissionControlData } from "../context/MissionControlDataContext";
 const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
 
 const INTEGRATION_META = {
-  "anthropic": { name: "Anthropic", icon: "🧠", category: "AI Models" },
-  "openai": { name: "OpenAI", icon: "🤖", category: "AI Models" },
-  "ollama": { name: "Ollama", icon: "🦙", category: "AI Models" },
-  "openai-codex": { name: "OpenAI Codex", icon: "💻", category: "AI Models" },
-  "telegram": { name: "Telegram", icon: "✈️", category: "Messaging" },
-  "slack": { name: "Slack", icon: "💬", category: "Messaging" },
-  "discord": { name: "Discord", icon: "🎮", category: "Messaging" },
-  "monday.com": { name: "Monday.com", icon: "📊", category: "Business" },
-  "github": { name: "GitHub", icon: "🐙", category: "Dev Tools" },
-  "supabase": { name: "Supabase", icon: "⚡", category: "Infrastructure" },
-  "vercel": { name: "Vercel", icon: "▲", category: "Infrastructure" },
-  "n8n": { name: "n8n", icon: "🔗", category: "Automation" },
-  "lodgify": { name: "Lodgify", icon: "🏠", category: "Business" },
-  "fast.io": { name: "Fast.io", icon: "📁", category: "Infrastructure" },
-  "brave": { name: "Brave Search", icon: "🦁", category: "Search" },
+  "anthropic": { name: "Anthropic Claude", desc: "Primary AI provider — Sonnet 4.6, Haiku 4.5, Opus 4.6", category: "AI Models" },
+  "openai": { name: "OpenAI", desc: "Legacy provider — Whisper, DALL-E, Image Gen", category: "AI Models" },
+  "ollama": { name: "Ollama", desc: "Local inference — llama3.2, qwen, codellama", category: "AI Models" },
+  "openai-codex": { name: "OpenAI Codex", desc: "ACP coding delegation runtime", category: "AI Models" },
+  "telegram": { name: "Telegram", desc: "Bot messaging channel", category: "Messaging" },
+  "slack": { name: "Slack", desc: "Workspace messaging via Socket Mode", category: "Messaging" },
+  "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging" },
+  "monday.com": { name: "Monday.com", desc: "External business project management", category: "Business" },
+  "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
+  "supabase": { name: "Supabase", desc: "PostgreSQL database + auth", category: "Infrastructure" },
+  "vercel": { name: "Vercel", desc: "Production deployment platform", category: "Infrastructure" },
+  "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Search" },
+  "grafana": { name: "Grafana Cloud", desc: "Monitoring + dashboards", category: "Infrastructure" },
+  "lodgify": { name: "Lodgify", desc: "STR property management", category: "Business" },
 };
 
 function statusColor(s) {
@@ -39,7 +38,7 @@ const IntegrationsHub = () => {
   const [filter, setFilter] = useState("all");
 
   const integrations = apiCreds.map(cred => {
-    const meta = INTEGRATION_META[cred.provider] || { name: cred.provider, icon: "🔌", category: "Other" };
+    const meta = INTEGRATION_META[cred.provider] || { name: cred.provider, desc: cred.provider, category: "Other" };
     return { ...cred, ...meta };
   });
 
@@ -94,10 +93,12 @@ const IntegrationsHub = () => {
               <div onClick={() => setExpanded(isExpanded ? null : integ.id)} style={{ cursor: "pointer" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 24 }}>{integ.icon}</span>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: C.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700, color: C.accent }}>
+                      {integ.name.slice(0, 2).toUpperCase()}
+                    </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{integ.name}</div>
-                      <div style={{ fontSize: 11, color: C.muted }}>{integ.category}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{integ.desc || integ.category}</div>
                     </div>
                   </div>
                   <Badge color={statusColor(integ.status)}>{integ.status}</Badge>

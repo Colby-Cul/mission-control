@@ -19,8 +19,19 @@ function statusColor(s) {
 }
 
 function getAgentActivity(agent, acpSessions) {
-  const active = acpSessions.find(s => s.agent === agent.id && s.status !== "done" && s.status !== "completed");
-  if (active) return { type: "task", label: (active.task || "Active task").slice(0, 55), color: C.amber };
+  const agentSessions = acpSessions.filter(s => s.agent === agent.id);
+  // Active (non-done) task takes priority
+  const active = agentSessions.find(s => s.status !== "done" && s.status !== "completed");
+  if (active) return { type: "active", label: (active.task || "Active task").slice(0, 55), color: C.amber };
+  // Most recent completed task
+  if (agentSessions.length > 0) {
+    const latest = agentSessions[0]; // already sorted by time desc from generate-live-data
+    const task = (latest.task || "").slice(0, 55);
+    // Check if it was a learning/research task
+    const isLearning = /learning|study|research|self-improv|doctorate/i.test(task);
+    if (isLearning) return { type: "learning", label: task, color: C.purple };
+    return { type: "done", label: task, color: C.green };
+  }
   return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
 }
 
@@ -108,7 +119,7 @@ const Team = () => {
         {/* Activity / Learning status */}
         <div style={{
           padding: "6px 8px", borderRadius: 6,
-          background: activity.type === "task" ? C.amber + "11" : C.purple + "11",
+          background: activity.type === "active" ? C.amber + "11" : C.purple + "11",
           border: `1px solid ${activity.color}22`,
           display: "flex", alignItems: "center", gap: 6,
         }}>
@@ -118,7 +129,7 @@ const Team = () => {
             boxShadow: `0 0 6px ${activity.color}`,
           }} />
           <div style={{ fontSize: 11, color: activity.color, fontWeight: 500 }}>
-            {activity.type === "task" ? "Working: " : ""}{activity.label}
+            {activity.type === "active" ? "Working: " : ""}{activity.label}
           </div>
         </div>
         {!compact && (
@@ -221,7 +232,7 @@ const Team = () => {
               <div style={{ fontSize: 9, color: C.muted, marginTop: 2 }}>{agent.model}</div>
               <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
               <div style={{ marginTop: 4, padding: "3px 6px", borderRadius: 4, background: activity.color + "11", fontSize: 9, color: activity.color, lineHeight: 1.3 }}>
-                {activity.type === "task" ? `Working: ${activity.label}` : activity.label}
+                {activity.type === "active" ? `Working: ${activity.label}` : activity.label}
               </div>
             </div>
           );
@@ -315,7 +326,7 @@ const Team = () => {
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: m.color || C.cyan, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: 11, flexShrink: 0 }}>{m.initials}</div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.name}</div>
-                          <div style={{ fontSize: 10, color: activity.color }}>{activity.type === "task" ? "Working: " : ""}{activity.label}</div>
+                          <div style={{ fontSize: 10, color: activity.color }}>{activity.type === "active" ? "Working: " : ""}{activity.label}</div>
                         </div>
                       </div>
                       <Badge color={statusColor(m.status)}>{m.status}</Badge>

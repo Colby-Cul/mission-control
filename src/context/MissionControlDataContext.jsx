@@ -772,6 +772,7 @@ export function MissionControlDataProvider({ children }) {
       const liveCronJobs = liveData && Array.isArray(liveData.cronJobs) ? liveData.cronJobs : null;
       const liveSkills = liveData && Array.isArray(liveData.skills) ? liveData.skills : null;
       const liveMetrics = liveData?.metrics || null;
+      const liveApiCredentials = liveData && Array.isArray(liveData.apiCredentials) ? liveData.apiCredentials : null;
 
       setSnapshot((current) => ({
         ...current,
@@ -785,6 +786,7 @@ export function MissionControlDataProvider({ children }) {
         ...(liveCronJobs ? { cronJobs: liveCronJobs } : {}),
         ...(liveSkills ? { skills: liveSkills } : {}),
         ...(liveMetrics ? { liveMetrics } : {}),
+        ...(liveApiCredentials ? { apiCredentials: liveApiCredentials } : {}),
         healthError: healthResult.status === "rejected" ? healthResult.reason?.message || "Health check failed." : null,
         statusError: statusResult.status === "rejected" ? statusResult.reason?.message || "Status request failed." : null,
         mondayError: mondayResult.status === "rejected" ? mondayResult.reason?.message || "Monday request failed." : null,

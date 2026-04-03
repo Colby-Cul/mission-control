@@ -86,6 +86,7 @@ def parse_agent_sessions(agent_id, sessions_dir, limit=60):
             parent_session = None
             first_ts = None
             last_ts = None
+            last_user_task = ''
 
             for line in lines:
                 d = json.loads(line)
@@ -101,16 +102,22 @@ def parse_agent_sessions(agent_id, sessions_dir, limit=60):
                         content = msg.get('content', [])
                         if isinstance(content, list):
                             for c in content:
-                                if isinstance(c, dict) and c.get('type') == 'text' and not task_desc:
+                                if isinstance(c, dict) and c.get('type') == 'text':
                                     text = c['text']
+                                    skip = text.startswith('Conversation info') or text.startswith('Sender') or text.startswith('A new session') or text.startswith('Read HEARTBEAT')
                                     if text.startswith('[cron:'):
                                         is_cron = True
                                         m = re.match(r'\[cron:[^\]]+\]\s*(.*)', text)
-                                        if m: task_desc = m.group(1).strip()[:150]
-                                    elif not text.startswith('Conversation info') and not text.startswith('Sender') and not text.startswith('A new session'):
-                                        task_desc = text[:150]
-                                        m2 = re.match(r'\[.*?\]\s*(.*)', task_desc)
-                                        if m2: task_desc = m2.group(1)
+                                        if m:
+                                            task_desc = m.group(1).strip()[:150]
+                                            last_user_task = task_desc
+                                    elif not skip:
+                                        cleaned = text[:150]
+                                        m2 = re.match(r'\[.*?\]\s*(.*)', cleaned)
+                                        if m2: cleaned = m2.group(1)
+                                        if not task_desc:
+                                            task_desc = cleaned
+                                        last_user_task = cleaned
 
                     if msg.get('role') == 'assistant':
                         content = msg.get('content', [])
@@ -130,6 +137,9 @@ def parse_agent_sessions(agent_id, sessions_dir, limit=60):
                             models_seen.add(m)
                             if not model_used: model_used = m
 
+            # Prefer the last meaningful user task over heartbeat preamble
+            if last_user_task and last_user_task != task_desc:
+                task_desc = last_user_task
             if not task_desc and not spawns:
                 continue
 
@@ -306,6 +316,63 @@ if monday_path.exists():
         'maskedKey': mask_key(token),
         'status': 'active',
         'lastUpdated': datetime.fromtimestamp(monday_path.stat().st_mtime).isoformat(),
+    })
+
+# Discord (from channels config)
+discord_cfg = config.get('channels', {}).get('discord', {})
+discord_accounts = discord_cfg.get('accounts', {})
+if discord_cfg.get('enabled'):
+    apis.append({
+        'id': 'channel:discord', 'provider': 'discord',
+        'maskedKey': 'Bot connected via OAuth',
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(config_path.stat().st_mtime).isoformat(),
+    })
+
+# Additional known integrations
+extra_integrations = [
+    ('supabase', Path.home() / '.supabase' / 'access-token', 'supabase'),
+    ('github', Path.home() / '.config' / 'gh' / 'hosts.yml', 'github'),
+    ('vercel', Path.home() / '.local' / 'share' / 'com.vercel.cli' / 'auth.json', 'vercel'),
+]
+for int_id, int_path, provider in extra_integrations:
+    if int_path.exists():
+        apis.append({
+            'id': int_id, 'provider': provider,
+            'maskedKey': 'Configured via CLI',
+            'status': 'active',
+            'lastUpdated': datetime.fromtimestamp(int_path.stat().st_mtime).isoformat(),
+        })
+
+# Brave Search (from plugins)
+brave_cfg = config.get('plugins', {}).get('entries', {}).get('brave', {})
+brave_key = brave_cfg.get('config', {}).get('webSearch', {}).get('apiKey', '')
+if brave_key:
+    apis.append({
+        'id': 'brave-search', 'provider': 'brave',
+        'maskedKey': mask_key(brave_key),
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(config_path.stat().st_mtime).isoformat(),
+    })
+
+# Grafana
+grafana_token_path = openclaw / 'workspace' / 'anthropic' / '.grafana-token'
+if grafana_token_path.exists():
+    apis.append({
+        'id': 'grafana', 'provider': 'grafana',
+        'maskedKey': mask_key(grafana_token_path.read_text().strip()),
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(grafana_token_path.stat().st_mtime).isoformat(),
+    })
+
+# Lodgify
+lodgify_path = Path.home() / '.lodgify_token'
+if lodgify_path.exists():
+    apis.append({
+        'id': 'lodgify', 'provider': 'lodgify',
+        'maskedKey': mask_key(lodgify_path.read_text().strip()),
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(lodgify_path.stat().st_mtime).isoformat(),
     })
 
 data['apiCredentials'] = apis
