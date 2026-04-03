@@ -5,7 +5,7 @@ import { useMissionControlData } from '../context/MissionControlDataContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 
 const DEPTS = [
-  { id: "ops", name: "Operations", lead: "main", agents: ["main", "executive-assistant"], color: C.accent },
+  { id: "ops", name: "Operations", lead: "executive-assistant", agents: ["executive-assistant"], color: C.accent },
   { id: "eng", name: "Engineering", lead: "coding-agent", agents: ["coding-agent", "validation", "designer"], color: C.green },
   { id: "fin", name: "Finance", lead: "cfo", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
 ];
