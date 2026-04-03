@@ -63,11 +63,16 @@ if config_path.exists():
         agents.append({'id': aid, 'name': a.get('name', aid), 'model': a.get('model', '?'), 'sessionCount': sc})
 data['agents'] = agents
 
-# ACP Sessions with enhanced fields
+# ACP Sessions — scan ALL agent session directories
 acp_tasks = []
-main_sessions = openclaw / 'agents' / 'main' / 'sessions'
-if main_sessions.exists():
-    for sf in sorted(main_sessions.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:60]:
+KNOWN_AGENTS = ['main','coding-agent','validation','executive-assistant','cfo','bookkeeper',
+    'fin-researcher','tax-advisor','crypto-analyst','stock-analyst','designer','codex']
+
+def parse_agent_sessions(agent_id, sessions_dir, limit=60):
+    results = []
+    if not sessions_dir.exists():
+        return results
+    for sf in sorted(sessions_dir.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]:
         try:
             lines = sf.read_text().strip().split('\n')
             task_desc = ''
@@ -75,7 +80,7 @@ if main_sessions.exists():
             total_input = 0
             total_output = 0
             total_tokens = 0
-            model_used = ''
+            model_used = 'codex' if agent_id == 'codex' else ''
             models_seen = set()
             is_cron = False
             parent_session = None
@@ -135,7 +140,7 @@ if main_sessions.exists():
             entry = {
                 'id': sf.stem[:20],
                 'sessionId': sf.stem,
-                'agent': 'main',
+                'agent': agent_id,
                 'task': task_desc or (spawns[0]['task'] if spawns else 'Unknown task'),
                 'status': status,
                 'dateCreated': first_ts if isinstance(first_ts, (int, float)) and first_ts > 1e9 else mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -154,62 +159,19 @@ if main_sessions.exists():
                 'spawns': len(spawns),
                 'parentSession': parent_session,
             }
-            # Estimated completion for in-progress
             if status == 'delegated' and total_tokens > 0:
-                avg_tokens_per_min = total_tokens / max(1, (sf.stat().st_size / 500))
                 entry['estCostToCompletion'] = round(cost * 0.3, 4)
                 entry['estTimeToCompletion'] = '~15 min'
 
-            acp_tasks.append(entry)
+            results.append(entry)
         except Exception:
             continue
+    return results
 
-# Codex sessions
-codex_dir = openclaw / 'agents' / 'codex' / 'sessions'
-if codex_dir.exists():
-    for sf in sorted(codex_dir.glob('*.jsonl'), key=lambda p: p.stat().st_mtime, reverse=True)[:30]:
-        try:
-            lines = sf.read_text().strip().split('\n')
-            task_desc = ''
-            total_input = total_output = total_tokens = 0
-            model_used = 'codex'
-            models_seen = set()
-            for line in lines:
-                d = json.loads(line)
-                if d.get('type') == 'message':
-                    msg = d.get('message', {})
-                    if msg.get('role') == 'assistant':
-                        content = msg.get('content', [])
-                        if isinstance(content, list):
-                            for c in content:
-                                if isinstance(c, dict) and c.get('type') == 'text' and not task_desc:
-                                    task_desc = c['text'][:150]
-                        usage = msg.get('usage', {})
-                        inp = usage.get('input', 0)
-                        out = usage.get('output', 0)
-                        total_input += inp; total_output += out
-                        total_tokens += usage.get('totalTokens', 0) or (inp + out)
-                        m = msg.get('model', '')
-                        if m: models_seen.add(m)
-                        if m and not model_used: model_used = m
-
-            mtime = datetime.fromtimestamp(sf.stat().st_mtime, tz=timezone.utc)
-            acp_tasks.append({
-                'id': sf.stem[:20], 'sessionId': sf.stem, 'agent': 'codex',
-                'task': task_desc or 'ACP Codex execution', 'status': 'done',
-                'dateCreated': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                'dateFinished': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                'startTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                'endTime': mtime.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                'inputTokens': total_input, 'outputTokens': total_output,
-                'tokens': total_tokens, 'model': model_used,
-                'modelsUsed': sorted(models_seen),
-                'totalCost': calc_cost(model_used, total_input, total_output),
-                'transcriptPath': str(sf), 'sizeBytes': sf.stat().st_size,
-                'isCron': False, 'spawns': 0, 'parentSession': None,
-            })
-        except Exception:
-            continue
+for agent_id in KNOWN_AGENTS:
+    sessions_dir = openclaw / 'agents' / agent_id / 'sessions'
+    limit = 60 if agent_id == 'main' else 30
+    acp_tasks.extend(parse_agent_sessions(agent_id, sessions_dir, limit))
 
 acp_tasks.sort(key=lambda t: t.get('endTime', ''), reverse=True)
 data['acpSessions'] = acp_tasks[:100]

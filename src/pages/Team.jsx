@@ -205,110 +205,88 @@ const Team = () => {
         </Card>
       </div>
 
-      {/* ORG CHART VIEW — Department-based hierarchy */}
-      {view === "org" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 0, alignItems: "center" }}>
-          {/* CEO / Exec */}
-          <div style={{ padding: 16, borderRadius: 12, background: `linear-gradient(135deg, ${C.accent}22, ${C.purple}22)`, border: `2px solid ${C.accent}`, textAlign: "center", minWidth: 220 }}>
-            <div style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Executive</div>
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.accent, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18 }}>CC</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Colby Culbertson</div>
-            <div style={{ fontSize: 12, color: C.muted }}>CEO & Owner</div>
-          </div>
-          {/* Connector to Jarvis */}
-          <div style={{ width: 2, height: 20, background: C.border }} />
-          {/* Jarvis — Chief of Staff */}
-          {(() => {
-            const jarvis = allAgents.find(a => a.id === "main");
-            if (!jarvis) return null;
-            const activity = getAgentActivity(jarvis, acpSessions);
-            return (
-              <div style={{ padding: 14, borderRadius: 12, background: C.accent + "15", border: `2px solid ${C.accent}55`, textAlign: "center", minWidth: 200 }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: jarvis.color, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 15, border: `3px solid ${statusColor(jarvis.status)}` }}>
-                  {jarvis.initials}
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{jarvis.name}</div>
-                <div style={{ fontSize: 11, color: C.muted }}>{jarvis.role} · {jarvis.model}</div>
-                <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 6 }}>
-                  <Badge color={statusColor(jarvis.status)}>{jarvis.status}</Badge>
-                </div>
-                <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: activity.color + "15", fontSize: 10, color: activity.color }}>
-                  {activity.label}
-                </div>
+      {/* ORG CHART VIEW — True reporting hierarchy */}
+      {view === "org" && (() => {
+        const OrgNode = ({ agent, borderColor, size, isLead }) => {
+          if (!agent) return null;
+          const activity = getAgentActivity(agent, acpSessions);
+          const sz = size || 36;
+          return (
+            <div style={{ padding: isLead ? 12 : 10, borderRadius: 10, background: isLead ? (borderColor || C.accent) + "11" : C.surface, border: `${isLead ? 2 : 1}px solid ${isLead ? (borderColor || C.accent) + "55" : C.border}`, textAlign: "center", minWidth: isLead ? 180 : 155 }}>
+              <div style={{ width: sz, height: sz, borderRadius: "50%", background: agent.color || C.accent, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: sz * 0.35, border: `2px solid ${statusColor(agent.status)}` }}>
+                {agent.initials}
               </div>
-            );
-          })()}
-          {/* Connector line down + horizontal spread */}
-          <div style={{ width: 2, height: 20, background: C.border }} />
-          <div style={{ width: Math.min(DEPTS.length * 320, 960), height: 2, background: C.border }} />
+              <div style={{ fontSize: isLead ? 14 : 12, fontWeight: 700, color: C.text }}>{agent.name}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>{agent.role}</div>
+              <div style={{ fontSize: 9, color: C.muted, marginTop: 2 }}>{agent.model}</div>
+              <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+              <div style={{ marginTop: 4, padding: "3px 6px", borderRadius: 4, background: activity.color + "11", fontSize: 9, color: activity.color, lineHeight: 1.3 }}>
+                {activity.type === "task" ? `Working: ${activity.label}` : activity.label}
+              </div>
+            </div>
+          );
+        };
+        const VLine = ({ h }) => <div style={{ width: 2, height: h || 16, background: C.border, margin: "0 auto" }} />;
+        const HLine = ({ w }) => <div style={{ width: w || "80%", height: 2, background: C.border, margin: "0 auto" }} />;
 
-          {/* Department columns */}
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${DEPTS.length}, 1fr)`, gap: 16, width: "100%", marginTop: 0 }}>
-            {DEPTS.map(dept => {
-              const members = dept.agents.map(id => allAgents.find(a => a.id === id)).filter(Boolean);
-              const lead = members.find(m => m.id === dept.lead);
-              const rest = members.filter(m => m.id !== dept.lead);
-              return (
-                <div key={dept.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-                  {/* Vertical connector from horizontal line */}
-                  <div style={{ width: 2, height: 16, background: C.border }} />
-                  {/* Department header */}
-                  <div style={{ padding: "8px 16px", borderRadius: 8, background: dept.color + "22", border: `1px solid ${dept.color}44`, marginBottom: 8, textAlign: "center", width: "100%" }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: dept.color }}>{dept.name}</div>
-                    <div style={{ fontSize: 10, color: C.muted }}>{members.length} agents</div>
-                  </div>
-                  {/* Lead agent */}
-                  {lead && (() => {
-                    const activity = getAgentActivity(lead, acpSessions);
-                    return (
-                      <div style={{ padding: 10, borderRadius: 10, background: dept.color + "11", border: `1px solid ${dept.color}33`, textAlign: "center", width: "100%", marginBottom: 4 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-                          <div style={{ width: 34, height: 34, borderRadius: "50%", background: lead.color || dept.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, border: `2px solid ${statusColor(lead.status)}` }}>
-                            {lead.initials}
-                          </div>
-                          <div style={{ textAlign: "left" }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{lead.name}</div>
-                            <div style={{ fontSize: 10, color: C.muted }}>{lead.role} · {lead.model}</div>
-                          </div>
-                          <Badge color={statusColor(lead.status)}>{lead.status}</Badge>
-                        </div>
-                        <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: activity.color + "11", fontSize: 10, color: activity.color }}>
-                          {activity.type === "task" ? "Working: " : ""}{activity.label}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  {/* Connector */}
-                  {rest.length > 0 && <div style={{ width: 2, height: 8, background: C.border }} />}
-                  {/* Sub agents */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
-                    {rest.map(agent => {
-                      const activity = getAgentActivity(agent, acpSessions);
-                      return (
-                        <div key={agent.id} style={{ padding: 8, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 4 }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: agent.color || C.cyan, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 10, border: `2px solid ${statusColor(agent.status)}` }}>
-                              {agent.initials}
+        const jarvis = allAgents.find(a => a.id === "main");
+        return (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+            {/* CEO */}
+            <div style={{ padding: 16, borderRadius: 12, background: `linear-gradient(135deg, ${C.accent}22, ${C.purple}22)`, border: `2px solid ${C.accent}`, textAlign: "center", minWidth: 220 }}>
+              <div style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Executive</div>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.accent, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18 }}>CC</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Colby Culbertson</div>
+              <div style={{ fontSize: 12, color: C.muted }}>CEO & Owner</div>
+            </div>
+            <VLine h={20} />
+            {/* Jarvis */}
+            <OrgNode agent={jarvis} borderColor={C.accent} size={44} isLead />
+            <VLine h={20} />
+            <HLine w="85%" />
+
+            {/* 3 Department columns */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, width: "100%" }}>
+              {DEPTS.map(dept => {
+                const members = dept.agents.filter(id => id !== "main").map(id => allAgents.find(a => a.id === id)).filter(Boolean);
+                const lead = members.find(m => m.id === dept.lead);
+                const reports = members.filter(m => m.id !== dept.lead);
+                return (
+                  <div key={dept.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+                    <VLine h={14} />
+                    {/* Department label */}
+                    <div style={{ padding: "6px 14px", borderRadius: 6, background: dept.color + "22", border: `1px solid ${dept.color}33`, marginBottom: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: dept.color, textAlign: "center" }}>{dept.name}</div>
+                    </div>
+                    {/* Department lead */}
+                    {lead && (
+                      <>
+                        <VLine h={8} />
+                        <OrgNode agent={lead} borderColor={dept.color} size={38} isLead />
+                      </>
+                    )}
+                    {/* Reports under lead */}
+                    {reports.length > 0 && (
+                      <>
+                        <VLine h={10} />
+                        {reports.length > 1 && <HLine w={`${Math.min(reports.length * 120, 280)}px`} />}
+                        <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                          {reports.map(agent => (
+                            <div key={agent.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                              <VLine h={8} />
+                              <OrgNode agent={agent} size={30} />
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{agent.name}</div>
-                              <div style={{ fontSize: 10, color: C.muted }}>{agent.role} · {agent.model}</div>
-                            </div>
-                            <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
-                          </div>
-                          <div style={{ padding: "3px 6px", borderRadius: 4, background: activity.color + "11", fontSize: 10, color: activity.color }}>
-                            {activity.type === "task" ? "Working: " : ""}{activity.label}
-                          </div>
+                          ))}
                         </div>
-                      );
-                    })}
+                      </>
+                    )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* GRID VIEW */}
       {view === "grid" && (
