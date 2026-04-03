@@ -31,7 +31,8 @@ const Rentals = () => {
   const [propFilter, setPropFilter] = useState("all");
 
   useEffect(() => {
-    fetch("/rental-data.json").then(r => r.json()).then(setBookings).catch(() => {});
+    const base = import.meta.env.BASE_URL || "/";
+    fetch(`${base}rental-data.json`).then(r => r.ok ? r.json() : []).then(setBookings).catch(() => {});
   }, []);
 
   const active = useMemo(() => bookings.filter(b => b.status !== "Declined"), [bookings]);
