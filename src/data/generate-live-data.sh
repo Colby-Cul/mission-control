@@ -184,6 +184,17 @@ for agent_id in KNOWN_AGENTS:
     acp_tasks.extend(parse_agent_sessions(agent_id, sessions_dir, limit))
 
 acp_tasks.sort(key=lambda t: t.get('endTime', ''), reverse=True)
+
+# Close stale delegations: only the most recent session per agent can be 'delegated'
+seen_active = set()
+for t in acp_tasks:
+    agent = t.get('agent', '')
+    if t['status'] == 'delegated':
+        if agent in seen_active:
+            t['status'] = 'done'  # older delegation — mark as completed
+        else:
+            seen_active.add(agent)
+
 data['acpSessions'] = acp_tasks[:100]
 
 # Projects with cost/model/agent metadata
