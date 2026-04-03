@@ -22,6 +22,12 @@ function statusColor(s) {
 function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
 function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
 
+function getAgentActivity(agent, sessions) {
+  const active = sessions.find(s => s.agent === agent.id && s.status !== "done" && s.status !== "completed");
+  if (active) return { type: "task", label: (active.task || "Active task").slice(0, 60), color: C.amber };
+  return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
+}
+
 const HUMAN_RATE = 75; // $/hr equivalent
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
@@ -149,12 +155,18 @@ const TheFloor = () => {
               </div>
             </div>
 
-            {agent.currentTask && (
-              <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: C.amber + "11", border: `1px solid ${C.amber}33` }}>
-                <div style={{ fontSize: 11, color: C.amber, fontWeight: 600 }}>Working on:</div>
-                <div style={{ fontSize: 12, color: C.text, marginTop: 2 }}>{(agent.currentTask.task || "").slice(0, 70)}</div>
-              </div>
-            )}
+            {(() => {
+              const activity = getAgentActivity(agent, acpSessions);
+              return (
+                <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: activity.color + "11", border: `1px solid ${activity.color}22`, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: activity.color, boxShadow: `0 0 6px ${activity.color}`, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 11, color: activity.color, fontWeight: 600 }}>{activity.type === "task" ? "Working on:" : "Status:"}</div>
+                    <div style={{ fontSize: 12, color: C.text, marginTop: 1 }}>{activity.label}</div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 12 }}>
               <div><div style={{ fontSize: 10, color: C.muted }}>Tasks</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{agent.total}</div></div>

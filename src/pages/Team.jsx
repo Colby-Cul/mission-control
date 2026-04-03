@@ -4,18 +4,24 @@ import { C, AGENTS } from '../data/constants';
 import { useMissionControlData } from '../context/MissionControlDataContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 
-const SQUADS = [
-  { id: "ops", name: "Operations", agents: ["main", "executive-assistant"], color: C.accent },
-  { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"], color: C.green },
-  { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
+const DEPTS = [
+  { id: "ops", name: "Operations", lead: "main", agents: ["main", "executive-assistant"], color: C.accent },
+  { id: "eng", name: "Engineering", lead: "coding-agent", agents: ["coding-agent", "validation", "designer"], color: C.green },
+  { id: "fin", name: "Finance", lead: "cfo", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
 ];
 
 function statusColor(s) {
   const v = String(s || "").toLowerCase();
   if (["online","connected","active","running"].includes(v)) return C.green;
-  if (["busy","warning"].includes(v)) return C.amber;
+  if (["busy","warning","learning"].includes(v)) return C.amber;
   if (["offline","error"].includes(v)) return C.red;
   return C.cyan;
+}
+
+function getAgentActivity(agent, acpSessions) {
+  const active = acpSessions.find(s => s.agent === agent.id && s.status !== "done" && s.status !== "completed");
+  if (active) return { type: "task", label: (active.task || "Active task").slice(0, 55), color: C.amber };
+  return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
 }
 
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
@@ -24,7 +30,7 @@ const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:707
 
 const Team = () => {
   const { agents, acpSessions = [] } = useMissionControlData();
-  const [view, setView] = useState("grid"); // grid | org | squads
+  const [view, setView] = useState("org"); // org | grid | squads
   const [actionResult, setActionResult] = useState(null);
 
   const allAgents = AGENTS.map(ca => {
@@ -52,7 +58,6 @@ const Team = () => {
       name: a.name,
       sessions: Math.min(a.sessions || 0, 100),
       completion: total > 0 ? Math.round((done / total) * 100) : 50,
-      cost_efficiency: total > 0 ? Math.min(Math.round(100 - (sessions.reduce((s, ss) => s + (ss.totalCost || 0), 0) / total) * 100), 100) : 70,
     };
   }), [allAgents, acpSessions]);
 
@@ -71,10 +76,61 @@ const Team = () => {
     setTimeout(() => setActionResult(null), 5000);
   };
 
-  // Org chart data
-  const orgChart = [
-    { agent: allAgents.find(a => a.id === "main"), children: allAgents.filter(a => a.id !== "main") }
-  ];
+  // Shared agent card renderer
+  const AgentCard = ({ agent, compact }) => {
+    const activity = getAgentActivity(agent, acpSessions);
+    const isLead = agent.id === "main" || agent.id === "cfo";
+    return (
+      <div style={{
+        padding: compact ? 10 : 14, borderRadius: 10,
+        background: isLead ? C.accent + "11" : C.surface,
+        border: `1px solid ${isLead ? C.accent + "44" : C.border}`,
+        display: "flex", flexDirection: "column", gap: 8,
+        minWidth: compact ? 150 : 260,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            width: compact ? 32 : 38, height: compact ? 32 : 38, borderRadius: "50%",
+            background: agent.color || C.accent, display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#fff", fontWeight: 700, fontSize: compact ? 11 : 13,
+            border: `2px solid ${statusColor(agent.status)}`,
+          }}>
+            {agent.initials || agent.name?.slice(0, 2).toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: C.text }}>{agent.name}</div>
+            <div style={{ fontSize: 11, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {agent.role || agent.dept} · {agent.model}
+            </div>
+          </div>
+          <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+        </div>
+        {/* Activity / Learning status */}
+        <div style={{
+          padding: "6px 8px", borderRadius: 6,
+          background: activity.type === "task" ? C.amber + "11" : C.purple + "11",
+          border: `1px solid ${activity.color}22`,
+          display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <div style={{
+            width: 6, height: 6, borderRadius: "50%",
+            background: activity.color,
+            boxShadow: `0 0 6px ${activity.color}`,
+          }} />
+          <div style={{ fontSize: 11, color: activity.color, fontWeight: 500 }}>
+            {activity.type === "task" ? "Working: " : ""}{activity.label}
+          </div>
+        </div>
+        {!compact && (
+          <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={() => handleAction(agent.id, "Reassign")} style={{ flex: 1, background: C.bg, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Reassign</button>
+            <button onClick={() => handleAction(agent.id, "Spin up")} style={{ flex: 1, background: C.green + "11", color: C.green, border: `1px solid ${C.green}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Spin Up</button>
+            <button onClick={() => handleAction(agent.id, "Shut down")} style={{ flex: 1, background: C.red + "11", color: C.red, border: `1px solid ${C.red}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Shut Down</button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -84,7 +140,7 @@ const Team = () => {
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>{allAgents.length} agents · {online} online</div>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
-          {["grid", "org", "squads"].map(v => (
+          {["org", "grid", "squads"].map(v => (
             <button key={v} onClick={() => setView(v)} style={{ background: view === v ? C.accent : C.surface, color: view === v ? "#fff" : C.muted, border: `1px solid ${view === v ? C.accent : C.border}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {v === "grid" ? "Grid" : v === "org" ? "Org Chart" : "Squads"}
             </button>
@@ -120,7 +176,6 @@ const Team = () => {
             </BarChart>
           </ResponsiveContainer>
         </Card>
-
         <Card>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Department Distribution</div>
           <ResponsiveContainer width="100%" height={200}>
@@ -133,7 +188,6 @@ const Team = () => {
             </PieChart>
           </ResponsiveContainer>
         </Card>
-
         <Card>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Agent Capabilities</div>
           {agentCapabilities.length > 0 ? (
@@ -151,86 +205,122 @@ const Team = () => {
         </Card>
       </div>
 
-      {/* GRID VIEW */}
-      {view === "grid" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-          {allAgents.map(agent => {
-            const currentTask = acpSessions.find(s => s.agent === agent.id && s.status !== "done");
+      {/* ORG CHART VIEW — Department-based hierarchy */}
+      {view === "org" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 0, alignItems: "center" }}>
+          {/* CEO / Exec */}
+          <div style={{ padding: 16, borderRadius: 12, background: `linear-gradient(135deg, ${C.accent}22, ${C.purple}22)`, border: `2px solid ${C.accent}`, textAlign: "center", minWidth: 220 }}>
+            <div style={{ fontSize: 10, color: C.accent, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Executive</div>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: C.accent, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 18 }}>CC</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Colby Culbertson</div>
+            <div style={{ fontSize: 12, color: C.muted }}>CEO & Owner</div>
+          </div>
+          {/* Connector to Jarvis */}
+          <div style={{ width: 2, height: 20, background: C.border }} />
+          {/* Jarvis — Chief of Staff */}
+          {(() => {
+            const jarvis = allAgents.find(a => a.id === "main");
+            if (!jarvis) return null;
+            const activity = getAgentActivity(jarvis, acpSessions);
             return (
-              <Card key={agent.id}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: "50%", background: agent.color || C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 14 }}>
-                      {agent.initials || agent.name?.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{agent.name}</div>
-                      <div style={{ fontSize: 12, color: C.muted }}>{agent.role || agent.dept || "Agent"}</div>
-                    </div>
-                  </div>
-                  <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+              <div style={{ padding: 14, borderRadius: 12, background: C.accent + "15", border: `2px solid ${C.accent}55`, textAlign: "center", minWidth: 200 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: jarvis.color, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 15, border: `3px solid ${statusColor(jarvis.status)}` }}>
+                  {jarvis.initials}
                 </div>
-                <div style={{ marginTop: 12, fontSize: 12, color: C.muted }}>
-                  <div>Model: <span style={{ color: C.text }}>{agent.model}</span></div>
-                  <div style={{ marginTop: 4 }}>Sessions: <span style={{ color: C.text }}>{agent.sessions}</span></div>
-                  {currentTask && (
-                    <div style={{ marginTop: 6, padding: 8, borderRadius: 6, background: C.bg, border: `1px solid ${C.border}` }}>
-                      <div style={{ fontSize: 11, color: C.amber }}>Current task:</div>
-                      <div style={{ fontSize: 12, color: C.text, marginTop: 2 }}>{(currentTask.task || "").slice(0, 60)}</div>
-                    </div>
-                  )}
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{jarvis.name}</div>
+                <div style={{ fontSize: 11, color: C.muted }}>{jarvis.role} · {jarvis.model}</div>
+                <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 6 }}>
+                  <Badge color={statusColor(jarvis.status)}>{jarvis.status}</Badge>
                 </div>
-                <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
-                  <button onClick={() => handleAction(agent.id, "Reassign")} style={{ flex: 1, background: C.surface, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 0", fontSize: 11, cursor: "pointer" }}>Reassign</button>
-                  <button onClick={() => handleAction(agent.id, "Spin up")} style={{ flex: 1, background: C.green + "22", color: C.green, border: `1px solid ${C.green}33`, borderRadius: 6, padding: "6px 0", fontSize: 11, cursor: "pointer" }}>Spin Up</button>
-                  <button onClick={() => handleAction(agent.id, "Shut down")} style={{ flex: 1, background: C.red + "22", color: C.red, border: `1px solid ${C.red}33`, borderRadius: 6, padding: "6px 0", fontSize: 11, cursor: "pointer" }}>Shut Down</button>
+                <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: activity.color + "15", fontSize: 10, color: activity.color }}>
+                  {activity.label}
                 </div>
-              </Card>
+              </div>
             );
-          })}
+          })()}
+          {/* Connector line down + horizontal spread */}
+          <div style={{ width: 2, height: 20, background: C.border }} />
+          <div style={{ width: Math.min(DEPTS.length * 320, 960), height: 2, background: C.border }} />
+
+          {/* Department columns */}
+          <div style={{ display: "grid", gridTemplateColumns: `repeat(${DEPTS.length}, 1fr)`, gap: 16, width: "100%", marginTop: 0 }}>
+            {DEPTS.map(dept => {
+              const members = dept.agents.map(id => allAgents.find(a => a.id === id)).filter(Boolean);
+              const lead = members.find(m => m.id === dept.lead);
+              const rest = members.filter(m => m.id !== dept.lead);
+              return (
+                <div key={dept.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+                  {/* Vertical connector from horizontal line */}
+                  <div style={{ width: 2, height: 16, background: C.border }} />
+                  {/* Department header */}
+                  <div style={{ padding: "8px 16px", borderRadius: 8, background: dept.color + "22", border: `1px solid ${dept.color}44`, marginBottom: 8, textAlign: "center", width: "100%" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: dept.color }}>{dept.name}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{members.length} agents</div>
+                  </div>
+                  {/* Lead agent */}
+                  {lead && (() => {
+                    const activity = getAgentActivity(lead, acpSessions);
+                    return (
+                      <div style={{ padding: 10, borderRadius: 10, background: dept.color + "11", border: `1px solid ${dept.color}33`, textAlign: "center", width: "100%", marginBottom: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
+                          <div style={{ width: 34, height: 34, borderRadius: "50%", background: lead.color || dept.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 12, border: `2px solid ${statusColor(lead.status)}` }}>
+                            {lead.initials}
+                          </div>
+                          <div style={{ textAlign: "left" }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{lead.name}</div>
+                            <div style={{ fontSize: 10, color: C.muted }}>{lead.role} · {lead.model}</div>
+                          </div>
+                          <Badge color={statusColor(lead.status)}>{lead.status}</Badge>
+                        </div>
+                        <div style={{ marginTop: 6, padding: "4px 8px", borderRadius: 4, background: activity.color + "11", fontSize: 10, color: activity.color }}>
+                          {activity.type === "task" ? "Working: " : ""}{activity.label}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {/* Connector */}
+                  {rest.length > 0 && <div style={{ width: 2, height: 8, background: C.border }} />}
+                  {/* Sub agents */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, width: "100%" }}>
+                    {rest.map(agent => {
+                      const activity = getAgentActivity(agent, acpSessions);
+                      return (
+                        <div key={agent.id} style={{ padding: 8, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 4 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: agent.color || C.cyan, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 10, border: `2px solid ${statusColor(agent.status)}` }}>
+                              {agent.initials}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{agent.name}</div>
+                              <div style={{ fontSize: 10, color: C.muted }}>{agent.role} · {agent.model}</div>
+                            </div>
+                            <Badge color={statusColor(agent.status)}>{agent.status}</Badge>
+                          </div>
+                          <div style={{ padding: "3px 6px", borderRadius: 4, background: activity.color + "11", fontSize: 10, color: activity.color }}>
+                            {activity.type === "task" ? "Working: " : ""}{activity.label}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* ORG CHART VIEW */}
-      {view === "org" && (
-        <Card>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
-            {orgChart.map(({ agent: lead, children }) => (
-              <div key={lead.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-                {/* Lead */}
-                <div style={{ padding: 16, borderRadius: 12, background: C.accent + "22", border: `2px solid ${C.accent}`, textAlign: "center", minWidth: 200 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: C.accent, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 16 }}>{lead.initials}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{lead.name}</div>
-                  <div style={{ fontSize: 12, color: C.muted }}>{lead.role || "Chief of Staff"}</div>
-                  <Badge color={statusColor(lead.status)}>{lead.status}</Badge>
-                </div>
-                {/* Connector line */}
-                <div style={{ width: 2, height: 24, background: C.border }} />
-                <div style={{ width: `${Math.min(children.length * 160, 600)}px`, height: 2, background: C.border }} />
-                {/* Children */}
-                <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginTop: 0 }}>
-                  {children.map(child => (
-                    <div key={child.id} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div style={{ width: 2, height: 20, background: C.border }} />
-                      <div style={{ padding: 12, borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, textAlign: "center", minWidth: 140 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: child.color || C.cyan, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13 }}>{child.initials}</div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{child.name}</div>
-                        <div style={{ fontSize: 11, color: C.muted }}>{child.role || "Agent"}</div>
-                        <Badge color={statusColor(child.status)}>{child.status}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
+      {/* GRID VIEW */}
+      {view === "grid" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+          {allAgents.map(agent => <AgentCard key={agent.id} agent={agent} />)}
+        </div>
       )}
 
       {/* SQUADS VIEW */}
       {view === "squads" && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
-          {SQUADS.map(squad => {
+          {DEPTS.map(squad => {
             const members = squad.agents.map(id => allAgents.find(a => a.id === id)).filter(Boolean);
             return (
               <Card key={squad.id}>
@@ -239,18 +329,21 @@ const Team = () => {
                   <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{squad.name}</div>
                   <Badge color={squad.color}>{members.length} agents</Badge>
                 </div>
-                {members.map(m => (
-                  <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: m.color || C.cyan, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: 11 }}>{m.initials}</div>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.name}</div>
-                        <div style={{ fontSize: 11, color: C.muted }}>{m.model}</div>
+                {members.map(m => {
+                  const activity = getAgentActivity(m, acpSessions);
+                  return (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${C.border}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: m.color || C.cyan, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 600, fontSize: 11, flexShrink: 0 }}>{m.initials}</div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{m.name}</div>
+                          <div style={{ fontSize: 10, color: activity.color }}>{activity.type === "task" ? "Working: " : ""}{activity.label}</div>
+                        </div>
                       </div>
+                      <Badge color={statusColor(m.status)}>{m.status}</Badge>
                     </div>
-                    <Badge color={statusColor(m.status)}>{m.status}</Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </Card>
             );
           })}
