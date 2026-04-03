@@ -7,6 +7,7 @@ const QUICKBOOKS_REVOKE_URL = "https://developer.api.intuit.com/v2/oauth2/tokens
 const QUICKBOOKS_SCOPES = [
   "com.intuit.quickbooks.accounting",
   "com.intuit.quickbooks.payment",
+  "com.intuit.quickbooks.payroll",
 ];
 const QUICKBOOKS_REDIRECT_URI =
   "https://mission-control-peach-omega.vercel.app/api/qb/callback";
