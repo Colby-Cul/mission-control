@@ -523,15 +523,6 @@ const Projects = () => {
 
                       <div style={{ marginTop: 14 }}>
                         <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Agents That Worked On It</div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          {workedAgents.length ? workedAgents.map((agent) => (
-                            <Avatar key={agent.id} agent={agent} size={28} />
-                          )) : <Badge color={C.border}>No agents reported</Badge>}
-                        </div>
-                      </div>
-
-                      <div style={{ marginTop: 14 }}>
-                        <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Agents Worked On</div>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                           <div style={{ display: "flex", alignItems: "center" }}>
                             {workedAgents.length ? (

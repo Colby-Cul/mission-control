@@ -202,6 +202,9 @@ def extract_task_text(text):
     cleaned = str(text or "").strip()
     if not cleaned:
         return ""
+    for marker in ("\n\nConversation info", "\nConversation info", "\n\nSender (untrusted metadata)", "\nSender (untrusted metadata)", "\n\nSystem:"):
+        if marker in cleaned:
+            cleaned = cleaned.split(marker, 1)[0].strip()
     if cleaned.startswith("[cron:"):
         match = re.match(r"\[cron:[^\]]+\]\s*(.*)", cleaned)
         return (match.group(1) if match else cleaned).strip()
