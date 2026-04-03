@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend } from "recharts";
 
 const DEPARTMENTS = [
   { id: "all", name: "All Departments" },
@@ -22,6 +23,8 @@ function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.t
 function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
 
 const HUMAN_RATE = 75; // $/hr equivalent
+const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
+const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
 
 const TheFloor = () => {
   const { agents, acpSessions = [], cronJobs = [], metrics } = useMissionControlData();
@@ -80,6 +83,50 @@ const TheFloor = () => {
         <KPI label="Human Equiv" value={fmtCost(totalHumanCost)} sub={`@$${HUMAN_RATE}/hr`} color={C.amber} />
         <KPI label="Net Savings" value={fmtCost(savings)} sub={savings > 0 ? "AI cost advantage" : "Over budget"} color={savings > 0 ? C.green : C.red} />
         <KPI label="Cron Jobs" value={cronJobs.length} sub={`${cronJobs.filter(j => j.enabled).length} active`} color={C.cyan} />
+      </div>
+
+      {/* Charts Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        {/* Agent Utilization Gauges */}
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Completion Rate</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="90%" data={agentStats.filter(a => a.total > 0).slice(0, 6).map((a, i) => ({ name: a.name, value: a.completionRate, fill: a.color || CHART_COLORS[i % CHART_COLORS.length] }))} startAngle={180} endAngle={0}>
+              <RadialBar dataKey="value" background={{ fill: C.surface }} cornerRadius={4} />
+              <Tooltip contentStyle={TT} formatter={v => `${v}%`} />
+              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: C.muted }} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Bot Cost vs Human Cost */}
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Bot vs Human Cost</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={agentStats.filter(a => a.totalCost > 0 || a.humanCost > 0).slice(0, 6)} layout="vertical">
+              <XAxis type="number" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+              <YAxis type="category" dataKey="name" tick={{ fill: C.text, fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
+              <Tooltip contentStyle={TT} formatter={v => `$${v.toFixed(2)}`} />
+              <Bar dataKey="totalCost" fill={C.purple} radius={[0, 3, 3, 0]} name="Bot Cost" />
+              <Bar dataKey="humanCost" fill={C.amber} radius={[0, 3, 3, 0]} name="Human Equiv" />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Task Distribution Pie */}
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Task Distribution</div>
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={agentStats.filter(a => a.total > 0).map((a, i) => ({ name: a.name, value: a.total, fill: a.color || CHART_COLORS[i % CHART_COLORS.length] }))} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value">
+                {agentStats.filter(a => a.total > 0).map((a, i) => <Cell key={i} fill={a.color || CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={TT} />
+              <Legend wrapperStyle={{ fontSize: 10, color: C.muted }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
       </div>
 
       {/* Agent Workstations Grid */}

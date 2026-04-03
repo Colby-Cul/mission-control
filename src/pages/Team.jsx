@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Badge, Card, KPI } from '../components/shared';
 import { C, AGENTS } from '../data/constants';
 import { useMissionControlData } from '../context/MissionControlDataContext';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 
 const SQUADS = [
   { id: "ops", name: "Operations", agents: ["main", "executive-assistant"], color: C.accent },
@@ -17,6 +18,8 @@ function statusColor(s) {
   return C.cyan;
 }
 
+const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
+const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
 const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
 
 const Team = () => {
@@ -29,6 +32,29 @@ const Team = () => {
     return { ...ca, ...(live || {}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online" };
   });
   const online = allAgents.filter(a => ["online","active","running","busy","connected"].includes(String(a.status).toLowerCase())).length;
+
+  // Chart data
+  const sessionsByAgent = useMemo(() => allAgents.map((a, i) => ({
+    name: a.name, sessions: a.sessions || 0, fill: a.color || CHART_COLORS[i % CHART_COLORS.length]
+  })).filter(a => a.sessions > 0).sort((a, b) => b.sessions - a.sessions), [allAgents]);
+
+  const deptDistribution = useMemo(() => {
+    const map = {};
+    allAgents.forEach(a => { const d = a.dept || "Other"; map[d] = (map[d] || 0) + 1; });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [allAgents]);
+
+  const agentCapabilities = useMemo(() => allAgents.filter(a => a.sessions > 0).slice(0, 5).map(a => {
+    const sessions = acpSessions.filter(s => s.agent === a.id);
+    const done = sessions.filter(s => s.status === "done").length;
+    const total = sessions.length;
+    return {
+      name: a.name,
+      sessions: Math.min(a.sessions || 0, 100),
+      completion: total > 0 ? Math.round((done / total) * 100) : 50,
+      cost_efficiency: total > 0 ? Math.min(Math.round(100 - (sessions.reduce((s, ss) => s + (ss.totalCost || 0), 0) / total) * 100), 100) : 70,
+    };
+  }), [allAgents, acpSessions]);
 
   const handleAction = async (agentId, action) => {
     setActionResult(null);
@@ -77,6 +103,52 @@ const Team = () => {
         <KPI label="Online" value={online} sub={`${allAgents.length - online} idle/offline`} color={C.green} />
         <KPI label="Total Sessions" value={allAgents.reduce((s, a) => s + (a.sessions || 0), 0)} sub="All time" color={C.cyan} />
         <KPI label="Active Tasks" value={acpSessions.filter(s => s.status === "delegated" || s.status === "pending").length} sub="In progress" color={C.amber} />
+      </div>
+
+      {/* Team Analytics */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Sessions by Agent</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={sessionsByAgent} layout="vertical">
+              <XAxis type="number" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fill: C.text, fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
+              <Tooltip contentStyle={TT} />
+              <Bar dataKey="sessions" radius={[0, 4, 4, 0]}>
+                {sessionsByAgent.map((e, i) => <Cell key={i} fill={e.fill} />)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Department Distribution</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie data={deptDistribution} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={4} dataKey="value">
+                {deptDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+              </Pie>
+              <Tooltip contentStyle={TT} />
+              <Legend wrapperStyle={{ fontSize: 10, color: C.muted }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </Card>
+
+        <Card>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>Agent Capabilities</div>
+          {agentCapabilities.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <RadarChart data={agentCapabilities}>
+                <PolarGrid stroke={C.border} />
+                <PolarAngleAxis dataKey="name" tick={{ fill: C.muted, fontSize: 9 }} />
+                <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
+                <Radar name="Sessions" dataKey="sessions" stroke={C.accent} fill={C.accent} fillOpacity={0.2} />
+                <Radar name="Completion %" dataKey="completion" stroke={C.green} fill={C.green} fillOpacity={0.2} />
+                <Tooltip contentStyle={TT} />
+              </RadarChart>
+            </ResponsiveContainer>
+          ) : <div style={{ color: C.muted, textAlign: "center", padding: 30 }}>No session data yet</div>}
+        </Card>
       </div>
 
       {/* GRID VIEW */}
