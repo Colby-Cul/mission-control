@@ -2039,6 +2039,164 @@
         "Automation"
       ],
       "createdAt": "2026-04-02T00:00:00Z"
+    },
+    {
+      "id": "guest-welcome-book-v2",
+      "name": "Guest Welcome Book & Checkout Guide System",
+      "description": "Dynamic web-based welcome books and checkout guides for Graeagle and Northstar properties. Delivered via email + SMS 30 minutes before guest check-in. Stays updated with property improvements, local dining, how-to videos, and house rules. Separate checkout guide sent morning of departure.",
+      "status": "queued",
+      "dependency": "str-website",
+      "domain": "CaliforniaLuxuryStays.com",
+      "agents": [
+        "main",
+        "worker"
+      ],
+      "taskCount": 18,
+      "doneCount": 0,
+      "activeCount": 0,
+      "totalCost": 0,
+      "modelsUsed": [],
+      "agentsWorkedOn": [],
+      "estCostToCompletion": null,
+      "estTimeToCompletion": null,
+      "phases": [
+        {
+          "phase": 1,
+          "name": "Hosting & DNS Setup",
+          "tasks": [
+            {
+              "id": "1.1",
+              "name": "Configure DNS for CaliforniaLuxuryStays.com",
+              "status": "queued"
+            },
+            {
+              "id": "1.2",
+              "name": "Set up hosting environment (Vercel)",
+              "status": "queued"
+            }
+          ]
+        },
+        {
+          "phase": 2,
+          "name": "Content Pull from Lodgify",
+          "tasks": [
+            {
+              "id": "2.1",
+              "name": "Pull Graeagle property data from Lodgify",
+              "status": "queued"
+            },
+            {
+              "id": "2.2",
+              "name": "Pull Northstar property data from Lodgify",
+              "status": "queued"
+            },
+            {
+              "id": "2.3",
+              "name": "Compile local dining & activities for Graeagle",
+              "status": "queued"
+            },
+            {
+              "id": "2.4",
+              "name": "Compile local dining & activities for Northstar",
+              "status": "queued"
+            }
+          ]
+        },
+        {
+          "phase": 3,
+          "name": "How-To Videos Audit",
+          "tasks": [
+            {
+              "id": "3.1",
+              "name": "Audit existing how-to video assets",
+              "status": "queued",
+              "note": "Flag to Zaddy-CEO-Chairman if new videos need to be filmed"
+            }
+          ]
+        },
+        {
+          "phase": 4,
+          "name": "Site Build",
+          "tasks": [
+            {
+              "id": "4.1",
+              "name": "Build Next.js project scaffold",
+              "status": "queued"
+            },
+            {
+              "id": "4.2",
+              "name": "Build Welcome Book - Graeagle",
+              "url": "californialuxurystays.com/welcome/graeagle",
+              "status": "queued"
+            },
+            {
+              "id": "4.3",
+              "name": "Build Welcome Book - Northstar",
+              "url": "californialuxurystays.com/welcome/northstar",
+              "status": "queued"
+            },
+            {
+              "id": "4.4",
+              "name": "Build Checkout Guide - Graeagle",
+              "url": "californialuxurystays.com/checkout/graeagle",
+              "status": "queued"
+            },
+            {
+              "id": "4.5",
+              "name": "Build Checkout Guide - Northstar",
+              "url": "californialuxurystays.com/checkout/northstar",
+              "status": "queued"
+            },
+            {
+              "id": "4.6",
+              "name": "QA & cross-device testing",
+              "status": "queued"
+            }
+          ]
+        },
+        {
+          "phase": 5,
+          "name": "n8n Automation Workflow",
+          "tasks": [
+            {
+              "id": "5.1",
+              "name": "Build n8n trigger from Lodgify booking data",
+              "status": "queued"
+            },
+            {
+              "id": "5.2",
+              "name": "Email delivery via AgentMail (welcome book)",
+              "status": "queued"
+            },
+            {
+              "id": "5.3",
+              "name": "SMS delivery (welcome book)",
+              "status": "queued"
+            },
+            {
+              "id": "5.4",
+              "name": "Morning-of checkout guide delivery",
+              "status": "queued"
+            },
+            {
+              "id": "5.5",
+              "name": "End-to-end automation test",
+              "status": "queued"
+            }
+          ]
+        },
+        {
+          "phase": 6,
+          "name": "Maintenance & Updates",
+          "tasks": [
+            {
+              "id": "6.1",
+              "name": "Document content update process",
+              "status": "queued"
+            }
+          ]
+        }
+      ]
     }
   ],
   "cronJobs": [
