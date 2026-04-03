@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Card, KPI, ProgressBar } from "../components/shared";
+import { Badge, Card, KPI, ProgressBar, GrafanaPanel, GrafanaDashboard, GRAFANA_PANELS } from "../components/shared";
 import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
@@ -156,7 +156,25 @@ const Home = () => {
         <KPI label="Agents" value={allAgents.length} sub={`${allAgents.filter(a => a.status === "online").length} online`} color={C.cyan} />
       </div>
 
-      {/* Charts Row */}
+      {/* Grafana KPI Panels */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+        <GrafanaPanel panelId={GRAFANA_PANELS.totalAgents} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.totalSessions} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.totalCost} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.activeProjects} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.cronJobs} height={120} />
+      </div>
+
+      {/* Grafana Tables */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <GrafanaPanel panelId={GRAFANA_PANELS.agentRoster} height={300} title="Agent Roster (Grafana)" />
+        <GrafanaPanel panelId={GRAFANA_PANELS.projectsTable} height={300} title="Projects (Grafana)" />
+      </div>
+
+      {/* Grafana Sessions Table */}
+      <GrafanaPanel panelId={GRAFANA_PANELS.sessionsTable} height={350} title="Recent ACP Sessions (Grafana)" />
+
+      {/* Local Charts (kept as fallback) */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card>
           <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>Activity (7 days)</div>

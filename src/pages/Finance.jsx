@@ -1,4 +1,4 @@
-import { Badge, Card, KPI } from "../components/shared";
+import { Badge, Card, KPI, GrafanaPanel, GrafanaDashboard, GRAFANA_PANELS } from "../components/shared";
 import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
@@ -93,6 +93,14 @@ const Finance = () => {
           ))}
         </div>
       </Card>
+
+      {/* Grafana Panels */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        <GrafanaPanel panelId={GRAFANA_PANELS.totalCost} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.totalSessions} height={120} />
+        <GrafanaPanel panelId={GRAFANA_PANELS.activeProjects} height={120} />
+      </div>
+      <GrafanaPanel panelId={GRAFANA_PANELS.sessionsTable} height={300} title="Session Cost Details (Grafana)" />
     </div>
   );
 };
