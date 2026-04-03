@@ -20,7 +20,7 @@ export const C = {
 // ── Real Agent Data (from OpenClaw runtime) ──
 export const AGENTS = [
   { id: "main", name: "Jarvis", initials: "JV", color: "#6366f1", ring: "#818cf8", dept: "Operations", model: "Claude Sonnet 4.6", role: "chief of staff", status: "online", sessions: 510 },
-  { id: "worker", name: "Worker", initials: "WK", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "Claude Sonnet 4.6", role: "implementation", status: "online", sessions: 4 },
+  { id: "coding-agent", name: "Coding Agent", initials: "CA", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "Claude Sonnet 4.6", role: "software engineer", status: "online", sessions: 4 },
   { id: "validation", name: "Validator", initials: "VL", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "Claude Sonnet 4.6", role: "QA", status: "online", sessions: 1 },
   { id: "executive-assistant", name: "Victoria", initials: "VA", color: "#8b5cf6", ring: "#a78bfa", dept: "Executive", model: "Claude Haiku 4.5", role: "executive assistant", status: "online", sessions: 6 },
 
@@ -30,6 +30,7 @@ export const AGENTS = [
   { id: "crypto-analyst", name: "Crypto Analyst", initials: "CA", color: "#F59E0B", ring: "#FBBF24", dept: "Finance", model: "Claude Sonnet 4.6", role: "Crypto Investment Analyst", status: "online", sessions: 0 },
   { id: "bookkeeper", name: "Bookkeeper", initials: "BK", color: "#6366F1", ring: "#818CF8", dept: "Finance", model: "Claude Haiku 4.5", role: "Bookkeeper", status: "online", sessions: 0 },
   { id: "stock-analyst", name: "Stock Analyst", initials: "SA", color: "#10B981", ring: "#34D399", dept: "Finance", model: "Claude Sonnet 4.6", role: "Stock Analyst", status: "online", sessions: 0 },
+  { id: "designer", name: "Designer", initials: "DS", color: "#ec4899", ring: "#f472b6", dept: "Engineering", model: "Claude Sonnet 4.6", role: "Creative Director & Lead Designer", status: "online", sessions: 0 },
 ];
 
 export const DEPARTMENTS = ["Operations", "Engineering", "Executive", "Finance"];

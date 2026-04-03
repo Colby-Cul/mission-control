@@ -7,7 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarCha
 const DEPARTMENTS = [
   { id: "all", name: "All Departments" },
   { id: "ops", name: "Operations", agents: ["main", "executive-assistant"] },
-  { id: "eng", name: "Engineering", agents: ["worker", "validation"] },
+  { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"] },
   { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"] },
 ];
 

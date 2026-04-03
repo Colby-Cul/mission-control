@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 
 const SQUADS = [
   { id: "ops", name: "Operations", agents: ["main", "executive-assistant"], color: C.accent },
-  { id: "eng", name: "Engineering", agents: ["worker", "validation"], color: C.green },
+  { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"], color: C.green },
   { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
 ];
 
