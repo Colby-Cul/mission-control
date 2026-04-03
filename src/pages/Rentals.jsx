@@ -39,26 +39,26 @@ const Rentals = () => {
   const filtered = useMemo(() => propFilter === "all" ? active : active.filter(b => String(b.property_id) === propFilter), [active, propFilter]);
 
   // ── KPI Calculations ──
-  const totalRevenue = useMemo(() => active.reduce((s, b) => s + (b.total_amount || 0), 0), [active]);
-  const totalNights = useMemo(() => active.reduce((s, b) => s + nightsBetween(b.arrival, b.departure), 0), [active]);
+  const totalRevenue = useMemo(() => filtered.reduce((s, b) => s + (b.total_amount || 0), 0), [filtered]);
+  const totalNights = useMemo(() => filtered.reduce((s, b) => s + nightsBetween(b.arrival, b.departure), 0), [filtered]);
   const avgNightlyRate = totalNights > 0 ? totalRevenue / totalNights : 0;
   const totalExpenses = useMemo(() => {
-    // Estimate months of operation
     const months = 10;
-    return Object.values(MONTHLY_EXPENSES).reduce((s, e) => s + Object.values(e).reduce((a, b) => a + b, 0), 0) * months;
-  }, []);
+    const propIds = propFilter === "all" ? Object.keys(MONTHLY_EXPENSES).map(Number) : [Number(propFilter)];
+    return propIds.reduce((s, pid) => s + Object.values(MONTHLY_EXPENSES[pid] || {}).reduce((a, b) => a + b, 0), 0) * months;
+  }, [propFilter]);
   const netProfit = totalRevenue - totalExpenses;
   const profitMargin = totalRevenue > 0 ? netProfit / totalRevenue : 0;
   // Occupancy: total booked nights / total available nights (2 properties × ~300 days in range)
-  const availableNights = 2 * 300;
+  const availableNights = (propFilter === "all" ? 2 : 1) * 300;
   const occupancyRate = totalNights / availableNights;
   const revPAR = totalRevenue / availableNights;
-  const avgGuests = active.length > 0 ? active.reduce((s, b) => s + (b.rooms?.[0]?.people || 2), 0) / active.length : 0;
+  const avgGuests = filtered.length > 0 ? filtered.reduce((s, b) => s + (b.rooms?.[0]?.people || 2), 0) / filtered.length : 0;
 
   // ── Monthly Revenue + P&L ──
   const monthlyData = useMemo(() => {
     const months = {};
-    active.forEach(b => {
+    filtered.forEach(b => {
       const m = b.arrival?.slice(0, 7);
       if (!m) return;
       if (!months[m]) months[m] = { month: m, graeagle: 0, northstar: 0, total: 0, bookings: 0 };
@@ -68,40 +68,43 @@ const Rentals = () => {
       if (b.property_id === 533203) months[m].graeagle += amt;
       else months[m].northstar += amt;
     });
+    const propIds = propFilter === "all" ? Object.keys(MONTHLY_EXPENSES).map(Number) : [Number(propFilter)];
+    const monthlyExp = propIds.reduce((s, pid) => s + Object.values(MONTHLY_EXPENSES[pid] || {}).reduce((a, b) => a + b, 0), 0);
     return Object.values(months).sort((a, b) => a.month.localeCompare(b.month)).map(m => {
-      const totalExp = Object.values(MONTHLY_EXPENSES).reduce((s, e) => s + Object.values(e).reduce((a, b) => a + b, 0), 0);
-      return { ...m, expenses: totalExp, profit: Math.round(m.total - totalExp), label: new Date(m.month + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" }) };
+      return { ...m, expenses: monthlyExp, profit: Math.round(m.total - monthlyExp), label: new Date(m.month + "-01").toLocaleDateString("en-US", { month: "short", year: "2-digit" }) };
     });
-  }, [active]);
+  }, [filtered, propFilter]);
 
   // ── Source Distribution ──
   const sourceData = useMemo(() => {
     const map = {};
-    active.forEach(b => {
+    filtered.forEach(b => {
       const src = b.source || "Direct";
       map[src] = (map[src] || 0) + (b.total_amount || 0);
     });
     return Object.entries(map).map(([name, value]) => ({
       name: SRC_LABELS[name] || name, value: Math.round(value), fill: SRC_COLORS[name] || COLORS[0]
     })).sort((a, b) => b.value - a.value);
-  }, [active]);
+  }, [filtered]);
 
   // ── Expense Breakdown ──
   const expenseData = useMemo(() => {
     const combined = {};
-    Object.values(MONTHLY_EXPENSES).forEach(exp => {
-      Object.entries(exp).forEach(([k, v]) => { combined[k] = (combined[k] || 0) + v * 10; }); // 10 months
+    const propIds = propFilter === "all" ? Object.keys(MONTHLY_EXPENSES).map(Number) : [Number(propFilter)];
+    propIds.forEach(pid => {
+      const exp = MONTHLY_EXPENSES[pid] || {};
+      Object.entries(exp).forEach(([k, v]) => { combined[k] = (combined[k] || 0) + v * 10; });
     });
     const labels = { mortgage: "Mortgage", utilities: "Utilities", insurance: "Insurance", maintenance: "Maintenance", cleaning: "Cleaning", platform: "Platform Fees", marketing: "Marketing" };
     return Object.entries(combined).filter(([, v]) => v > 0).map(([k, v], i) => ({
       name: labels[k] || k, value: v, fill: COLORS[i % COLORS.length]
     })).sort((a, b) => b.value - a.value);
-  }, []);
+  }, [propFilter]);
 
   // ── Occupancy by Month ──
   const occupancyData = useMemo(() => {
     const months = {};
-    active.forEach(b => {
+    filtered.forEach(b => {
       const m = b.arrival?.slice(0, 7);
       if (!m) return;
       if (!months[m]) months[m] = { month: m, nights: 0 };
@@ -130,7 +133,7 @@ const Rentals = () => {
         avgGuests: propBookings.length > 0 ? Math.round(propBookings.reduce((s, b) => s + (b.rooms?.[0]?.people || 2), 0) / propBookings.length) : 0,
       };
     });
-  }, [active]);
+  }, [filtered]);
 
   // ── Sortable Bookings Table ──
   const sortedBookings = useMemo(() => {
@@ -163,7 +166,7 @@ const Rentals = () => {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Rentals</h1>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Pineside Cabins — {active.length} bookings across {Object.keys(PROP_MAP).length} properties</div>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Pineside Cabins — {filtered.length} bookings across {Object.keys(PROP_MAP).length} properties</div>
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {[["all", "All"], ["533203", "Graeagle"], ["746614", "Northstar"]].map(([v, l]) => (
@@ -179,7 +182,7 @@ const Rentals = () => {
         <KPI label="Occupancy" value={fmtPct(occupancyRate)} sub="Avg across properties" color={occupancyRate > 0.7 ? C.green : C.amber} />
         <KPI label="ADR" value={fmtCurrency(avgNightlyRate)} sub="Avg nightly rate" color={C.cyan} />
         <KPI label="RevPAR" value={fmtCurrency(revPAR)} sub="Rev per avail night" color={C.purple} />
-        <KPI label="Bookings" value={active.length} sub={`${bookings.length - active.length} declined`} color={C.accent} />
+        <KPI label="Bookings" value={filtered.length} sub={`${bookings.length - filtered.length} declined`} color={C.accent} />
         <KPI label="Nights Booked" value={totalNights} sub={`of ${availableNights} available`} color={C.teal} />
         <KPI label="Avg Guests" value={avgGuests.toFixed(1)} sub="Per booking" color={C.amber} />
       </div>

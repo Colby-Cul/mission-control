@@ -366,24 +366,80 @@ if brave_key:
         'lastUpdated': datetime.fromtimestamp(config_path.stat().st_mtime).isoformat(),
     })
 
-# Grafana
-grafana_token_path = openclaw / 'workspace' / 'anthropic' / '.grafana-token'
-if grafana_token_path.exists():
+# Keychain-based integrations
+import subprocess
+keychain_services = [
+    ('lodgify', 'lodgify-api-key', 'lodgify'),
+    ('grafana-cloud', 'grafana-cloud', 'grafana'),
+    ('grafana-sa-id', 'grafana-sa-id', None),  # skip, grouped with grafana-cloud
+    ('n8n', 'n8n-api-key', 'n8n'),
+    ('n8n-mcp', 'n8n-mcp-token', None),  # skip, grouped with n8n
+    ('fast-io', 'fast.io', 'fast.io'),
+    ('spike-sh', 'spike.sh-webhook', 'spike.sh'),
+    ('supabase', 'supabase-project-url', 'supabase'),
+    ('quickbooks', 'quickbooks-client-id', 'quickbooks'),
+    ('cloud-redis', 'cloud-redis-account', 'cloud-redis'),
+    ('exa', 'exa-api-key', 'exa'),
+]
+for int_id, svc_name, provider in keychain_services:
+    if not provider:
+        continue
+    try:
+        r = subprocess.run(['security', 'find-generic-password', '-s', svc_name, '-w'],
+            capture_output=True, text=True, timeout=5)
+        if r.returncode == 0 and r.stdout.strip():
+            apis.append({
+                'id': int_id, 'provider': provider,
+                'maskedKey': mask_key(r.stdout.strip()),
+                'status': 'active',
+                'lastUpdated': datetime.now().isoformat(),
+            })
+    except Exception:
+        pass
+
+# Tailscale
+try:
+    r = subprocess.run(['tailscale', 'status', '--json'], capture_output=True, text=True, timeout=5)
+    if r.returncode == 0:
+        apis.append({
+            'id': 'tailscale', 'provider': 'tailscale',
+            'maskedKey': 'Mesh VPN connected',
+            'status': 'active',
+            'lastUpdated': datetime.now().isoformat(),
+        })
+except Exception:
+    pass
+
+# Vercel CLI
+vercel_auth = Path.home() / '.local' / 'share' / 'com.vercel.cli' / 'auth.json'
+if not vercel_auth.exists():
+    vercel_auth = Path.home() / '.vercel' / 'auth.json'
+if vercel_auth.exists():
     apis.append({
-        'id': 'grafana', 'provider': 'grafana',
-        'maskedKey': mask_key(grafana_token_path.read_text().strip()),
+        'id': 'vercel', 'provider': 'vercel',
+        'maskedKey': 'CLI authenticated',
         'status': 'active',
-        'lastUpdated': datetime.fromtimestamp(grafana_token_path.stat().st_mtime).isoformat(),
+        'lastUpdated': datetime.fromtimestamp(vercel_auth.stat().st_mtime).isoformat(),
     })
 
-# Lodgify
-lodgify_path = Path.home() / '.lodgify_token'
-if lodgify_path.exists():
+# Composio
+composio_bin = openclaw / 'composio_env' / 'bin' / 'composio'
+if composio_bin.exists():
     apis.append({
-        'id': 'lodgify', 'provider': 'lodgify',
-        'maskedKey': mask_key(lodgify_path.read_text().strip()),
+        'id': 'composio', 'provider': 'composio',
+        'maskedKey': 'SDK installed',
         'status': 'active',
-        'lastUpdated': datetime.fromtimestamp(lodgify_path.stat().st_mtime).isoformat(),
+        'lastUpdated': datetime.fromtimestamp(composio_bin.stat().st_mtime).isoformat(),
+    })
+
+# GitHub CLI (only if not already added)
+gh_config = Path.home() / '.config' / 'gh' / 'hosts.yml'
+if gh_config.exists() and not any(a['id'] == 'github' for a in apis):
+    apis.append({
+        'id': 'github', 'provider': 'github',
+        'maskedKey': 'CLI authenticated',
+        'status': 'active',
+        'lastUpdated': datetime.fromtimestamp(gh_config.stat().st_mtime).isoformat(),
     })
 
 data['apiCredentials'] = apis

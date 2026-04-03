@@ -6,20 +6,34 @@ import { useMissionControlData } from "../context/MissionControlDataContext";
 const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
 
 const INTEGRATION_META = {
-  "anthropic": { name: "Anthropic Claude", desc: "Primary AI provider — Sonnet 4.6, Haiku 4.5, Opus 4.6", category: "AI Models" },
-  "openai": { name: "OpenAI", desc: "Legacy provider — Whisper, DALL-E, Image Gen", category: "AI Models" },
+  // AI Models
+  "anthropic": { name: "Anthropic Claude", desc: "Primary AI — Sonnet 4.6, Haiku 4.5, Opus 4.6", category: "AI Models" },
+  "openai": { name: "OpenAI", desc: "Whisper, DALL-E, Image Gen", category: "AI Models" },
   "ollama": { name: "Ollama", desc: "Local inference — llama3.2, qwen, codellama", category: "AI Models" },
   "openai-codex": { name: "OpenAI Codex", desc: "ACP coding delegation runtime", category: "AI Models" },
+  "exa": { name: "Exa Search", desc: "Neural web search MCP server", category: "AI Models" },
+  "composio": { name: "Composio", desc: "Tool orchestration SDK", category: "AI Models" },
+  // Messaging
   "telegram": { name: "Telegram", desc: "Bot messaging channel", category: "Messaging" },
   "slack": { name: "Slack", desc: "Workspace messaging via Socket Mode", category: "Messaging" },
   "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging" },
+  // Business
   "monday.com": { name: "Monday.com", desc: "External business project management", category: "Business" },
-  "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
+  "lodgify": { name: "Lodgify", desc: "STR property management + bookings", category: "Business" },
+  "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management", category: "Business" },
+  // Infrastructure
   "supabase": { name: "Supabase", desc: "PostgreSQL database + auth", category: "Infrastructure" },
   "vercel": { name: "Vercel", desc: "Production deployment platform", category: "Infrastructure" },
-  "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Search" },
-  "grafana": { name: "Grafana Cloud", desc: "Monitoring + dashboards", category: "Infrastructure" },
-  "lodgify": { name: "Lodgify", desc: "STR property management", category: "Business" },
+  "grafana": { name: "Grafana Cloud", desc: "Monitoring + observability dashboards", category: "Infrastructure" },
+  "tailscale": { name: "Tailscale", desc: "Mesh VPN — Mac Mini cluster", category: "Infrastructure" },
+  "cloud-redis": { name: "Cloud Redis", desc: "Redis cache / message broker", category: "Infrastructure" },
+  // Dev Tools
+  "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
+  "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Dev Tools" },
+  "fast.io": { name: "Fast.io", desc: "CDN file hosting from Google Drive", category: "Dev Tools" },
+  // Monitoring
+  "n8n": { name: "n8n", desc: "Workflow automation platform", category: "Automation" },
+  "spike.sh": { name: "Spike.sh", desc: "Incident alerting + webhooks", category: "Monitoring" },
 };
 
 function statusColor(s) {
