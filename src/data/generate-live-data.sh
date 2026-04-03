@@ -380,7 +380,24 @@ keychain_services = [
     ('quickbooks', 'quickbooks-client-id', 'quickbooks'),
     ('cloud-redis', 'cloud-redis-account', 'cloud-redis'),
     ('exa', 'exa-api-key', 'exa'),
+    ('pricelabs', 'pricelabs-api-key', 'pricelabs'),
 ]
+
+# Known active integrations without keychain entries (connected via OAuth/app)
+known_active = [
+    ('pricelabs', 'pricelabs', 'Connected via Lodgify'),
+    ('canva', 'canva', 'OAuth connected'),
+    ('cloudflare', 'cloudflare', 'DNS active'),
+    ('lastpass', 'lastpass', 'Desktop app connected'),
+]
+for int_id, provider, desc in known_active:
+    if not any(a['id'] == int_id for a in apis):
+        apis.append({
+            'id': int_id, 'provider': provider,
+            'maskedKey': desc,
+            'status': 'active',
+            'lastUpdated': datetime.now().isoformat(),
+        })
 for int_id, svc_name, provider in keychain_services:
     if not provider:
         continue

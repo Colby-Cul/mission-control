@@ -17,23 +17,30 @@ const INTEGRATION_META = {
   "telegram": { name: "Telegram", desc: "Bot messaging channel", category: "Messaging" },
   "slack": { name: "Slack", desc: "Workspace messaging via Socket Mode", category: "Messaging" },
   "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging" },
-  // Business
+  // STR / Rentals
+  "lodgify": { name: "Lodgify", desc: "PMS — property management + bookings", category: "STR" },
+  "pricelabs": { name: "Price Labs", desc: "Dynamic pricing + revenue management", category: "STR" },
+  // Business / Finance
   "monday.com": { name: "Monday.com", desc: "External business project management", category: "Business" },
-  "lodgify": { name: "Lodgify", desc: "STR property management + bookings", category: "Business" },
   "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management", category: "Business" },
+  "canva": { name: "Canva", desc: "Design + marketing assets", category: "Business" },
   // Infrastructure
   "supabase": { name: "Supabase", desc: "PostgreSQL database + auth", category: "Infrastructure" },
   "vercel": { name: "Vercel", desc: "Production deployment platform", category: "Infrastructure" },
   "grafana": { name: "Grafana Cloud", desc: "Monitoring + observability dashboards", category: "Infrastructure" },
   "tailscale": { name: "Tailscale", desc: "Mesh VPN — Mac Mini cluster", category: "Infrastructure" },
   "cloud-redis": { name: "Cloud Redis", desc: "Redis cache / message broker", category: "Infrastructure" },
+  "cloudflare": { name: "Cloudflare", desc: "DNS + CDN + security", category: "Infrastructure" },
   // Dev Tools
   "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
   "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Dev Tools" },
   "fast.io": { name: "Fast.io", desc: "CDN file hosting from Google Drive", category: "Dev Tools" },
-  // Monitoring
+  // Automation / Monitoring
   "n8n": { name: "n8n", desc: "Workflow automation platform", category: "Automation" },
   "spike.sh": { name: "Spike.sh", desc: "Incident alerting + webhooks", category: "Monitoring" },
+  // Productivity
+  "lastpass": { name: "LastPass", desc: "Password manager", category: "Productivity" },
+  "1password": { name: "1Password", desc: "Secret management", category: "Productivity" },
 };
 
 function statusColor(s) {
