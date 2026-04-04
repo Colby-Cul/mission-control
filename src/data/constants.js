@@ -44,7 +44,7 @@ export const AGENTS = [
   { id: "scribe", name: "Scribe", initials: "SC", color: "#6d28d9", ring: "#a78bfa", dept: "Marketing", model: "GPT-4o-mini", role: "Copywriter", status: "online", sessions: 0 },
 ];
 
-export const DEPARTMENTS = ["Operations", "Engineering", "Executive", "Finance"];
+export const DEPARTMENTS = ["Operations", "Engineering", "Executive", "Finance", "Marketing"];
 
 // ── Real Projects ──
 export const PROJECTS = [
