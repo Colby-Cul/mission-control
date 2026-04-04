@@ -9,6 +9,7 @@ const DEPARTMENTS = [
   { id: "ops", name: "Operations", agents: ["executive-assistant"] },
   { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"] },
   { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"] },
+  { id: "mkt", name: "Marketing", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"] },
 ];
 
 function statusColor(s) {

@@ -8,6 +8,7 @@ const DEPTS = [
   { id: "ops", name: "Operations", lead: "executive-assistant", agents: ["executive-assistant"], color: C.accent },
   { id: "eng", name: "Engineering", lead: "coding-agent", agents: ["coding-agent", "validation", "designer"], color: C.green },
   { id: "fin", name: "Finance", lead: "cfo", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
+  { id: "mkt", name: "Marketing", lead: "maven", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"], color: "#e11d48" },
 ];
 
 function statusColor(s) {
