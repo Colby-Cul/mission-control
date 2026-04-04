@@ -248,11 +248,28 @@ for agent_dir in sorted((openclaw / "agents").glob("*")):
     jsonl_files = sorted(sessions_dir.glob("*.jsonl"), key=lambda path: path.stat().st_mtime, reverse=True)
     session_inventory_path = sessions_dir / "sessions.json"
     inventory = parse_json_file(session_inventory_path) if session_inventory_path.exists() else {}
-    agent_rows.append({
+    # Load knowledge level data if available
+    knowledge_path = agent_dir / "knowledge.json"
+    knowledge = parse_json_file(knowledge_path) if knowledge_path.exists() else None
+
+    agent_row = {
         "id": agent_dir.name,
         "name": agent_dir.name,
         "sessionCount": len(jsonl_files),
-    })
+    }
+    if knowledge:
+        agent_row["knowledge"] = {
+            "domain": knowledge.get("domain", ""),
+            "xp": knowledge.get("xp", 0),
+            "level": knowledge.get("level", 0),
+            "level_name": knowledge.get("level_name", "Pre-School"),
+            "level_progress_pct": knowledge.get("level_progress_pct", 0),
+            "sessions_completed": knowledge.get("sessions_completed", 0),
+            "learning_sessions_completed": knowledge.get("learning_sessions_completed", 0),
+            "tasks_completed": knowledge.get("tasks_completed", 0),
+            "last_learning_session": knowledge.get("last_learning_session"),
+        }
+    agent_rows.append(agent_row)
 
     for path in jsonl_files[:80]:
         if path.name.endswith(".acp-stream.jsonl"):

@@ -36,6 +36,16 @@ function getAgentActivity(agent, allSessions) {
   return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
 }
 
+function knowledgeBadgeColor(levelName) {
+  const l = (levelName || "").toLowerCase();
+  if (l.includes("doctorate")) return "#D4AF37";
+  if (l.includes("phd")) return "#f97316";
+  if (l.includes("master") || l.includes("bachelor")) return "#8b5cf6";
+  if (l.includes("high") || l.includes("associate")) return "#10b981";
+  if (l.includes("elementary") || l.includes("middle")) return "#0ea5e9";
+  return "#6b7280"; // grey for Pre-School / Kindergarten
+}
+
 const HUMAN_RATE = 75; // $/hr equivalent
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
@@ -46,7 +56,8 @@ const TheFloor = () => {
 
   const allAgents = AGENTS.map(ca => {
     const live = agents.find(a => a.id === ca.id);
-    return { ...ca, ...(live || {}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online" };
+    const knowledge = live?.knowledge || live?.raw?.knowledge || null;
+    return { ...ca, ...(live || {}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online", knowledge };
   });
 
   const filteredAgents = dept === "all" ? allAgents : allAgents.filter(a => {
@@ -158,8 +169,20 @@ const TheFloor = () => {
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: agent.grade === "A" ? C.green : agent.grade === "B" ? C.cyan : agent.grade === "C" ? C.amber : C.red }}>{agent.grade}</div>
-                <div style={{ fontSize: 10, color: C.muted }}>{agent.completionRate}% done</div>
+                {agent.knowledge ? (
+                  <>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: knowledgeBadgeColor(agent.knowledge.level_name) + "22", border: `1px solid ${knowledgeBadgeColor(agent.knowledge.level_name)}44` }}>
+                      {agent.knowledge.level_name === "Doctorate" && <span style={{ fontSize: 10 }}>✦</span>}
+                      <span style={{ fontSize: 11, fontWeight: 700, color: knowledgeBadgeColor(agent.knowledge.level_name) }}>{agent.knowledge.level_name}</span>
+                    </div>
+                    <div style={{ fontSize: 9, color: C.muted, marginTop: 3 }}>{(agent.knowledge.xp || 0).toLocaleString()} XP</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: agent.grade === "A" ? C.green : agent.grade === "B" ? C.cyan : agent.grade === "C" ? C.amber : C.red }}>{agent.grade}</div>
+                    <div style={{ fontSize: 10, color: C.muted }}>{agent.completionRate}% done</div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -175,6 +198,19 @@ const TheFloor = () => {
                 </div>
               );
             })()}
+
+            {/* Knowledge XP Bar */}
+            {agent.knowledge && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: C.muted }}>Domain: {agent.knowledge.domain}</span>
+                  <span style={{ fontSize: 9, color: C.muted }}>{agent.knowledge.level_progress_pct}% to next</span>
+                </div>
+                <div style={{ height: 4, borderRadius: 2, background: C.bg, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${agent.knowledge.level_progress_pct}%`, borderRadius: 2, background: knowledgeBadgeColor(agent.knowledge.level_name), transition: "width 0.5s" }} />
+                </div>
+              </div>
+            )}
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 12 }}>
               <div><div style={{ fontSize: 10, color: C.muted }}>Tasks</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{agent.total}</div></div>
