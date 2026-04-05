@@ -3,10 +3,10 @@
     "id": "coding",
     "name": "ACP Coding Delegations",
     "status": "active",
-    "taskCount": 5,
+    "taskCount": 6,
     "doneCount": 2,
-    "activeCount": 3,
-    "totalCost": 159.0367,
+    "activeCount": 4,
+    "totalCost": 162.0345,
     "apiModelsUsed": [
       "claude-haiku-4-5-20251001",
       "claude-opus-4-6",
@@ -27,17 +27,49 @@
       "designer",
       "executive-assistant",
       "main",
-      "maven"
+      "maven",
+      "mtp"
     ],
     "agents": [
       "designer",
       "executive-assistant",
       "main",
-      "maven"
+      "maven",
+      "mtp"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~45 min",
+    "estimatedTimeToCompletion": "~60 min",
     "sessions": [
+      {
+        "id": "98a761c1-d12c-44d5-a",
+        "sessionId": "98a761c1-d12c-44d5-a3ba-1baa50bb6d32",
+        "agent": "mtp",
+        "task": "Agent-to-agent announce step.",
+        "status": "in_progress",
+        "lane": "inprogress",
+        "dateCreated": "2026-04-05T12:11:02.842Z",
+        "dateFinished": null,
+        "startTime": "2026-04-05T12:11:02.842Z",
+        "endTime": null,
+        "inputTokens": 141824,
+        "outputTokens": 2394,
+        "cachedInputTokens": 156800,
+        "tokens": 301018,
+        "model": "gpt-4o-mini",
+        "apiModelUsed": "gpt-4o-mini",
+        "modelsUsed": [
+          "gpt-4o-mini"
+        ],
+        "totalCost": 0.5745,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/mtp/sessions/98a761c1-d12c-44d5-a3ba-1baa50bb6d32.jsonl",
+        "sizeBytes": 48177,
+        "isCron": false,
+        "spawns": 1,
+        "parentSession": "",
+        "projectId": "coding",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~41 min"
+      },
       {
         "id": "0a1c5d74-5eec-474f-b",
         "sessionId": "0a1c5d74-5eec-474f-b677-13866370b8b0",
@@ -77,40 +109,40 @@
         "dateFinished": null,
         "startTime": "2026-04-04T17:50:36.167Z",
         "endTime": null,
-        "inputTokens": 4637876,
-        "outputTokens": 5725,
-        "cachedInputTokens": 5561216,
-        "tokens": 10204817,
+        "inputTokens": 4818547,
+        "outputTokens": 5903,
+        "cachedInputTokens": 5785856,
+        "tokens": 10610306,
         "model": "gpt-4o-mini",
         "apiModelUsed": "gpt-4o-mini",
         "modelsUsed": [
           "gpt-4o-mini"
         ],
-        "totalCost": 18.6035,
+        "totalCost": 19.3377,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/maven/sessions/963bd9a1-111b-40ca-8edd-998e03c9dfb7.jsonl",
-        "sizeBytes": 17792039,
+        "sizeBytes": 18889110,
         "isCron": false,
         "spawns": 3,
         "parentSession": "heartbeat",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~7.0 hr"
+        "estimatedTimeToCompletion": "~7.1 hr"
       },
       {
         "id": "8167bc3d-5d4a-43f4-9",
         "sessionId": "8167bc3d-5d4a-43f4-91c9-b7309e3aa010",
         "agent": "main",
-        "task": "It looks like you're ready to go! Feel free to run the script to push your tasks to Google Tasks. If any issues crop up or if you need further assistance, don\u2019t hesitate to reach out. Safe travels through your task management! \ud83d\ude80",
+        "task": "To send an image back, prefer the message tool (media/path/filePath). If you must inline, use MEDIA:https://example.com/image.jpg (spaces ok, quote if needed) or a safe relative path like MEDIA:./image.jpg. Avoid absolute paths (MEDIA:/...) and ~ paths \u2014 they are blocked for security. Keep caption in the text body.",
         "status": "blocked",
         "lane": "blocked",
         "dateCreated": "2026-04-03T04:30:24.068Z",
         "dateFinished": null,
         "startTime": "2026-04-03T04:30:24.068Z",
         "endTime": null,
-        "inputTokens": 681437,
-        "outputTokens": 7602,
-        "cachedInputTokens": 1149340,
-        "tokens": 1838379,
+        "inputTokens": 1106953,
+        "outputTokens": 11676,
+        "cachedInputTokens": 1461660,
+        "tokens": 2580289,
         "model": "gpt-4o",
         "apiModelUsed": "claude-haiku-4-5-20251001, claude-opus-4-6, claude-sonnet-4-6, delivery-mirror, gpt-4o, gpt-4o-mini",
         "modelsUsed": [
@@ -121,15 +153,15 @@
           "gpt-4o",
           "gpt-4o-mini"
         ],
-        "totalCost": 3.2163,
+        "totalCost": 4.7112,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/8167bc3d-5d4a-43f4-91c9-b7309e3aa010.jsonl",
-        "sizeBytes": 457773,
+        "sizeBytes": 504782,
         "isCron": false,
-        "spawns": 2,
+        "spawns": 3,
         "parentSession": "telegram:7923187109",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~20.1 hr"
+        "estimatedTimeToCompletion": "~20.2 hr"
       },
       {
         "id": "d2f5f7d2-80f6-4c91-8",
@@ -142,10 +174,10 @@
         "dateFinished": null,
         "startTime": "2026-04-03T02:02:55.893Z",
         "endTime": null,
-        "inputTokens": 33681278,
-        "outputTokens": 131182,
-        "cachedInputTokens": 38945018,
-        "tokens": 72757478,
+        "inputTokens": 33682150,
+        "outputTokens": 131381,
+        "cachedInputTokens": 39097082,
+        "tokens": 72910613,
         "model": "gpt-4o-mini",
         "apiModelUsed": "claude-haiku-4-5-20251001, claude-opus-4-6, claude-sonnet-4-6, gpt-4o-mini",
         "modelsUsed": [
@@ -154,15 +186,15 @@
           "claude-sonnet-4-6",
           "gpt-4o-mini"
         ],
-        "totalCost": 134.1963,
+        "totalCost": 134.3905,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/d2f5f7d2-80f6-4c91-8e46-bea39b0bf462.jsonl",
-        "sizeBytes": 3186969,
+        "sizeBytes": 3194123,
         "isCron": false,
         "spawns": 1,
         "parentSession": "heartbeat",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~20.9 hr"
+        "estimatedTimeToCompletion": "~21.0 hr"
       },
       {
         "id": "a004d65f-4a20-4d92-b",
@@ -201,7 +233,7 @@
     "taskCount": 70,
     "doneCount": 64,
     "activeCount": 6,
-    "totalCost": 5.8833,
+    "totalCost": 5.8865,
     "apiModelsUsed": [
       "gpt-4o",
       "gpt-4o-mini"
@@ -219,6 +251,36 @@
     "estimatedCostToCompletion": 0.0,
     "estimatedTimeToCompletion": "~90 min",
     "sessions": [
+      {
+        "id": "dc9816f6-c57d-4520-8",
+        "sessionId": "dc9816f6-c57d-4520-8428-935a743ae2d4",
+        "agent": "main",
+        "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update only.",
+        "status": "in_progress",
+        "lane": "inprogress",
+        "dateCreated": "2026-04-05T14:06:42.673Z",
+        "dateFinished": null,
+        "startTime": "2026-04-05T14:06:42.673Z",
+        "endTime": null,
+        "inputTokens": 16967,
+        "outputTokens": 211,
+        "cachedInputTokens": 13184,
+        "tokens": 30362,
+        "model": "gpt-4o-mini",
+        "apiModelUsed": "gpt-4o-mini",
+        "modelsUsed": [
+          "gpt-4o-mini"
+        ],
+        "totalCost": 0.061,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/dc9816f6-c57d-4520-8428-935a743ae2d4.jsonl",
+        "sizeBytes": 15298,
+        "isCron": false,
+        "spawns": 0,
+        "parentSession": "",
+        "projectId": "mission-control",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~1 min"
+      },
       {
         "id": "1d1fea82-5d26-4266-a",
         "sessionId": "1d1fea82-5d26-4266-abb3-d1c9ac0b2ffc",
@@ -247,7 +309,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1 min"
+        "estimatedTimeToCompletion": "~6 min"
       },
       {
         "id": "f2826f95-ac1b-4f70-b",
@@ -277,7 +339,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~6 min"
+        "estimatedTimeToCompletion": "~11 min"
       },
       {
         "id": "ac6e2cd3-5ec1-4d12-a",
@@ -307,7 +369,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~12 min"
+        "estimatedTimeToCompletion": "~17 min"
       },
       {
         "id": "911d2eae-65f8-4f52-a",
@@ -337,19 +399,19 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~12 min"
+        "estimatedTimeToCompletion": "~17 min"
       },
       {
         "id": "9762db9a-98cb-42a2-a",
         "sessionId": "9762db9a-98cb-42a2-a714-258d65647179",
         "agent": "main",
         "task": "Check Discord Jarvis Mission Control server status. Verify bot connection, channel health, role assignments. Test message routing. Brief status update only.",
-        "status": "in_progress",
-        "lane": "inprogress",
+        "status": "done",
+        "lane": "done",
         "dateCreated": "2026-04-05T13:06:42.546Z",
-        "dateFinished": null,
+        "dateFinished": "2026-04-05T13:07:17Z",
         "startTime": "2026-04-05T13:06:42.546Z",
-        "endTime": null,
+        "endTime": "2026-04-05T13:07:17Z",
         "inputTokens": 20084,
         "outputTokens": 242,
         "cachedInputTokens": 52224,
@@ -365,9 +427,7 @@
         "isCron": false,
         "spawns": 0,
         "parentSession": "",
-        "projectId": "mission-control",
-        "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~17 min"
+        "projectId": "mission-control"
       },
       {
         "id": "c42389eb-75ab-4311-a",
@@ -873,7 +933,7 @@
         "parentSession": "heartbeat",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1.8 hr"
+        "estimatedTimeToCompletion": "~1.9 hr"
       },
       {
         "id": "9b5462d5-400d-4b8f-b",
@@ -2160,34 +2220,6 @@
         "sizeBytes": 2759,
         "isCron": false,
         "spawns": 0,
-        "parentSession": "heartbeat",
-        "projectId": "mission-control"
-      },
-      {
-        "id": "18cd3d08-3d99-4f9e-b",
-        "sessionId": "18cd3d08-3d99-4f9e-bb6f-fcd182be7214",
-        "agent": "main",
-        "task": "You are the Mission Control autonomous coding coordinator. CWD: /Users/jarvisculbertson/mission-control",
-        "status": "done",
-        "lane": "done",
-        "dateCreated": "2026-04-04T21:20:37.908Z",
-        "dateFinished": "2026-04-04T21:20:46Z",
-        "startTime": "2026-04-04T21:20:37.908Z",
-        "endTime": "2026-04-04T21:20:46Z",
-        "inputTokens": 15448,
-        "outputTokens": 157,
-        "cachedInputTokens": 14080,
-        "tokens": 29685,
-        "model": "gpt-4o",
-        "apiModelUsed": "gpt-4o",
-        "modelsUsed": [
-          "gpt-4o"
-        ],
-        "totalCost": 0.0578,
-        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/18cd3d08-3d99-4f9e-bb6f-fcd182be7214.jsonl",
-        "sizeBytes": 5106,
-        "isCron": false,
-        "spawns": 1,
         "parentSession": "heartbeat",
         "projectId": "mission-control"
       }
