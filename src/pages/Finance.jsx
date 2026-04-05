@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Badge, Card, KPI } from "../components/shared";
-import { C, AGENTS } from "../data/constants";
+import { C } from "../data/constants";
+import { buildAgentRoster } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
 
@@ -11,6 +12,7 @@ function fmtCost(v) { const n=Number(v); return isFinite(n)?`$${n.toFixed(2)}`:"
 
 const Finance = () => {
   const { acpSessions=[], projects=[], agents } = useMissionControlData();
+  const allAgents = buildAgentRoster(agents, acpSessions);
 
   const totalCost = acpSessions.reduce((s,t) => s+(t.totalCost||0), 0);
   const totalTokens = acpSessions.reduce((s,t) => s+(t.tokens||0), 0);
@@ -23,11 +25,11 @@ const Finance = () => {
   const budgetPct = Math.min(Math.round((totalCost/monthlyBudget)*100),100);
 
   // Cost by agent
-  const costByAgent = useMemo(() => AGENTS.map((a,i) => {
+  const costByAgent = useMemo(() => allAgents.map((a,i) => {
     const sessions = acpSessions.filter(s => s.agent===a.id);
     const cost = sessions.reduce((sum,s) => sum+(s.totalCost||0),0);
     return { name: a.name||a.id, cost: Math.round(cost*100)/100, sessions: sessions.length, fill: a.color||CHART_COLORS[i%CHART_COLORS.length] };
-  }).filter(a => a.cost > 0 || a.sessions > 0).sort((a,b) => b.cost-a.cost), [acpSessions]);
+  }).filter(a => a.cost > 0 || a.sessions > 0).sort((a,b) => b.cost-a.cost), [acpSessions, allAgents]);
 
   // Cost by model (pie)
   const costByModel = useMemo(() => {

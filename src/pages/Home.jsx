@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge, Card, KPI } from "../components/shared";
-import { C, AGENTS } from "../data/constants";
+import { C } from "../data/constants";
+import { buildAgentRoster, isAgentOnline } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar, Legend } from "recharts";
 
@@ -23,10 +24,7 @@ const Home = () => {
   const navigate = useNavigate();
   const { acpSessions=[], projects=[], cronJobs=[], skills=[], agents, snapshot } = useMissionControlData();
 
-  const allAgents = AGENTS.map(ca => {
-    const live = agents?.find(a => a.id === ca.id);
-    return { ...ca, ...(live||{}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online" };
-  });
+  const allAgents = buildAgentRoster(agents, acpSessions);
 
   const totalCost = acpSessions.reduce((s,t) => s + (t.totalCost||0), 0);
   const totalTokens = acpSessions.reduce((s,t) => s + (t.tokens||0), 0);
@@ -37,7 +35,7 @@ const Home = () => {
   const enabledCrons = cronJobs.filter(j => j.enabled).length;
   const errorCrons = cronJobs.filter(j => j.consecutiveErrors > 0 || j.lastStatus==="error").length;
   const gatewayOk = snapshot?.health?.ok || snapshot?.health?.status==="live";
-  const workerConnected = snapshot?.workerNode?.connected || false;
+  const workerConnected = allAgents.some(agent => agent.id !== "main" && isAgentOnline(agent.status));
 
   // Chart data: sessions per day (7 days)
   const dailyActivity = useMemo(() => {
@@ -132,7 +130,7 @@ const Home = () => {
         <KPI label="Blocked" value={blockedTasks||"0"} sub={blockedTasks?"Attention":"Clear"} color={blockedTasks?C.red:C.green} />
         <KPI label="Projects" value={projects.length||"—"} sub={`${activeProjects} active`} color={C.purple} />
         <KPI label="API Cost" value={fmtCost(totalCost)} sub={fmtTokens(totalTokens)+" tkns"} color={C.amber} />
-        <KPI label="Agents" value={allAgents.length} sub={`${allAgents.filter(a=>a.status==="online").length} online`} color={C.cyan} />
+        <KPI label="Agents" value={allAgents.length} sub={`${allAgents.filter(a=>isAgentOnline(a.status)).length} online`} color={C.cyan} />
       </div>
 
       {/* Charts Row 1: Activity Trend + Cost by Model */}
