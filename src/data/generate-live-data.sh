@@ -174,13 +174,16 @@ def lane_from_status(status):
     return "todo"
 
 
-def guess_status(task_text, has_spawn=False, has_error=False, is_open=False):
+def guess_status(task_text, has_spawn=False, has_error=False, is_open=False, file_age_hours=0):
     lowered = str(task_text or "").lower()
     if "blocked" in lowered or has_error:
         return "blocked"
-    if is_open:
+    # Sessions older than 1 hour are done, regardless of inventory
+    if file_age_hours > 1:
+        return "done"
+    if is_open and file_age_hours < 1:
         return "in_progress"
-    if has_spawn:
+    if has_spawn and file_age_hours < 1:
         return "in_progress"
     return "done"
 
@@ -354,11 +357,13 @@ for agent_dir in sorted((openclaw / "agents").glob("*")):
                     if isinstance(entry, dict) and entry.get("sessionId") == path.stem:
                         inventory_match = entry
                         break
+            file_age_hours = (datetime.now(timezone.utc) - datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)).total_seconds() / 3600
             status = guess_status(
                 task_text or path.stem,
                 has_spawn=spawn_count > 0,
                 has_error=has_error,
                 is_open=bool(inventory_match),
+                file_age_hours=file_age_hours,
             )
             lane = lane_from_status(status)
             date_finished = None if lane in {"todo", "inprogress", "blocked"} else (iso_from_any(last_ts) or iso_from_any(path.stat().st_mtime))

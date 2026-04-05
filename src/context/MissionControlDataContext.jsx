@@ -107,6 +107,7 @@ function normalizeAgent(agent, index) {
     initials: known.initials || getInitials(name),
     color: known.color || "#0ea5e9",
     ring: known.ring || "#38bdf8",
+    knowledge: agent?.knowledge || null,
     raw: agent
   };
 }

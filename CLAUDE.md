@@ -1,5 +1,15 @@
-# Mission Control — Project Instructions
+STARTUP: Read ~/.openclaw/persistent-memory/PROJECT_REGISTRY.md for the master project list. After completing work, update the Mission Control entry.
 
-## Monday.com Exclusion (MANDATORY)
+# Mission Control Dashboard
 
-Monday.com is explicitly excluded from Mission Control. It was used as a temporary project/task board during development only and is being fully replaced by Mission Control. Do not add Monday.com API calls, SDK dependencies, or imports. Do not reference Monday.com boards, items, columns, or webhooks. Do not build any sync or integration with Monday.com. Do not suggest Monday.com as a solution for task, sprint, or project management. All project management, sprint tracking, and task boards are handled natively within Mission Control itself. Treat any existing Monday.com code as legacy/deprecated — do not expand it, only remove or replace it when touched.
+- **Repo:** https://github.com/Colby-Cul/mission-control
+- **Stack:** React + Vite, Recharts, deployed to Vercel + GitHub Pages
+- **Production:** https://mission-control-peach-omega.vercel.app
+- **Data:** `bash src/data/generate-live-data.sh` regenerates from OpenClaw runtime
+- **Deploy:** `vercel --prod --yes` for production, `git push` for GitHub Pages
+
+## Rules
+1. Never break existing working features — only add to them.
+2. All project/task management is native to Mission Control. No external tools.
+3. Test `npx vite build` before committing.
+4. After changes, regenerate live-data and deploy to Vercel.

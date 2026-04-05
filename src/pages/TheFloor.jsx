@@ -57,8 +57,15 @@ const TheFloor = () => {
 
   const allAgents = AGENTS.map(ca => {
     const live = agents.find(a => a.id === ca.id);
-    const knowledge = live?.knowledge || live?.raw?.knowledge || null;
-    return { ...ca, ...(live || {}), sessions: live?.sessions || ca.sessions || 0, status: live?.status || "online", knowledge };
+    const k = live ? (live.knowledge || (live.raw ? live.raw.knowledge : null)) : null;
+    const merged = { ...ca };
+    if (live) {
+      Object.assign(merged, live);
+      merged.sessions = live.sessions || ca.sessions || 0;
+      merged.status = live.status || "online";
+    }
+    merged.knowledge = k;
+    return merged;
   });
 
   const filteredAgents = dept === "all" ? allAgents : allAgents.filter(a => {
