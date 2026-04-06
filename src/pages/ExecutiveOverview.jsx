@@ -1,5 +1,6 @@
 import { Card, KPI, Badge } from "../components/shared";
 import { C } from "../data/constants";
+import { useMissionControlData } from "../context/MissionControlDataContext";
 
 const MISSION = "Our mission is to create an autonomous wealth-building organization that grows revenue, cuts inefficiency, manages capital intelligently, and compounds value across every company and investment\u2014transforming complexity into control, execution into scale, and scale into generational wealth.";
 
@@ -26,13 +27,7 @@ const COMMAND_LAYERS = [
   { id: "CMD-10", name: "Memory & Knowledge", status: "Not Started", color: C.muted, desc: "Institutional memory, decision logs, knowledge base" },
 ];
 
-const METRICS = [
-  { label: "Total Entities", value: "7 + 1 Trust", sub: "LLCs, Corps, Trust", color: C.accent },
-  { label: "Combined Revenue", value: "~$2.8M", sub: "C&C $2.3M + Xome $480K", color: C.green },
-  { label: "Real Estate", value: "2", sub: "Graeagle + Truckee", color: C.purple },
-  { label: "Operating Biz", value: "2", sub: "C&C, Xome", color: C.cyan },
-  { label: "Holdings", value: "3", sub: "Lincoln, Black Lab, Cabo", color: C.amber },
-];
+/* METRICS is now computed inside the component using live data */
 
 function statusBadgeColor(status) {
   if (status === "Active") return C.green;
@@ -41,6 +36,16 @@ function statusBadgeColor(status) {
 }
 
 const ExecutiveOverview = () => {
+  const { agents, acpSessions, projects, skills } = useMissionControlData();
+
+  const METRICS = [
+    { label: "Active Agents", value: agents.filter(a => a.status === "active").length, sub: `${agents.length} total`, color: C.accent },
+    { label: "Active Sessions", value: acpSessions.filter(s => s.status !== "done").length, sub: "In-progress tasks", color: C.green },
+    { label: "Total Cost", value: "$" + acpSessions.reduce((s, t) => s + (t.totalCost || 0), 0).toFixed(2), sub: "Across all sessions", color: C.purple },
+    { label: "Projects", value: projects.length, sub: "Tracked projects", color: C.cyan },
+    { label: "Skills Deployed", value: skills.length, sub: "Active skills", color: C.amber },
+  ];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Founder Profile Card */}

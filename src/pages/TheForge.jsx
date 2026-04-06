@@ -3,7 +3,7 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { getApiUrl } from "../utils/api";
 const STAGES = [
   { key: "sourced", label: "Sourced", color: C.muted },
   { key: "evaluating", label: "Evaluating", color: C.amber },
@@ -35,7 +35,7 @@ const TheForge = () => {
   const handleAdd = async () => {
     if (!newIdea.trim()) return;
     try {
-      await fetch(`${MC_API()}/project`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`${getApiUrl()}/project`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name: newIdea, agents: ["main"], status: "active", description: `Source: ${newSource}. Added from The Forge pipeline.`})});
       setAddResult({ ok: true, msg: `"${newIdea}" added to pipeline` });
       setNewIdea(""); setTimeout(() => { setAddResult(null); refresh(); }, 2000);

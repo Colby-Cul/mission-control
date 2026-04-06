@@ -3,6 +3,7 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend } from "recharts";
+import { statusColor } from "./liveViewUtils";
 
 const DEPARTMENTS = [
   { id: "all", name: "All Departments" },
@@ -11,14 +12,6 @@ const DEPARTMENTS = [
   { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"] },
   { id: "mkt", name: "Marketing", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"] },
 ];
-
-function statusColor(s) {
-  const v = String(s || "").toLowerCase();
-  if (["online","connected","active","running","ok"].includes(v)) return C.green;
-  if (["busy","warning"].includes(v)) return C.amber;
-  if (["offline","error","blocked"].includes(v)) return C.red;
-  return C.cyan;
-}
 
 function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
 function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
@@ -52,7 +45,7 @@ const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
 
 const TheFloor = () => {
-  const { agents, acpSessions = [], cronJobs = [], metrics } = useMissionControlData();
+  const { agents, acpSessions = [], cronJobs = [] } = useMissionControlData();
   const [dept, setDept] = useState("all");
 
   const allAgents = AGENTS.map(ca => {

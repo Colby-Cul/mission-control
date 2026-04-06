@@ -1,21 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { useSearchParams } from "react-router-dom";
+import { getApiUrl, HOME_DIR } from "../utils/api";
 
 const DOCS = [
-  { id: "claude-md", name: "CLAUDE.md (Agent Policy)", path: "/Users/jarvisculbertson/.openclaw/agents/main/agent/CLAUDE.md", category: "Policy" },
-  { id: "memory-anchor", name: "MEMORY_ANCHOR.md", path: "/Users/jarvisculbertson/.openclaw/persistent-memory/MEMORY_ANCHOR.md", category: "Policy" },
-  { id: "memory-md", name: "MEMORY.md", path: "/Users/jarvisculbertson/.openclaw/workspace/anthropic/MEMORY.md", category: "Memory" },
-  { id: "tools-md", name: "TOOLS.md", path: "/Users/jarvisculbertson/.openclaw/workspace/anthropic/TOOLS.md", category: "Config" },
-  { id: "heartbeat", name: "HEARTBEAT.md", path: "/Users/jarvisculbertson/.openclaw/workspace/anthropic/HEARTBEAT.md", category: "Config" },
-  { id: "soul-md", name: "SOUL.md", path: "/Users/jarvisculbertson/.openclaw/workspace/anthropic/SOUL.md", category: "Identity" },
-  { id: "agents-md", name: "AGENTS.md", path: "/Users/jarvisculbertson/.openclaw/workspace/anthropic/AGENTS.md", category: "Config" },
-  { id: "mc-claude", name: "Mission Control CLAUDE.md", path: "/Users/jarvisculbertson/mission-control/CLAUDE.md", category: "Project" },
-  { id: "mc-directive", name: "Build Directive v2", path: "/Users/jarvisculbertson/mission-control/MISSION_CONTROL_DIRECTIVE_v2.md", category: "Project" },
-  { id: "cfo-claude", name: "CFO CLAUDE.md", path: "/Users/jarvisculbertson/.openclaw/agents/cfo/agent/CLAUDE.md", category: "Policy" },
+  { id: "claude-md", name: "CLAUDE.md (Agent Policy)", path: `${HOME_DIR}/.openclaw/agents/main/agent/CLAUDE.md`, category: "Policy" },
+  { id: "memory-anchor", name: "MEMORY_ANCHOR.md", path: `${HOME_DIR}/.openclaw/persistent-memory/MEMORY_ANCHOR.md`, category: "Policy" },
+  { id: "memory-md", name: "MEMORY.md", path: `${HOME_DIR}/.openclaw/workspace/anthropic/MEMORY.md`, category: "Memory" },
+  { id: "tools-md", name: "TOOLS.md", path: `${HOME_DIR}/.openclaw/workspace/anthropic/TOOLS.md`, category: "Config" },
+  { id: "heartbeat", name: "HEARTBEAT.md", path: `${HOME_DIR}/.openclaw/workspace/anthropic/HEARTBEAT.md`, category: "Config" },
+  { id: "soul-md", name: "SOUL.md", path: `${HOME_DIR}/.openclaw/workspace/anthropic/SOUL.md`, category: "Identity" },
+  { id: "agents-md", name: "AGENTS.md", path: `${HOME_DIR}/.openclaw/workspace/anthropic/AGENTS.md`, category: "Config" },
+  { id: "mc-claude", name: "Mission Control CLAUDE.md", path: `${HOME_DIR}/mission-control/CLAUDE.md`, category: "Project" },
+  { id: "mc-directive", name: "Build Directive v2", path: `${HOME_DIR}/mission-control/MISSION_CONTROL_DIRECTIVE_v2.md`, category: "Project" },
+  { id: "cfo-claude", name: "CFO CLAUDE.md", path: `${HOME_DIR}/.openclaw/agents/cfo/agent/CLAUDE.md`, category: "Policy" },
 ];
 
 const DocsHub = () => {
@@ -28,13 +28,22 @@ const DocsHub = () => {
   const [saveResult, setSaveResult] = useState(null);
   const [filter, setFilter] = useState("all");
 
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const file = searchParams.get("file");
+    if (file) {
+      const match = DOCS.find(d => d.path === file);
+      if (match) loadDoc(match);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const categories = [...new Set(DOCS.map(d => d.category))];
   const filtered = filter === "all" ? DOCS : DOCS.filter(d => d.category === filter);
 
   const loadDoc = async (doc) => {
     setSelected(doc); setContent(""); setEditing(false); setSaveResult(null); setLoading(true);
     try {
-      const resp = await fetch(`${MC_API()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: doc.path }) });
+      const resp = await fetch(`${getApiUrl()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: doc.path }) });
       const data = await resp.json();
       if (data.ok) { setContent(data.content); setEditContent(data.content); }
       else setContent(`Error: ${data.error}`);
@@ -45,7 +54,7 @@ const DocsHub = () => {
   const saveDoc = async () => {
     setSaveResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/memory/write`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: selected.path, content: editContent }) });
+      const resp = await fetch(`${getApiUrl()}/memory/write`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: selected.path, content: editContent }) });
       const data = await resp.json();
       setSaveResult(data.ok ? { ok: true, msg: "Saved successfully" } : { ok: false, msg: data.error });
       if (data.ok) { setContent(editContent); setEditing(false); }

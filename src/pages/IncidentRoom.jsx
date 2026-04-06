@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
-import { C, AGENTS } from "../data/constants";
+import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { getApiUrl } from "../utils/api";
+import { fmtDate, fmtDuration } from "../utils/format";
 
 const SEVERITY = { P1: C.red, P2: C.amber, P3: C.cyan, P4: C.muted };
 const STATUS_COLORS = { open: C.red, investigating: C.amber, resolved: C.green, monitoring: C.cyan };
-
-function fmtDate(v) { if (!v) return "—"; const d = new Date(v); return isNaN(d) ? "—" : d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
-function fmtDuration(ms) { if (!ms) return "—"; const m = Math.floor(ms/60000); return m < 60 ? `${m}m` : `${Math.floor(m/60)}h ${m%60}m`; }
-
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
 
 // Sample incidents derived from cron errors and system state
 function deriveIncidents(cronJobs, acpSessions) {
@@ -51,6 +48,7 @@ const IncidentRoom = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSeverity, setNewSeverity] = useState("P3");
+  const [createResult, setCreateResult] = useState(null);
 
   const incidents = deriveIncidents(cronJobs, acpSessions);
   const open = incidents.filter(i => i.status === "open").length;
@@ -59,10 +57,13 @@ const IncidentRoom = () => {
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
     try {
-      await fetch(`${MC_API()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name:`INCIDENT: ${newTitle}`,agent:"main",status:"blocked",priority:"critical",description:`Severity: ${newSeverity}`})});
       setNewTitle(""); setShowCreate(false);
-    } catch(e) {}
+      setCreateResult({ ok: true, msg: "Incident created" }); setTimeout(() => setCreateResult(null), 4000);
+    } catch(e) {
+      setCreateResult({ ok: false, msg: "Failed to create incident. Try: openclaw agent --agent main" }); setTimeout(() => setCreateResult(null), 5000);
+    }
   };
 
   return (
@@ -88,6 +89,8 @@ const IncidentRoom = () => {
           </div>
         </Card>
       )}
+
+      {createResult && <div style={{ padding: 8, borderRadius: 8, background: createResult.ok ? C.green+"22" : C.red+"22", color: createResult.ok ? C.green : C.red, fontSize: 12 }}>{createResult.msg}</div>}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
         <KPI label="Open Incidents" value={open} sub={p1p2 ? `${p1p2} critical/high` : "All low"} color={open > 0 ? C.red : C.green} />

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Avatar, Badge, Card, KPI, ProgressBar } from "../components/shared";
 import { AGENTS, C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { getApiUrl } from "../utils/api";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -144,9 +145,8 @@ const Projects = () => {
     if (!newProjectName.trim()) return;
     setProjectSubmitting(true);
     setProjectResult(null);
-    const MC_API = localStorage.getItem("mc-api-url") || "http://localhost:7070";
     try {
-      const resp = await fetch(`${MC_API}/project`, {
+      const resp = await fetch(`${getApiUrl()}/project`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

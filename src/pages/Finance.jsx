@@ -3,12 +3,13 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { buildAgentRoster } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { fmtCost } from "../utils/format";
+import financeConfig from "../data/finance-config.json";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
 
-const HUMAN_RATE = 75;
+const HUMAN_RATE = financeConfig.companies?.[0]?.humanEquivRate || 75;
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
-function fmtCost(v) { const n=Number(v); return isFinite(n)?`$${n.toFixed(2)}`:"$0.00"; }
 
 const Finance = () => {
   const { acpSessions=[], projects=[], agents } = useMissionControlData();
@@ -21,7 +22,7 @@ const Finance = () => {
   const savings = humanEquiv - totalCost;
   const roi = totalCost > 0 ? Math.round(((humanEquiv-totalCost)/totalCost)*100) : 0;
   const dailyBurn = totalCost / 30;
-  const monthlyBudget = 5000;
+  const monthlyBudget = financeConfig.companies?.[0]?.monthlyBudget || 5000;
   const budgetPct = Math.min(Math.round((totalCost/monthlyBudget)*100),100);
 
   // Cost by agent

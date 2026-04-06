@@ -5,17 +5,8 @@ import { C } from "../data/constants";
 import { buildAgentRoster, isAgentOnline } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar, Legend } from "recharts";
-
-function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
-function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
-function fmtDate(v) { if (!v) return "—"; const d = new Date(v); return isNaN(d) ? "—" : d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
-function statusColor(s) {
-  const v = String(s||"").toLowerCase();
-  if (["ok","live","online","connected","active","running","done"].includes(v)) return C.green;
-  if (["busy","warning","delegated","pending"].includes(v)) return C.amber;
-  if (["offline","error","failed","blocked","disconnected"].includes(v)) return C.red;
-  return C.cyan;
-}
+import { statusColor } from "./liveViewUtils";
+import { fmtDate, fmtCost } from "../utils/format";
 
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444"];
 const TOOLTIP_STYLE = { backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8, color: "#f9fafb", fontSize: 12 };

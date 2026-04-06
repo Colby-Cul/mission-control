@@ -4,6 +4,9 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import taskTemplates from "../data/task-templates.json";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { statusColor } from "./liveViewUtils";
+import { getApiUrl } from "../utils/api";
+import { fmtDate, fmtCost, fmtTokens } from "../utils/format";
 
 const VIEW_STORAGE_KEY = "mission-control.tasks.view-mode";
 const SORT_STORAGE_KEY = "mission-control.tasks.sort";
@@ -39,8 +42,6 @@ const SORTABLE_COLUMNS = [
   { key: "dateCreated", label: "Created" },
   { key: "dateFinished", label: "Finished" },
 ];
-const LOCAL_API = "http://127.0.0.1:7070";
-
 function readStoredView() {
   if (typeof window === "undefined") return "list";
   const v = window.localStorage.getItem(VIEW_STORAGE_KEY);
@@ -55,27 +56,6 @@ function readStoredPriorityFilter() {
   if (typeof window === "undefined") return [];
   try { const p = JSON.parse(window.localStorage.getItem(PRIORITY_FILTER_KEY)); if (Array.isArray(p)) return p; } catch {}
   return [];
-}
-function formatDate(v) {
-  if (!v) return "—";
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? v : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-}
-function formatCurrency(v) {
-  const n = Number(v);
-  return isFinite(n) ? `$${n.toFixed(2)}` : "—";
-}
-function formatTokens(v) {
-  const n = Number(v);
-  if (!isFinite(n) || n <= 0) return "—";
-  return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : String(n);
-}
-function statusColor(s) {
-  const v = String(s || "").toLowerCase();
-  if (["done","complete","completed","success"].includes(v)) return C.green;
-  if (["blocked","failed","error","stalled"].includes(v)) return C.red;
-  if (["delegated","working","running","busy","in progress","in_progress","active","pending"].includes(v)) return C.amber;
-  return C.cyan;
 }
 function normalizeLane(status, lane) {
   if (lane && KANBAN_COLUMNS.some(c => c.key === lane)) return lane;
@@ -147,6 +127,7 @@ const Tasks = () => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [expandedNode, setExpandedNode] = useState(null);
   const [dragState, setDragState] = useState(null);
+  const [dndError, setDndError] = useState(null);
   const [localPriorities, setLocalPriorities] = useState({});
 
   useEffect(() => { if (typeof window !== "undefined") window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode); }, [viewMode]);
@@ -194,7 +175,7 @@ const Tasks = () => {
   const handlePriorityChange = (taskId, priority) => {
     setLocalPriorities(p => ({ ...p, [taskId]: priority }));
     // Persist via API (fire and forget)
-    fetch(`${LOCAL_API}/task/update-status`, {
+    fetch(`${getApiUrl()}/task/update-status`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: taskId, priority }),
     }).catch(() => {});
@@ -206,14 +187,27 @@ const Tasks = () => {
 
   const onDrop = async (lane) => {
     if (!dragState) return;
-    try {
-      await fetch(`${LOCAL_API}/task/update-status`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: dragState.sessionId || dragState.id, status: lane, lane }),
-      });
-      refresh();
-    } catch {}
+    const taskId = dragState.sessionId || dragState.id;
+    const originalLane = dragState.lane;
     setDragState(null);
+    try {
+      const res = await fetch(`${getApiUrl()}/task/update-status`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: taskId, status: lane, lane }),
+      });
+      if (!res.ok) throw new Error("API returned " + res.status);
+      refresh();
+    } catch {
+      // Revert to original lane on failure
+      setLocalPriorities(p => ({ ...p })); // trigger re-render
+      if (acpSessions) {
+        const target = acpSessions.find(s => (s.sessionId || s.id) === taskId);
+        if (target) target.lane = originalLane;
+      }
+      refresh();
+      setDndError(taskId);
+      setTimeout(() => setDndError(null), 2000);
+    }
   };
 
   return (
@@ -272,7 +266,7 @@ const Tasks = () => {
         <KPI label="Done" value={totals.done || "—"} sub="Completed" color={C.green} />
         <KPI label="Active" value={totals.active || "—"} sub="In progress" color={C.amber} />
         <KPI label="Blocked" value={totals.blocked || "0"} sub="Needs attention" color={C.red} />
-        <KPI label="Cost" value={formatCurrency(totals.totalCost)} sub="Total API spend" color={C.teal} />
+        <KPI label="Cost" value={fmtCost(totals.totalCost)} sub="Total API spend" color={C.teal} />
       </div>
 
       <Card>
@@ -280,7 +274,7 @@ const Tasks = () => {
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
             {activeTab === "task-templates" ? `Templates (${taskTemplates.length})` : `Tasks (${visibleSessions.length})`}
           </div>
-          <div style={{ fontSize: 12, color: C.muted }}>Updated {formatDate(snapshot?.generatedAt || snapshot?.lastUpdated)}</div>
+          <div style={{ fontSize: 12, color: C.muted }}>Updated {fmtDate(snapshot?.generatedAt || snapshot?.lastUpdated)}</div>
         </div>
 
         {/* Templates */}
@@ -321,10 +315,10 @@ const Tasks = () => {
                     <td style={{ padding: "10px 8px" }}><PrioritySelector value={task.priority} onChange={(p) => handlePriorityChange(task.sessionId || task.id, p)} /></td>
                     <td style={{ padding: "10px 8px" }}><Badge color={statusColor(task.status)}>{task.status}</Badge></td>
                     <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{task.apiModelUsed || "—"}</td>
-                    <td style={{ padding: "10px 8px", color: C.text }}>{formatTokens(task.tokens)}</td>
-                    <td style={{ padding: "10px 8px", color: C.text }}>{formatCurrency(task.totalCost)}</td>
-                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{formatDate(task.dateCreated)}</td>
-                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{formatDate(task.dateFinished)}</td>
+                    <td style={{ padding: "10px 8px", color: C.text }}>{fmtTokens(task.tokens)}</td>
+                    <td style={{ padding: "10px 8px", color: C.text }}>{fmtCost(task.totalCost)}</td>
+                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{fmtDate(task.dateCreated)}</td>
+                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{fmtDate(task.dateFinished)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -344,8 +338,10 @@ const Tasks = () => {
                 {(grouped[col.key] || []).map(task => {
                   const isExpanded = expandedCard === (task.sessionId || task.id);
                   const prioColor = PRIORITY_MAP[task.priority]?.color || PRIORITY_MAP.normal.color;
+                  const hasError = dndError === (task.sessionId || task.id);
                   return (
-                    <div key={task.id} draggable onDragStart={() => setDragState(task)} onDragEnd={() => setDragState(null)} style={{ padding: 12, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${prioColor}`, cursor: "grab" }}>
+                    <div key={task.id} draggable onDragStart={() => setDragState(task)} onDragEnd={() => setDragState(null)} style={{ padding: 12, borderRadius: 12, background: hasError ? "rgba(239,68,68,0.12)" : C.card, border: `1px solid ${hasError ? C.red : C.border}`, borderLeft: `3px solid ${prioColor}`, cursor: "grab", transition: "background 0.3s, border-color 0.3s" }}>
+                      {hasError && <div style={{ color: C.red, fontSize: 10, fontWeight: 700, marginBottom: 6 }}>Move failed — reverted</div>}
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 6 }}>
                         <div style={{ color: C.text, fontSize: 13, fontWeight: 700, lineHeight: 1.4, flex: 1, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{task.task}</div>
                         <PriorityBadge priority={task.priority} />
@@ -365,10 +361,10 @@ const Tasks = () => {
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                             <div><span style={{ color: C.muted }}>Agent:</span> <span style={{ color: C.text }}>{task.agent}</span></div>
                             <div><span style={{ color: C.muted }}>Model:</span> <span style={{ color: C.text }}>{task.apiModelUsed || "—"}</span></div>
-                            <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{formatCurrency(task.totalCost)}</span></div>
-                            <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{formatTokens(task.tokens)}</span></div>
-                            <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{formatDate(task.dateCreated)}</span></div>
-                            <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{formatDate(task.dateFinished)}</span></div>
+                            <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{fmtCost(task.totalCost)}</span></div>
+                            <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{fmtTokens(task.tokens)}</span></div>
+                            <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{fmtDate(task.dateCreated)}</span></div>
+                            <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{fmtDate(task.dateFinished)}</span></div>
                           </div>
                           <div style={{ marginTop: 6, fontFamily: "monospace", color: C.muted, fontSize: 9 }}>Session: {task.sessionId || task.id}</div>
                           <div style={{ marginTop: 6 }}>
@@ -395,7 +391,7 @@ const Tasks = () => {
               const hasNext = i < gittTimeline.length - 1;
               return (
                 <div key={task.id} style={{ display: "grid", gridTemplateColumns: "120px 56px minmax(0, 1fr)", gap: 0 }}>
-                  <div style={{ padding: "8px 8px 18px 0", color: C.muted, fontSize: 11, textAlign: "right" }}>{formatDate(task.dateCreated)}</div>
+                  <div style={{ padding: "8px 8px 18px 0", color: C.muted, fontSize: 11, textAlign: "right" }}>{fmtDate(task.dateCreated)}</div>
                   <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
                     <div style={{ width: 14, height: 14, borderRadius: "50%", background: color, border: `3px solid ${C.bg}`, boxShadow: `0 0 0 2px ${color}55`, marginTop: 10, zIndex: 1 }} />
                     {hasNext && <div style={{ position: "absolute", top: 24, bottom: -8, left: "50%", width: 2, transform: "translateX(-50%)", background: `linear-gradient(180deg, ${color}, ${C.border})` }} />}
@@ -413,10 +409,10 @@ const Tasks = () => {
                       </div>
                       {expanded && (
                         <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, fontSize: 11 }}>
-                          <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{formatCurrency(task.totalCost)}</span></div>
-                          <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{formatTokens(task.tokens)}</span></div>
-                          <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{formatDate(task.dateCreated)}</span></div>
-                          <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{formatDate(task.dateFinished)}</span></div>
+                          <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{fmtCost(task.totalCost)}</span></div>
+                          <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{fmtTokens(task.tokens)}</span></div>
+                          <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{fmtDate(task.dateCreated)}</span></div>
+                          <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{fmtDate(task.dateFinished)}</span></div>
                           <div style={{ gridColumn: "1/-1", fontFamily: "monospace", color: C.muted, fontSize: 9 }}>Session: {task.sessionId}</div>
                         </div>
                       )}

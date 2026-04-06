@@ -4,17 +4,17 @@ import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { useNavigate } from "react-router-dom";
 
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { getApiUrl, HOME_DIR } from "../utils/api";
 
 const DIRS = [
-  { name: "Agent Configs", path: "/Users/jarvisculbertson/.openclaw/agents/", icon: "🤖", files: ["main/", "worker/", "validation/", "executive-assistant/", "cfo/", "bookkeeper/", "fin-researcher/", "tax-advisor/", "crypto-analyst/", "stock-analyst/"] },
-  { name: "Skills", path: "/Users/jarvisculbertson/.openclaw/skills/", icon: "⚡", files: ["monday-com/", "slack/", "agent-browser/", "prompt-guard/", "e2e-testing/", "travel-planning/"] },
-  { name: "Scripts", path: "/Users/jarvisculbertson/.openclaw/scripts/", icon: "📜", files: ["mc-sync.sh"] },
-  { name: "Logs", path: "/Users/jarvisculbertson/.openclaw/logs/", icon: "📋", files: ["gateway.log", "gateway.err.log", "mc-api.log", "mc-sync.log"] },
-  { name: "Cron", path: "/Users/jarvisculbertson/.openclaw/cron/", icon: "⏰", files: ["jobs.json"] },
-  { name: "MC API Server", path: "/Users/jarvisculbertson/.openclaw/mc-api/", icon: "🖥️", files: ["server.js"] },
-  { name: "Mission Control", path: "/Users/jarvisculbertson/mission-control/", icon: "🎛️", files: ["src/", "public/", "package.json", "CLAUDE.md"] },
-  { name: "Persistent Memory", path: "/Users/jarvisculbertson/.openclaw/persistent-memory/", icon: "🧠", files: ["MEMORY_ANCHOR.md", "config/"] },
+  { name: "Agent Configs", path: `${HOME_DIR}/.openclaw/agents/`, icon: "🤖", files: ["main/", "worker/", "validation/", "executive-assistant/", "cfo/", "bookkeeper/", "fin-researcher/", "tax-advisor/", "crypto-analyst/", "stock-analyst/"] },
+  { name: "Skills", path: `${HOME_DIR}/.openclaw/skills/`, icon: "⚡", files: ["monday-com/", "slack/", "agent-browser/", "prompt-guard/", "e2e-testing/", "travel-planning/"] },
+  { name: "Scripts", path: `${HOME_DIR}/.openclaw/scripts/`, icon: "📜", files: ["mc-sync.sh"] },
+  { name: "Logs", path: `${HOME_DIR}/.openclaw/logs/`, icon: "📋", files: ["gateway.log", "gateway.err.log", "mc-api.log", "mc-sync.log"] },
+  { name: "Cron", path: `${HOME_DIR}/.openclaw/cron/`, icon: "⏰", files: ["jobs.json"] },
+  { name: "MC API Server", path: `${HOME_DIR}/.openclaw/mc-api/`, icon: "🖥️", files: ["server.js"] },
+  { name: "Mission Control", path: `${HOME_DIR}/mission-control/`, icon: "🎛️", files: ["src/", "public/", "package.json", "CLAUDE.md"] },
+  { name: "Persistent Memory", path: `${HOME_DIR}/.openclaw/persistent-memory/`, icon: "🧠", files: ["MEMORY_ANCHOR.md", "config/"] },
 ];
 
 const WorkspaceFiles = () => {
@@ -26,7 +26,7 @@ const WorkspaceFiles = () => {
   const openFile = async (dirPath, fileName) => {
     setLoading(true); setFileContent(null);
     try {
-      const resp = await fetch(`${MC_API()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: dirPath + fileName }) });
+      const resp = await fetch(`${getApiUrl()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: dirPath + fileName }) });
       const data = await resp.json();
       setFileContent(data.ok ? { name: fileName, content: data.content, path: dirPath + fileName } : { name: fileName, content: `Error: ${data.error}`, path: dirPath + fileName });
     } catch { setFileContent({ name: fileName, content: "API unreachable", path: dirPath + fileName }); }
@@ -73,7 +73,7 @@ const WorkspaceFiles = () => {
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{fileContent.name}</div>
                 <div style={{ fontSize: 11, color: C.muted, fontFamily: "monospace" }}>{fileContent.path}</div>
               </div>
-              <button onClick={() => navigate("/docs")} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Open in Docs Hub</button>
+              <button onClick={() => navigate("/docs?file=" + encodeURIComponent(fileContent.path))} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>Open in Docs Hub</button>
             </div>
             {loading ? <div style={{ color: C.muted }}>Loading...</div> :
               <pre style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 12, color: C.text, fontSize: 11, fontFamily: "monospace", whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 450, overflow: "auto", margin: 0 }}>

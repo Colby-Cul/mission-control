@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Badge, Card } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { getApiUrl } from "../utils/api";
 
 const PROVIDER_META = {
   anthropic: { label: "Anthropic", logo: "https://cdn.simpleicons.org/anthropic/191919" },
@@ -18,7 +19,6 @@ const PROVIDER_META = {
 };
 
 const REQUIRED_PROVIDERS = ["anthropic", "openai", "slack", "discord", "monday.com", "github", "telegram"];
-const LOCAL_API = "http://127.0.0.1:7070";
 
 function normalizeProvider(value) {
   const provider = String(value || "").trim().toLowerCase();
@@ -117,7 +117,7 @@ const ApiSkills = () => {
     setResults((current) => ({ ...current, [provider]: null }));
 
     try {
-      const response = await fetch(`${LOCAL_API}/api-skills/${encodeURIComponent(provider)}/update`, {
+      const response = await fetch(`${getApiUrl()}/api-skills/${encodeURIComponent(provider)}/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key }),

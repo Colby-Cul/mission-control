@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { getApiUrl } from "../utils/api";
+import { statusColor } from "./liveViewUtils";
 
 const INTEGRATION_META = {
   // AI Models
@@ -43,19 +43,12 @@ const INTEGRATION_META = {
   "1password": { name: "1Password", desc: "Secret management", category: "Productivity" },
 };
 
-function statusColor(s) {
-  if (s === "active" || s === "connected") return C.green;
-  if (s === "degraded" || s === "warning") return C.amber;
-  if (s === "disconnected" || s === "missing" || s === "expired") return C.red;
-  return C.cyan;
-}
-
 const IntegrationsHub = () => {
   const { snapshot } = useMissionControlData();
   const apiCreds = snapshot?.apiCredentials || [];
   const [expanded, setExpanded] = useState(null);
-  const [updateKey, setUpdateKey] = useState("");
-  const [updateResult, setUpdateResult] = useState(null);
+  const [updateKeys, setUpdateKeys] = useState({});
+  const [updateResults, setUpdateResults] = useState({});
   const [filter, setFilter] = useState("all");
 
   const integrations = apiCreds.map(cred => {
@@ -69,19 +62,18 @@ const IntegrationsHub = () => {
   const issues = integrations.filter(i => i.status !== "active").length;
 
   const handleUpdateKey = async (provider) => {
-    if (!updateKey.trim()) return;
-    setUpdateResult(null);
+    if (!(updateKeys[provider] || "").trim()) return;
+    setUpdateResults(prev => ({...prev, [provider]: null}));
     try {
-      // Call local API to update the key
-      const resp = await fetch(`${MC_API()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      const resp = await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name:`Update API key: ${provider}`,agent:"main",status:"pending",description:`Update ${provider} API key via Settings`})});
       const data = await resp.json();
-      setUpdateResult(data.ok ? { ok: true, msg: "Key update dispatched to agent" } : { ok: false, msg: data.error });
-      setUpdateKey("");
+      setUpdateResults(prev => ({...prev, [provider]: data.ok ? { ok: true, msg: "Key update dispatched to agent" } : { ok: false, msg: data.error }}));
+      setUpdateKeys(prev => ({...prev, [provider]: ""}));
     } catch(e) {
-      setUpdateResult({ ok: false, msg: `Run: openclaw config set ... manually` });
+      setUpdateResults(prev => ({...prev, [provider]: { ok: false, msg: `Run: openclaw config set ... manually` }}));
     }
-    setTimeout(() => setUpdateResult(null), 5000);
+    setTimeout(() => setUpdateResults(prev => ({...prev, [provider]: null})), 5000);
   };
 
   return (
@@ -138,13 +130,14 @@ const IntegrationsHub = () => {
                   <div style={{ marginTop: 8 }}>
                     <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>Update Key</div>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <input type="password" value={updateKey} onChange={e => setUpdateKey(e.target.value)} placeholder="New API key..." style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 8px", color: C.text, fontSize: 12 }} />
-                      <button onClick={() => handleUpdateKey(integ.provider)} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Save</button>
+                      <input type="password" value={updateKeys[expanded] || ""} onChange={e => setUpdateKeys(prev => ({...prev, [expanded]: e.target.value}))} placeholder="New API key..." style={{ flex: 1, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 8px", color: C.text, fontSize: 12 }} />
+                      <button onClick={() => handleUpdateKey(integ.provider)} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Dispatch Update</button>
                     </div>
+                    <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>Sends a task to the main agent to update this key</div>
                   </div>
-                  {updateResult && (
-                    <div style={{ marginTop: 6, padding: 6, borderRadius: 4, background: updateResult.ok ? C.green+"22" : C.red+"22", color: updateResult.ok ? C.green : C.red, fontSize: 11 }}>
-                      {updateResult.msg}
+                  {updateResults[expanded] && (
+                    <div style={{ marginTop: 6, padding: 6, borderRadius: 4, background: updateResults[expanded].ok ? C.green+"22" : C.red+"22", color: updateResults[expanded].ok ? C.green : C.red, fontSize: 11 }}>
+                      {updateResults[expanded].msg}
                     </div>
                   )}
                 </div>

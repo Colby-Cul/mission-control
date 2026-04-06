@@ -14,9 +14,14 @@ const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius
 const Sessions = () => {
   const { acpSessions = [], refresh } = useMissionControlData();
   const [selected, setSelected] = useState(null);
+  const [limit, setLimit] = useState(25);
   const totalBytes = acpSessions.reduce((s, t) => s + (t.sizeBytes || 0), 0);
   const totalTokens = acpSessions.reduce((s, t) => s + (t.tokens || 0), 0);
   const totalCost = acpSessions.reduce((s, t) => s + (t.totalCost || 0), 0);
+
+  const sortedSessions = useMemo(() =>
+    [...acpSessions].sort((a, b) => new Date(b.dateCreated || 0).getTime() - new Date(a.dateCreated || 0).getTime()),
+    [acpSessions]);
 
   // Status distribution pie
   const statusDist = useMemo(() => {
@@ -117,7 +122,7 @@ const Sessions = () => {
       <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap: 12 }}>
         <Card>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {acpSessions.slice(0, 25).map(s => (
+            {sortedSessions.slice(0, limit).map(s => (
               <button key={s.sessionId || s.id} onClick={() => setSelected(s)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderRadius: 8, background: selected?.sessionId === s.sessionId ? C.accent + "22" : C.surface, border: `1px solid ${selected?.sessionId === s.sessionId ? C.accent : C.border}`, cursor: "pointer", textAlign: "left", color: C.text, fontSize: 13 }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{(s.task || "Session").slice(0, 50)}</div>
@@ -127,6 +132,11 @@ const Sessions = () => {
               </button>
             ))}
           </div>
+          {sortedSessions.length > limit && (
+            <button onClick={() => setLimit(l => l + 25)} style={{ marginTop: 8, width: "100%", padding: "10px 0", background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              Load More ({sortedSessions.length - limit} remaining)
+            </button>
+          )}
         </Card>
         {selected && (
           <Card>

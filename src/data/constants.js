@@ -84,22 +84,20 @@ export const FORGE_IDEAS = [];
 // ── Activity Feed Data (empty — will be populated by real events) ──
 export const ACTIVITIES = [];
 
-// ── Cost trend data generator ──
-function genCostTrend(days) {
-  const d = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(2026, 2, 21 - i);
-    const isWknd = date.getDay() === 0 || date.getDay() === 6;
-    const f = isWknd ? 0.3 : 1;
-    d.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      total: +(((Math.random() * 40 + 30) * f).toFixed(2)),
-      opus: +(((Math.random() * 20 + 15) * f).toFixed(2)),
-      sonnet: +(((Math.random() * 12 + 8) * f).toFixed(2)),
-      haiku: +(((Math.random() * 5 + 2) * f).toFixed(2)),
-    });
-  }
-  return d;
-}
-
-export const COST_TREND = genCostTrend(14);
+// ── Cost trend data (static / deterministic) ──
+export const COST_TREND = [
+  { date: "Mar 8",  total: 9.12,  opus: 4.56,  sonnet: 2.88, haiku: 1.68 },
+  { date: "Mar 9",  total: 10.05, opus: 5.10,  sonnet: 3.15, haiku: 1.80 },
+  { date: "Mar 10", total: 52.30, opus: 26.40, sonnet: 16.10, haiku: 9.80 },
+  { date: "Mar 11", total: 48.75, opus: 24.20, sonnet: 15.35, haiku: 9.20 },
+  { date: "Mar 12", total: 55.10, opus: 28.00, sonnet: 17.50, haiku: 9.60 },
+  { date: "Mar 13", total: 43.90, opus: 22.10, sonnet: 13.80, haiku: 8.00 },
+  { date: "Mar 14", total: 50.20, opus: 25.50, sonnet: 16.00, haiku: 8.70 },
+  { date: "Mar 15", total: 11.40, opus: 5.70,  sonnet: 3.60, haiku: 2.10 },
+  { date: "Mar 16", total: 8.85,  opus: 4.35,  sonnet: 2.70, haiku: 1.80 },
+  { date: "Mar 17", total: 47.60, opus: 23.80, sonnet: 15.00, haiku: 8.80 },
+  { date: "Mar 18", total: 51.45, opus: 26.00, sonnet: 16.25, haiku: 9.20 },
+  { date: "Mar 19", total: 46.30, opus: 23.10, sonnet: 14.70, haiku: 8.50 },
+  { date: "Mar 20", total: 54.80, opus: 27.90, sonnet: 17.30, haiku: 9.60 },
+  { date: "Mar 21", total: 49.15, opus: 24.60, sonnet: 15.75, haiku: 8.80 },
+];

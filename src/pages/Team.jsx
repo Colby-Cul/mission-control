@@ -3,6 +3,8 @@ import { Badge, Card, KPI } from '../components/shared';
 import { C, AGENTS } from '../data/constants';
 import { useMissionControlData } from '../context/MissionControlDataContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { statusColor } from "./liveViewUtils";
+import { getApiUrl } from "../utils/api";
 
 const DEPTS = [
   { id: "ops", name: "Operations", lead: "executive-assistant", agents: ["executive-assistant"], color: C.accent },
@@ -10,14 +12,6 @@ const DEPTS = [
   { id: "fin", name: "Finance", lead: "cfo", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
   { id: "mkt", name: "Marketing", lead: "maven", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"], color: "#e11d48" },
 ];
-
-function statusColor(s) {
-  const v = String(s || "").toLowerCase();
-  if (["online","connected","active","running"].includes(v)) return C.green;
-  if (["busy","warning","learning"].includes(v)) return C.amber;
-  if (["offline","error"].includes(v)) return C.red;
-  return C.cyan;
-}
 
 function getAgentActivity(agent, acpSessions) {
   const agentSessions = acpSessions.filter(s => s.agent === agent.id);
@@ -38,8 +32,6 @@ function getAgentActivity(agent, acpSessions) {
 
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
-
 const Team = () => {
   const { agents, acpSessions = [] } = useMissionControlData();
   const [view, setView] = useState("org"); // org | grid | squads
@@ -76,7 +68,7 @@ const Team = () => {
   const handleAction = async (agentId, action) => {
     setActionResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/task`, {
+      const resp = await fetch(`${getApiUrl()}/task`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: `${action} agent ${agentId}`, agent: "main", status: "pending", description: `Agent action: ${action} on ${agentId}` }),
       });
@@ -134,10 +126,13 @@ const Team = () => {
           </div>
         </div>
         {!compact && (
-          <div style={{ display: "flex", gap: 4 }}>
-            <button onClick={() => handleAction(agent.id, "Reassign")} style={{ flex: 1, background: C.bg, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Reassign</button>
-            <button onClick={() => handleAction(agent.id, "Spin up")} style={{ flex: 1, background: C.green + "11", color: C.green, border: `1px solid ${C.green}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Spin Up</button>
-            <button onClick={() => handleAction(agent.id, "Shut down")} style={{ flex: 1, background: C.red + "11", color: C.red, border: `1px solid ${C.red}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Shut Down</button>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ fontSize: 9, color: C.muted, textAlign: "center" }}>Dispatches task to main agent</div>
+            <div style={{ display: "flex", gap: 4 }}>
+            <button onClick={() => handleAction(agent.id, "Reassign")} style={{ flex: 1, background: C.bg, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Request Reassign</button>
+            <button onClick={() => handleAction(agent.id, "Spin up")} style={{ flex: 1, background: C.green + "11", color: C.green, border: `1px solid ${C.green}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Request Spin Up</button>
+            <button onClick={() => handleAction(agent.id, "Shut down")} style={{ flex: 1, background: C.red + "11", color: C.red, border: `1px solid ${C.red}22`, borderRadius: 6, padding: "5px 0", fontSize: 10, cursor: "pointer" }}>Request Shutdown</button>
+            </div>
           </div>
         )}
       </div>

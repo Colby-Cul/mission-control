@@ -4,14 +4,16 @@ import { C, PROJECTS } from '../data/constants'; // PROJECTS used as fallback
 import { icons, NAV_ITEMS, SETTINGS_NAV } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
+import ErrorBoundary from './ErrorBoundary';
 import { useMissionControlData } from '../context/MissionControlDataContext';
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { agents, activities, projects, acpSessions } = useMissionControlData();
+  const { agents, activities, projects, acpSessions, snapshot } = useMissionControlData();
   const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
-  
+  const showFabs = ["home", "", "tasks", "projects", "command"].includes(currentPage);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,7 +177,10 @@ const Layout = () => {
       </div>
 
       {/* ── MAIN AREA ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+        {snapshot?.loading && (
+          <div style={{ height: 2, background: `linear-gradient(90deg, ${C.accent}, ${C.purple})`, animation: "loading 1s infinite", position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }} />
+        )}
         {/* Top Bar */}
         <div style={{
           height: 52, 
@@ -249,15 +254,17 @@ const Layout = () => {
               }}
             >
               {icons.bell}
-              <span style={{ 
-                position: "absolute", 
-                top: 0, 
-                right: 0, 
-                width: 8, 
-                height: 8, 
-                borderRadius: "50%", 
-                background: C.red 
-              }} />
+              {activities.length > 0 && (
+                <span style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: C.red
+                }} />
+              )}
             </button>
             {notifOpen && (
               <div style={{ 
@@ -320,51 +327,55 @@ const Layout = () => {
 
         {/* Content */}
         <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </div>
 
         {/* Floating Action Buttons */}
-        <div style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          display: "flex",
-          gap: 8,
-          zIndex: 50
-        }}>
-          <button onClick={() => navigate("/tasks")} style={{
-            background: C.accent,
-            color: "#fff",
-            border: "none",
-            borderRadius: 12,
-            padding: "10px 18px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+        {showFabs && (
+          <div style={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
             display: "flex",
-            alignItems: "center",
-            gap: 6
+            gap: 8,
+            zIndex: 50
           }}>
-            + Add Task
-          </button>
-          <button onClick={() => navigate("/projects")} style={{
-            background: C.purple,
-            color: "#fff",
-            border: "none",
-            borderRadius: 12,
-            padding: "10px 18px",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(139,92,246,0.4)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6
-          }}>
-            + New Project
-          </button>
-        </div>
+            <button onClick={() => navigate("/tasks")} style={{
+              background: C.accent,
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "10px 18px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(99,102,241,0.4)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}>
+              + Add Task
+            </button>
+            <button onClick={() => navigate("/projects")} style={{
+              background: C.purple,
+              color: "#fff",
+              border: "none",
+              borderRadius: 12,
+              padding: "10px 18px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(139,92,246,0.4)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}>
+              + New Project
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── CMD+K SEARCH MODAL ── */}
@@ -430,27 +441,38 @@ const Layout = () => {
               {searchQuery.length > 0 ? (
                 <>
                   {agents.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase())).map(a => (
-                    <button 
-                      key={a.id} 
-                      onClick={() => handleNavigation("team")} 
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: 10, 
-                        padding: "8px 10px", 
-                        width: "100%", 
-                        background: "none", 
-                        border: "none", 
-                        borderRadius: 8, 
-                        cursor: "pointer", 
-                        color: C.text, 
-                        fontSize: 13, 
-                        textAlign: "left" 
+                    <button
+                      key={a.id}
+                      onClick={() => handleNavigation("team")}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 10px",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        color: C.text,
+                        fontSize: 13,
+                        textAlign: "left"
                       }}
                     >
                       <Avatar agent={a} size={24} />
                       <span>{a.name}</span>
                       <Badge color={C.cyan}>Agent</Badge>
+                    </button>
+                  ))}
+                  {NAV_ITEMS.filter(n => n.label.toLowerCase().includes(searchQuery.toLowerCase())).map(n => (
+                    <button
+                      key={n.id}
+                      onClick={() => handleNavigation(n.id)}
+                      style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", width: "100%", background: "none", border: "none", borderRadius: 8, cursor: "pointer", color: C.text, fontSize: 13, textAlign: "left" }}
+                    >
+                      <span style={{ flexShrink: 0, display: "flex" }}>{n.icon}</span>
+                      <span>{n.label}</span>
+                      <Badge color={C.green}>Page</Badge>
                     </button>
                   ))}
                   {searchableProjects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map(p => (

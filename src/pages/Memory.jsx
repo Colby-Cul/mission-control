@@ -3,7 +3,7 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { getApiUrl, HOME_DIR } from "../utils/api";
 
 const MEMORY_FILES = [
   { id: "memory-md", label: "MEMORY.md", path: "MEMORY_DIR/workspace/anthropic/MEMORY.md", agent: "main" },
@@ -15,7 +15,7 @@ const MEMORY_FILES = [
   { id: "claude-md", label: "CLAUDE.md (Agent)", path: "MEMORY_DIR/agents/main/agent/CLAUDE.md", agent: "main" },
 ];
 
-function resolvePath(p) { return p.replace("MEMORY_DIR", `${window._homeDir || "/Users/jarvisculbertson"}/.openclaw`); }
+function resolvePath(p) { return p.replace("MEMORY_DIR", `${window._homeDir || HOME_DIR}/.openclaw`); }
 
 const Memory = () => {
   const { snapshot } = useMissionControlData();
@@ -34,7 +34,7 @@ const Memory = () => {
     setSaveResult(null);
     setLoading(true);
     try {
-      const resp = await fetch(`${MC_API()}/memory/read`, {
+      const resp = await fetch(`${getApiUrl()}/memory/read`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: resolvePath(file.path) }),
       });
@@ -50,7 +50,7 @@ const Memory = () => {
   const saveFile = async () => {
     setSaveResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/memory/write`, {
+      const resp = await fetch(`${getApiUrl()}/memory/write`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: resolvePath(selectedFile.path), content: editContent }),
       });

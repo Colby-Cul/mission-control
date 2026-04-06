@@ -103,6 +103,8 @@ const Rentals = () => {
 
   // ── Occupancy by Month ──
   const occupancyData = useMemo(() => {
+    const propCount = propFilter === "all" ? 2 : 1;
+    const daysPerMonth = propCount * 30;
     const months = {};
     filtered.forEach(b => {
       const m = b.arrival?.slice(0, 7);
@@ -111,12 +113,12 @@ const Rentals = () => {
       months[m].nights += nightsBetween(b.arrival, b.departure);
     });
     return Object.values(months).sort((a, b) => a.month.localeCompare(b.month)).map(m => ({
-      ...m, occupancy: Math.round((m.nights / 60) * 100), // 60 = 2 props × 30 days
+      ...m, occupancy: Math.round((m.nights / daysPerMonth) * 100),
       adr: monthlyData.find(d => d.month === m.month)?.total / Math.max(1, m.nights) || 0,
-      revpar: monthlyData.find(d => d.month === m.month)?.total / 60 || 0,
+      revpar: monthlyData.find(d => d.month === m.month)?.total / daysPerMonth || 0,
       label: new Date(m.month + "-01").toLocaleDateString("en-US", { month: "short" }),
     }));
-  }, [active, monthlyData]);
+  }, [filtered, monthlyData]);
 
   // ── Property Performance ──
   const propertyPerf = useMemo(() => {

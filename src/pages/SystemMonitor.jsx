@@ -2,26 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { getApiUrl } from "../utils/api";
+import { statusColor } from "./liveViewUtils";
 
 const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const TIMELINE_DAYS = 7;
-
-function statusColor(status) {
-  switch (String(status || "").toLowerCase()) {
-    case "ok":
-    case "live":
-    case "online":
-    case "success":
-    case "healthy":
-      return C.green;
-    case "error":
-    case "failed":
-    case "fail":
-      return C.red;
-    default:
-      return C.amber;
-  }
-}
 
 function normalizeStatusLabel(status) {
   switch (String(status || "").toLowerCase()) {
@@ -263,11 +248,29 @@ const SystemMonitor = () => {
     [enabledOverrides, snapshotCronJobs, weekStart]
   );
 
-  const handleToggle = (jobName) => {
+  const handleToggle = async (jobName) => {
+    const previous = enabledOverrides[jobName];
     setEnabledOverrides((current) => ({
       ...current,
       [jobName]: !current[jobName]
     }));
+    try {
+      const resp = await fetch(`${getApiUrl()}/cron/toggle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobName, enabled: !previous })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    } catch (error) {
+      setEnabledOverrides((current) => ({
+        ...current,
+        [jobName]: previous
+      }));
+      setTriggerState((current) => ({
+        ...current,
+        [jobName]: { state: "error", message: error?.message || "Toggle failed" }
+      }));
+    }
   };
 
   const handleTrigger = async (jobName) => {
@@ -277,7 +280,11 @@ const SystemMonitor = () => {
     }));
 
     try {
-      const response = await fetch("http://localhost:7070/sync", { method: "POST" });
+      const response = await fetch(`${getApiUrl()}/cron/trigger`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobName })
+      });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -401,7 +408,7 @@ const SystemMonitor = () => {
                         {trigger?.state === "loading" ? "Triggering..." : "Manual Trigger"}
                       </button>
                       <div style={{ fontSize: 12, color: triggerColor, textAlign: "right", minHeight: 16 }}>
-                        {trigger?.message || "POST http://localhost:7070/sync"}
+                        {trigger?.message || `POST ${getApiUrl()}/cron/trigger`}
                       </div>
                     </div>
                   </div>

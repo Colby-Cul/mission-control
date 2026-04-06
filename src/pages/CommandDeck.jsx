@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { Badge, Card, KPI } from "../components/shared";
-import { C, AGENTS } from "../data/constants";
+import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
-function fmtDate(v) { if (!v) return "—"; const d = new Date(v); return isNaN(d) ? "—" : d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
-function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
+import { getApiUrl } from "../utils/api";
+import { fmtDate, fmtCost } from "../utils/format";
 
 const CommandDeck = () => {
   const { acpSessions = [], projects = [], cronJobs = [], refresh } = useMissionControlData();
@@ -23,7 +21,7 @@ const CommandDeck = () => {
   const quickAction = async (name, desc) => {
     setActionResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      const resp = await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name, description: desc, agent: "main", status: "pending", priority: "high"}) });
       const data = await resp.json();
       setActionResult({ ok: data.ok, msg: data.ok ? `${name} dispatched` : data.error });
@@ -33,14 +31,14 @@ const CommandDeck = () => {
 
   const unblock = async (task) => {
     try {
-      await fetch(`${MC_API()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name: `Unblock: ${task.task?.slice(0,60)}`, agent: "main", status: "pending", priority: "critical", description: `Escalated from blocked queue. Original: ${task.task}`}) });
       refresh();
     } catch {}
   };
 
   const triggerSync = async () => {
-    try { await fetch(`${MC_API()}/sync`, { method: "POST" }); refresh(); } catch {}
+    try { await fetch(`${getApiUrl()}/sync`, { method: "POST" }); refresh(); } catch {}
     setActionResult({ ok: true, msg: "Sync triggered" });
     setTimeout(() => setActionResult(null), 3000);
   };

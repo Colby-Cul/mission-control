@@ -3,7 +3,7 @@ import { Badge, Card, KPI } from '../components/shared';
 import { C } from '../data/constants';
 import { useMissionControlData } from '../context/MissionControlDataContext';
 
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { getApiUrl } from "../utils/api";
 
 const SkillLab = () => {
   const { skills = [], refresh } = useMissionControlData();
@@ -18,7 +18,7 @@ const SkillLab = () => {
     setRefreshing(true);
     setRefreshResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/sync`, { method: "POST" });
+      const resp = await fetch(`${getApiUrl()}/sync`, { method: "POST" });
       const data = await resp.json();
       setRefreshResult(data.ok ? { ok: true, msg: "Synced — rescanning skills directory" } : { ok: false, msg: data.error });
       setTimeout(() => refresh(), 1500);
@@ -42,7 +42,7 @@ const SkillLab = () => {
     setUploadResult(null);
     try {
       const buffer = await file.arrayBuffer();
-      const resp = await fetch(`${MC_API()}/upload-skill`, {
+      const resp = await fetch(`${getApiUrl()}/upload-skill`, {
         method: "POST",
         headers: { "Content-Type": "application/octet-stream" },
         body: buffer,

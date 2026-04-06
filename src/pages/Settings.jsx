@@ -4,26 +4,33 @@ import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import settingsData from "../data/settings.json";
-
-function statusColor(s) {
-  const v = String(s || "").toLowerCase();
-  if (["connected","ok","healthy","live"].includes(v)) return C.green;
-  if (["warning","auth required","not configured"].includes(v)) return C.amber;
-  if (["error","offline"].includes(v)) return C.red;
-  return C.cyan;
-}
-
-const MC_API = () => localStorage.getItem("mc-api-url") || "http://localhost:7070";
+import { statusColor } from "./liveViewUtils";
+import { getApiUrl } from "../utils/api";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { config, defaults, snapshot, metrics, setConfig, refresh } = useMissionControlData();
   const [draft, setDraft] = useState(config);
   const [theme, setTheme] = useState(() => localStorage.getItem("mc-theme") || "dark");
-  const [displayName, setDisplayName] = useState(settingsData.displayName || "");
-  const [timezone, setTimezone] = useState(settingsData.timezone || "America/Los_Angeles");
+  const [displayName, setDisplayName] = useState(
+    () => localStorage.getItem("mc-settings-displayName") || settingsData.displayName || ""
+  );
+  const [timezone, setTimezone] = useState(
+    () => localStorage.getItem("mc-settings-timezone") || settingsData.timezone || "America/Los_Angeles"
+  );
   const [syncResult, setSyncResult] = useState(null);
-  const [notifications, setNotifications] = useState(settingsData.notifications || {});
+  const [notifications, setNotifications] = useState(
+    () => JSON.parse(localStorage.getItem("mc-settings-notifications") || "null") || settingsData.notifications || {}
+  );
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  const saveProfile = () => {
+    localStorage.setItem("mc-settings-displayName", displayName);
+    localStorage.setItem("mc-settings-timezone", timezone);
+    localStorage.setItem("mc-settings-notifications", JSON.stringify(notifications));
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 3000);
+  };
 
   useEffect(() => { setDraft(config); }, [config]);
   useEffect(() => { localStorage.setItem("mc-theme", theme); }, [theme]);
@@ -36,7 +43,7 @@ const Settings = () => {
   const triggerSync = async () => {
     setSyncResult(null);
     try {
-      const resp = await fetch(`${MC_API()}/sync`, { method: "POST" });
+      const resp = await fetch(`${getApiUrl()}/sync`, { method: "POST" });
       const data = await resp.json();
       setSyncResult(data.ok ? { ok: true, msg: "Sync complete" } : { ok: false, msg: data.error });
     } catch (e) {
@@ -78,6 +85,10 @@ const Settings = () => {
               ))}
             </div>
           </label>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
+          <button onClick={saveProfile} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 600, cursor: "pointer" }}>Save Profile</button>
+          {profileSaved && <Badge color={C.green}>Saved</Badge>}
         </div>
       </Card>
 
@@ -129,7 +140,7 @@ const Settings = () => {
           </button>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Local API Server</div>
-            <div style={{ fontSize: 11, color: C.muted }}>http://localhost:7070</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{getApiUrl()}</div>
           </div>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Vercel</div>

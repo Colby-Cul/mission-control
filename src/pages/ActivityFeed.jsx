@@ -2,38 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Card } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
+import { statusColor } from "./liveViewUtils";
 
 const HEATMAP_HOURS = Array.from({ length: 24 }, (_, index) => index);
 const HEATMAP_DAYS = 7;
-
-function statusColor(status) {
-  switch (String(status || "").toLowerCase()) {
-    case "ok":
-    case "healthy":
-    case "online":
-    case "done":
-    case "complete":
-    case "completed":
-    case "success":
-      return C.green;
-    case "busy":
-    case "warning":
-    case "working on it":
-    case "delegated":
-    case "running":
-    case "working":
-    case "in progress":
-    case "in_progress":
-      return C.amber;
-    case "error":
-    case "failed":
-    case "offline":
-    case "blocked":
-      return C.red;
-    default:
-      return C.cyan;
-  }
-}
 
 function actionTypeColor(actionType) {
   switch (actionType) {
