@@ -607,6 +607,14 @@ tasks.sort(
 manual_projects_path = repo_root / "src" / "data" / "manual-projects.json"
 manual_projects = parse_json_file(manual_projects_path) if manual_projects_path.exists() else []
 
+manual_tasks_path = repo_root / "src" / "data" / "manual-tasks.json"
+manual_tasks = parse_json_file(manual_tasks_path) if manual_tasks_path.exists() else []
+if isinstance(manual_tasks, list):
+    manual_task_ids = {t.get("id") for t in manual_tasks}
+    # Remove any auto-generated tasks that share an id with a manual task
+    tasks = [t for t in tasks if t.get("id") not in manual_task_ids]
+    tasks.extend(manual_tasks)
+
 project_groups = defaultdict(list)
 for task in tasks:
     if task.get("projectId"):
@@ -617,6 +625,7 @@ project_names = {
     "system-ops": "System Operations",
     "str-website": "STR Website - Pineside Cabins",
     "coding": "ACP Coding Delegations",
+    "mc-expansion": "Mission Control Expansion Directive",
 }
 
 projects = []
@@ -646,9 +655,16 @@ for project_id, sessions in sorted(project_groups.items()):
     projects.append(project)
 
 existing_project_ids = {project["id"] for project in projects}
-for manual in manual_projects if isinstance(manual_projects, list) else []:
-    if manual.get("id") not in existing_project_ids:
-        projects.append(manual)
+manual_by_id = {m["id"]: m for m in (manual_projects if isinstance(manual_projects, list) else []) if m.get("id")}
+for project in projects:
+    manual = manual_by_id.pop(project["id"], None)
+    if manual:
+        # Merge manual metadata (description, priority, tags) into auto-generated project
+        for key in ("description", "priority", "tags", "dependency", "createdAt"):
+            if manual.get(key) and not project.get(key):
+                project[key] = manual[key]
+for manual in manual_by_id.values():
+    projects.append(manual)
 
 cron_jobs = []
 cron_path = openclaw / "cron" / "jobs.json"
