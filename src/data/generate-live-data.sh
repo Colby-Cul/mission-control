@@ -219,10 +219,88 @@ def extract_task_text(text):
         "a new session",
         "read heartbeat",
         "system:",
+        "[subagent context]",
+        "[media attached",
+        "this context is runtime",
+        "(media/path/",
     )
     if cleaned.lower().startswith(skip_prefixes):
         return ""
     return cleaned
+
+
+def clean_task_name(raw_text, agent_id, session_id=""):
+    """Convert raw task text into a readable, human-friendly name."""
+    text = str(raw_text or "").strip()
+
+    # Filter out non-task content
+    junk_patterns = [
+        r'^[0-9a-f]{8}[-\s][0-9a-f]{4}',  # UUIDs
+        r'^\(media/path/',                   # media tool hints
+        r'^This context is runtime',          # runtime context
+        r'^[A-Za-z]+ Session$',              # bare "Main Session" etc (will be regenerated below)
+    ]
+    for pat in junk_patterns:
+        if re.match(pat, text, re.I):
+            text = ""
+            break
+
+    # If it's just a UUID or session ID, generate a name from context
+    uuid_pattern = re.compile(r'^[0-9a-f]{8}[-\s][0-9a-f]{4}[-\s][0-9a-f]{4}[-\s][0-9a-f]{4}[-\s][0-9a-f]{12}$', re.I)
+    if uuid_pattern.match(text) or not text or len(text) < 5:
+        agent_label = agent_id.replace("-", " ").title() if agent_id else "Agent"
+        return f"{agent_label} Session"
+
+    # Truncate very long texts to first meaningful sentence
+    if len(text) > 120:
+        # Try to cut at a sentence boundary
+        for sep in (". ", "! ", "? ", "\n"):
+            idx = text.find(sep, 40)
+            if 40 < idx < 150:
+                text = text[:idx + 1]
+                break
+        else:
+            text = text[:117] + "..."
+
+    # Clean up common noise patterns
+    noise_replacements = {
+        "Mission Control auto-update cycle:": "Mission Control Data Refresh",
+        "Mission Control auto-update cycle": "Mission Control Data Refresh",
+        "You are the Mission Control autonomous coding coordinator.": "Mission Control Build Coordination",
+        "Check Discord Jarvis Mission Control server status": "Discord Health Check",
+        "Check Discord Jarvis Mission Control server status.": "Discord Health Check",
+        "To send an image back, prefer the message tool": "Media Processing Task",
+        "CWD: /Users/jarvisculbertson/mission-control": "Mission Control Build Task",
+        "CWD: /Users/jarvisculbertson/.openclaw": "OpenClaw Workspace Task",
+        "Agent health check. Run these checks sil": "System Health Check",
+        "OpenClaw runtime context (internal):": "Runtime Context Update",
+    }
+    for prefix, replacement in noise_replacements.items():
+        if text.strip().startswith(prefix):
+            remainder = text[len(prefix):].strip()
+            if remainder and len(remainder) > 20 and not remainder.startswith("Verify") and not remainder.startswith("Run "):
+                text = remainder
+            else:
+                return replacement
+
+    # Remove leading directive markers
+    text = re.sub(r'^(DELEGATION:\s*|TASK:\s*|TODO:\s*|URGENT:\s*)', '', text, flags=re.I).strip()
+
+    # Clean up "Delegate this test task to..." pattern
+    delegate_match = re.match(r"(?:Delegate|Send|Forward)\s+(?:this\s+)?(?:test\s+)?(?:task\s+)?to\s+(?:the\s+)?(\w[\w\s]*?)(?:\s*(?:NOW|ASAP|immediately))?[:]\s*['\"]?(.*?)['\"]?\s*$", text, re.I | re.S)
+    if delegate_match:
+        target = delegate_match.group(1).strip()
+        task = delegate_match.group(2).strip()
+        if task and len(task) > 10:
+            text = task[:120]
+        else:
+            text = f"Delegated to {target}"
+
+    # Capitalize first letter
+    if text and text[0].islower():
+        text = text[0].upper() + text[1:]
+
+    return text or f"{agent_id.replace('-', ' ').title()} Session"
 
 
 child_parent_map = {}
@@ -375,11 +453,19 @@ for agent_dir in sorted((openclaw / "agents").glob("*")):
             if not parent_session:
                 parent_session = child_parent_map.get(child_key)
 
+            # Clean up the task name
+            readable_name = clean_task_name(task_text, agent_dir.name, session_id)
+
+            # For main agent: if it only spawned tasks (delegation), mark accordingly
+            is_delegation = agent_dir.name == "main" and spawn_count > 0
+            if is_delegation and readable_name == "Mission Control Data Refresh":
+                readable_name = "Heartbeat: Data Refresh & Delegation"
+
             task = {
                 "id": session_id[:20],
                 "sessionId": session_id,
                 "agent": agent_dir.name,
-                "task": task_text or path.stem.replace("-", " "),
+                "task": readable_name,
                 "status": status,
                 "lane": lane,
                 "dateCreated": date_created,
@@ -456,8 +542,59 @@ for agent_dir in sorted((openclaw / "agents").glob("*")):
             session_index[session_id] = task
             tasks.append(task)
 
+# Post-processing: fix attribution and clean names
+AGENT_LABELS = {
+    "main": "Jarvis", "codex": "Coding Agent", "codex-default": "Coding Agent",
+    "coding-agent": "Coding Agent", "validation": "Validator",
+    "executive-assistant": "Victoria", "cfo": "CFO", "bookkeeper": "Bookkeeper",
+    "fin-researcher": "Financial Researcher", "tax-advisor": "Tax Advisor",
+    "crypto-analyst": "Crypto Analyst", "stock-analyst": "Stock Analyst",
+    "designer": "Designer", "maven": "Maven (CMO)",
+    "quill": "Quill", "echo": "Echo", "spark": "Spark", "beacon": "Beacon",
+    "lens": "Lens", "pulse": "Pulse", "sentinel": "Sentinel", "herald": "Herald", "scribe": "Scribe",
+}
+
 for task in tasks:
+    # Relabel codex sessions as coding-agent work (they're delegated from main)
+    if task["agent"] in ("codex", "codex-default"):
+        task["agent"] = "coding-agent"
+
+    # Skip junk agents
+    if task["agent"] in ("acp-codex", "acp-defaultagent", "assistant", "default",
+                          "execassistant", "monday-com", "monday-com-agent",
+                          "openai-gpt-4o-mini", "task-master", "taskmaster",
+                          "your_discord_monitor_agent_id", "discord-chat", "mtp"):
+        task["_skip"] = True
+        continue
+
+    # Ensure task name is clean
+    task["task"] = clean_task_name(task["task"], task["agent"], task.get("sessionId", ""))
     task["projectId"] = guess_project_id(task)
+
+# Filter out junk agents and deduplicate repeated tasks
+seen_patterns = {}
+cleaned_tasks = []
+# Patterns that are heartbeat/system noise — keep max 1 per agent
+noise_patterns = ["data refresh", "heartbeat", "discord health check", "health check",
+                  "session$", "runtime context"]
+
+for task in tasks:
+    if task.get("_skip"):
+        continue
+    name_lower = task["task"].lower()
+    # Check if it's a noise pattern
+    is_noise = any(p in name_lower for p in noise_patterns)
+    if is_noise or name_lower.endswith("session"):
+        key = f"{task['agent']}_{task['task']}"
+        if key not in seen_patterns:
+            seen_patterns[key] = 0
+        seen_patterns[key] += 1
+        if seen_patterns[key] <= 2:  # Keep max 2 of each noise type per agent
+            cleaned_tasks.append(task)
+        continue
+    cleaned_tasks.append(task)
+
+tasks = cleaned_tasks
 
 tasks.sort(
     key=lambda task: (
