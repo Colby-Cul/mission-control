@@ -13,14 +13,22 @@ export function statusColor(status) {
     case "complete":
     case "completed":
     case "enabled":
+    case "success":
       return C.green;
     case "busy":
     case "warning":
     case "working on it":
+    case "working":
     case "in progress":
+    case "in_progress":
+    case "inprogress":
     case "degraded":
     case "stuck":
     case "auth required":
+    case "not configured":
+    case "delegated":
+    case "pending":
+    case "learning":
       return C.amber;
     case "error":
     case "failed":
@@ -28,6 +36,10 @@ export function statusColor(status) {
     case "blocked":
     case "disabled":
     case "unavailable":
+    case "disconnected":
+    case "missing":
+    case "expired":
+    case "stalled":
       return C.red;
     default:
       return C.cyan;
