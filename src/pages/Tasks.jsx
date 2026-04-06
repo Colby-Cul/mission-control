@@ -7,6 +7,7 @@ import { useMissionControlData } from "../context/MissionControlDataContext";
 
 const VIEW_STORAGE_KEY = "mission-control.tasks.view-mode";
 const SORT_STORAGE_KEY = "mission-control.tasks.sort";
+const PRIORITY_FILTER_KEY = "mission-control.tasks.priority-filter";
 const KANBAN_COLUMNS = [
   { key: "todo", label: "To Do", color: C.cyan },
   { key: "inprogress", label: "In Progress", color: C.amber },
@@ -19,167 +20,118 @@ const TASK_SUB_TABS = [
   { key: "recently-completed", label: "Recently Completed" },
   { key: "task-templates", label: "Task Templates" },
 ];
+const PRIORITIES = [
+  { key: "critical", label: "Critical", color: "#ef4444", order: 0 },
+  { key: "high", label: "High", color: "#f97316", order: 1 },
+  { key: "normal", label: "Normal", color: "#6366f1", order: 2 },
+  { key: "low", label: "Low", color: "#6b7280", order: 3 },
+];
+const PRIORITY_MAP = Object.fromEntries(PRIORITIES.map(p => [p.key, p]));
 const SORTABLE_COLUMNS = [
   { key: "task", label: "Task" },
   { key: "projectName", label: "Project" },
   { key: "agent", label: "Agent" },
+  { key: "priority", label: "Priority" },
   { key: "status", label: "Status" },
-  { key: "apiModelUsed", label: "API Model Used" },
+  { key: "apiModelUsed", label: "Model" },
   { key: "tokens", label: "Tokens" },
-  { key: "totalCost", label: "Total Cost" },
-  { key: "estimatedCostToCompletion", label: "Est. Cost Remaining" },
-  { key: "estimatedTimeToCompletion", label: "Est. Time Remaining" },
-  { key: "dateCreated", label: "Date Created" },
-  { key: "dateFinished", label: "Date Finished" },
+  { key: "totalCost", label: "Cost" },
+  { key: "dateCreated", label: "Created" },
+  { key: "dateFinished", label: "Finished" },
 ];
 const LOCAL_API = "http://127.0.0.1:7070";
 
 function readStoredView() {
   if (typeof window === "undefined") return "list";
-  const value = window.localStorage.getItem(VIEW_STORAGE_KEY);
-  return ["list", "kanban", "gitt"].includes(value) ? value : "list";
+  const v = window.localStorage.getItem(VIEW_STORAGE_KEY);
+  return ["list", "kanban", "gitt"].includes(v) ? v : "list";
 }
-
 function readStoredSort() {
   if (typeof window === "undefined") return { key: "dateCreated", direction: "desc" };
-  try {
-    const parsed = JSON.parse(window.sessionStorage.getItem(SORT_STORAGE_KEY) || "null");
-    if (parsed?.key && parsed?.direction) return parsed;
-  } catch {}
+  try { const p = JSON.parse(window.sessionStorage.getItem(SORT_STORAGE_KEY)); if (p?.key) return p; } catch {}
   return { key: "dateCreated", direction: "desc" };
 }
-
-function formatDate(value) {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function readStoredPriorityFilter() {
+  if (typeof window === "undefined") return [];
+  try { const p = JSON.parse(window.localStorage.getItem(PRIORITY_FILTER_KEY)); if (Array.isArray(p)) return p; } catch {}
+  return [];
 }
-
-function formatCurrency(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "—";
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+function formatDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? v : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
-
-function formatTokens(value) {
-  const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) return "—";
-  if (number >= 1_000_000) return `${(number / 1_000_000).toFixed(1)}M`;
-  if (number >= 1_000) return `${(number / 1_000).toFixed(1)}K`;
-  return String(number);
+function formatCurrency(v) {
+  const n = Number(v);
+  return isFinite(n) ? `$${n.toFixed(2)}` : "—";
 }
-
-function statusColor(status) {
-  const normalized = String(status || "").toLowerCase();
-  if (["done", "complete", "completed", "success"].includes(normalized)) return C.green;
-  if (["blocked", "failed", "error", "stalled"].includes(normalized)) return C.red;
-  if (["delegated", "working", "running", "busy", "in progress", "in_progress", "active", "pending"].includes(normalized)) return C.amber;
+function formatTokens(v) {
+  const n = Number(v);
+  if (!isFinite(n) || n <= 0) return "—";
+  return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : String(n);
+}
+function statusColor(s) {
+  const v = String(s || "").toLowerCase();
+  if (["done","complete","completed","success"].includes(v)) return C.green;
+  if (["blocked","failed","error","stalled"].includes(v)) return C.red;
+  if (["delegated","working","running","busy","in progress","in_progress","active","pending"].includes(v)) return C.amber;
   return C.cyan;
 }
-
 function normalizeLane(status, lane) {
-  if (lane && KANBAN_COLUMNS.some((column) => column.key === lane)) return lane;
-  const normalized = String(status || "").toLowerCase();
-  if (["done", "complete", "completed", "success"].includes(normalized)) return "done";
-  if (["blocked", "failed", "error", "stalled"].includes(normalized)) return "blocked";
-  if (["delegated", "working", "running", "busy", "active", "pending", "in progress", "in_progress"].includes(normalized)) return "inprogress";
+  if (lane && KANBAN_COLUMNS.some(c => c.key === lane)) return lane;
+  const v = String(status || "").toLowerCase();
+  if (["done","complete","completed","success"].includes(v)) return "done";
+  if (["blocked","failed","error","stalled"].includes(v)) return "blocked";
+  if (["delegated","working","running","busy","active","pending","in progress","in_progress"].includes(v)) return "inprogress";
   return "todo";
 }
-
-function getArrow(sortKey, activeSort) {
-  if (activeSort.key !== sortKey) return "";
-  return activeSort.direction === "asc" ? "↑" : "↓";
-}
-
 function getComparableValue(task, key) {
-  switch (key) {
-    case "tokens":
-    case "totalCost":
-    case "estimatedCostToCompletion":
-      return Number(task[key] || 0);
-    case "dateCreated":
-    case "dateFinished":
-      return new Date(task[key] || 0).getTime();
-    default:
-      return String(task[key] || "").toLowerCase();
-  }
+  if (key === "priority") return PRIORITY_MAP[task.priority]?.order ?? 2;
+  if (["tokens","totalCost","estimatedCostToCompletion"].includes(key)) return Number(task[key] || 0);
+  if (["dateCreated","dateFinished"].includes(key)) return new Date(task[key] || 0).getTime();
+  return String(task[key] || "").toLowerCase();
 }
-
 function sortTasks(tasks, sort) {
-  const direction = sort.direction === "asc" ? 1 : -1;
-  return [...tasks].sort((left, right) => {
-    const leftValue = getComparableValue(left, sort.key);
-    const rightValue = getComparableValue(right, sort.key);
-    if (leftValue < rightValue) return -1 * direction;
-    if (leftValue > rightValue) return 1 * direction;
-    return String(left.sessionId || left.id).localeCompare(String(right.sessionId || right.id));
+  const dir = sort.direction === "asc" ? 1 : -1;
+  return [...tasks].sort((a, b) => {
+    const av = getComparableValue(a, sort.key), bv = getComparableValue(b, sort.key);
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
   });
 }
 
-function ViewToggle({ value, onChange }) {
+function PriorityBadge({ priority, onClick }) {
+  const p = PRIORITY_MAP[priority] || PRIORITY_MAP.normal;
   return (
-    <div style={{ display: "inline-flex", padding: 4, borderRadius: 12, background: C.surface, border: `1px solid ${C.border}` }}>
-      {[
-        { key: "list", label: "List" },
-        { key: "kanban", label: "Kanban" },
-        { key: "gitt", label: "Gitt" },
-      ].map((view) => (
-        <button
-          key={view.key}
-          onClick={() => onChange(view.key)}
-          style={{
-            background: value === view.key ? C.accent : "transparent",
-            color: value === view.key ? "#fff" : C.muted,
-            border: "none",
-            borderRadius: 8,
-            padding: "8px 14px",
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          {view.label}
-        </button>
-      ))}
-    </div>
+    <span onClick={onClick} style={{
+      display: "inline-flex", alignItems: "center", gap: 4,
+      padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700,
+      background: p.color + "22", color: p.color, border: `1px solid ${p.color}33`,
+      cursor: onClick ? "pointer" : "default", userSelect: "none",
+    }}>
+      {p.label}
+    </span>
   );
 }
 
-function SortableHeader({ column, sort, onSort }) {
+function PrioritySelector({ value, onChange }) {
+  const [open, setOpen] = useState(false);
   return (
-    <th style={{ padding: "12px 10px", fontSize: 12, color: C.muted, fontWeight: 600 }}>
-      <button
-        onClick={() => onSort(column.key)}
-        style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}
-      >
-        {column.label} {getArrow(column.key, sort)}
-      </button>
-    </th>
-  );
-}
-
-function TaskDetailGrid({ task }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
-      <div style={{ fontSize: 12, color: C.muted }}>Agent<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{task.agent}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>API Model Used<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{task.apiModelUsed || "—"}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Total Cost<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{formatCurrency(task.totalCost)}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Est. Cost Remaining<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{formatCurrency(task.estimatedCostToCompletion)}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Est. Time Remaining<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{task.estimatedTimeToCompletion || "—"}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Date Created<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{formatDate(task.dateCreated)}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Date Finished<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{formatDate(task.dateFinished)}</div></div>
-      <div style={{ fontSize: 12, color: C.muted }}>Tokens<div style={{ color: C.text, fontSize: 13, marginTop: 3 }}>{formatTokens(task.tokens)}</div></div>
+    <div style={{ position: "relative", display: "inline-block" }}>
+      <PriorityBadge priority={value} onClick={() => setOpen(!open)} />
+      {open && (
+        <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, zIndex: 20, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, overflow: "hidden", boxShadow: "0 4px 12px rgba(0,0,0,0.4)" }}>
+          {PRIORITIES.map(p => (
+            <button key={p.key} onClick={() => { onChange(p.key); setOpen(false); }} style={{
+              display: "block", width: "100%", padding: "8px 16px", border: "none", background: value === p.key ? p.color + "22" : "transparent",
+              color: p.color, fontSize: 12, fontWeight: 600, cursor: "pointer", textAlign: "left",
+            }}>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -191,100 +143,76 @@ const Tasks = () => {
   const [sort, setSort] = useState(readStoredSort);
   const [activeTab, setActiveTab] = useState("my-tasks");
   const [filter, setFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState(readStoredPriorityFilter);
+  const [expandedCard, setExpandedCard] = useState(null);
   const [expandedNode, setExpandedNode] = useState(null);
   const [dragState, setDragState] = useState(null);
+  const [localPriorities, setLocalPriorities] = useState({});
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode);
-    }
-  }, [viewMode]);
+  useEffect(() => { if (typeof window !== "undefined") window.localStorage.setItem(VIEW_STORAGE_KEY, viewMode); }, [viewMode]);
+  useEffect(() => { if (typeof window !== "undefined") window.sessionStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sort)); }, [sort]);
+  useEffect(() => { if (typeof window !== "undefined") window.localStorage.setItem(PRIORITY_FILTER_KEY, JSON.stringify(priorityFilter)); }, [priorityFilter]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(SORT_STORAGE_KEY, JSON.stringify(sort));
-    }
-  }, [sort]);
-
-  const sessions = useMemo(
-    () => (acpSessions || []).map((session) => ({
-      ...session,
-      lane: normalizeLane(session.status, session.lane),
-      apiModelUsed: session.apiModelUsed || session.model || "—",
-    })),
-    [acpSessions]
-  );
+  const sessions = useMemo(() => (acpSessions || []).map(s => ({
+    ...s,
+    lane: normalizeLane(s.status, s.lane),
+    apiModelUsed: s.apiModelUsed || s.model || "—",
+    priority: localPriorities[s.sessionId || s.id] || s.priority || "normal",
+  })), [acpSessions, localPriorities]);
 
   const visibleSessions = useMemo(() => {
     let base = sessions;
-    if (activeTab === "blocked-queue") {
-      base = sessions.filter((session) => session.lane === "blocked");
-    } else if (activeTab === "recently-completed") {
-      base = sessions.filter((session) => session.lane === "done");
-    } else if (activeTab === "my-tasks" && filter !== "all") {
-      base = sessions.filter((session) => session.agent === filter || session.lane === filter || session.status === filter);
-    } else if (activeTab === "task-templates") {
-      base = [];
-    }
+    if (activeTab === "blocked-queue") base = sessions.filter(s => s.lane === "blocked");
+    else if (activeTab === "recently-completed") base = sessions.filter(s => s.lane === "done");
+    else if (activeTab === "my-tasks" && filter !== "all") base = sessions.filter(s => s.agent === filter || s.lane === filter || s.status === filter);
+    else if (activeTab === "task-templates") base = [];
+    // Priority filter
+    if (priorityFilter.length > 0) base = base.filter(s => priorityFilter.includes(s.priority));
     return sortTasks(base, sort);
-  }, [activeTab, filter, sessions, sort]);
+  }, [activeTab, filter, priorityFilter, sessions, sort]);
 
-  const grouped = useMemo(
-    () =>
-      KANBAN_COLUMNS.reduce((acc, column) => {
-        acc[column.key] = visibleSessions
-          .filter((session) => session.lane === column.key)
-          .sort((left, right) => new Date(right.dateCreated || 0).getTime() - new Date(left.dateCreated || 0).getTime());
-        return acc;
-      }, {}),
-    [visibleSessions]
-  );
+  const grouped = useMemo(() => KANBAN_COLUMNS.reduce((acc, col) => {
+    acc[col.key] = visibleSessions.filter(s => s.lane === col.key)
+      .sort((a, b) => (PRIORITY_MAP[a.priority]?.order ?? 2) - (PRIORITY_MAP[b.priority]?.order ?? 2));
+    return acc;
+  }, {}), [visibleSessions]);
 
-  const gittTimeline = useMemo(() => {
-    return [...visibleSessions].sort(
-      (left, right) => new Date(right.dateCreated || right.dateFinished || 0).getTime() - new Date(left.dateCreated || left.dateFinished || 0).getTime()
-    );
-  }, [visibleSessions]);
+  const gittTimeline = useMemo(() => [...visibleSessions].sort((a, b) =>
+    new Date(b.dateCreated || 0).getTime() - new Date(a.dateCreated || 0).getTime()
+  ), [visibleSessions]);
 
   const totals = useMemo(() => ({
     sessions: sessions.length,
-    done: sessions.filter((session) => session.lane === "done").length,
-    active: sessions.filter((session) => session.lane !== "done").length,
-    blocked: sessions.filter((session) => session.lane === "blocked").length,
-    totalCost: sessions.reduce((sum, session) => sum + Number(session.totalCost || 0), 0),
+    done: sessions.filter(s => s.lane === "done").length,
+    active: sessions.filter(s => s.lane !== "done").length,
+    blocked: sessions.filter(s => s.lane === "blocked").length,
+    totalCost: sessions.reduce((sum, s) => sum + Number(s.totalCost || 0), 0),
   }), [sessions]);
 
-  const handleSort = (key) => {
-    setSort((current) => (
-      current.key === key
-        ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
-        : { key, direction: ["task", "projectName", "agent", "status", "apiModelUsed", "estimatedTimeToCompletion"].includes(key) ? "asc" : "desc" }
-    ));
+  const handleSort = (key) => setSort(c => c.key === key ? { key, direction: c.direction === "asc" ? "desc" : "asc" } : { key, direction: "desc" });
+
+  const handlePriorityChange = (taskId, priority) => {
+    setLocalPriorities(p => ({ ...p, [taskId]: priority }));
+    // Persist via API (fire and forget)
+    fetch(`${LOCAL_API}/task/update-status`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: taskId, priority }),
+    }).catch(() => {});
   };
 
-  const persistLaneChange = async (task, lane) => {
-    const statusMap = { todo: "todo", inprogress: "in_progress", blocked: "blocked", done: "done" };
-    try {
-      await fetch(`${LOCAL_API}/task/update-status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: task.sessionId || task.id,
-          status: statusMap[lane] || lane,
-          lane,
-          projectId: task.projectId,
-          projectName: task.projectName,
-        }),
-      });
-      refresh();
-    } catch {
-      // Keep UI usable even if the local API is down.
-    }
+  const togglePriorityFilter = (key) => {
+    setPriorityFilter(f => f.includes(key) ? f.filter(k => k !== key) : [...f, key]);
   };
 
   const onDrop = async (lane) => {
     if (!dragState) return;
-    await persistLaneChange(dragState, lane);
+    try {
+      await fetch(`${LOCAL_API}/task/update-status`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: dragState.sessionId || dragState.id, status: lane, lane }),
+      });
+      refresh();
+    } catch {}
     setDragState(null);
   };
 
@@ -293,231 +221,212 @@ const Tasks = () => {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Tasks</h1>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Mission Control session data from `live-data.json`. View mode persists in `localStorage`; sorting persists for this browser session.
-          </div>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>ACP session data with priority management</div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <ViewToggle value={viewMode} onChange={setViewMode} />
-          <button
-            onClick={refresh}
-            style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer" }}
-          >
-            Refresh Tasks
-          </button>
+          <div style={{ display: "inline-flex", padding: 4, borderRadius: 12, background: C.surface, border: `1px solid ${C.border}` }}>
+            {["list", "kanban", "gitt"].map(v => (
+              <button key={v} onClick={() => setViewMode(v)} style={{ background: viewMode === v ? C.accent : "transparent", color: viewMode === v ? "#fff" : C.muted, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                {v === "list" ? "List" : v === "kanban" ? "Kanban" : "Gitt"}
+              </button>
+            ))}
+          </div>
+          <button onClick={refresh} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer" }}>Refresh</button>
         </div>
       </div>
 
+      {/* Sub tabs */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {TASK_SUB_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            style={{
-              background: activeTab === tab.key ? "rgba(59,130,246,0.18)" : C.surface,
-              color: activeTab === tab.key ? C.text : C.muted,
-              border: `1px solid ${activeTab === tab.key ? C.accent : C.border}`,
-              borderRadius: 10,
-              padding: "8px 14px",
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
+        {TASK_SUB_TABS.map(tab => (
+          <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{ background: activeTab === tab.key ? "rgba(59,130,246,0.18)" : C.surface, color: activeTab === tab.key ? C.text : C.muted, border: `1px solid ${activeTab === tab.key ? C.accent : C.border}`, borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
             {tab.label}
           </button>
         ))}
       </div>
 
-      {activeTab === "my-tasks" ? (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {["all", "todo", "inprogress", "blocked", "done", "main", "codex"].map((value) => (
-            <button
-              key={value}
-              onClick={() => setFilter(value)}
-              style={{
-                background: filter === value ? C.accent : C.surface,
-                color: filter === value ? "#fff" : C.muted,
-                border: `1px solid ${filter === value ? C.accent : C.border}`,
-                borderRadius: 8,
-                padding: "6px 14px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              {value === "all" ? "All" : value === "inprogress" ? "In Progress" : value.charAt(0).toUpperCase() + value.slice(1)}
+      {/* Priority filter bar */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ fontSize: 11, color: C.muted, marginRight: 4 }}>Priority:</span>
+        <button onClick={() => setPriorityFilter([])} style={{ background: priorityFilter.length === 0 ? C.accent : C.surface, color: priorityFilter.length === 0 ? "#fff" : C.muted, border: `1px solid ${priorityFilter.length === 0 ? C.accent : C.border}`, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>All</button>
+        {PRIORITIES.map(p => (
+          <button key={p.key} onClick={() => togglePriorityFilter(p.key)} style={{ background: priorityFilter.includes(p.key) ? p.color + "22" : C.surface, color: priorityFilter.includes(p.key) ? p.color : C.muted, border: `1px solid ${priorityFilter.includes(p.key) ? p.color + "55" : C.border}`, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Status filter (for My Tasks tab) */}
+      {activeTab === "my-tasks" && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {["all", "todo", "inprogress", "blocked", "done", "main", "codex"].map(v => (
+            <button key={v} onClick={() => setFilter(v)} style={{ background: filter === v ? C.accent : C.surface, color: filter === v ? "#fff" : C.muted, border: `1px solid ${filter === v ? C.accent : C.border}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              {v === "all" ? "All" : v === "inprogress" ? "In Progress" : v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
           ))}
         </div>
-      ) : null}
+      )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-        <KPI label="Total Sessions" value={totals.sessions || "—"} sub="All ACP sessions" color={C.accent} />
-        <KPI label="Completed" value={totals.done || "—"} sub="Done lane" color={C.green} />
-        <KPI label="Active Work" value={totals.active || "—"} sub="To do + in progress + blocked" color={C.amber} />
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+        <KPI label="Total" value={totals.sessions || "—"} sub="All sessions" color={C.accent} />
+        <KPI label="Done" value={totals.done || "—"} sub="Completed" color={C.green} />
+        <KPI label="Active" value={totals.active || "—"} sub="In progress" color={C.amber} />
         <KPI label="Blocked" value={totals.blocked || "0"} sub="Needs attention" color={C.red} />
-        <KPI label="Total Cost" value={formatCurrency(totals.totalCost)} sub="Calculated from runtime session data" color={C.teal} />
+        <KPI label="Cost" value={formatCurrency(totals.totalCost)} sub="Total API spend" color={C.teal} />
       </div>
 
       <Card>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-              {activeTab === "task-templates" ? `Task Templates (${taskTemplates.length})` : `Visible Tasks (${visibleSessions.length})`}
-            </div>
-            <div style={{ fontSize: 12, color: C.muted }}>Source updated {formatDate(snapshot?.generatedAt || snapshot?.lastUpdated)}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+            {activeTab === "task-templates" ? `Templates (${taskTemplates.length})` : `Tasks (${visibleSessions.length})`}
           </div>
+          <div style={{ fontSize: 12, color: C.muted }}>Updated {formatDate(snapshot?.generatedAt || snapshot?.lastUpdated)}</div>
+        </div>
 
-          {activeTab === "task-templates" ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-              {taskTemplates.map((template) => (
-                <div key={template.id} style={{ border: `1px solid ${C.border}`, borderRadius: 14, background: C.surface, padding: 14 }}>
-                  <div style={{ color: C.text, fontSize: 14, fontWeight: 700 }}>{template.name}</div>
-                  <div style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>{template.description}</div>
-                </div>
-              ))}
-            </div>
-          ) : null}
+        {/* Templates */}
+        {activeTab === "task-templates" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+            {taskTemplates.map(t => (
+              <div key={t.id} style={{ border: `1px solid ${C.border}`, borderRadius: 14, background: C.surface, padding: 14 }}>
+                <div style={{ color: C.text, fontSize: 14, fontWeight: 700 }}>{t.name}</div>
+                <div style={{ color: C.muted, fontSize: 12, marginTop: 6 }}>{t.description}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
-          {activeTab !== "task-templates" && viewMode === "list" ? (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1440 }}>
-                <thead>
-                  <tr style={{ textAlign: "left", borderBottom: `1px solid ${C.border}` }}>
-                    {SORTABLE_COLUMNS.map((column) => (
-                      <SortableHeader key={column.key} column={column} sort={sort} onSort={handleSort} />
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleSessions.map((task) => (
-                    <tr key={task.id} style={{ borderBottom: `1px solid ${C.border}` }}>
-                      <td style={{ padding: "14px 10px", color: C.text, fontWeight: 600 }}>{task.task}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>
-                        {task.projectName ? (
-                          <button onClick={() => navigate(`/projects?project=${encodeURIComponent(task.projectId)}`)} style={{ background: "transparent", border: "none", color: C.accent, cursor: "pointer", padding: 0 }}>
-                            {task.projectName}
-                          </button>
-                        ) : "—"}
-                      </td>
-                      <td style={{ padding: "14px 10px" }}><Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge></td>
-                      <td style={{ padding: "14px 10px" }}><Badge color={statusColor(task.status)}>{task.status}</Badge></td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{task.apiModelUsed || "—"}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{formatTokens(task.tokens)}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{formatCurrency(task.totalCost)}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{formatCurrency(task.estimatedCostToCompletion)}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{task.estimatedTimeToCompletion || "—"}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{formatDate(task.dateCreated)}</td>
-                      <td style={{ padding: "14px 10px", color: C.text }}>{formatDate(task.dateFinished)}</td>
-                    </tr>
+        {/* LIST VIEW */}
+        {activeTab !== "task-templates" && viewMode === "list" && (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1200 }}>
+              <thead>
+                <tr style={{ textAlign: "left", borderBottom: `1px solid ${C.border}` }}>
+                  {SORTABLE_COLUMNS.map(col => (
+                    <th key={col.key} style={{ padding: "10px 8px", fontSize: 11, color: C.muted, fontWeight: 600 }}>
+                      <button onClick={() => handleSort(col.key)} style={{ background: "transparent", border: "none", color: "inherit", cursor: "pointer", padding: 0, font: "inherit" }}>
+                        {col.label} {sort.key === col.key ? (sort.direction === "asc" ? "↑" : "↓") : ""}
+                      </button>
+                    </th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleSessions.map(task => (
+                  <tr key={task.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: "10px 8px", color: C.text, fontWeight: 600, maxWidth: 300 }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.task}</div>
+                    </td>
+                    <td style={{ padding: "10px 8px", color: C.text }}>{task.projectName || "—"}</td>
+                    <td style={{ padding: "10px 8px" }}><Badge color={C.accent}>{task.agent}</Badge></td>
+                    <td style={{ padding: "10px 8px" }}><PrioritySelector value={task.priority} onChange={(p) => handlePriorityChange(task.sessionId || task.id, p)} /></td>
+                    <td style={{ padding: "10px 8px" }}><Badge color={statusColor(task.status)}>{task.status}</Badge></td>
+                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{task.apiModelUsed || "—"}</td>
+                    <td style={{ padding: "10px 8px", color: C.text }}>{formatTokens(task.tokens)}</td>
+                    <td style={{ padding: "10px 8px", color: C.text }}>{formatCurrency(task.totalCost)}</td>
+                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{formatDate(task.dateCreated)}</td>
+                    <td style={{ padding: "10px 8px", color: C.muted, fontSize: 11 }}>{formatDate(task.dateFinished)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          {activeTab !== "task-templates" && viewMode === "kanban" ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, alignItems: "start" }}>
-              {KANBAN_COLUMNS.map((column) => (
-                <div
-                  key={column.key}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => onDrop(column.key)}
-                  style={{
-                    minHeight: 260,
-                    borderRadius: 16,
-                    padding: 12,
-                    background: "linear-gradient(180deg, rgba(31,41,55,0.92), rgba(17,24,39,0.88))",
-                    border: `1px solid ${dragState && dragState.lane !== column.key ? C.border : column.color}`,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ color: column.color, fontWeight: 700 }}>{column.label}</div>
-                    <div style={{ color: C.muted, fontSize: 12 }}>{grouped[column.key]?.length || 0}</div>
-                  </div>
-                  {(grouped[column.key] || []).map((task) => (
-                    <div
-                      key={task.id}
-                      draggable
-                      onDragStart={() => setDragState(task)}
-                      onDragEnd={() => setDragState(null)}
-                      style={{ padding: 12, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, cursor: "grab" }}
-                    >
-                      <div style={{ color: C.text, fontSize: 13, fontWeight: 700, lineHeight: 1.4 }}>{task.task}</div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                        <Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge>
+        {/* KANBAN VIEW */}
+        {activeTab !== "task-templates" && viewMode === "kanban" && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, alignItems: "start" }}>
+            {KANBAN_COLUMNS.map(col => (
+              <div key={col.key} onDragOver={e => e.preventDefault()} onDrop={() => onDrop(col.key)} style={{ minHeight: 200, borderRadius: 16, padding: 12, background: "linear-gradient(180deg, rgba(31,41,55,0.92), rgba(17,24,39,0.88))", border: `1px solid ${dragState && dragState.lane !== col.key ? C.border : col.color}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div style={{ color: col.color, fontWeight: 700 }}>{col.label}</div>
+                  <div style={{ color: C.muted, fontSize: 12 }}>{grouped[col.key]?.length || 0}</div>
+                </div>
+                {(grouped[col.key] || []).map(task => {
+                  const isExpanded = expandedCard === (task.sessionId || task.id);
+                  const prioColor = PRIORITY_MAP[task.priority]?.color || PRIORITY_MAP.normal.color;
+                  return (
+                    <div key={task.id} draggable onDragStart={() => setDragState(task)} onDragEnd={() => setDragState(null)} style={{ padding: 12, borderRadius: 12, background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${prioColor}`, cursor: "grab" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 6 }}>
+                        <div style={{ color: C.text, fontSize: 13, fontWeight: 700, lineHeight: 1.4, flex: 1, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{task.task}</div>
+                        <PriorityBadge priority={task.priority} />
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        <Badge color={C.accent}>{task.agent}</Badge>
                         <Badge color={statusColor(task.status)}>{task.status}</Badge>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 10 }}>
-                        <div style={{ fontSize: 11, color: C.muted }}>Model<div style={{ color: C.text, fontSize: 12, marginTop: 2 }}>{task.apiModelUsed || "—"}</div></div>
-                        <div style={{ fontSize: 11, color: C.muted }}>Cost so far<div style={{ color: C.text, fontSize: 12, marginTop: 2 }}>{formatCurrency(task.totalCost)}</div></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ) : null}
-
-          {activeTab !== "task-templates" && viewMode === "gitt" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {gittTimeline.map((task, index) => {
-                const nodeExpanded = expandedNode === task.id;
-                const color = statusColor(task.status);
-                const hasBranch = Boolean(task.parentSession);
-                const hasNext = index < gittTimeline.length - 1;
-
-                return (
-                  <div key={task.id} style={{ display: "grid", gridTemplateColumns: "140px 56px minmax(0, 1fr)", gap: 0 }}>
-                    <div style={{ padding: "8px 12px 18px 0", color: C.muted, fontSize: 12, textAlign: "right" }}>{formatDate(task.dateCreated)}</div>
-                    <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                      <div style={{ width: 14, height: 14, borderRadius: "50%", background: color, border: `3px solid ${C.bg}`, boxShadow: `0 0 0 2px ${color}55`, marginTop: 10, zIndex: 1 }} />
-                      {hasNext ? <div style={{ position: "absolute", top: 24, bottom: -8, left: "50%", width: 2, transform: "translateX(-50%)", background: `linear-gradient(180deg, ${color}, ${C.border})` }} /> : null}
-                      {hasBranch ? <div style={{ position: "absolute", top: 17, left: "50%", width: 18, height: 2, transform: "translateX(0)", background: color }} /> : null}
-                    </div>
-                    <div style={{ padding: "0 0 18px 16px" }}>
-                      <button
-                        onClick={() => setExpandedNode(nodeExpanded ? null : task.id)}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          border: `1px solid ${nodeExpanded ? color : C.border}`,
-                          borderRadius: 14,
-                          background: "linear-gradient(135deg, rgba(31,41,55,0.98), rgba(17,24,39,0.92))",
-                          padding: 14,
-                          color: C.text,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                          <div style={{ fontWeight: 700, lineHeight: 1.4 }}>{task.task}</div>
-                          <div style={{ fontSize: 11, color: C.muted, fontFamily: "monospace" }}>{task.sessionId || task.id}</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                          <Badge color={task.agent === "codex" ? C.purple : C.accent}>{task.agent}</Badge>
-                          <Badge color={color}>{task.status}</Badge>
-                          <Badge color={C.teal}>{task.apiModelUsed || "—"}</Badge>
-                        </div>
-                        {nodeExpanded ? (
-                          <div style={{ marginTop: 12 }}>
-                            <TaskDetailGrid task={task} />
-                            {task.parentSession ? (
-                              <div style={{ marginTop: 10, fontSize: 12, color: C.muted }}>Parent session: {task.parentSession}</div>
-                            ) : null}
-                          </div>
-                        ) : null}
+                      {/* Expand button */}
+                      <button onClick={() => setExpandedCard(isExpanded ? null : (task.sessionId || task.id))} style={{ width: "100%", marginTop: 8, padding: "4px 0", background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                        {isExpanded ? "▲ Collapse" : "▼ Details"}
                       </button>
+                      {/* Expanded detail */}
+                      {isExpanded && (
+                        <div style={{ marginTop: 8, padding: 10, borderRadius: 8, background: C.bg, border: `1px solid ${C.border}`, fontSize: 11 }}>
+                          <div style={{ color: C.text, lineHeight: 1.6, marginBottom: 8 }}>{(task.task || "").slice(0, 400)}{(task.task || "").length > 400 ? "…" : ""}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                            <div><span style={{ color: C.muted }}>Agent:</span> <span style={{ color: C.text }}>{task.agent}</span></div>
+                            <div><span style={{ color: C.muted }}>Model:</span> <span style={{ color: C.text }}>{task.apiModelUsed || "—"}</span></div>
+                            <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{formatCurrency(task.totalCost)}</span></div>
+                            <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{formatTokens(task.tokens)}</span></div>
+                            <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{formatDate(task.dateCreated)}</span></div>
+                            <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{formatDate(task.dateFinished)}</span></div>
+                          </div>
+                          <div style={{ marginTop: 6, fontFamily: "monospace", color: C.muted, fontSize: 9 }}>Session: {task.sessionId || task.id}</div>
+                          <div style={{ marginTop: 6 }}>
+                            <span style={{ color: C.muted }}>Priority: </span>
+                            <PrioritySelector value={task.priority} onChange={(p) => handlePriorityChange(task.sessionId || task.id, p)} />
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* GITT VIEW */}
+        {activeTab !== "task-templates" && viewMode === "gitt" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {gittTimeline.map((task, i) => {
+              const expanded = expandedNode === task.id;
+              const color = statusColor(task.status);
+              const prioColor = PRIORITY_MAP[task.priority]?.color || C.border;
+              const hasNext = i < gittTimeline.length - 1;
+              return (
+                <div key={task.id} style={{ display: "grid", gridTemplateColumns: "120px 56px minmax(0, 1fr)", gap: 0 }}>
+                  <div style={{ padding: "8px 8px 18px 0", color: C.muted, fontSize: 11, textAlign: "right" }}>{formatDate(task.dateCreated)}</div>
+                  <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+                    <div style={{ width: 14, height: 14, borderRadius: "50%", background: color, border: `3px solid ${C.bg}`, boxShadow: `0 0 0 2px ${color}55`, marginTop: 10, zIndex: 1 }} />
+                    {hasNext && <div style={{ position: "absolute", top: 24, bottom: -8, left: "50%", width: 2, transform: "translateX(-50%)", background: `linear-gradient(180deg, ${color}, ${C.border})` }} />}
                   </div>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
+                  <div style={{ padding: "0 0 18px 12px" }}>
+                    <button onClick={() => setExpandedNode(expanded ? null : task.id)} style={{ width: "100%", textAlign: "left", border: `1px solid ${expanded ? color : C.border}`, borderLeft: `3px solid ${prioColor}`, borderRadius: 14, background: "linear-gradient(135deg, rgba(31,41,55,0.98), rgba(17,24,39,0.92))", padding: 14, color: C.text, cursor: "pointer" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                        <div style={{ fontWeight: 700, lineHeight: 1.4 }}>{task.task}</div>
+                        <PriorityBadge priority={task.priority} />
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        <Badge color={C.accent}>{task.agent}</Badge>
+                        <Badge color={color}>{task.status}</Badge>
+                        <Badge color={C.teal}>{task.apiModelUsed || "—"}</Badge>
+                      </div>
+                      {expanded && (
+                        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 8, fontSize: 11 }}>
+                          <div><span style={{ color: C.muted }}>Cost:</span> <span style={{ color: C.text }}>{formatCurrency(task.totalCost)}</span></div>
+                          <div><span style={{ color: C.muted }}>Tokens:</span> <span style={{ color: C.text }}>{formatTokens(task.tokens)}</span></div>
+                          <div><span style={{ color: C.muted }}>Created:</span> <span style={{ color: C.text }}>{formatDate(task.dateCreated)}</span></div>
+                          <div><span style={{ color: C.muted }}>Finished:</span> <span style={{ color: C.text }}>{formatDate(task.dateFinished)}</span></div>
+                          <div style={{ gridColumn: "1/-1", fontFamily: "monospace", color: C.muted, fontSize: 9 }}>Session: {task.sessionId}</div>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
     </div>
   );
