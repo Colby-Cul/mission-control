@@ -13,3 +13,7 @@ STARTUP: Read ~/.openclaw/persistent-memory/PROJECT_REGISTRY.md for the master p
 2. All project/task management is native to Mission Control. No external tools.
 3. Test `npx vite build` before committing.
 4. After changes, regenerate live-data and deploy to Vercel.
+
+## Recent Work Log
+
+- 2026-04-05: Bookkeeper completed an expense and waste review using available workspace cost artifacts. Main confirmed issue remains AI/model spend leakage from premium-model overuse, fallback routing, and duplicate operational work. See `~/.openclaw/workspace/anthropic/EXPENSE_RESEARCH_2026-04-05.md`.
