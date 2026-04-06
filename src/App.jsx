@@ -2,6 +2,7 @@ import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { MissionControlDataProvider } from './context/MissionControlDataContext';
 import {
+  ExecutiveOverview,
   Home,
   CommandDeck,
   Team,
@@ -21,7 +22,8 @@ import {
   Rentals,
   IncidentRoom,
   IntegrationsHub,
-  Settings
+  Settings,
+  EntityMap
 } from './pages';
 
 function normalizeBasePath(baseUrl) {
@@ -45,6 +47,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="overview" element={<ExecutiveOverview />} />
             <Route path="command" element={<CommandDeck />} />
             <Route path="team" element={<Team />} />
             <Route path="floor" element={<TheFloor />} />
@@ -63,6 +66,7 @@ function App() {
             <Route path="rentals" element={<Rentals />} />
             <Route path="incidents" element={<IncidentRoom />} />
             <Route path="integrations" element={<IntegrationsHub />} />
+            <Route path="entity-map" element={<EntityMap />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

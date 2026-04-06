@@ -1,3 +1,4 @@
+export { default as ExecutiveOverview } from './ExecutiveOverview';
 export { default as Home } from './Home';
 export { default as CommandDeck } from './CommandDeck';
 export { default as Team } from './Team';
@@ -18,3 +19,4 @@ export { default as Rentals } from './Rentals';
 export { default as IncidentRoom } from './IncidentRoom';
 export { default as IntegrationsHub } from './IntegrationsHub';
 export { default as Settings } from './Settings';
+export { default as EntityMap } from './EntityMap';
