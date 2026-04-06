@@ -7,40 +7,43 @@ import { statusColor } from "./liveViewUtils";
 
 const INTEGRATION_META = {
   // AI Models
-  "anthropic": { name: "Anthropic Claude", desc: "Primary AI — Sonnet 4.6, Haiku 4.5, Opus 4.6", category: "AI Models" },
-  "openai": { name: "OpenAI", desc: "Whisper, DALL-E, Image Gen", category: "AI Models" },
-  "ollama": { name: "Ollama", desc: "Local inference — llama3.2, qwen, codellama", category: "AI Models" },
-  "openai-codex": { name: "OpenAI Codex", desc: "ACP coding delegation runtime", category: "AI Models" },
-  "exa": { name: "Exa Search", desc: "Neural web search MCP server", category: "AI Models" },
-  "composio": { name: "Composio", desc: "Tool orchestration SDK", category: "AI Models" },
+  "anthropic": { name: "Anthropic Claude", desc: "Primary AI — Sonnet 4.6, Haiku 4.5, Opus 4.6", category: "AI Models", knownStatus: "active" },
+  "openai": { name: "OpenAI", desc: "GPT-4o, GPT-5.4, Whisper, DALL-E", category: "AI Models", knownStatus: "active" },
+  "ollama": { name: "Ollama", desc: "Local inference — qwen2.5-coder:32b", category: "AI Models", knownStatus: "active" },
+  "openai-codex": { name: "OpenAI Codex", desc: "ACP coding delegation runtime", category: "AI Models", knownStatus: "active" },
+  "exa": { name: "Exa Search", desc: "Neural web search MCP server", category: "AI Models", knownStatus: "active" },
   // Messaging
-  "telegram": { name: "Telegram", desc: "Bot messaging channel", category: "Messaging" },
-  "slack": { name: "Slack", desc: "Workspace messaging via Socket Mode", category: "Messaging" },
+  "telegram": { name: "Telegram", desc: "Bot messaging — agent delivery channel", category: "Messaging", knownStatus: "active" },
+  "slack": { name: "Slack", desc: "Workspace messaging via MCP + Socket Mode", category: "Messaging", knownStatus: "active" },
   "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging" },
   // STR / Rentals
-  "lodgify": { name: "Lodgify", desc: "PMS — property management + bookings", category: "STR" },
+  "lodgify": { name: "Lodgify", desc: "PMS — property management + bookings", category: "STR", knownStatus: "active" },
   "pricelabs": { name: "Price Labs", desc: "Dynamic pricing + revenue management", category: "STR" },
   // Business / Finance
-  "monday.com": { name: "Monday.com", desc: "External business project management", category: "Business" },
-  "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management", category: "Business" },
+  "monday.com": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active" },
+  "monday": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active", aliasOf: "monday.com" },
+  "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management via MCP", category: "Business", knownStatus: "active" },
   "canva": { name: "Canva", desc: "Design + marketing assets", category: "Business" },
+  "notion": { name: "Notion", desc: "Knowledge base + docs via MCP", category: "Business", knownStatus: "active" },
+  // Google Workspace
+  "google": { name: "Google Workspace", desc: "OAuth — Calendar, Gmail, Tasks, Drive", category: "Google" },
+  "gmail": { name: "Gmail", desc: "Email management via MCP", category: "Google", knownStatus: "active" },
+  "google-calendar": { name: "Google Calendar", desc: "Calendar management via MCP", category: "Google", knownStatus: "active" },
   // Infrastructure
-  "supabase": { name: "Supabase", desc: "PostgreSQL database + auth", category: "Infrastructure" },
-  "vercel": { name: "Vercel", desc: "Production deployment platform", category: "Infrastructure" },
+  "supabase": { name: "Supabase", desc: "PostgreSQL database + auth via MCP", category: "Infrastructure", knownStatus: "active" },
+  "vercel": { name: "Vercel", desc: "Production deployment platform via MCP", category: "Infrastructure", knownStatus: "active" },
   "grafana": { name: "Grafana Cloud", desc: "Monitoring + observability dashboards", category: "Infrastructure" },
   "tailscale": { name: "Tailscale", desc: "Mesh VPN — Mac Mini cluster", category: "Infrastructure" },
-  "cloud-redis": { name: "Cloud Redis", desc: "Redis cache / message broker", category: "Infrastructure" },
   "cloudflare": { name: "Cloudflare", desc: "DNS + CDN + security", category: "Infrastructure" },
   // Dev Tools
   "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
   "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Dev Tools" },
-  "fast.io": { name: "Fast.io", desc: "CDN file hosting from Google Drive", category: "Dev Tools" },
+  "dropbox": { name: "Dropbox", desc: "Cloud file storage (dbxcli)", category: "Dev Tools", knownStatus: "active" },
   // Automation / Monitoring
-  "n8n": { name: "n8n", desc: "Workflow automation platform", category: "Automation" },
+  "n8n": { name: "n8n", desc: "Workflow automation platform via MCP", category: "Automation", knownStatus: "active" },
   "spike.sh": { name: "Spike.sh", desc: "Incident alerting + webhooks", category: "Monitoring" },
-  // Productivity
-  "lastpass": { name: "LastPass", desc: "Password manager", category: "Productivity" },
-  "1password": { name: "1Password", desc: "Secret management", category: "Productivity" },
+  // System
+  "macos": { name: "macOS", desc: "System screen unlock credential", category: "System" },
 };
 
 const IntegrationsHub = () => {
@@ -51,10 +54,26 @@ const IntegrationsHub = () => {
   const [updateResults, setUpdateResults] = useState({});
   const [filter, setFilter] = useState("all");
 
-  const integrations = apiCreds.map(cred => {
-    const meta = INTEGRATION_META[cred.provider] || { name: cred.provider, desc: cred.provider, category: "Other" };
-    return { ...cred, ...meta };
-  });
+  // Merge live apiCredentials with the full INTEGRATION_META registry
+  const integrations = (() => {
+    const credsByProvider = {};
+    apiCreds.forEach(cred => { credsByProvider[cred.provider] = cred; });
+    const seen = new Set();
+    const result = [];
+    // First: entries from live data, enriched with metadata
+    apiCreds.forEach(cred => {
+      const meta = INTEGRATION_META[cred.provider] || { name: cred.provider, desc: cred.provider, category: "Other" };
+      if (meta.aliasOf) return; // skip aliases if the canonical exists
+      seen.add(cred.provider);
+      result.push({ ...cred, ...meta, status: cred.status || meta.knownStatus || "not configured" });
+    });
+    // Second: entries from INTEGRATION_META that aren't in live data
+    Object.entries(INTEGRATION_META).forEach(([key, meta]) => {
+      if (seen.has(key) || meta.aliasOf) return;
+      result.push({ id: key, provider: key, ...meta, status: meta.knownStatus || "not configured", maskedKey: null });
+    });
+    return result;
+  })();
 
   const categories = [...new Set(integrations.map(i => i.category))];
   const filtered = filter === "all" ? integrations : integrations.filter(i => i.category === filter);
