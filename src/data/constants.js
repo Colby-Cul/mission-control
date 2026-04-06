@@ -19,29 +19,32 @@ export const C = {
 
 // ── Real Agent Data (from OpenClaw runtime) ──
 export const AGENTS = [
+  // Operations
   { id: "main", name: "Jarvis", initials: "JV", color: "#6366f1", ring: "#818cf8", dept: "Operations", model: "Claude Sonnet 4.6", role: "chief of staff", status: "online", sessions: 510 },
-  { id: "coding-agent", name: "Coding Agent", initials: "CA", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "Claude Sonnet 4.6", role: "software engineer", status: "online", sessions: 4 },
-  { id: "validation", name: "Validator", initials: "VL", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "Claude Sonnet 4.6", role: "QA", status: "online", sessions: 1 },
+  // Engineering
+  { id: "coding-agent", name: "Soren", initials: "SR", color: "#10b981", ring: "#34d399", dept: "Engineering", model: "Claude Sonnet 4.6", role: "software engineer", status: "online", sessions: 4 },
+  { id: "validation", name: "Quinn", initials: "QN", color: "#0ea5e9", ring: "#38bdf8", dept: "Engineering", model: "Claude Sonnet 4.6", role: "QA engineer", status: "online", sessions: 1 },
+  { id: "designer", name: "Celeste", initials: "CL", color: "#ec4899", ring: "#f472b6", dept: "Engineering", model: "GPT-4o-mini", role: "Creative Director", status: "online", sessions: 0 },
+  // Executive
   { id: "executive-assistant", name: "Victoria", initials: "VA", color: "#8b5cf6", ring: "#a78bfa", dept: "Executive", model: "Claude Haiku 4.5", role: "executive assistant", status: "online", sessions: 6 },
-
-  { id: "cfo", name: "CFO", initials: "CF", color: "#D4AF37", ring: "#F5D060", dept: "Finance", model: "Claude Sonnet 4.6", role: "Chief Financial Officer", status: "online", sessions: 0 },
-  { id: "fin-researcher", name: "Financial Researcher", initials: "FR", color: "#2DD4BF", ring: "#5EEAD4", dept: "Finance", model: "Claude Sonnet 4.6", role: "Financial Researcher", status: "online", sessions: 0 },
-  { id: "tax-advisor", name: "Tax Advisor", initials: "TA", color: "#1E3A5F", ring: "#3B6B9E", dept: "Finance", model: "Claude Sonnet 4.6", role: "Strategic Tax Advisor", status: "online", sessions: 0 },
-  { id: "crypto-analyst", name: "Crypto Analyst", initials: "CA", color: "#F59E0B", ring: "#FBBF24", dept: "Finance", model: "Claude Sonnet 4.6", role: "Crypto Investment Analyst", status: "online", sessions: 0 },
-  { id: "bookkeeper", name: "Bookkeeper", initials: "BK", color: "#6366F1", ring: "#818CF8", dept: "Finance", model: "Claude Haiku 4.5", role: "Bookkeeper", status: "online", sessions: 0 },
-  { id: "stock-analyst", name: "Stock Analyst", initials: "SA", color: "#10B981", ring: "#34D399", dept: "Finance", model: "Claude Sonnet 4.6", role: "Stock Analyst", status: "online", sessions: 0 },
-  { id: "designer", name: "Designer", initials: "DS", color: "#ec4899", ring: "#f472b6", dept: "Engineering", model: "GPT-4o-mini", role: "Creative Director & Lead Designer", status: "online", sessions: 0 },
-
-  { id: "maven", name: "Maven", initials: "MV", color: "#e11d48", ring: "#fb7185", dept: "Marketing", model: "GPT-4o-mini", role: "CMO", status: "online", sessions: 0 },
-  { id: "quill", name: "Quill", initials: "QL", color: "#7c3aed", ring: "#a78bfa", dept: "Marketing", model: "GPT-4o-mini", role: "Content Strategist", status: "online", sessions: 0 },
-  { id: "echo", name: "Echo", initials: "EC", color: "#0891b2", ring: "#22d3ee", dept: "Marketing", model: "GPT-4o-mini", role: "Social Media Manager", status: "online", sessions: 0 },
-  { id: "spark", name: "Spark", initials: "SP", color: "#ea580c", ring: "#fb923c", dept: "Marketing", model: "GPT-4o-mini", role: "Growth Hacker", status: "online", sessions: 0 },
-  { id: "beacon", name: "Beacon", initials: "BC", color: "#059669", ring: "#34d399", dept: "Marketing", model: "GPT-4o-mini", role: "SEO & Email Specialist", status: "online", sessions: 0 },
-  { id: "lens", name: "Lens", initials: "LN", color: "#4f46e5", ring: "#818cf8", dept: "Marketing", model: "GPT-4o-mini", role: "Market Research Analyst", status: "online", sessions: 0 },
-  { id: "pulse", name: "Pulse", initials: "PL", color: "#0d9488", ring: "#2dd4bf", dept: "Marketing", model: "GPT-4o-mini", role: "Performance Analyst", status: "online", sessions: 0 },
-  { id: "sentinel", name: "Sentinel", initials: "SN", color: "#b91c1c", ring: "#f87171", dept: "Marketing", model: "GPT-4o-mini", role: "QA Validator", status: "online", sessions: 0 },
-  { id: "herald", name: "Herald", initials: "HR", color: "#a16207", ring: "#fbbf24", dept: "Marketing", model: "GPT-4o-mini", role: "Brand & PR Specialist", status: "online", sessions: 0 },
-  { id: "scribe", name: "Scribe", initials: "SC", color: "#6d28d9", ring: "#a78bfa", dept: "Marketing", model: "GPT-4o-mini", role: "Copywriter", status: "online", sessions: 0 },
+  // Finance
+  { id: "cfo", name: "Colton", initials: "CF", color: "#D4AF37", ring: "#F5D060", dept: "Finance", model: "Claude Sonnet 4.6", role: "Chief Financial Officer", status: "online", sessions: 0 },
+  { id: "fin-researcher", name: "Fletcher", initials: "FR", color: "#2DD4BF", ring: "#5EEAD4", dept: "Finance", model: "Claude Sonnet 4.6", role: "Financial Researcher", status: "online", sessions: 0 },
+  { id: "tax-advisor", name: "Talia", initials: "TA", color: "#3b82f6", ring: "#60a5fa", dept: "Finance", model: "Claude Sonnet 4.6", role: "Strategic Tax Advisor", status: "online", sessions: 0 },
+  { id: "crypto-analyst", name: "Cyrus", initials: "CY", color: "#F59E0B", ring: "#FBBF24", dept: "Finance", model: "Claude Sonnet 4.6", role: "Crypto Investment Analyst", status: "online", sessions: 0 },
+  { id: "bookkeeper", name: "Beatrice", initials: "BT", color: "#a855f7", ring: "#c084fc", dept: "Finance", model: "Claude Haiku 4.5", role: "Bookkeeper", status: "online", sessions: 0 },
+  { id: "stock-analyst", name: "Sterling", initials: "ST", color: "#22d3ee", ring: "#67e8f9", dept: "Finance", model: "Claude Sonnet 4.6", role: "Stock Analyst", status: "online", sessions: 0 },
+  // Marketing
+  { id: "maven", name: "Camden", initials: "CM", color: "#e11d48", ring: "#fb7185", dept: "Marketing", model: "GPT-4o-mini", role: "CMO", status: "online", sessions: 0 },
+  { id: "quill", name: "Cordelia", initials: "CS", color: "#7c3aed", ring: "#a78bfa", dept: "Marketing", model: "GPT-4o-mini", role: "Content Strategist", status: "online", sessions: 0 },
+  { id: "echo", name: "Sienna", initials: "SM", color: "#0891b2", ring: "#22d3ee", dept: "Marketing", model: "GPT-4o-mini", role: "Social Media Manager", status: "online", sessions: 0 },
+  { id: "spark", name: "Gideon", initials: "GH", color: "#ea580c", ring: "#fb923c", dept: "Marketing", model: "GPT-4o-mini", role: "Growth Hacker", status: "online", sessions: 0 },
+  { id: "beacon", name: "Serena", initials: "SE", color: "#059669", ring: "#6ee7b7", dept: "Marketing", model: "GPT-4o-mini", role: "SEO & Email Specialist", status: "online", sessions: 0 },
+  { id: "lens", name: "Marlowe", initials: "MR", color: "#4f46e5", ring: "#818cf8", dept: "Marketing", model: "GPT-4o-mini", role: "Market Research Analyst", status: "online", sessions: 0 },
+  { id: "pulse", name: "Pierce", initials: "PA", color: "#0d9488", ring: "#2dd4bf", dept: "Marketing", model: "GPT-4o-mini", role: "Performance Analyst", status: "online", sessions: 0 },
+  { id: "sentinel", name: "Quentin", initials: "QV", color: "#b91c1c", ring: "#f87171", dept: "Marketing", model: "GPT-4o-mini", role: "QA Validator", status: "online", sessions: 0 },
+  { id: "herald", name: "Brinley", initials: "BR", color: "#a16207", ring: "#fbbf24", dept: "Marketing", model: "GPT-4o-mini", role: "Brand & PR Specialist", status: "online", sessions: 0 },
+  { id: "scribe", name: "Callista", initials: "CW", color: "#6d28d9", ring: "#c4b5fd", dept: "Marketing", model: "GPT-4o-mini", role: "Copywriter", status: "online", sessions: 0 },
 ];
 
 export const DEPARTMENTS = ["Operations", "Engineering", "Executive", "Finance", "Marketing"];

@@ -24,9 +24,12 @@ const MissionControlDataContext = createContext(null);
 const KNOWN_AGENT_METADATA = {
   main: { name: "Jarvis", role: "chief of staff", model: "Claude Opus", initials: "JV", color: "#6366f1", ring: "#818cf8" },
   worker: { name: "Worker", role: "implementation", model: "Claude Sonnet", initials: "WK", color: "#10b981", ring: "#34d399" },
-  validation: { name: "Validator", role: "QA", model: "Claude Sonnet", initials: "VL", color: "#0ea5e9", ring: "#38bdf8" },
-  "executive-assistant": { name: "Victoria", role: "executive assistant", model: "Claude Sonnet", initials: "VA", color: "#8b5cf6", ring: "#a78bfa" },
-  codex: { name: "Codex", role: "coding agent", model: "GPT-5.4", initials: "CX", color: "#14b8a6", ring: "#2dd4bf" }
+  "coding-agent": { name: "Soren", role: "software engineer", model: "Claude Sonnet", initials: "SR", color: "#10b981", ring: "#34d399" },
+  validation: { name: "Quinn", role: "QA engineer", model: "Claude Sonnet", initials: "QN", color: "#0ea5e9", ring: "#38bdf8" },
+  "executive-assistant": { name: "Victoria", role: "executive assistant", model: "Claude Haiku", initials: "VA", color: "#8b5cf6", ring: "#a78bfa" },
+  codex: { name: "Codex", role: "coding agent", model: "GPT-5.4", initials: "CX", color: "#14b8a6", ring: "#2dd4bf" },
+  cfo: { name: "Colton", role: "Chief Financial Officer", model: "Claude Sonnet", initials: "CF", color: "#D4AF37", ring: "#F5D060" },
+  bookkeeper: { name: "Beatrice", role: "Bookkeeper", model: "Claude Haiku", initials: "BT", color: "#a855f7", ring: "#c084fc" },
 };
 
 function readStoredValue(key, fallback = "") {

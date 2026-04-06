@@ -6,7 +6,7 @@ import { buildAgentRoster, isAgentOnline } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, RadialBarChart, RadialBar, Legend } from "recharts";
 import { statusColor } from "./liveViewUtils";
-import { fmtDate, fmtCost } from "../utils/format";
+import { fmtDate, fmtCost, fmtTokens } from "../utils/format";
 
 const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444"];
 const TOOLTIP_STYLE = { backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8, color: "#f9fafb", fontSize: 12 };

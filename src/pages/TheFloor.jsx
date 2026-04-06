@@ -4,6 +4,7 @@ import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend } from "recharts";
 import { statusColor } from "./liveViewUtils";
+import { fmtCost, fmtTokens } from "../utils/format";
 
 const DEPARTMENTS = [
   { id: "all", name: "All Departments" },
@@ -12,9 +13,6 @@ const DEPARTMENTS = [
   { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"] },
   { id: "mkt", name: "Marketing", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"] },
 ];
-
-function fmtCost(v) { const n = Number(v); return isFinite(n) && n > 0 ? `$${n.toFixed(2)}` : "$0.00"; }
-function fmtTokens(v) { const n = Number(v); return n >= 1e6 ? `${(n/1e6).toFixed(1)}M` : n >= 1e3 ? `${(n/1e3).toFixed(1)}K` : isFinite(n) ? String(n) : "0"; }
 
 function getAgentActivity(agent, allSessions) {
   const agentSessions = allSessions.filter(s => s.agent === agent.id);
@@ -41,7 +39,11 @@ function knowledgeBadgeColor(levelName) {
 }
 
 const HUMAN_RATE = 75; // $/hr equivalent
-const CHART_COLORS = ["#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
+const CHART_COLORS = [
+  "#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444",
+  "#D4AF37","#2DD4BF","#3b82f6","#F59E0B","#a855f7","#22d3ee","#e11d48","#7c3aed",
+  "#0891b2","#ea580c","#059669","#4f46e5","#0d9488","#b91c1c","#a16207","#6d28d9",
+];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
 
 const TheFloor = () => {
