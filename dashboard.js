@@ -27,26 +27,22 @@ class MissionControlDashboard {
         // Initialize security
         this.auth = new MissionControlAuth();
         
-        // COST-OPTIMIZED MODEL ROUTING TABLE
+        // COST-OPTIMIZED MODEL ROUTING TABLE (Anthropic-first)
         this.modelCosts = {
             // LOCAL MODELS (Ollama) - NEARLY FREE
             'ollama-llama3.2:3b': 0.000000001,   // ~$0 - Local processing
             'ollama-qwen3:8b': 0.000000001,      // ~$0 - Local processing
-            
-            // CLOUD MODELS (Cost per 1M tokens)
-            'claude-opus': 0.000015,             // ~$15/1M average
-            'claude-sonnet': 0.000003,           // ~$3/1M average  
-            'claude-haiku': 0.00000025,          // ~$0.25/1M average
-            'gpt-4o': 0.0025,                    // ~$2.50/1M average
-            'gpt-4o-mini': 0.0000015,            // ~$0.15/1M average - 90% CHEAPER than Claude!
-            'gpt-3.5-turbo': 0.0000005           // ~$0.50/1M average - 85% CHEAPER than Claude!
+
+            // CLOUD MODELS (Cost per 1M tokens) — Anthropic
+            'claude-opus-4-6': 0.000015,         // ~$15/1M average — executive tasks
+            'claude-sonnet-4-6': 0.000009,       // ~$9/1M average — primary workhorse
+            'claude-haiku-4-5': 0.0000025,       // ~$2.5/1M average — cost-efficient
         };
-        
+
         // Track cost savings
         this.costSavings = {
             totalSaved: 0,
             ollamaRequests: 0,
-            openaiRequests: 0,
             claudeRequests: 0
         };
         
@@ -365,6 +361,13 @@ class MissionControlDashboard {
             }));
             res.json({ agents, totalAgents: agents.length });
         });
+
+        this.app.get('/api/team-org', (req, res) => {
+            res.json({
+                agents: this.getTeamOrgAgents(),
+                departments: this.getTeamOrgDepartments()
+            });
+        });
         
         this.app.get('/api/bot/:botId', (req, res) => {
             const bot = this.bots.get(req.params.botId);
@@ -499,10 +502,10 @@ class MissionControlDashboard {
                         cost: '$15.20',
                         requests: 34
                     },
-                    { 
-                        name: 'GPT-4o-mini', 
-                        provider: 'OpenAI', 
-                        status: 'active', 
+                    {
+                        name: 'Claude Haiku 4.5',
+                        provider: 'Anthropic',
+                        status: 'active',
                         usage: '45.2%',
                         cost: '$3.80',
                         requests: 156
@@ -915,7 +918,7 @@ class MissionControlDashboard {
             id: 'coding-bot',
             name: 'Coding Bot',
             department: 'technical',
-            model: 'gpt-4o',                   // OpenAI for superior coding capabilities
+            model: 'claude-sonnet-4-6',        // Anthropic Sonnet for coding
             status: 'ready',
             capabilities: ['software_development', 'api_integration', 'automation_scripts', 'code_maintenance'],
             preferredCost: 0.000005,           // Slightly higher cost but better coding performance
@@ -1124,31 +1127,31 @@ class MissionControlDashboard {
 
     // REMOVED: simulateClaudeResponse - Now using REAL AI
     
-    // SMART COST-OPTIMAL MODEL ROUTING
+    // SMART COST-OPTIMAL MODEL ROUTING (Anthropic-first)
     selectCostOptimalModel(requestedModel, task) {
         const complexity = this.assessTaskComplexity(task);
         const isExecutiveTask = task.department === 'executive' || task.botId === 'executive-assistant';
         const isResearchTask = task.type?.includes('research') || task.capabilities?.includes('research');
-        
-        // TIER 1: FREE LOCAL MODELS (Ollama) - 99% cost savings!
+
+        // TIER 1: FREE LOCAL MODELS (Ollama) - 99% cost savings
         if (complexity === 'low' && !isExecutiveTask) {
             return { provider: 'ollama', model: 'llama3.2:3b', cost: 0.000000001 };
         }
-        
-        // TIER 2: CHEAP CLOUD MODELS (OpenAI GPT-4o-mini) - 85% cost savings
+
+        // TIER 2: COST-EFFICIENT CLOUD (Claude Haiku 4.5) — fast + cheap
         if (complexity === 'medium' && !isExecutiveTask) {
-            return { provider: 'openai', model: 'gpt-4o-mini', cost: 0.000000375 }; // Updated actual cost calculation
+            return { provider: 'claude', model: 'claude-haiku-4-5-20251001', cost: 0.0000025 };
         }
-        
-        // TIER 3: PREMIUM MODELS (Claude) - For executive & complex tasks
+
+        // TIER 3: PREMIUM (Claude Opus/Sonnet) — executive & complex
         if (isExecutiveTask && complexity === 'high') {
-            return { provider: 'claude', model: 'opus', cost: 0.000015 };
+            return { provider: 'claude', model: 'claude-opus-4-6', cost: 0.000015 };
         } else if (complexity === 'high' || isResearchTask) {
-            return { provider: 'claude', model: 'sonnet', cost: 0.000003 };
+            return { provider: 'claude', model: 'claude-sonnet-4-6', cost: 0.000009 };
         }
-        
-        // DEFAULT: Cost-efficient OpenAI for remaining tasks
-        return { provider: 'openai', model: 'gpt-4o-mini', cost: 0.000000375 };
+
+        // DEFAULT: Claude Haiku for remaining tasks
+        return { provider: 'claude', model: 'claude-haiku-4-5-20251001', cost: 0.0000025 };
     }
     
     assessTaskComplexity(task) {
@@ -1224,34 +1227,11 @@ class MissionControlDashboard {
         }
     }
     
+    // DEPRECATED: OpenAI routing removed — all calls go through Claude now
     async callOpenAIModel(model, prompt, task) {
-        try {
-            // Check if OpenAI API key is available
-            if (!process.env.OPENAI_API_KEY || 
-                process.env.OPENAI_API_KEY === 'your_openai_api_key_here_get_from_platform.openai.com' ||
-                process.env.OPENAI_API_KEY.length < 20) {
-                console.log(`🔄 No OpenAI key available, routing to Claude via OpenClaw...`);
-                return await this.callClaudeModel('sonnet', prompt, task);
-            }
-            
-            // Attempt OpenAI API call
-            const response = await this.openai.chat.completions.create({
-                model: model === 'gpt-4o-mini' ? 'gpt-4o-mini' : 'gpt-3.5-turbo',
-                messages: [
-                    { role: 'system', content: 'You are a professional AI assistant providing high-quality responses for Mission Control operations.' },
-                    { role: 'user', content: prompt }
-                ],
-                max_tokens: 1000,
-                temperature: 0.7
-            });
-            
-            return response.choices[0].message.content;
-            
-        } catch (error) {
-            console.error(`❌ OpenAI call failed (${error.message}), falling back to Claude...`);
-            // Reliable fallback to Claude via OpenClaw
-            return await this.callClaudeModel('sonnet', prompt, task);
-        }
+        // Route all former OpenAI calls to Claude Haiku (cost-efficient tier)
+        console.log(`🔄 OpenAI deprecated — routing to Claude Haiku...`);
+        return await this.callClaudeModel('claude-haiku-4-5-20251001', prompt, task);
     }
     
     async callClaudeModel(model, prompt, task) {
@@ -1528,4 +1508,41 @@ MissionControlDashboard.prototype.getBotsWithSkills = function(skills) {
         }
     }
     return matchingBots;
+};
+
+MissionControlDashboard.prototype.getTeamOrgAgents = function() {
+    return Array.from(this.bots.values()).map(bot => ({
+        id: bot.id,
+        name: bot.name,
+        department: bot.department,
+        status: bot.status,
+        model: bot.model,
+        capabilities: bot.capabilities || [],
+        currentTask: bot.currentTask,
+        tasksCompleted: bot.tasksCompleted || 0
+    }));
+};
+
+MissionControlDashboard.prototype.getTeamOrgDepartments = function() {
+    const departments = new Map();
+
+    for (const bot of this.bots.values()) {
+        const department = departments.get(bot.department) || {
+            name: bot.department,
+            agentIds: [],
+            activeAgents: 0,
+            totalAgents: 0
+        };
+
+        department.agentIds.push(bot.id);
+        department.totalAgents++;
+
+        if (bot.status === 'active' || bot.status === 'busy' || bot.status === 'ready') {
+            department.activeAgents++;
+        }
+
+        departments.set(bot.department, department);
+    }
+
+    return Array.from(departments.values()).sort((a, b) => a.name.localeCompare(b.name));
 };
