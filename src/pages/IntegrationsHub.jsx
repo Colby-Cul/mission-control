@@ -20,8 +20,8 @@ const INTEGRATION_META = {
   "lodgify": { name: "Lodgify", desc: "PMS — property management + bookings", category: "STR", knownStatus: "active" },
   "pricelabs": { name: "Price Labs", desc: "Dynamic pricing + revenue management", category: "STR", knownStatus: "active" },
   // Business / Finance
-  "monday.com": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active" },
-  "monday": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active", aliasOf: "monday.com" },
+  "monday.com": { name: "Monday.com", desc: "Connected — not used for task mgmt (Mission Control only)", category: "Business", knownStatus: "active" },
+  "monday": { name: "Monday.com", desc: "Connected — not used for task mgmt (Mission Control only)", category: "Business", knownStatus: "active", aliasOf: "monday.com" },
   "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management via MCP", category: "Business", knownStatus: "active" },
   "plaid": { name: "Plaid", desc: "Bank + brokerage account aggregation (read-only)", category: "Business", knownStatus: "not configured" },
   "coinbase": { name: "Coinbase", desc: "Crypto portfolio + trading via OAuth API", category: "Business", knownStatus: "not configured" },

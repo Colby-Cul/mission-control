@@ -1,4 +1,4 @@
-const { getPlaidClient, sendJson, readJsonBody } = require("../_lib/plaid");
+const { getPlaidClient, withCredentials, sendJson, readJsonBody } = require("../_lib/plaid");
 const { decryptToken } = require("../_lib/crypto");
 const { supabaseRest, supabaseDelete } = require("../_lib/supabase");
 
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     try {
       const accessToken = await decryptToken(plaidItem.access_token_enc);
       const client = getPlaidClient();
-      await client.itemRemove({ access_token: accessToken });
+      await client.itemRemove(withCredentials({ access_token: accessToken }));
     } catch (err) {
       console.error("Plaid token revocation warning:", err.message);
       // Continue with deletion even if revocation fails

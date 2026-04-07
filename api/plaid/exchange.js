@@ -1,4 +1,4 @@
-const { getPlaidClient, sendJson, readJsonBody } = require("../_lib/plaid");
+const { getPlaidClient, withCredentials, sendJson, readJsonBody } = require("../_lib/plaid");
 const { encryptToken } = require("../_lib/crypto");
 const { supabaseRest, supabaseUpsert } = require("../_lib/supabase");
 
@@ -18,23 +18,23 @@ module.exports = async function handler(req, res) {
     }
 
     // Exchange public token for access token
-    const exchangeResponse = await client.itemPublicTokenExchange({
+    const exchangeResponse = await client.itemPublicTokenExchange(withCredentials({
       public_token,
-    });
+    }));
 
     const accessToken = exchangeResponse.data.access_token;
     const itemId = exchangeResponse.data.item_id;
 
     // Get institution info
-    const itemResponse = await client.itemGet({ access_token: accessToken });
+    const itemResponse = await client.itemGet(withCredentials({ access_token: accessToken }));
     const institutionId = itemResponse.data.item.institution_id;
 
     let institutionName = institutionId;
     try {
-      const instResponse = await client.institutionsGetById({
+      const instResponse = await client.institutionsGetById(withCredentials({
         institution_id: institutionId,
         country_codes: ["US"],
-      });
+      }));
       institutionName = instResponse.data.institution.name;
     } catch {
       // Use institution ID as fallback
@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
     const plaidItemId = Array.isArray(plaidItem) ? plaidItem[0].id : plaidItem.id;
 
     // Pull initial account data
-    const accountsResponse = await client.accountsGet({ access_token: accessToken });
+    const accountsResponse = await client.accountsGet(withCredentials({ access_token: accessToken }));
     const accounts = accountsResponse.data.accounts;
 
     const accountRows = accounts.map((acct) => ({
@@ -131,10 +131,11 @@ async function syncTransactions(client, accessToken, plaidItemId, accountScope, 
   const allAdded = [];
 
   while (hasMore) {
-    const response = await client.transactionsSync({
+    const { withCredentials } = require("../_lib/plaid");
+    const response = await client.transactionsSync(withCredentials({
       access_token: accessToken,
       cursor: cursor || undefined,
-    });
+    }));
 
     const { added, modified, removed, has_more, next_cursor } = response.data;
 
@@ -192,9 +193,10 @@ async function syncTransactions(client, accessToken, plaidItemId, accountScope, 
 async function syncHoldings(client, accessToken, accountScope, entityId) {
   const { supabaseUpsert: upsert, supabaseRest: rest } = require("../_lib/supabase");
 
-  const response = await client.investmentsHoldingsGet({
+  const { withCredentials } = require("../_lib/plaid");
+  const response = await client.investmentsHoldingsGet(withCredentials({
     access_token: accessToken,
-  });
+  }));
 
   const { holdings, securities, accounts } = response.data;
 

@@ -1,4 +1,4 @@
-const { getPlaidClient, getWebhookUrl, sendJson, readJsonBody } = require("../_lib/plaid");
+const { getPlaidClient, getWebhookUrl, withCredentials, sendJson, readJsonBody } = require("../_lib/plaid");
 const { CountryCode, Products } = require("plaid");
 
 module.exports = async function handler(req, res) {
@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
       delete request.products;
     }
 
-    const response = await client.linkTokenCreate(request);
+    const response = await client.linkTokenCreate(withCredentials(request));
 
     return sendJson(res, 200, {
       link_token: response.data.link_token,

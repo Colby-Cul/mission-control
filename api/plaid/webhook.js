@@ -1,4 +1,4 @@
-const { getPlaidClient, sendJson, readJsonBody } = require("../_lib/plaid");
+const { getPlaidClient, withCredentials, sendJson, readJsonBody } = require("../_lib/plaid");
 const { decryptToken } = require("../_lib/crypto");
 const { supabaseRest } = require("../_lib/supabase");
 
@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
     // Update balance on any sync
     if (["TRANSACTIONS", "HOLDINGS"].includes(webhook_type)) {
       try {
-        const accountsResponse = await client.accountsGet({ access_token: accessToken });
+        const accountsResponse = await client.accountsGet(withCredentials({ access_token: accessToken }));
         for (const acct of accountsResponse.data.accounts) {
           await supabaseRest("financial_accounts", {
             method: "PATCH",

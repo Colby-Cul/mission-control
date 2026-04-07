@@ -1,4 +1,4 @@
-const { getPlaidClient, sendJson } = require("../_lib/plaid");
+const { getPlaidClient, withCredentials, sendJson } = require("../_lib/plaid");
 const { decryptToken } = require("../_lib/crypto");
 const { supabaseRest } = require("../_lib/supabase");
 const { syncTransactions, syncHoldings } = require("./exchange");
@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
         const accessToken = await decryptToken(item.access_token_enc);
 
         // Sync balances
-        const accountsResponse = await client.accountsGet({ access_token: accessToken });
+        const accountsResponse = await client.accountsGet(withCredentials({ access_token: accessToken }));
         for (const acct of accountsResponse.data.accounts) {
           await supabaseRest("financial_accounts", {
             method: "PATCH",
