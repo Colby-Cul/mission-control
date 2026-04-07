@@ -15,35 +15,38 @@ const INTEGRATION_META = {
   // Messaging
   "telegram": { name: "Telegram", desc: "Bot messaging — agent delivery channel", category: "Messaging", knownStatus: "active" },
   "slack": { name: "Slack", desc: "Workspace messaging via MCP + Socket Mode", category: "Messaging", knownStatus: "active" },
-  "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging" },
+  "discord": { name: "Discord", desc: "Guild messaging — all channels", category: "Messaging", knownStatus: "active" },
   // STR / Rentals
   "lodgify": { name: "Lodgify", desc: "PMS — property management + bookings", category: "STR", knownStatus: "active" },
-  "pricelabs": { name: "Price Labs", desc: "Dynamic pricing + revenue management", category: "STR" },
+  "pricelabs": { name: "Price Labs", desc: "Dynamic pricing + revenue management", category: "STR", knownStatus: "active" },
   // Business / Finance
   "monday.com": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active" },
   "monday": { name: "Monday.com", desc: "Business project management via MCP", category: "Business", knownStatus: "active", aliasOf: "monday.com" },
   "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management via MCP", category: "Business", knownStatus: "active" },
-  "canva": { name: "Canva", desc: "Design + marketing assets", category: "Business" },
+  "plaid": { name: "Plaid", desc: "Bank + brokerage account aggregation (read-only)", category: "Business", knownStatus: "not configured" },
+  "coinbase": { name: "Coinbase", desc: "Crypto portfolio + trading via OAuth API", category: "Business", knownStatus: "not configured" },
+  "canva": { name: "Canva", desc: "Design + marketing assets via MCP", category: "Business", knownStatus: "active" },
   "notion": { name: "Notion", desc: "Knowledge base + docs via MCP", category: "Business", knownStatus: "active" },
   // Google Workspace
-  "google": { name: "Google Workspace", desc: "OAuth — Calendar, Gmail, Tasks, Drive", category: "Google" },
+  "google": { name: "Google Workspace", desc: "OAuth — Calendar, Gmail, Tasks, Drive", category: "Google", knownStatus: "active" },
   "gmail": { name: "Gmail", desc: "Email management via MCP", category: "Google", knownStatus: "active" },
   "google-calendar": { name: "Google Calendar", desc: "Calendar management via MCP", category: "Google", knownStatus: "active" },
   // Infrastructure
   "supabase": { name: "Supabase", desc: "PostgreSQL database + auth via MCP", category: "Infrastructure", knownStatus: "active" },
   "vercel": { name: "Vercel", desc: "Production deployment platform via MCP", category: "Infrastructure", knownStatus: "active" },
-  "grafana": { name: "Grafana Cloud", desc: "Monitoring + observability dashboards", category: "Infrastructure" },
-  "tailscale": { name: "Tailscale", desc: "Mesh VPN — Mac Mini cluster", category: "Infrastructure" },
-  "cloudflare": { name: "Cloudflare", desc: "DNS + CDN + security", category: "Infrastructure" },
+  "grafana": { name: "Grafana Cloud", desc: "Monitoring + observability dashboards", category: "Infrastructure", knownStatus: "active" },
+  "tailscale": { name: "Tailscale", desc: "Mesh VPN — Mac Mini cluster", category: "Infrastructure", knownStatus: "active" },
+  "cloudflare": { name: "Cloudflare", desc: "DNS + CDN + security", category: "Infrastructure", knownStatus: "active" },
   // Dev Tools
   "github": { name: "GitHub", desc: "Code repos, CI/CD, GitHub Pages", category: "Dev Tools" },
-  "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Dev Tools" },
+  "brave": { name: "Brave Search", desc: "Web search API for agents", category: "Dev Tools", knownStatus: "active" },
   "dropbox": { name: "Dropbox", desc: "Cloud file storage (dbxcli)", category: "Dev Tools", knownStatus: "active" },
+  "fast.io": { name: "Fast.io", desc: "CDN file hosting from Google Drive", category: "Dev Tools", knownStatus: "active" },
   // Automation / Monitoring
   "n8n": { name: "n8n", desc: "Workflow automation platform via MCP", category: "Automation", knownStatus: "active" },
-  "spike.sh": { name: "Spike.sh", desc: "Incident alerting + webhooks", category: "Monitoring" },
+  "spike.sh": { name: "Spike.sh", desc: "Incident alerting + webhooks", category: "Monitoring", knownStatus: "active" },
   // System
-  "macos": { name: "macOS", desc: "System screen unlock credential", category: "System" },
+  "macos": { name: "macOS", desc: "System screen unlock credential", category: "System", knownStatus: "active" },
 };
 
 const IntegrationsHub = () => {

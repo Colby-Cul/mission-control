@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { buildAgentRoster } from "../data/agentRoster";
@@ -52,6 +52,21 @@ const Finance = () => {
   // Forecast
   const forecast = [30,60,90].map(d => ({ days: `${d}d`, cost: Math.round(dailyBurn*d*100)/100, savings: Math.round(((humanEquiv/30)*d - dailyBurn*d)*100)/100 }));
 
+  // Financial accounts summary
+  const [finSummary, setFinSummary] = useState(null);
+  useEffect(() => {
+    fetch("/api/plaid/summary")
+      .then(r => r.json())
+      .then(data => { if (data && !data.error) setFinSummary(data); })
+      .catch(() => {});
+  }, []);
+
+  const fmtBigMoney = (v) => {
+    const n = Number(v);
+    if (!isFinite(n) || n === 0) return "$0";
+    return n >= 1000000 ? `$${(n/1000000).toFixed(2)}M` : n >= 1000 ? `$${(n/1000).toFixed(1)}K` : `$${n.toFixed(0)}`;
+  };
+
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <h1 style={{fontSize:24,fontWeight:700,color:C.text,margin:0}}>Finance</h1>
@@ -76,6 +91,22 @@ const Finance = () => {
           <span style={{fontSize:14,fontWeight:700,color:C.text}}>{budgetPct}%</span>
         </div>
       </Card>
+
+      {/* Financial Accounts Summary */}
+      {finSummary && finSummary.linked_institutions > 0 && (
+        <Card>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{fontSize:14,fontWeight:600,color:C.text}}>Financial Accounts</div>
+            <a href="#/accounts" style={{color:C.accent,fontSize:12,textDecoration:"none"}}>View All →</a>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4, 1fr)",gap:10}}>
+            <KPI label="Net Worth" value={fmtBigMoney(finSummary.net_worth)} sub="All accounts" color={C.green} />
+            <KPI label="Banking" value={fmtBigMoney(finSummary.banking?.total)} sub={`${finSummary.banking?.accounts?.length || 0} accounts`} color={C.cyan} />
+            <KPI label="Investments" value={fmtBigMoney(finSummary.investments?.total)} sub={`${finSummary.investments?.accounts?.length || 0} accounts`} color={C.purple} />
+            <KPI label="Crypto" value={fmtBigMoney(finSummary.crypto?.total || 0)} sub="Coinbase" color={C.amber} />
+          </div>
+        </Card>
+      )}
 
       {/* Charts */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>

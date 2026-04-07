@@ -25,6 +25,7 @@ const IncidentRoom = lazy(() => import('./pages/IncidentRoom'));
 const IntegrationsHub = lazy(() => import('./pages/IntegrationsHub'));
 const Settings = lazy(() => import('./pages/Settings'));
 const EntityMap = lazy(() => import('./pages/EntityMap'));
+const Accounts = lazy(() => import('./pages/Accounts'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -67,6 +68,7 @@ function App() {
               <Route path="rentals" element={<Rentals />} />
               <Route path="incidents" element={<IncidentRoom />} />
               <Route path="integrations" element={<IntegrationsHub />} />
+              <Route path="accounts" element={<Accounts />} />
               <Route path="entity-map" element={<EntityMap />} />
               <Route path="settings" element={<Settings />} />
             </Route>

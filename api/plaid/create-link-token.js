@@ -1,0 +1,45 @@
+const { getPlaidClient, getWebhookUrl, sendJson, readJsonBody } = require("../_lib/plaid");
+const { CountryCode, Products } = require("plaid");
+
+module.exports = async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST");
+    return sendJson(res, 405, { error: "Method not allowed" });
+  }
+
+  try {
+    const client = getPlaidClient();
+    const body = await readJsonBody(req);
+
+    const products = body.products || [Products.Transactions];
+    const includeInvestments = products.includes(Products.Investments) ||
+      products.includes("investments");
+
+    const request = {
+      user: { client_user_id: "mission-control-user" },
+      client_name: "Mission Control",
+      products: products.map((p) => (typeof p === "string" ? p : p)),
+      country_codes: [CountryCode.Us],
+      language: "en",
+      webhook: getWebhookUrl(),
+    };
+
+    // For update mode (re-authentication)
+    if (body.access_token) {
+      request.access_token = body.access_token;
+      delete request.products;
+    }
+
+    const response = await client.linkTokenCreate(request);
+
+    return sendJson(res, 200, {
+      link_token: response.data.link_token,
+      expiration: response.data.expiration,
+    });
+  } catch (error) {
+    console.error("Plaid create-link-token error:", error.response?.data || error.message);
+    return sendJson(res, error.statusCode || 500, {
+      error: error.response?.data?.error_message || error.message,
+    });
+  }
+};
