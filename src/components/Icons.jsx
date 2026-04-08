@@ -56,6 +56,7 @@ export const NAV_ITEMS = [
   { id: "incidents", label: "Incident Room", icon: icons.activity },
   { id: "integrations", label: "Integrations Hub", icon: icons.apiSkills },
   { id: "rentals", label: "Rentals", icon: icons.rentals },
+  { id: "legal-docs", label: "Legal Docs", icon: icons.docs },
   { id: "entity-map", label: "Entity Map", icon: icons.entityMap },
 ];
 

@@ -74,7 +74,31 @@ module.exports = async function handler(req, res) {
       // No crypto connected yet
     }
 
-    const netWorth = banking.total + investments.total + cryptoTotal - credit.total_balance;
+    // Get property equity (owned portion)
+    let realEstateOwnedEquity = 0;
+    let realEstateTotalValue = 0;
+    let realEstateTotalMortgage = 0;
+    let propertyCount = 0;
+    try {
+      const properties = await supabaseRest("property_assets", {
+        query: "select=current_value,zestimate,purchase_price,mortgage_balance,ownership_pct",
+      });
+      if (properties) {
+        propertyCount = properties.length;
+        properties.forEach((p) => {
+          const val = p.current_value || p.zestimate || p.purchase_price || 0;
+          const mort = p.mortgage_balance || 0;
+          const pct = p.ownership_pct || 100;
+          realEstateTotalValue += val;
+          realEstateTotalMortgage += mort;
+          realEstateOwnedEquity += (val - mort) * pct / 100;
+        });
+      }
+    } catch {
+      // No properties yet
+    }
+
+    const netWorth = banking.total + investments.total + cryptoTotal + realEstateOwnedEquity - credit.total_balance;
 
     return sendJson(res, 200, {
       net_worth: Math.round(netWorth * 100) / 100,
@@ -82,6 +106,12 @@ module.exports = async function handler(req, res) {
       investments,
       credit,
       crypto: { total: cryptoTotal },
+      real_estate: {
+        total_value: Math.round(realEstateTotalValue * 100) / 100,
+        total_mortgage: Math.round(realEstateTotalMortgage * 100) / 100,
+        owned_equity: Math.round(realEstateOwnedEquity * 100) / 100,
+        property_count: propertyCount,
+      },
       linked_institutions: institutions.size,
       last_sync: accounts.reduce((latest, a) => {
         const synced = a.plaid_items?.last_synced_at;

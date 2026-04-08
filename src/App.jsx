@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import { MissionControlDataProvider } from './context/MissionControlDataContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
 
 const Home = lazy(() => import('./pages/Home'));
 const ExecutiveOverview = lazy(() => import('./pages/ExecutiveOverview'));
@@ -26,6 +28,7 @@ const IntegrationsHub = lazy(() => import('./pages/IntegrationsHub'));
 const Settings = lazy(() => import('./pages/Settings'));
 const EntityMap = lazy(() => import('./pages/EntityMap'));
 const Accounts = lazy(() => import('./pages/Accounts'));
+const LegalDocs = lazy(() => import('./pages/LegalDocs'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -43,40 +46,63 @@ function App() {
   const routerProps = useBrowserRouter ? { basename: basePath } : {};
 
   return (
-    <MissionControlDataProvider>
-      <Router {...routerProps}>
-        <Suspense fallback={<div style={{padding:40,color:"#9ca3af",textAlign:"center"}}>Loading...</div>}>
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="overview" element={<ExecutiveOverview />} />
-              <Route path="command" element={<CommandDeck />} />
-              <Route path="team" element={<Team />} />
-              <Route path="floor" element={<TheFloor />} />
-              <Route path="projects" element={<Projects />} />
-              <Route path="tasks" element={<Tasks />} />
-              <Route path="finance" element={<Finance />} />
-              <Route path="forge" element={<TheForge />} />
-              <Route path="skills" element={<SkillLab />} />
-              <Route path="api-skills" element={<ApiSkills />} />
-              <Route path="activity" element={<ActivityFeed />} />
-              <Route path="sessions" element={<Sessions />} />
-              <Route path="memory" element={<Memory />} />
-              <Route path="docs" element={<DocsHub />} />
-              <Route path="files" element={<WorkspaceFiles />} />
-              <Route path="system" element={<SystemMonitor />} />
-              <Route path="rentals" element={<Rentals />} />
-              <Route path="incidents" element={<IncidentRoom />} />
-              <Route path="integrations" element={<IntegrationsHub />} />
-              <Route path="accounts" element={<Accounts />} />
+    <AuthProvider>
+      <AuthGate>
+        <MissionControlDataProvider>
+          <Router {...routerProps}>
+            <Suspense fallback={<div style={{padding:40,color:"#9ca3af",textAlign:"center"}}>Loading...</div>}>
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="overview" element={<ExecutiveOverview />} />
+                  <Route path="command" element={<CommandDeck />} />
+                  <Route path="team" element={<Team />} />
+                  <Route path="floor" element={<TheFloor />} />
+                  <Route path="projects" element={<Projects />} />
+                  <Route path="tasks" element={<Tasks />} />
+                  <Route path="finance" element={<Finance />} />
+                  <Route path="forge" element={<TheForge />} />
+                  <Route path="skills" element={<SkillLab />} />
+                  <Route path="api-skills" element={<ApiSkills />} />
+                  <Route path="activity" element={<ActivityFeed />} />
+                  <Route path="sessions" element={<Sessions />} />
+                  <Route path="memory" element={<Memory />} />
+                  <Route path="docs" element={<DocsHub />} />
+                  <Route path="files" element={<WorkspaceFiles />} />
+                  <Route path="system" element={<SystemMonitor />} />
+                  <Route path="rentals" element={<Rentals />} />
+                  <Route path="incidents" element={<IncidentRoom />} />
+                  <Route path="integrations" element={<IntegrationsHub />} />
+                  <Route path="accounts" element={<Accounts />} />
+                  <Route path="legal-docs" element={<LegalDocs />} />
               <Route path="entity-map" element={<EntityMap />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </Router>
-    </MissionControlDataProvider>
+                  <Route path="settings" element={<Settings />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </Router>
+        </MissionControlDataProvider>
+      </AuthGate>
+    </AuthProvider>
   );
+}
+
+function AuthGate({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#030712", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#9ca3af", fontSize: 14 }}>Authenticating...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return children;
 }
 
 export default App;

@@ -2,11 +2,80 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 OUTPUT="$SCRIPT_DIR/live-data.json"
 PROJECTS_OUTPUT="$SCRIPT_DIR/projects.json"
-PUBLIC_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)/public"
+PUBLIC_DIR="$REPO_ROOT/public"
 PUBLIC_OUTPUT="$PUBLIC_DIR/live-data.json"
 PUBLIC_PROJECTS_OUTPUT="$PUBLIC_DIR/projects.json"
+ENV_FILE="$REPO_ROOT/.env"
+
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  # Load local webhook configuration for optional notifications.
+  . "$ENV_FILE"
+  set +a
+fi
+
+DISCORD_AUTO_UPDATE_WEBHOOK_URL="${DISCORD_AUTO_UPDATE_WEBHOOK_URL:-${DISCORD_WEBHOOK_URL:-}}"
+
+notify_discord_auto_update_completion() {
+  local webhook_url="${DISCORD_AUTO_UPDATE_WEBHOOK_URL:-}"
+  local output_size projects_size public_status payload_file
+
+  if [ -z "$webhook_url" ]; then
+    return 0
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "Discord auto-update notification skipped: curl not found"
+    return 0
+  fi
+
+  output_size="$(wc -c < "$OUTPUT" | tr -d ' ')"
+  projects_size="$(wc -c < "$PROJECTS_OUTPUT" | tr -d ' ')"
+  public_status="skipped"
+  if [ -d "$PUBLIC_DIR" ]; then
+    public_status="updated"
+  fi
+
+  payload_file="$(mktemp)"
+  python3 - "$payload_file" "$output_size" "$projects_size" "$public_status" <<'PYEOF'
+import json
+import sys
+from datetime import datetime, timezone
+
+payload_path, output_size, projects_size, public_status = sys.argv[1:]
+generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+payload = {
+    "content": "Mission Control auto-update completed.",
+    "embeds": [
+        {
+            "title": "Mission Control Data Refresh",
+            "color": 5763719,
+            "fields": [
+                {"name": "Generated", "value": generated_at, "inline": False},
+                {"name": "live-data.json", "value": f"{output_size} bytes", "inline": True},
+                {"name": "projects.json", "value": f"{projects_size} bytes", "inline": True},
+                {"name": "Public Sync", "value": public_status, "inline": True},
+            ],
+        }
+    ],
+}
+
+with open(payload_path, "w", encoding="utf-8") as handle:
+    json.dump(payload, handle)
+PYEOF
+
+  if curl -fsS -H "Content-Type: application/json" -X POST --data @"$payload_file" "$webhook_url" >/dev/null; then
+    echo "Discord auto-update notification sent"
+  else
+    echo "Discord auto-update notification failed"
+  fi
+
+  rm -f "$payload_file"
+}
 
 if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
   echo "CI detected — skipping live data generation"
@@ -803,3 +872,5 @@ if [ -d "$PUBLIC_DIR" ]; then
   echo "Copied to: $PUBLIC_OUTPUT"
   echo "Copied to: $PUBLIC_PROJECTS_OUTPUT"
 fi
+
+notify_discord_auto_update_completion

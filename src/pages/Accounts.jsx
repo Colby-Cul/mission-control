@@ -5,7 +5,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import PlaidLink from "../components/PlaidLink";
 import entityData from "../data/entity-data.json";
 
-const TABS = ["Overview", "Banking", "Investments", "Crypto"];
+const TABS = ["Overview", "Banking", "Investments", "Real Estate", "Crypto"];
 const CHART_COLORS = ["#10b981","#0ea5e9","#8b5cf6","#f59e0b","#ec4899","#6366f1","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
 const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
 const CATEGORY_COLORS = {
@@ -42,6 +42,9 @@ const Accounts = () => {
   const [accountTransactions, setAccountTransactions] = useState([]);
   const [holdings, setHoldings] = useState([]);
   const [cryptoHoldings, setCryptoHoldings] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [showAddProperty, setShowAddProperty] = useState(false);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -60,12 +63,14 @@ const Accounts = () => {
       setAccounts(accountsRes.accounts || []);
       setAllTransactions(txnRes.transactions || []);
 
-      const [holdingsRes, cryptoRes] = await Promise.all([
+      const [holdingsRes, cryptoRes, propsRes] = await Promise.all([
         fetch("/api/plaid/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
         fetch("/api/coinbase/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
+        fetch("/api/properties").then(r => r.json()).catch(() => ({ properties: [] })),
       ]);
       setHoldings(holdingsRes.holdings || []);
       setCryptoHoldings(cryptoRes.holdings || []);
+      setProperties(propsRes.properties || []);
     } catch (err) {
       console.error("Failed to fetch financial data:", err);
     } finally {
@@ -104,6 +109,7 @@ const Accounts = () => {
     return [
       { name: "Banking", value: Math.max(0, summary.banking?.total || 0), color: "#0ea5e9" },
       { name: "Investments", value: Math.max(0, summary.investments?.total || 0), color: "#8b5cf6" },
+      { name: "Real Estate Equity", value: Math.max(0, summary.real_estate?.owned_equity || 0), color: "#10b981" },
       { name: "Crypto", value: Math.max(0, summary.crypto?.total || 0), color: "#f59e0b" },
     ].filter(d => d.value > 0);
   }, [summary]);
@@ -155,7 +161,7 @@ const Accounts = () => {
   // Recent transactions (top 10)
   const recentTxns = useMemo(() => allTransactions.slice(0, 10), [allTransactions]);
 
-  const totalAssets = (summary?.banking?.total || 0) + (summary?.investments?.total || 0) + (summary?.crypto?.total || 0);
+  const totalAssets = (summary?.banking?.total || 0) + (summary?.investments?.total || 0) + (summary?.crypto?.total || 0) + (summary?.real_estate?.owned_equity || 0);
   const totalLiabilities = creditAccounts.reduce((s, a) => s + (a.balance_current || 0), 0)
     + loanAccounts.reduce((s, a) => s + (a.balance_current || 0), 0);
 
@@ -184,11 +190,11 @@ const Accounts = () => {
       {summary && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10 }}>
           <KPI label="Net Worth" value={fmtMoney(summary.net_worth)} sub="Assets - Liabilities" color={C.green} />
-          <KPI label="Total Assets" value={fmtMoney(totalAssets)} sub={`${bankAccounts.length + investmentAccounts.length} accounts`} color={C.cyan} />
+          <KPI label="Real Estate" value={fmtMoney(summary.real_estate?.owned_equity)} sub={`${summary.real_estate?.property_count || 0} properties (your equity)`} color={"#10b981"} />
           <KPI label="Banking" value={fmtMoney(summary.banking?.total)} sub={`${bankAccounts.length} accounts`} color={"#0ea5e9"} />
           <KPI label="Investments" value={fmtMoney(summary.investments?.total)} sub={`${investmentAccounts.length} accounts`} color={C.purple} />
-          <KPI label="Credit" value={fmtMoney(summary.credit?.total_balance)} sub={`${Math.round((summary.credit?.total_balance || 0) / Math.max(1, summary.credit?.total_limit || 1) * 100)}% utilized`} color={C.red} />
-          <KPI label="Institutions" value={summary.linked_institutions} sub="Connected" color={C.accent} />
+          <KPI label="Credit" value={fmtMoney(summary.credit?.total_balance)} sub={summary.credit?.total_limit ? `${Math.round((summary.credit?.total_balance || 0) / Math.max(1, summary.credit?.total_limit || 1) * 100)}% utilized` : "No cards linked"} color={C.red} />
+          <KPI label="Institutions" value={summary.linked_institutions || 0} sub={summary.linked_institutions ? "Connected" : "Link accounts below"} color={C.accent} />
         </div>
       )}
 
@@ -274,12 +280,70 @@ const Accounts = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div style={{ color: C.muted, textAlign: "center", padding: 30 }}>No transaction data</div>
+                    <div style={{ color: C.muted, textAlign: "center", padding: 30 }}>
+                      Link bank accounts to see spending breakdown
+                    </div>
                   )}
                 </Card>
               </div>
 
+              {/* Connect Accounts CTA (show when no bank accounts) */}
+              {accounts.length === 0 && (
+                <Card style={{ border: `1px solid ${C.accent}40`, background: C.accent + "08" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 4 }}>Connect Your Financial Accounts</div>
+                      <div style={{ fontSize: 13, color: C.muted }}>
+                        Link banks, brokerages, and mortgage servicers via Plaid for real-time balances, transactions, and investment holdings.
+                      </div>
+                    </div>
+                    <button onClick={() => setTab("Banking")} style={{
+                      background: C.accent, color: "#fff", border: "none", borderRadius: 8,
+                      padding: "10px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                    }}>
+                      Get Started
+                    </button>
+                  </div>
+                </Card>
+              )}
+
+              {/* Property Overview (always show if properties exist) */}
+              {properties.length > 0 && (
+                <Card>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>Real Estate Portfolio</div>
+                    <button onClick={() => setTab("Real Estate")} style={{
+                      background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer",
+                    }}>View Details →</button>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(properties.length, 3)}, 1fr)`, gap: 12 }}>
+                    {properties.map((p, i) => {
+                      const val = p.current_value || p.zestimate || p.purchase_price || 0;
+                      const mort = p.mortgage_balance || 0;
+                      const ownedEq = (val - mort) * (p.ownership_pct || 100) / 100;
+                      return (
+                        <div key={i} style={{
+                          background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`,
+                          padding: 14, borderLeft: "3px solid #10b981",
+                        }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>{p.address}</div>
+                          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>{p.city}, {p.state} · {p.entity_name} · {p.ownership_pct}% owned</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, fontSize: 12 }}>
+                            <div><span style={{ color: C.muted }}>Value: </span><span style={{ color: C.text, fontWeight: 600 }}>{fmtMoney(val)}</span></div>
+                            <div><span style={{ color: C.muted }}>Mortgage: </span><span style={{ color: mort > 0 ? C.red : C.muted }}>{mort > 0 ? fmtMoney(mort) : "TBD"}</span></div>
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: C.green, marginTop: 6 }}>
+                            Your Equity: {fmtMoney(ownedEq)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
+
               {/* Account Balances Chart + Recent Transactions */}
+              {(accountBalances.length > 0 || recentTxns.length > 0) && (
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {/* Account Balances */}
                 <Card>
@@ -296,7 +360,7 @@ const Accounts = () => {
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div style={{ color: C.muted, textAlign: "center", padding: 30 }}>No accounts</div>
+                    <div style={{ color: C.muted, textAlign: "center", padding: 30 }}>Link accounts to see balances</div>
                   )}
                 </Card>
 
@@ -341,8 +405,10 @@ const Accounts = () => {
                   )}
                 </Card>
               </div>
+              )}
 
               {/* All Accounts Grid */}
+              {accounts.length > 0 && (
               <Card>
                 <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 12 }}>All Accounts</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
@@ -385,6 +451,7 @@ const Accounts = () => {
                   })}
                 </div>
               </Card>
+              )}
             </>
           )}
 
@@ -414,7 +481,7 @@ const Accounts = () => {
                 <Card><div style={{ color: C.muted, textAlign: "center", padding: 20 }}>No bank accounts linked yet.</div></Card>
               ) : (
                 <Table
-                  columns={["Institution", "Account", "Type", "Balance", "Available", "Scope"]}
+                  columns={["Institution", "Account", "Type", "Balance", "Available", "Entity"]}
                   rows={bankAccounts.map(a => [
                     <span style={{ fontWeight: 600 }}>{a.plaid_items?.institution_name || "---"}</span>,
                     <span style={{ cursor: "pointer", color: C.accent }}
@@ -424,7 +491,7 @@ const Accounts = () => {
                     <Badge label={a.subtype || a.type} />,
                     <span style={{ fontWeight: 600, color: C.green }}>{fmtFullMoney(a.balance_current)}</span>,
                     fmtFullMoney(a.balance_available),
-                    <Badge label={a.account_scope} color={a.account_scope === "business" ? C.purple : C.cyan} />,
+                    <EntitySelect accountId={a.id} currentEntity={a.entity_id} currentScope={a.account_scope} onUpdate={fetchData} />,
                   ])}
                 />
               )}
@@ -434,7 +501,7 @@ const Accounts = () => {
                 <>
                   <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 8 }}>Credit Cards</div>
                   <Table
-                    columns={["Account", "Balance", "Available", "Utilization"]}
+                    columns={["Account", "Balance", "Available", "Utilization", "Entity"]}
                     rows={creditAccounts.map(a => {
                       const util = a.balance_limit ? Math.round(a.balance_current / a.balance_limit * 100) : 0;
                       return [
@@ -447,6 +514,7 @@ const Accounts = () => {
                           </div>
                           <span style={{ fontSize: 12, color: util > 50 ? C.red : C.muted }}>{util}%</span>
                         </div>,
+                        <EntitySelect accountId={a.id} currentEntity={a.entity_id} currentScope={a.account_scope} onUpdate={fetchData} />,
                       ];
                     })}
                   />
@@ -458,11 +526,12 @@ const Accounts = () => {
                 <>
                   <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginTop: 8 }}>Loans</div>
                   <Table
-                    columns={["Account", "Type", "Balance"]}
+                    columns={["Account", "Type", "Balance", "Entity"]}
                     rows={loanAccounts.map(a => [
                       <span style={{ fontWeight: 600 }}>{a.name} {a.mask ? `••${a.mask}` : ""}</span>,
                       <Badge label={a.subtype || "loan"} />,
                       <span style={{ fontWeight: 600, color: C.red }}>{fmtFullMoney(a.balance_current)}</span>,
+                      <EntitySelect accountId={a.id} currentEntity={a.entity_id} currentScope={a.account_scope} onUpdate={fetchData} />,
                     ])}
                   />
                 </>
@@ -563,6 +632,15 @@ const Accounts = () => {
             </>
           )}
 
+          {/* ═══════ REAL ESTATE TAB ═══════ */}
+          {tab === "Real Estate" && (
+            <RealEstateTab
+              properties={properties}
+              onRefresh={fetchData}
+              entityData={entityData}
+            />
+          )}
+
           {/* ═══════ CRYPTO TAB ═══════ */}
           {tab === "Crypto" && (
             <>
@@ -607,6 +685,296 @@ const Accounts = () => {
         </>
       )}
     </div>
+  );
+};
+
+// ═══════════════════════════════════════════════
+// Entity Assignment Dropdown Component
+// ═══════════════════════════════════════════════
+const EntitySelect = ({ accountId, currentEntity, currentScope, onUpdate }) => {
+  const handleChange = async (e) => {
+    const val = e.target.value;
+    const entity_id = val === "personal" ? null : val;
+    const account_scope = val === "personal" ? "personal" : "business";
+    try {
+      await fetch("/api/plaid/assign-entity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ account_id: accountId, entity_id, account_scope }),
+      });
+      onUpdate();
+    } catch (err) {
+      console.error("Entity assign error:", err);
+    }
+  };
+
+  const entities = entityData.entities || [];
+  const currentVal = currentEntity || (currentScope === "personal" ? "personal" : "");
+
+  return (
+    <select value={currentVal} onChange={handleChange}
+      style={{
+        background: C.surface, color: C.text, border: `1px solid ${C.border}`,
+        borderRadius: 5, padding: "3px 6px", fontSize: 11, cursor: "pointer",
+        maxWidth: 130,
+      }}>
+      <option value="personal">Personal</option>
+      {entities.map(e => <option key={e.id} value={e.id}>{e.shortName}</option>)}
+      {currentEntity && !entities.find(e => e.id === currentEntity) && (
+        <option value={currentEntity}>{currentEntity}</option>
+      )}
+    </select>
+  );
+};
+
+// ═══════════════════════════════════════════════
+// Real Estate Tab Component
+// ═══════════════════════════════════════════════
+const EMPTY_PROPERTY = {
+  address: "", city: "", state: "CA", zip: "", property_type: "residential",
+  entity_id: "", entity_name: "", ownership_pct: 100,
+  purchase_price: "", purchase_date: "", current_value: "", mortgage_balance: "",
+  mortgage_rate: "", mortgage_payment: "", is_rental: false, lodgify_id: "", monthly_expenses: "", notes: "",
+};
+
+const RealEstateTab = ({ properties, onRefresh, entityData }) => {
+  const [editing, setEditing] = useState(null); // property object or EMPTY
+  const [saving, setSaving] = useState(false);
+  const [fetchingZestimate, setFetchingZestimate] = useState(null);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const payload = { ...editing };
+      // Clean numeric fields
+      ["purchase_price", "current_value", "mortgage_balance", "mortgage_rate", "mortgage_payment", "ownership_pct", "monthly_expenses"]
+        .forEach(k => { if (payload[k] === "") payload[k] = null; else if (payload[k]) payload[k] = Number(payload[k]); });
+      if (payload.is_rental === "false") payload.is_rental = false;
+
+      await fetch("/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setEditing(null);
+      onRefresh();
+    } catch (err) { console.error("Save error:", err); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Delete this property?")) return;
+    await fetch("/api/properties", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    onRefresh();
+  };
+
+  const handleFetchZestimate = async (prop) => {
+    setFetchingZestimate(prop.id);
+    try {
+      const fullAddress = `${prop.address}, ${prop.city}, ${prop.state} ${prop.zip || ""}`.trim();
+      const res = await fetch("/api/properties/zestimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ property_id: prop.id, address: fullAddress }),
+      });
+      const data = await res.json();
+      if (data.zestimate) {
+        onRefresh();
+      } else {
+        alert(data.error || "Could not fetch Zestimate");
+      }
+    } catch (err) { alert("Zestimate fetch failed: " + err.message); }
+    finally { setFetchingZestimate(null); }
+  };
+
+  const totalValue = properties.reduce((s, p) => s + (p.current_value || p.zestimate || p.purchase_price || 0), 0);
+  const totalMortgage = properties.reduce((s, p) => s + (p.mortgage_balance || 0), 0);
+  const totalOwnedEquity = properties.reduce((s, p) => {
+    const val = p.current_value || p.zestimate || p.purchase_price || 0;
+    return s + (val - (p.mortgage_balance || 0)) * (p.ownership_pct || 100) / 100;
+  }, 0);
+
+  const InputField = ({ label, field, type = "text", placeholder = "" }) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <label style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>{label}</label>
+      <input type={type} value={editing[field] || ""} placeholder={placeholder}
+        onChange={e => setEditing({ ...editing, [field]: e.target.value })}
+        style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13 }}
+      />
+    </div>
+  );
+
+  return (
+    <>
+      {/* Summary KPIs */}
+      {properties.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+          <KPI label="Total Value" value={fmtMoney(totalValue)} sub={`${properties.length} properties`} color={"#10b981"} />
+          <KPI label="Total Mortgage" value={fmtMoney(totalMortgage)} sub="Outstanding balance" color={C.red} />
+          <KPI label="Total Equity" value={fmtMoney(totalValue - totalMortgage)} sub="Value - Mortgage" color={C.cyan} />
+          <KPI label="Your Equity" value={fmtMoney(totalOwnedEquity)} sub="Ownership-adjusted" color={C.green} />
+        </div>
+      )}
+
+      {/* Add Property button */}
+      <Card style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ color: C.muted, fontSize: 13 }}>Manage property assets with Zillow Zestimate valuations</span>
+        <button onClick={() => setEditing({ ...EMPTY_PROPERTY })}
+          style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          Add Property
+        </button>
+      </Card>
+
+      {/* Property Cards */}
+      {properties.length === 0 && !editing && (
+        <Card><div style={{ color: C.muted, textAlign: "center", padding: 20 }}>No properties added yet. Click "Add Property" to track your real estate assets.</div></Card>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(380px, 1fr))", gap: 12 }}>
+        {properties.map((p) => {
+          const marketVal = p.current_value || p.zestimate || p.purchase_price || 0;
+          const equity = marketVal - (p.mortgage_balance || 0);
+          const ownedEquity = equity * (p.ownership_pct || 100) / 100;
+          const appreciation = p.purchase_price ? ((marketVal - p.purchase_price) / p.purchase_price * 100) : null;
+
+          return (
+            <Card key={p.id} style={{ padding: 0, overflow: "hidden" }}>
+              {/* Header */}
+              <div style={{ background: "linear-gradient(135deg, #065f46 0%, #047857 100%)", padding: "14px 16px" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{p.address}</div>
+                <div style={{ fontSize: 12, color: "#a7f3d0" }}>{p.city}, {p.state} {p.zip}</div>
+              </div>
+
+              <div style={{ padding: 16 }}>
+                {/* Value and equity */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: C.muted }}>Market Value</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: C.text }}>{fmtFullMoney(marketVal)}</div>
+                    {p.valuation_source === "zillow_rapidapi" && (
+                      <div style={{ fontSize: 10, color: C.muted }}>
+                        Zestimate · {p.zestimate_updated_at ? new Date(p.zestimate_updated_at).toLocaleDateString() : ""}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: C.muted }}>Your Equity ({p.ownership_pct}%)</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: C.green }}>{fmtFullMoney(ownedEquity)}</div>
+                    {appreciation !== null && (
+                      <div style={{ fontSize: 10, color: appreciation >= 0 ? C.green : C.red }}>
+                        {appreciation >= 0 ? "+" : ""}{appreciation.toFixed(1)}% since purchase
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, fontSize: 12, marginBottom: 12 }}>
+                  <div><span style={{ color: C.muted }}>Purchase: </span><span style={{ color: C.text }}>{p.purchase_price ? fmtFullMoney(p.purchase_price) : "---"}</span></div>
+                  <div><span style={{ color: C.muted }}>Mortgage: </span><span style={{ color: C.red }}>{p.mortgage_balance ? fmtFullMoney(p.mortgage_balance) : "$0"}</span></div>
+                  <div><span style={{ color: C.muted }}>Equity: </span><span style={{ color: C.green }}>{fmtFullMoney(equity)}</span></div>
+                </div>
+
+                {/* Entity and tags */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {p.entity_name && <Badge label={p.entity_name} color={C.purple} />}
+                    {p.is_rental && <Badge label="Rental" color={C.amber} />}
+                    <Badge label={`${p.ownership_pct}% owned`} color={C.cyan} />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: "flex", gap: 8, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                  <button onClick={() => handleFetchZestimate(p)} disabled={fetchingZestimate === p.id}
+                    style={{ flex: 1, background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 0", fontSize: 12, cursor: "pointer", opacity: fetchingZestimate === p.id ? 0.6 : 1 }}>
+                    {fetchingZestimate === p.id ? "Fetching..." : "Update Zestimate"}
+                  </button>
+                  {p.zillow_zpid && (
+                    <a href={`https://www.zillow.com/homedetails/${p.zillow_zpid}_zpid/`} target="_blank" rel="noopener noreferrer"
+                      style={{ background: C.surface, color: "#0074e4", border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 12px", fontSize: 12, textAlign: "center", textDecoration: "none" }}>
+                      Zillow
+                    </a>
+                  )}
+                  <button onClick={() => setEditing({ ...p })}
+                    style={{ flex: 1, background: C.surface, color: C.accent, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 0", fontSize: 12, cursor: "pointer" }}>
+                    Edit
+                  </button>
+                  <button onClick={() => handleDelete(p.id)}
+                    style={{ background: C.surface, color: C.red, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Add/Edit Form Modal */}
+      {editing && (
+        <Card style={{ border: `1px solid ${C.accent}` }}>
+          <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 16 }}>
+            {editing.id ? "Edit Property" : "Add Property"}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <InputField label="Street Address" field="address" placeholder="47 Shasta Trl" />
+            <InputField label="City" field="city" placeholder="Graeagle" />
+            <InputField label="State" field="state" placeholder="CA" />
+            <InputField label="ZIP" field="zip" placeholder="96103" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <InputField label="Purchase Price" field="purchase_price" type="number" placeholder="500000" />
+            <InputField label="Current Value / Zestimate" field="current_value" type="number" placeholder="650000" />
+            <InputField label="Mortgage Balance" field="mortgage_balance" type="number" placeholder="350000" />
+            <InputField label="Ownership %" field="ownership_pct" type="number" placeholder="50" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <InputField label="Mortgage Rate %" field="mortgage_rate" type="number" placeholder="6.5" />
+            <InputField label="Monthly Payment" field="mortgage_payment" type="number" placeholder="2200" />
+            <InputField label="Purchase Date" field="purchase_date" type="date" />
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>Entity</label>
+              <select value={editing.entity_id || ""} onChange={e => {
+                const ent = entityData.entities.find(x => x.id === e.target.value);
+                setEditing({ ...editing, entity_id: e.target.value, entity_name: ent?.shortName || "" });
+              }}
+                style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13 }}>
+                <option value="">Personal</option>
+                {entityData.entities.map(e => <option key={e.id} value={e.id}>{e.shortName}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={editing.is_rental || false} onChange={e => setEditing({ ...editing, is_rental: e.target.checked })} />
+              <span style={{ fontSize: 13, color: C.text }}>Vacation Rental</span>
+            </div>
+            <InputField label="Monthly Expenses" field="monthly_expenses" type="number" placeholder="3830" />
+            <InputField label="Notes" field="notes" placeholder="Optional notes" />
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={handleSave} disabled={saving || !editing.address || !editing.city}
+              style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
+              {saving ? "Saving..." : editing.id ? "Update Property" : "Add Property"}
+            </button>
+            <button onClick={() => setEditing(null)}
+              style={{ background: "none", color: C.muted, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 24px", fontSize: 14, cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        </Card>
+      )}
+    </>
   );
 };
 

@@ -6,11 +6,13 @@ import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
 import ErrorBoundary from './ErrorBoundary';
 import { useMissionControlData } from '../context/MissionControlDataContext';
+import { useAuth } from '../context/AuthContext';
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { agents, activities, projects, acpSessions, snapshot } = useMissionControlData();
+  const { user, signOut } = useAuth();
   const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
   const showFabs = ["home", "", "tasks", "projects", "command"].includes(currentPage);
 
@@ -308,20 +310,29 @@ const Layout = () => {
             )}
           </div>
           
-          {/* User avatar */}
-          <div style={{ 
-            width: 32, 
-            height: 32, 
-            borderRadius: "50%", 
-            background: C.accent, 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            fontSize: 12, 
-            fontWeight: 700, 
-            border: `2px solid ${C.accentLight}` 
-          }}>
-            CC
+          {/* User avatar + sign out */}
+          <div style={{ position: "relative" }}>
+            <div
+              onClick={() => { if (confirm("Sign out?")) signOut(); }}
+              title={user?.email || "Sign out"}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: user?.user_metadata?.avatar_url ? "none" : C.accent,
+                backgroundImage: user?.user_metadata?.avatar_url ? `url(${user.user_metadata.avatar_url})` : "none",
+                backgroundSize: "cover",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 12,
+                fontWeight: 700,
+                border: `2px solid ${C.accentLight}`,
+                cursor: "pointer",
+                color: "#fff",
+              }}>
+              {!user?.user_metadata?.avatar_url && (user?.email?.substring(0,2).toUpperCase() || "CC")}
+            </div>
           </div>
         </div>
 
