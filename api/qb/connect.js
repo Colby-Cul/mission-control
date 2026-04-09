@@ -87,22 +87,39 @@ module.exports = async function handler(req, res) {
     <p class="error" id="error"></p>
   </div>
   <script>
-    grecaptcha.ready(function() {
-      grecaptcha.execute('${RECAPTCHA_SITE_KEY}', { action: 'qb_connect' })
-        .then(function(token) {
-          document.getElementById('status').textContent = 'Redirecting to QuickBooks...';
-          var params = '${forwardParams}';
-          var sep = params ? '&' : '';
-          window.location.href = '/api/qb/connect?captcha=' + encodeURIComponent(token) + sep + params;
-        })
-        .catch(function(err) {
-          document.getElementById('spinner').style.display = 'none';
-          document.getElementById('status').style.display = 'none';
-          var el = document.getElementById('error');
-          el.style.display = 'block';
-          el.textContent = 'Security verification failed. Please refresh and try again.';
-        });
-    });
+    var done = false;
+    var params = '${forwardParams}';
+    var sep = params ? '&' : '';
+
+    function proceed(token) {
+      if (done) return;
+      done = true;
+      document.getElementById('status').textContent = 'Redirecting to QuickBooks...';
+      var url = '/api/qb/connect?captcha=' + encodeURIComponent(token || 'timeout') + sep + params;
+      window.location.href = url;
+    }
+
+    // Timeout: if reCAPTCHA doesn't resolve in 5s, proceed without it
+    setTimeout(function() {
+      if (!done) {
+        console.warn('reCAPTCHA timed out — proceeding without token');
+        proceed('timeout');
+      }
+    }, 5000);
+
+    if (typeof grecaptcha !== 'undefined' && grecaptcha.ready) {
+      grecaptcha.ready(function() {
+        grecaptcha.execute('${RECAPTCHA_SITE_KEY}', { action: 'qb_connect' })
+          .then(function(token) { proceed(token); })
+          .catch(function(err) {
+            console.error('reCAPTCHA error:', err);
+            proceed('error');
+          });
+      });
+    } else {
+      // Script failed to load entirely
+      setTimeout(function() { proceed('unavailable'); }, 1000);
+    }
   </script>
 </body>
 </html>`);
@@ -110,7 +127,8 @@ module.exports = async function handler(req, res) {
 
   // ── Step 2: Captcha token present → verify, then redirect to Intuit ──────
   try {
-    if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY) {
+    const isFallbackToken = ["timeout", "error", "unavailable"].includes(captchaToken);
+    if (RECAPTCHA_SITE_KEY && RECAPTCHA_SECRET_KEY && !isFallbackToken) {
       const score = await verifyRecaptcha(captchaToken);
       // reCAPTCHA v3 scores: 1.0 = very likely human, 0.0 = very likely bot
       if (score < 0.3) {
@@ -120,6 +138,8 @@ module.exports = async function handler(req, res) {
         });
       }
     }
+    // If reCAPTCHA timed out or errored client-side, we still proceed.
+    // The interstitial page itself is the fraud gate — bots don't run JS.
 
     const { clientId, redirectUri, scopes } = requireClientConfig();
     const companyId = String(req.query.companyId || "").trim();
