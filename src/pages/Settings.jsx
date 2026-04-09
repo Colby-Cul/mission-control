@@ -43,7 +43,7 @@ const Settings = () => {
   const triggerSync = async () => {
     setSyncResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/sync`, { method: "POST" });
+      const resp = await fetch(`/api/sync`, { method: "POST" });
       const data = await resp.json();
       setSyncResult(data.ok ? { ok: true, msg: "Sync complete" } : { ok: false, msg: data.error });
     } catch (e) {
@@ -140,7 +140,7 @@ const Settings = () => {
           </button>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Local API Server</div>
-            <div style={{ fontSize: 11, color: C.muted }}>{getApiUrl()}</div>
+            <div style={{ fontSize: 11, color: C.muted }}>{"/api (Vercel)"}</div>
           </div>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Vercel</div>

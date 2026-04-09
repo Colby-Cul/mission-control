@@ -21,7 +21,7 @@ const CommandDeck = () => {
   const quickAction = async (name, desc) => {
     setActionResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      const resp = await fetch(`/api/tasks`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name, description: desc, agent: "main", status: "pending", priority: "high"}) });
       const data = await resp.json();
       setActionResult({ ok: data.ok, msg: data.ok ? `${name} dispatched` : data.error });
@@ -31,14 +31,14 @@ const CommandDeck = () => {
 
   const unblock = async (task) => {
     try {
-      await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`/api/tasks`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name: `Unblock: ${task.task?.slice(0,60)}`, agent: "main", status: "pending", priority: "critical", description: `Escalated from blocked queue. Original: ${task.task}`}) });
       refresh();
     } catch {}
   };
 
   const triggerSync = async () => {
-    try { await fetch(`${getApiUrl()}/sync`, { method: "POST" }); refresh(); } catch {}
+    try { await fetch(`/api/sync`, { method: "POST" }); refresh(); } catch {}
     setActionResult({ ok: true, msg: "Sync triggered" });
     setTimeout(() => setActionResult(null), 3000);
   };

@@ -43,7 +43,7 @@ const DocsHub = () => {
   const loadDoc = async (doc) => {
     setSelected(doc); setContent(""); setEditing(false); setSaveResult(null); setLoading(true);
     try {
-      const resp = await fetch(`${getApiUrl()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: doc.path }) });
+      const resp = await fetch(`/api/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: doc.path }) });
       const data = await resp.json();
       if (data.ok) { setContent(data.content); setEditContent(data.content); }
       else setContent(`Error: ${data.error}`);
@@ -54,7 +54,7 @@ const DocsHub = () => {
   const saveDoc = async () => {
     setSaveResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/memory/write`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: selected.path, content: editContent }) });
+      const resp = await fetch(`/api/memory/write`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: selected.path, content: editContent }) });
       const data = await resp.json();
       setSaveResult(data.ok ? { ok: true, msg: "Saved successfully" } : { ok: false, msg: data.error });
       if (data.ok) { setContent(editContent); setEditing(false); }

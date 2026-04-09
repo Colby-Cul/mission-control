@@ -68,7 +68,7 @@ const Team = () => {
   const handleAction = async (agentId, action) => {
     setActionResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/task`, {
+      const resp = await fetch(`/api/tasks`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: `${action} agent ${agentId}`, agent: "main", status: "pending", description: `Agent action: ${action} on ${agentId}` }),
       });

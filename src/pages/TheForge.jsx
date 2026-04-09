@@ -35,7 +35,7 @@ const TheForge = () => {
   const handleAdd = async () => {
     if (!newIdea.trim()) return;
     try {
-      await fetch(`${getApiUrl()}/project`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`/api/projects`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name: newIdea, agents: ["main"], status: "active", description: `Source: ${newSource}. Added from The Forge pipeline.`})});
       setAddResult({ ok: true, msg: `"${newIdea}" added to pipeline` });
       setNewIdea(""); setTimeout(() => { setAddResult(null); refresh(); }, 2000);

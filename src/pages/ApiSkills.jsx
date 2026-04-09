@@ -117,7 +117,7 @@ const ApiSkills = () => {
     setResults((current) => ({ ...current, [provider]: null }));
 
     try {
-      const response = await fetch(`${getApiUrl()}/api-skills/${encodeURIComponent(provider)}/update`, {
+      const response = await fetch(`/api/api-skills/${encodeURIComponent(provider)}/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key }),

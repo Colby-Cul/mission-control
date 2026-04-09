@@ -34,7 +34,7 @@ const Memory = () => {
     setSaveResult(null);
     setLoading(true);
     try {
-      const resp = await fetch(`${getApiUrl()}/memory/read`, {
+      const resp = await fetch(`/api/memory/read`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: resolvePath(file.path) }),
       });
@@ -50,7 +50,7 @@ const Memory = () => {
   const saveFile = async () => {
     setSaveResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/memory/write`, {
+      const resp = await fetch(`/api/memory/write`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ path: resolvePath(selectedFile.path), content: editContent }),
       });

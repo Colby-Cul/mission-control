@@ -146,7 +146,7 @@ const Projects = () => {
     setProjectSubmitting(true);
     setProjectResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/project`, {
+      const resp = await fetch(`/api/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

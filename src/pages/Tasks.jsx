@@ -175,7 +175,7 @@ const Tasks = () => {
   const handlePriorityChange = (taskId, priority) => {
     setLocalPriorities(p => ({ ...p, [taskId]: priority }));
     // Persist via API (fire and forget)
-    fetch(`${getApiUrl()}/task/update-status`, {
+    fetch(`/api/tasks/update-status`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId: taskId, priority }),
     }).catch(() => {});
@@ -191,7 +191,7 @@ const Tasks = () => {
     const originalLane = dragState.lane;
     setDragState(null);
     try {
-      const res = await fetch(`${getApiUrl()}/task/update-status`, {
+      const res = await fetch(`/api/tasks/update-status`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: taskId, status: lane, lane }),
       });

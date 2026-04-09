@@ -255,7 +255,7 @@ const SystemMonitor = () => {
       [jobName]: !current[jobName]
     }));
     try {
-      const resp = await fetch(`${getApiUrl()}/cron/toggle`, {
+      const resp = await fetch(`/api/cron/toggle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobName, enabled: !previous })
@@ -280,7 +280,7 @@ const SystemMonitor = () => {
     }));
 
     try {
-      const response = await fetch(`${getApiUrl()}/cron/trigger`, {
+      const response = await fetch(`/api/cron/trigger`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobName })
@@ -408,7 +408,7 @@ const SystemMonitor = () => {
                         {trigger?.state === "loading" ? "Triggering..." : "Manual Trigger"}
                       </button>
                       <div style={{ fontSize: 12, color: triggerColor, textAlign: "right", minHeight: 16 }}>
-                        {trigger?.message || `POST ${getApiUrl()}/cron/trigger`}
+                        {trigger?.message || `POST /api/cron/trigger`}
                       </div>
                     </div>
                   </div>

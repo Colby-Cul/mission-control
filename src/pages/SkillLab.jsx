@@ -18,7 +18,7 @@ const SkillLab = () => {
     setRefreshing(true);
     setRefreshResult(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/sync`, { method: "POST" });
+      const resp = await fetch(`/api/sync`, { method: "POST" });
       const data = await resp.json();
       setRefreshResult(data.ok ? { ok: true, msg: "Synced — rescanning skills directory" } : { ok: false, msg: data.error });
       setTimeout(() => refresh(), 1500);
@@ -42,7 +42,7 @@ const SkillLab = () => {
     setUploadResult(null);
     try {
       const buffer = await file.arrayBuffer();
-      const resp = await fetch(`${getApiUrl()}/upload-skill`, {
+      const resp = await fetch(`/api/skills/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/octet-stream" },
         body: buffer,

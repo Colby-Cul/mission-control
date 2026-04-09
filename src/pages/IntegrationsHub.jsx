@@ -271,7 +271,7 @@ const IntegrationsHub = () => {
     if (!(updateKeys[provider] || "").trim()) return;
     setUpdateResults(prev => ({...prev, [provider]: null}));
     try {
-      const resp = await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      const resp = await fetch(`/api/tasks`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name:`Update API key: ${provider}`,agent:"main",status:"pending",description:`Update ${provider} API key via Settings`})});
       const data = await resp.json();
       setUpdateResults(prev => ({...prev, [provider]: data.ok ? { ok: true, msg: "Key update dispatched to agent" } : { ok: false, msg: data.error }}));

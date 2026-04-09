@@ -26,7 +26,7 @@ const WorkspaceFiles = () => {
   const openFile = async (dirPath, fileName) => {
     setLoading(true); setFileContent(null);
     try {
-      const resp = await fetch(`${getApiUrl()}/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: dirPath + fileName }) });
+      const resp = await fetch(`/api/memory/read`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ path: dirPath + fileName }) });
       const data = await resp.json();
       setFileContent(data.ok ? { name: fileName, content: data.content, path: dirPath + fileName } : { name: fileName, content: `Error: ${data.error}`, path: dirPath + fileName });
     } catch { setFileContent({ name: fileName, content: "API unreachable", path: dirPath + fileName }); }

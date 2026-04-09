@@ -57,7 +57,7 @@ const IncidentRoom = () => {
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
     try {
-      await fetch(`${getApiUrl()}/task`, { method: "POST", headers: {"Content-Type":"application/json"},
+      await fetch(`/api/tasks`, { method: "POST", headers: {"Content-Type":"application/json"},
         body: JSON.stringify({name:`INCIDENT: ${newTitle}`,agent:"main",status:"blocked",priority:"critical",description:`Severity: ${newSeverity}`})});
       setNewTitle(""); setShowCreate(false);
       setCreateResult({ ok: true, msg: "Incident created" }); setTimeout(() => setCreateResult(null), 4000);
