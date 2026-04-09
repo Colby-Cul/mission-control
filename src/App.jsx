@@ -29,6 +29,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const EntityMap = lazy(() => import('./pages/EntityMap'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const LegalDocs = lazy(() => import('./pages/LegalDocs'));
+const PhotoManager = lazy(() => import('./pages/PhotoManager'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -71,6 +72,7 @@ function App() {
                   <Route path="files" element={<WorkspaceFiles />} />
                   <Route path="system" element={<SystemMonitor />} />
                   <Route path="rentals" element={<Rentals />} />
+                  <Route path="photo-manager" element={<PhotoManager />} />
                   <Route path="incidents" element={<IncidentRoom />} />
                   <Route path="integrations" element={<IntegrationsHub />} />
                   <Route path="accounts" element={<Accounts />} />
