@@ -1,6 +1,6 @@
 const {
-  deleteConnectionFromKeychain,
-  loadConnectionFromKeychain,
+  deleteConnection,
+  loadConnection,
   readJsonBody,
   revokeToken,
   sendJson,
@@ -17,12 +17,13 @@ module.exports = async function handler(req, res) {
     const companyId = String(body.companyId || "").trim();
     const realmId = String(body.realmId || "").trim();
     const connectionKey = companyId || realmId;
-    const storedConnection = loadConnectionFromKeychain(connectionKey);
+
+    const storedConnection = await loadConnection(connectionKey);
     const token =
       String(body.refreshToken || "").trim() ||
       String(body.accessToken || "").trim() ||
-      storedConnection?.refreshToken ||
-      storedConnection?.accessToken ||
+      storedConnection?.refresh_token ||
+      storedConnection?.access_token ||
       "";
 
     if (!token) {
@@ -32,17 +33,17 @@ module.exports = async function handler(req, res) {
     }
 
     const revocation = await revokeToken(token);
-    const keychainDelete = deleteConnectionFromKeychain(connectionKey);
+    const deletion = await deleteConnection(connectionKey);
 
     return sendJson(res, 200, {
       ok: true,
       revocation,
-      deletedStoredConnection: keychainDelete,
+      deletedStoredConnection: deletion,
       companyId: companyId || null,
       realmId: realmId || null,
     });
   } catch (error) {
-    console.error("QuickBooks token revocation failed", {
+    console.error("QuickBooks disconnect failed", {
       intuitTid: error.intuitTid || null,
       statusCode: error.statusCode || 500,
       message: error.message,

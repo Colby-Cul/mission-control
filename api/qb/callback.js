@@ -5,7 +5,7 @@ const {
   parseState,
   redirect,
   sendJson,
-  storeConnectionInKeychain,
+  storeConnection,
 } = require("../_lib/quickbooks");
 
 module.exports = async function handler(req, res) {
@@ -46,18 +46,22 @@ module.exports = async function handler(req, res) {
   try {
     const tokenSet = await exchangeCodeForTokens(code);
     const companyKey = state.companyId || realmId || "default";
+    const now = new Date();
+
     const connectionRecord = {
-      companyId: state.companyId || null,
-      realmId: realmId || null,
-      tokenType: tokenSet.token_type,
-      scope: tokenSet.scope,
-      accessToken: tokenSet.access_token,
-      refreshToken: tokenSet.refresh_token,
-      expiresIn: tokenSet.expires_in,
-      refreshTokenExpiresIn: tokenSet.x_refresh_token_expires_in,
-      connectedAt: new Date().toISOString(),
+      realm_id: realmId || null,
+      access_token: tokenSet.access_token,
+      refresh_token: tokenSet.refresh_token,
+      token_type: tokenSet.token_type || "bearer",
+      scope: tokenSet.scope || null,
+      expires_at: new Date(now.getTime() + tokenSet.expires_in * 1000).toISOString(),
+      refresh_token_expires_at: tokenSet.x_refresh_token_expires_in
+        ? new Date(now.getTime() + tokenSet.x_refresh_token_expires_in * 1000).toISOString()
+        : null,
+      connected_at: now.toISOString(),
     };
-    const storage = storeConnectionInKeychain(companyKey, connectionRecord);
+
+    const storage = await storeConnection(companyKey, connectionRecord);
 
     clearCookie(res, "qb_post_auth_return", "/");
 
@@ -74,12 +78,10 @@ module.exports = async function handler(req, res) {
 
     return sendJson(res, 200, {
       ok: true,
-      message:
-        "QuickBooks authorization code exchanged successfully. Runtime token persistence is only available via macOS Keychain in local execution.",
+      message: "QuickBooks connected. Token storage may be degraded — check Supabase config.",
       realmId: realmId || null,
       companyId: state.companyId || null,
       storage,
-      tokens: connectionRecord,
     });
   } catch (exchangeError) {
     console.error("QuickBooks token exchange failed", {
