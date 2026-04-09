@@ -4,6 +4,7 @@ import { C } from "../data/constants";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import PlaidLink from "../components/PlaidLink";
 import entityData from "../data/entity-data.json";
+import { fetchWithMockFallback } from "../utils/mockApi";
 
 const TABS = ["Overview", "Banking", "Investments", "Real Estate", "Crypto"];
 const CHART_COLORS = ["#10b981","#0ea5e9","#8b5cf6","#f59e0b","#ec4899","#6366f1","#14b8a6","#ef4444","#D4AF37","#1E3A5F"];
@@ -55,18 +56,18 @@ const Accounts = () => {
     setLoading(true);
     try {
       const [summaryRes, accountsRes, txnRes] = await Promise.all([
-        fetch("/api/plaid/summary").then(r => r.json()),
-        fetch("/api/plaid/accounts").then(r => r.json()),
-        fetch("/api/plaid/transactions?limit=200").then(r => r.json()),
+        fetchWithMockFallback("/api/plaid/summary").then(r => r.json()),
+        fetchWithMockFallback("/api/plaid/accounts").then(r => r.json()),
+        fetchWithMockFallback("/api/plaid/transactions?limit=200").then(r => r.json()),
       ]);
       setSummary(summaryRes);
       setAccounts(accountsRes.accounts || []);
       setAllTransactions(txnRes.transactions || []);
 
       const [holdingsRes, cryptoRes, propsRes] = await Promise.all([
-        fetch("/api/plaid/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
-        fetch("/api/coinbase/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
-        fetch("/api/properties").then(r => r.json()).catch(() => ({ properties: [] })),
+        fetchWithMockFallback("/api/plaid/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
+        fetchWithMockFallback("/api/coinbase/holdings").then(r => r.json()).catch(() => ({ holdings: [] })),
+        fetchWithMockFallback("/api/properties").then(r => r.json()).catch(() => ({ properties: [] })),
       ]);
       setHoldings(holdingsRes.holdings || []);
       setCryptoHoldings(cryptoRes.holdings || []);
@@ -82,7 +83,7 @@ const Accounts = () => {
 
   const fetchAccountTransactions = useCallback(async (accountId) => {
     try {
-      const res = await fetch(`/api/plaid/transactions?account_id=${accountId}&limit=50`).then(r => r.json());
+      const res = await fetchWithMockFallback(`/api/plaid/transactions?account_id=${accountId}&limit=50`).then(r => r.json());
       setAccountTransactions(res.transactions || []);
     } catch (err) {
       console.error("Failed to fetch transactions:", err);

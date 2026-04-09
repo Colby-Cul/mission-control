@@ -4,6 +4,7 @@ import { C } from "../data/constants";
 import { buildAgentRoster } from "../data/agentRoster";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { fmtCost } from "../utils/format";
+import { fetchWithMockFallback } from "../utils/mockApi";
 import financeConfig from "../data/finance-config.json";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
 
@@ -55,7 +56,7 @@ const Finance = () => {
   // Financial accounts summary
   const [finSummary, setFinSummary] = useState(null);
   useEffect(() => {
-    fetch("/api/plaid/summary")
+    fetchWithMockFallback("/api/plaid/summary")
       .then(r => r.json())
       .then(data => { if (data && !data.error) setFinSummary(data); })
       .catch(() => {});
