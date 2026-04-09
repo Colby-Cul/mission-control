@@ -1,31 +1,35 @@
 import { useState } from "react";
-import { Badge, Card, KPI } from "../components/shared";
+import { Card, KPI } from "../components/shared";
 import { C, AGENTS } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar, PieChart, Pie, Cell, Legend } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { statusColor } from "./liveViewUtils";
 import { fmtCost, fmtTokens } from "../utils/format";
+import AgentAvatar from "../components/shared/AgentAvatar";
 
 const DEPARTMENTS = [
-  { id: "all", name: "All Departments" },
-  { id: "ops", name: "Operations", agents: ["executive-assistant"] },
-  { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"] },
-  { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"] },
-  { id: "mkt", name: "Marketing", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"] },
+  { id: "all", name: "All", icon: "grid" },
+  { id: "exec", name: "Executive", agents: ["main", "executive-assistant", "ops-runner"], color: "#8b5cf6" },
+  { id: "eng", name: "Engineering", agents: ["coding-agent", "validation", "designer"], color: "#10b981" },
+  { id: "fin", name: "Finance", agents: ["cfo", "bookkeeper", "fin-researcher", "tax-advisor", "crypto-analyst", "stock-analyst"], color: "#D4AF37" },
+  { id: "mkt", name: "Marketing", agents: ["maven", "quill", "echo", "spark", "beacon", "lens", "pulse", "sentinel", "herald", "scribe"], color: "#e11d48" },
 ];
 
 function getAgentActivity(agent, allSessions) {
   const agentSessions = allSessions.filter(s => s.agent === agent.id);
   const active = agentSessions.find(s => s.status !== "done" && s.status !== "completed");
-  if (active) return { type: "active", label: (active.task || "Active task").slice(0, 60), color: C.amber };
+  if (active) {
+    const label = (active.task || "Active task").slice(0, 55);
+    return { type: "active", label, color: C.amber };
+  }
   if (agentSessions.length > 0) {
     const latest = agentSessions[0];
-    const task = (latest.task || "").slice(0, 60);
+    const task = (latest.task || "").slice(0, 55);
     const isLearning = /learning|study|research|self-improv|doctorate/i.test(task);
     if (isLearning) return { type: "learning", label: task, color: C.purple };
     return { type: "done", label: task, color: C.green };
   }
-  return { type: "learning", label: "Self-improving · Doctorate research", color: C.purple };
+  return { type: "idle", label: "Awaiting dispatch", color: "#64748b" };
 }
 
 function knowledgeBadgeColor(levelName) {
@@ -35,16 +39,23 @@ function knowledgeBadgeColor(levelName) {
   if (l.includes("master") || l.includes("bachelor")) return "#8b5cf6";
   if (l.includes("high") || l.includes("associate")) return "#10b981";
   if (l.includes("elementary") || l.includes("middle")) return "#0ea5e9";
-  return "#6b7280"; // grey for Pre-School / Kindergarten
+  if (l.includes("kindergarten")) return "#6366f1";
+  return "#6b7280";
 }
 
-const HUMAN_RATE = 75; // $/hr equivalent
+function knowledgeBadgeLabel(name) {
+  if (!name) return "Unranked";
+  if (name === "PhD Candidate") return "PhD";
+  return name;
+}
+
+const HUMAN_RATE = 75;
 const CHART_COLORS = [
   "#6366f1","#10b981","#f59e0b","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#ef4444",
   "#D4AF37","#2DD4BF","#3b82f6","#F59E0B","#a855f7","#22d3ee","#e11d48","#7c3aed",
   "#0891b2","#ea580c","#059669","#4f46e5","#0d9488","#b91c1c","#a16207","#6d28d9",
 ];
-const TT = { backgroundColor:"#1f2937", border:"1px solid #374151", borderRadius:8, color:"#f9fafb", fontSize:12 };
+const TT = { backgroundColor: "#1f2937", border: "1px solid #374151", borderRadius: 8, color: "#f9fafb", fontSize: 12 };
 
 const TheFloor = () => {
   const { agents, acpSessions = [], cronJobs = [] } = useMissionControlData();
@@ -68,7 +79,6 @@ const TheFloor = () => {
     return d?.agents?.includes(a.id);
   });
 
-  // Calculate per-agent stats from sessions
   const agentStats = filteredAgents.map(agent => {
     const sessions = acpSessions.filter(s => s.agent === agent.id);
     const totalCost = sessions.reduce((sum, s) => sum + (s.totalCost || 0), 0);
@@ -76,64 +86,69 @@ const TheFloor = () => {
     const done = sessions.filter(s => s.status === "done").length;
     const total = sessions.length;
     const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
-    const grade = completionRate >= 90 ? "A" : completionRate >= 75 ? "B" : completionRate >= 60 ? "C" : completionRate >= 40 ? "D" : "F";
     const currentTask = sessions.find(s => s.status !== "done" && s.status !== "completed");
-    const hoursActive = total * 0.15; // rough estimate: 9 min avg per session
+    const hoursActive = total * 0.15;
     const humanCost = hoursActive * HUMAN_RATE;
-    return { ...agent, totalCost, totalTokens, done, total, completionRate, grade, currentTask, hoursActive, humanCost };
+    return { ...agent, totalCost, totalTokens, done, total, completionRate, currentTask, hoursActive, humanCost };
   });
+
+  // Sort: agents with most activity first
+  const sortedStats = [...agentStats].sort((a, b) => (b.total + (b.knowledge?.xp || 0)) - (a.total + (a.knowledge?.xp || 0)));
 
   const totalBotCost = agentStats.reduce((s, a) => s + a.totalCost, 0);
   const totalHumanCost = agentStats.reduce((s, a) => s + a.humanCost, 0);
   const savings = totalHumanCost - totalBotCost;
-  const topPerformer = [...agentStats].sort((a, b) => b.completionRate - a.completionRate)[0];
-  const bottomPerformer = [...agentStats].sort((a, b) => a.completionRate - b.completionRate)[0];
+  const activeCount = agentStats.filter(a => {
+    const activity = getAgentActivity(a, acpSessions);
+    return activity.type === "active";
+  }).length;
+
+  const deptColor = DEPARTMENTS.find(d => d.id === dept)?.color || C.accent;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>The Floor</h1>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>Agent workstations · Real-time department view</div>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Agent workstations — real-time operations view</div>
         </div>
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 3, background: C.surface, borderRadius: 10, padding: 3, border: `1px solid ${C.border}` }}>
           {DEPARTMENTS.map(d => (
-            <button key={d.id} onClick={() => setDept(d.id)} style={{ background: dept === d.id ? C.accent : C.surface, color: dept === d.id ? "#fff" : C.muted, border: `1px solid ${dept === d.id ? C.accent : C.border}`, borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button key={d.id} onClick={() => setDept(d.id)} style={{
+              background: dept === d.id ? (d.color || C.accent) : "transparent",
+              color: dept === d.id ? "#fff" : C.muted,
+              border: "none",
+              borderRadius: 8,
+              padding: "6px 14px",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}>
               {d.name}
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-        <KPI label="Agents" value={filteredAgents.length} sub={`${filteredAgents.filter(a => a.status === "online").length} online`} color={C.accent} />
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+        <KPI label="Agents" value={filteredAgents.length} sub={`${activeCount} active`} color={deptColor} />
         <KPI label="Bot Cost" value={fmtCost(totalBotCost)} sub="Total API spend" color={C.purple} />
         <KPI label="Human Equiv" value={fmtCost(totalHumanCost)} sub={`@$${HUMAN_RATE}/hr`} color={C.amber} />
-        <KPI label="Net Savings" value={fmtCost(savings)} sub={savings > 0 ? "AI cost advantage" : "Over budget"} color={savings > 0 ? C.green : C.red} />
+        <KPI label="Net Savings" value={fmtCost(Math.abs(savings))} sub={savings > 0 ? "Under budget" : "Over budget"} color={savings > 0 ? C.green : C.red} />
         <KPI label="Cron Jobs" value={cronJobs.length} sub={`${cronJobs.filter(j => j.enabled).length} active`} color={C.cyan} />
       </div>
 
-      {/* Charts Row */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-        {/* Agent Utilization Gauges */}
-        <Card>
-          <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Completion Rate</div>
-          <ResponsiveContainer width="100%" height={220}>
-            <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="90%" data={agentStats.filter(a => a.total > 0).slice(0, 6).map((a, i) => ({ name: a.name, value: a.completionRate, fill: a.color || CHART_COLORS[i % CHART_COLORS.length] }))} startAngle={180} endAngle={0}>
-              <RadialBar dataKey="value" background={{ fill: C.surface }} cornerRadius={4} />
-              <Tooltip contentStyle={TT} formatter={v => `${v}%`} />
-              <Legend iconSize={8} wrapperStyle={{ fontSize: 10, color: C.muted }} />
-            </RadialBarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Bot Cost vs Human Cost */}
+      {/* Charts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Bot vs Human Cost</div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={agentStats.filter(a => a.totalCost > 0 || a.humanCost > 0).slice(0, 6)} layout="vertical">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={agentStats.filter(a => a.totalCost > 0 || a.humanCost > 0).slice(0, 8)} layout="vertical">
               <XAxis type="number" tick={{ fill: C.muted, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-              <YAxis type="category" dataKey="name" tick={{ fill: C.text, fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
+              <YAxis type="category" dataKey="name" tick={{ fill: C.text, fontSize: 10 }} axisLine={false} tickLine={false} width={70} />
               <Tooltip contentStyle={TT} formatter={v => `$${v.toFixed(2)}`} />
               <Bar dataKey="totalCost" fill={C.purple} radius={[0, 3, 3, 0]} name="Bot Cost" />
               <Bar dataKey="humanCost" fill={C.amber} radius={[0, 3, 3, 0]} name="Human Equiv" />
@@ -142,122 +157,137 @@ const TheFloor = () => {
           </ResponsiveContainer>
         </Card>
 
-        {/* Task Distribution Pie */}
         <Card>
           <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 8 }}>Task Distribution</div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
-              <Pie data={agentStats.filter(a => a.total > 0).map((a, i) => ({ name: a.name, value: a.total, fill: a.color || CHART_COLORS[i % CHART_COLORS.length] }))} cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} dataKey="value">
+              <Pie data={agentStats.filter(a => a.total > 0).map((a, i) => ({ name: a.name, value: a.total, fill: a.color || CHART_COLORS[i % CHART_COLORS.length] }))} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2} dataKey="value">
                 {agentStats.filter(a => a.total > 0).map((a, i) => <Cell key={i} fill={a.color || CHART_COLORS[i % CHART_COLORS.length]} />)}
               </Pie>
               <Tooltip contentStyle={TT} />
-              <Legend wrapperStyle={{ fontSize: 10, color: C.muted }} />
+              <Legend wrapperStyle={{ fontSize: 9, color: C.muted }} />
             </PieChart>
           </ResponsiveContainer>
         </Card>
       </div>
 
       {/* Agent Workstations Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12 }}>
-        {agentStats.map(agent => (
-          <Card key={agent.id}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: agent.color || C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 15, border: `3px solid ${statusColor(agent.status)}` }}>
-                  {agent.initials || agent.name?.slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{agent.name}</div>
-                  <div style={{ fontSize: 12, color: C.muted }}>{agent.role || agent.dept || "Agent"} · {agent.model}</div>
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                {agent.knowledge ? (
-                  <>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, background: knowledgeBadgeColor(agent.knowledge.level_name) + "22", border: `1px solid ${knowledgeBadgeColor(agent.knowledge.level_name)}44` }}>
-                      {agent.knowledge.level_name === "Doctorate" && <span style={{ fontSize: 10 }}>✦</span>}
-                      <span style={{ fontSize: 11, fontWeight: 700, color: knowledgeBadgeColor(agent.knowledge.level_name) }}>{agent.knowledge.level_name}</span>
-                    </div>
-                    <div style={{ fontSize: 9, color: C.muted, marginTop: 3 }}>{(agent.knowledge.xp || 0).toLocaleString()} XP</div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 24, fontWeight: 800, color: agent.grade === "A" ? C.green : agent.grade === "B" ? C.cyan : agent.grade === "C" ? C.amber : C.red }}>{agent.grade}</div>
-                    <div style={{ fontSize: 10, color: C.muted }}>{agent.completionRate}% done</div>
-                  </>
-                )}
-              </div>
-            </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 12 }}>
+        {sortedStats.map(agent => {
+          const activity = getAgentActivity(agent, acpSessions);
+          const k = agent.knowledge;
+          const badgeColor = k ? knowledgeBadgeColor(k.level_name) : "#6b7280";
 
-            {(() => {
-              const activity = getAgentActivity(agent, acpSessions);
-              return (
-                <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: activity.color + "11", border: `1px solid ${activity.color}22`, display: "flex", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: activity.color, boxShadow: `0 0 6px ${activity.color}`, flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: 11, color: activity.color, fontWeight: 600 }}>{activity.type === "active" ? "Working on:" : activity.type === "done" ? "Last task:" : activity.type === "learning" ? "Learning:" : "Status:"}</div>
-                    <div style={{ fontSize: 12, color: C.text, marginTop: 1 }}>{activity.label}</div>
+          return (
+            <Card key={agent.id} style={{ position: "relative", overflow: "hidden" }}>
+              {/* Subtle top accent bar */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${agent.color || C.accent}, transparent)` }} />
+
+              {/* Header: Avatar + Name + Badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 4 }}>
+                <AgentAvatar agent={agent} size={46} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{agent.name}</span>
+                    {k && (
+                      <span style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: badgeColor,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                        background: badgeColor + "18",
+                        border: `1px solid ${badgeColor}33`,
+                        whiteSpace: "nowrap",
+                      }}>
+                        {knowledgeBadgeLabel(k.level_name)}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                    {agent.role || "Agent"} · <span style={{ color: agent.color || C.accent }}>{agent.dept}</span>
                   </div>
                 </div>
-              );
-            })()}
+                {k && (
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: badgeColor }}>{(k.xp || 0).toLocaleString()}</div>
+                    <div style={{ fontSize: 9, color: C.muted }}>XP</div>
+                  </div>
+                )}
+              </div>
 
-            {/* Knowledge XP Bar */}
-            {agent.knowledge && (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, color: C.muted }}>Domain: {agent.knowledge.domain}</span>
-                  <span style={{ fontSize: 9, color: C.muted }}>{agent.knowledge.level_progress_pct}% to next</span>
+              {/* Activity Status */}
+              <div style={{
+                marginTop: 10,
+                padding: "6px 10px",
+                borderRadius: 6,
+                background: activity.color + "0c",
+                border: `1px solid ${activity.color}18`,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 8,
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: "50%",
+                  background: activity.color,
+                  boxShadow: activity.type === "active" ? `0 0 6px ${activity.color}` : "none",
+                  flexShrink: 0, marginTop: 4,
+                }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 10, color: activity.color, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    {activity.type === "active" ? "Working on" : activity.type === "learning" ? "Learning" : activity.type === "done" ? "Last completed" : "Status"}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.text, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activity.label}</div>
                 </div>
-                <div style={{ height: 4, borderRadius: 2, background: C.bg, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${agent.knowledge.level_progress_pct}%`, borderRadius: 2, background: knowledgeBadgeColor(agent.knowledge.level_name), transition: "width 0.5s" }} />
+              </div>
+
+              {/* Knowledge Progress Bar */}
+              {k && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 10, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>
+                      {k.domain}
+                    </span>
+                    <span style={{ fontSize: 9, color: C.muted, flexShrink: 0 }}>{k.level_progress_pct}%</span>
+                  </div>
+                  <div style={{ height: 3, borderRadius: 2, background: C.bg, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${k.level_progress_pct}%`, borderRadius: 2, background: `linear-gradient(90deg, ${badgeColor}, ${badgeColor}88)`, transition: "width 0.5s" }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Stats Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}44` }}>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>Tasks</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{agent.total}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>Done</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: agent.done > 0 ? C.green : C.muted }}>{agent.done}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>Cost</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{fmtCost(agent.totalCost)}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 9, color: C.muted, textTransform: "uppercase" }}>Tokens</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{fmtTokens(agent.totalTokens)}</div>
                 </div>
               </div>
-            )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 12 }}>
-              <div><div style={{ fontSize: 10, color: C.muted }}>Tasks</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{agent.total}</div></div>
-              <div><div style={{ fontSize: 10, color: C.muted }}>Done</div><div style={{ fontSize: 16, fontWeight: 700, color: C.green }}>{agent.done}</div></div>
-              <div><div style={{ fontSize: 10, color: C.muted }}>Cost</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{fmtCost(agent.totalCost)}</div></div>
-              <div><div style={{ fontSize: 10, color: C.muted }}>Tokens</div><div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{fmtTokens(agent.totalTokens)}</div></div>
-            </div>
-
-            <div style={{ marginTop: 10, padding: 8, borderRadius: 6, background: C.bg }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11 }}>
-                <span style={{ color: C.muted }}>Opportunity cost ({agent.hoursActive.toFixed(1)}h × ${HUMAN_RATE}/hr)</span>
-                <span style={{ color: C.green, fontWeight: 600 }}>{fmtCost(agent.humanCost - agent.totalCost)} saved</span>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Performance Rankings */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Card>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>Top Performer</div>
-          {topPerformer && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.green, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700 }}>{topPerformer.initials}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{topPerformer.name}</div>
-                <div style={{ fontSize: 12, color: C.green }}>{topPerformer.completionRate}% completion · {topPerformer.done}/{topPerformer.total} tasks</div>
-              </div>
-            </div>
-          )}
-        </Card>
-        <Card>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 8 }}>Needs Attention</div>
-          {bottomPerformer && bottomPerformer.id !== topPerformer?.id && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.red, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700 }}>{bottomPerformer.initials}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{bottomPerformer.name}</div>
-                <div style={{ fontSize: 12, color: C.red }}>{bottomPerformer.completionRate}% completion · {bottomPerformer.done}/{bottomPerformer.total} tasks</div>
-              </div>
-            </div>
-          )}
-        </Card>
+              {/* Savings footer — only show if there's actual activity */}
+              {agent.total > 0 && (
+                <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted }}>
+                  <span>Opp. cost ({agent.hoursActive.toFixed(1)}h x ${HUMAN_RATE}/hr)</span>
+                  <span style={{ color: (agent.humanCost - agent.totalCost) >= 0 ? C.green : C.red, fontWeight: 600 }}>
+                    {fmtCost(agent.humanCost - agent.totalCost)} saved
+                  </span>
+                </div>
+              )}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );
