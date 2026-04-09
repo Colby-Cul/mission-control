@@ -8,8 +8,8 @@ const {
   setCookie,
 } = require("../_lib/quickbooks");
 
-const RECAPTCHA_SITE_KEY = process.env.RECAPTCHA_SITE_KEY || "";
-const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY || "";
+const RECAPTCHA_SITE_KEY = (process.env.RECAPTCHA_SITE_KEY || "").trim();
+const RECAPTCHA_SECRET_KEY = (process.env.RECAPTCHA_SECRET_KEY || "").trim();
 
 /**
  * Verify a reCAPTCHA v3 token with Google.
