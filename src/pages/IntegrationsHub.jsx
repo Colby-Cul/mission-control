@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge, Card, KPI } from "../components/shared";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
@@ -22,7 +22,7 @@ const INTEGRATION_META = {
   // Business / Finance
   "monday.com": { name: "Monday.com", desc: "Connected — not used for task mgmt (Mission Control only)", category: "Business", knownStatus: "active" },
   "monday": { name: "Monday.com", desc: "Connected — not used for task mgmt (Mission Control only)", category: "Business", knownStatus: "active", aliasOf: "monday.com" },
-  "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management via MCP", category: "Business", knownStatus: "active" },
+  "quickbooks": { name: "QuickBooks", desc: "Accounting + financial management via OAuth", category: "Business", knownStatus: "not configured" },
   "plaid": { name: "Plaid", desc: "Bank + brokerage account aggregation (read-only)", category: "Business", knownStatus: "not configured" },
   "coinbase": { name: "Coinbase", desc: "Crypto portfolio + trading via OAuth API", category: "Business", knownStatus: "not configured" },
   "canva": { name: "Canva", desc: "Design + marketing assets via MCP", category: "Business", knownStatus: "active" },
@@ -49,6 +49,174 @@ const INTEGRATION_META = {
   "macos": { name: "macOS", desc: "System screen unlock credential", category: "System", knownStatus: "active" },
 };
 
+// ── QuickBooks Status Hook ──────────────────────────────────────────────────
+
+function useQuickBooksStatus() {
+  const [qbStatus, setQbStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    fetch("/api/qb/status?test=true")
+      .then(r => r.json())
+      .then(data => {
+        setQbStatus(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setQbStatus(null);
+        setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  // Check URL params for post-OAuth status
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("qb_status")) {
+      refresh();
+      // Clean up URL params
+      const url = new URL(window.location);
+      url.searchParams.delete("qb_status");
+      url.searchParams.delete("qb_error");
+      url.searchParams.delete("qb_error_description");
+      url.searchParams.delete("realmId");
+      url.searchParams.delete("companyId");
+      url.searchParams.delete("qb_store");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [refresh]);
+
+  const connected = qbStatus?.statuses?.some(s => s.token_status === "valid" && s.api_test === "ok");
+  const firstConn = qbStatus?.statuses?.[0] || null;
+
+  return { qbStatus, firstConn, connected, loading, refresh };
+}
+
+// ── QuickBooks Card Detail ──────────────────────────────────────────────────
+
+function QuickBooksDetail({ qb, onRefresh }) {
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  const handleDisconnect = async () => {
+    if (!confirm("Disconnect QuickBooks? This will revoke the OAuth tokens.")) return;
+    setDisconnecting(true);
+    try {
+      await fetch("/api/qb/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyId: qb.firstConn?.company_key || "",
+          realmId: qb.firstConn?.realm_id || "",
+        }),
+      });
+      onRefresh();
+    } catch {
+      // refresh anyway to show current state
+      onRefresh();
+    }
+    setDisconnecting(false);
+  };
+
+  if (qb.loading) {
+    return (
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, color: C.muted }}>Checking QuickBooks connection...</div>
+      </div>
+    );
+  }
+
+  if (!qb.connected) {
+    return (
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+          QuickBooks is not connected. Authorize access to enable financial data sync.
+        </div>
+        <a
+          href="/api/qb/connect?returnTo=/integrations"
+          style={{
+            display: "inline-block", background: "#2ca01c", color: "#fff", border: "none",
+            borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 600,
+            textDecoration: "none", cursor: "pointer",
+          }}
+        >
+          Connect QuickBooks
+        </a>
+      </div>
+    );
+  }
+
+  const conn = qb.firstConn;
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+      {conn.company_name && (
+        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+          {conn.company_name}
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
+        <div>
+          <span style={{ color: C.muted }}>Realm ID: </span>
+          <span style={{ color: C.text, fontFamily: "monospace" }}>{conn.realm_id || "—"}</span>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Environment: </span>
+          <span style={{ color: C.text }}>{qb.qbStatus?.environment || "sandbox"}</span>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Token: </span>
+          <Badge color={conn.token_status === "valid" ? C.green : C.red}>{conn.token_status}</Badge>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Expires: </span>
+          <span style={{ color: C.text }}>
+            {conn.minutes_remaining > 0 ? `${conn.minutes_remaining}m` : "expired"}
+          </span>
+        </div>
+        {conn.refresh_days_remaining != null && (
+          <div>
+            <span style={{ color: C.muted }}>Refresh token: </span>
+            <span style={{ color: conn.refresh_days_remaining > 7 ? C.green : C.amber }}>
+              {conn.refresh_days_remaining}d remaining
+            </span>
+          </div>
+        )}
+        <div>
+          <span style={{ color: C.muted }}>API test: </span>
+          <Badge color={conn.api_test === "ok" ? C.green : C.red}>{conn.api_test || "—"}</Badge>
+        </div>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <button
+          onClick={onRefresh}
+          style={{
+            background: C.surface, color: C.muted, border: `1px solid ${C.border}`,
+            borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+          }}
+        >
+          Refresh Status
+        </button>
+        <button
+          onClick={handleDisconnect}
+          disabled={disconnecting}
+          style={{
+            background: "transparent", color: C.red, border: `1px solid ${C.red}44`,
+            borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+            opacity: disconnecting ? 0.5 : 1,
+          }}
+        >
+          {disconnecting ? "Disconnecting..." : "Disconnect"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ──────────────────────────────────────────────────────────
+
 const IntegrationsHub = () => {
   const { snapshot } = useMissionControlData();
   const apiCreds = snapshot?.apiCredentials || [];
@@ -56,6 +224,8 @@ const IntegrationsHub = () => {
   const [updateKeys, setUpdateKeys] = useState({});
   const [updateResults, setUpdateResults] = useState({});
   const [filter, setFilter] = useState("all");
+
+  const qb = useQuickBooksStatus();
 
   // Merge live apiCredentials with the full INTEGRATION_META registry
   const integrations = (() => {
@@ -73,7 +243,21 @@ const IntegrationsHub = () => {
     // Second: entries from INTEGRATION_META that aren't in live data
     Object.entries(INTEGRATION_META).forEach(([key, meta]) => {
       if (seen.has(key) || meta.aliasOf) return;
-      result.push({ id: key, provider: key, ...meta, status: meta.knownStatus || "not configured", maskedKey: null });
+      const entry = { id: key, provider: key, ...meta, status: meta.knownStatus || "not configured", maskedKey: null };
+      // Override QuickBooks status with live status
+      if (key === "quickbooks") {
+        if (qb.loading) {
+          entry.status = "checking...";
+        } else if (qb.connected) {
+          entry.status = "active";
+          if (qb.firstConn?.company_name) {
+            entry.desc = qb.firstConn.company_name + " — " + (qb.qbStatus?.environment || "sandbox");
+          }
+        } else {
+          entry.status = "not configured";
+        }
+      }
+      result.push(entry);
     });
     return result;
   })();
@@ -81,7 +265,7 @@ const IntegrationsHub = () => {
   const categories = [...new Set(integrations.map(i => i.category))];
   const filtered = filter === "all" ? integrations : integrations.filter(i => i.category === filter);
   const connected = integrations.filter(i => i.status === "active").length;
-  const issues = integrations.filter(i => i.status !== "active").length;
+  const issues = integrations.filter(i => i.status !== "active" && i.status !== "checking...").length;
 
   const handleUpdateKey = async (provider) => {
     if (!(updateKeys[provider] || "").trim()) return;
@@ -123,6 +307,7 @@ const IntegrationsHub = () => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
         {filtered.map(integ => {
           const isExpanded = expanded === integ.id;
+          const isQB = integ.provider === "quickbooks";
           return (
             <Card key={integ.id}>
               <div onClick={() => setExpanded(isExpanded ? null : integ.id)} style={{ cursor: "pointer" }}>
@@ -140,7 +325,11 @@ const IntegrationsHub = () => {
                 </div>
               </div>
 
-              {isExpanded && (
+              {isExpanded && isQB && (
+                <QuickBooksDetail qb={qb} onRefresh={qb.refresh} />
+              )}
+
+              {isExpanded && !isQB && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>API Key</div>
                   <div style={{ fontFamily: "monospace", fontSize: 12, color: C.text, padding: "6px 8px", background: C.bg, borderRadius: 4, wordBreak: "break-all" }}>
