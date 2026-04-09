@@ -49,6 +49,98 @@ const INTEGRATION_META = {
   "macos": { name: "macOS", desc: "System screen unlock credential", category: "System", knownStatus: "active" },
 };
 
+// ── Plaid Status Hook ──────────────────────────────────────────────────────
+
+function usePlaidStatus() {
+  const [plaidData, setPlaidData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    fetch("/api/plaid/summary")
+      .then(r => r.json())
+      .then(data => {
+        if (data && !data.error) setPlaidData(data);
+        else setPlaidData(null);
+        setLoading(false);
+      })
+      .catch(() => { setPlaidData(null); setLoading(false); });
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const connected = plaidData && plaidData.linked_institutions > 0;
+  return { plaidData, connected, loading, refresh };
+}
+
+// ── Plaid Card Detail ──────────────────────────────────────────────────────
+
+function PlaidDetail({ plaid }) {
+  if (plaid.loading) {
+    return (
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, color: C.muted }}>Checking Plaid connection...</div>
+      </div>
+    );
+  }
+
+  if (!plaid.connected) {
+    return (
+      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+          No bank accounts linked. Use the Accounts page to connect via Plaid Link.
+        </div>
+        <a href="#/accounts" style={{ display: "inline-block", background: C.accent, color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 600, textDecoration: "none", cursor: "pointer" }}>
+          Go to Accounts
+        </a>
+      </div>
+    );
+  }
+
+  const d = plaid.plaidData;
+  const bankCount = d.banking?.accounts?.length || 0;
+  const investCount = d.investments?.accounts?.length || 0;
+  const creditCount = d.credit?.accounts?.length || 0;
+  const totalAccounts = bankCount + investCount + creditCount;
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
+        <div>
+          <span style={{ color: C.muted }}>Institutions: </span>
+          <span style={{ color: C.text, fontWeight: 600 }}>{d.linked_institutions}</span>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Accounts: </span>
+          <span style={{ color: C.text, fontWeight: 600 }}>{totalAccounts}</span>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Banking: </span>
+          <span style={{ color: C.text }}>{bankCount} acct{bankCount !== 1 ? "s" : ""}</span>
+        </div>
+        <div>
+          <span style={{ color: C.muted }}>Investments: </span>
+          <span style={{ color: C.text }}>{investCount} acct{investCount !== 1 ? "s" : ""}</span>
+        </div>
+        {d.last_sync && (
+          <div style={{ gridColumn: "1 / -1" }}>
+            <span style={{ color: C.muted }}>Last sync: </span>
+            <span style={{ color: C.text }}>{new Date(d.last_sync).toLocaleString()}</span>
+          </div>
+        )}
+      </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+        <a href="#/accounts" style={{ background: C.surface, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, textDecoration: "none", cursor: "pointer" }}>
+          Manage Accounts
+        </a>
+        <button onClick={plaid.refresh} style={{ background: C.surface, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+          Refresh Status
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── QuickBooks Status Hook ──────────────────────────────────────────────────
 
 function useQuickBooksStatus() {
@@ -226,6 +318,7 @@ const IntegrationsHub = () => {
   const [filter, setFilter] = useState("all");
 
   const qb = useQuickBooksStatus();
+  const plaid = usePlaidStatus();
 
   // Merge live apiCredentials with the full INTEGRATION_META registry
   const integrations = (() => {
@@ -253,6 +346,16 @@ const IntegrationsHub = () => {
           if (qb.firstConn?.company_name) {
             entry.desc = qb.firstConn.company_name + " — " + (qb.qbStatus?.environment || "sandbox");
           }
+        } else {
+          entry.status = "not configured";
+        }
+      }
+      if (key === "plaid") {
+        if (plaid.loading) {
+          entry.status = "checking...";
+        } else if (plaid.connected) {
+          entry.status = "active";
+          entry.desc = `${plaid.plaidData.linked_institutions} institution${plaid.plaidData.linked_institutions !== 1 ? "s" : ""} linked — read-only`;
         } else {
           entry.status = "not configured";
         }
@@ -329,7 +432,11 @@ const IntegrationsHub = () => {
                 <QuickBooksDetail qb={qb} onRefresh={qb.refresh} />
               )}
 
-              {isExpanded && !isQB && (
+              {isExpanded && integ.provider === "plaid" && (
+                <PlaidDetail plaid={plaid} />
+              )}
+
+              {isExpanded && !isQB && integ.provider !== "plaid" && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
                   <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>API Key</div>
                   <div style={{ fontFamily: "monospace", fontSize: 12, color: C.text, padding: "6px 8px", background: C.bg, borderRadius: 4, wordBreak: "break-all" }}>
