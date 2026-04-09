@@ -691,6 +691,24 @@ const Accounts = () => {
 // ═══════════════════════════════════════════════
 // Entity Assignment Dropdown Component
 // ═══════════════════════════════════════════════
+// Helper to get entity logo
+const getEntityLogo = (entityId) => {
+  const entity = entityData.entities?.find(e => e.id === entityId);
+  return entity?.logo || null;
+};
+
+const EntityBadge = ({ entityId }) => {
+  const entity = entityData.entities?.find(e => e.id === entityId);
+  const logo = entity?.logo;
+  const name = entity?.shortName || entityId || "Personal";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {logo && <img src={logo} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: "contain", background: "#000" }} />}
+      <span style={{ fontSize: 11, color: entityId ? C.purple : C.cyan }}>{name}</span>
+    </div>
+  );
+};
+
 const EntitySelect = ({ accountId, currentEntity, currentScope, onUpdate }) => {
   const handleChange = async (e) => {
     const val = e.target.value;
@@ -710,20 +728,24 @@ const EntitySelect = ({ accountId, currentEntity, currentScope, onUpdate }) => {
 
   const entities = entityData.entities || [];
   const currentVal = currentEntity || (currentScope === "personal" ? "personal" : "");
+  const currentLogo = getEntityLogo(currentEntity);
 
   return (
-    <select value={currentVal} onChange={handleChange}
-      style={{
-        background: C.surface, color: C.text, border: `1px solid ${C.border}`,
-        borderRadius: 5, padding: "3px 6px", fontSize: 11, cursor: "pointer",
-        maxWidth: 130,
-      }}>
-      <option value="personal">Personal</option>
-      {entities.map(e => <option key={e.id} value={e.id}>{e.shortName}</option>)}
-      {currentEntity && !entities.find(e => e.id === currentEntity) && (
-        <option value={currentEntity}>{currentEntity}</option>
-      )}
-    </select>
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {currentLogo && <img src={currentLogo} alt="" style={{ width: 18, height: 18, borderRadius: 4, objectFit: "contain", background: "#000" }} />}
+      <select value={currentVal} onChange={handleChange}
+        style={{
+          background: C.surface, color: C.text, border: `1px solid ${C.border}`,
+          borderRadius: 5, padding: "3px 6px", fontSize: 11, cursor: "pointer",
+          maxWidth: 120,
+        }}>
+        <option value="personal">Personal</option>
+        {entities.map(e => <option key={e.id} value={e.id}>{e.shortName}</option>)}
+        {currentEntity && !entities.find(e => e.id === currentEntity) && (
+          <option value={currentEntity}>{currentEntity}</option>
+        )}
+      </select>
+    </div>
   );
 };
 

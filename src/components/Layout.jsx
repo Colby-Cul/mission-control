@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { C, PROJECTS } from '../data/constants'; // PROJECTS used as fallback
+import { C } from '../data/constants';
 import { icons, NAV_ITEMS, SETTINGS_NAV } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
@@ -36,9 +36,7 @@ const Layout = () => {
   }, []);
 
   const currentLabel = NAV_ITEMS.find(n => n.id === currentPage)?.label || "Home";
-  const searchableProjects = projects.length
-    ? projects.map(p => ({ id: p.id, name: p.name, color: C.accent }))
-    : PROJECTS;
+  const searchableProjects = projects.map((p) => ({ id: p.id, name: p.name, color: C.accent }));
   const searchableTasks = acpSessions.slice(0, 20).map(s => ({
     id: s.sessionId || s.id,
     name: s.task || "ACP Session",
