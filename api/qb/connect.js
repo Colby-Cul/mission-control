@@ -66,7 +66,7 @@ module.exports = async function handler(req, res) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Connecting to QuickBooks...</title>
-  <script src="https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}"></script>
+  <script src="https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}" async defer></script>
   <style>
     body { margin:0; background:#030712; color:#f9fafb; font-family:system-ui,sans-serif;
            display:flex; justify-content:center; align-items:center; height:100vh; }
