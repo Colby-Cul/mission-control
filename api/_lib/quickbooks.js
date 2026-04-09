@@ -57,16 +57,18 @@ function getClientCredentialFromKeychain(service) {
 }
 
 function getQuickBooksClientConfig() {
-  const clientId =
+  const clientId = (
     process.env.QUICKBOOKS_CLIENT_ID ||
     (process.platform === "darwin"
       ? getClientCredentialFromKeychain("quickbooks-client-id")
-      : "");
-  const clientSecret =
+      : "")
+  ).trim();
+  const clientSecret = (
     process.env.QUICKBOOKS_CLIENT_SECRET ||
     (process.platform === "darwin"
       ? getClientCredentialFromKeychain("quickbooks-client-secret")
-      : "");
+      : "")
+  ).trim();
 
   return {
     clientId,
