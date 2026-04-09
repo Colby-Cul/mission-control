@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T09:50:54Z",
+  "generatedAt": "2026-04-09T10:20:53Z",
   "agents": [
     {
       "id": "acp-codex",
@@ -192,7 +192,7 @@
     {
       "id": "executive-assistant",
       "name": "executive-assistant",
-      "sessionCount": 21,
+      "sessionCount": 25,
       "knowledge": {
         "domain": "Executive Operations / Business Coordination",
         "xp": 290,
@@ -313,7 +313,7 @@
     {
       "id": "ops-runner",
       "name": "ops-runner",
-      "sessionCount": 25
+      "sessionCount": 28
     },
     {
       "id": "pulse",
@@ -466,6 +466,216 @@
   ],
   "acpSessions": [
     {
+      "id": "d7407678-b8ff-46b8-b",
+      "sessionId": "d7407678-b8ff-46b8-b33c-7268bd0ef49d",
+      "agent": "ops-runner",
+      "task": "Mission Control Data Refresh",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:20:46.116Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:20:46.116Z",
+      "endTime": null,
+      "inputTokens": 357,
+      "outputTokens": 120,
+      "cachedInputTokens": 49536,
+      "tokens": 50013,
+      "model": "deepseek-chat",
+      "apiModelUsed": "deepseek-chat",
+      "modelsUsed": [
+        "deepseek-chat"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/d7407678-b8ff-46b8-b33c-7268bd0ef49d.jsonl",
+      "sizeBytes": 3973,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "mission-control",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~1 min"
+    },
+    {
+      "id": "b329ae24-a0a1-4ef5-8",
+      "sessionId": "b329ae24-a0a1-4ef5-8fda-92f44a34cc2e",
+      "agent": "executive-assistant",
+      "task": "FIRST: Read AGENTS.md and HEARTBEAT.md for your full directive and credentials.",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:16:41.510Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:16:41.510Z",
+      "endTime": null,
+      "inputTokens": 35998,
+      "outputTokens": 874,
+      "cachedInputTokens": 38400,
+      "tokens": 75272,
+      "model": "gpt-4o",
+      "apiModelUsed": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.1467,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/b329ae24-a0a1-4ef5-8fda-92f44a34cc2e.jsonl",
+      "sizeBytes": 49384,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~1 min"
+    },
+    {
+      "id": "6b5b2a63-ab52-44e2-a",
+      "sessionId": "6b5b2a63-ab52-44e2-a5d8-88827ffb9557",
+      "agent": "executive-assistant",
+      "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox using the helper script: python3 /Users/jarvisculberts...",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:13:45.865Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:13:45.865Z",
+      "endTime": null,
+      "inputTokens": 21281,
+      "outputTokens": 63,
+      "cachedInputTokens": 0,
+      "tokens": 21344,
+      "model": "gpt-4o",
+      "apiModelUsed": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0538,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/6b5b2a63-ab52-44e2-a5d8-88827ffb9557.jsonl",
+      "sizeBytes": 2959,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~2 min"
+    },
+    {
+      "id": "fe3b88b8-96b1-4c34-a",
+      "sessionId": "fe3b88b8-96b1-4c34-a716-8e30e0b66b78",
+      "agent": "ops-runner",
+      "task": "Discord Health Check",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:04:08.676Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:04:08.676Z",
+      "endTime": null,
+      "inputTokens": 15736,
+      "outputTokens": 743,
+      "cachedInputTokens": 162752,
+      "tokens": 179231,
+      "model": "deepseek-chat",
+      "apiModelUsed": "deepseek-chat",
+      "modelsUsed": [
+        "deepseek-chat"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/fe3b88b8-96b1-4c34-a716-8e30e0b66b78.jsonl",
+      "sizeBytes": 104080,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~6 min"
+    },
+    {
+      "id": "806b1a1b-a65c-4629-9",
+      "sessionId": "806b1a1b-a65c-4629-9037-fca2f6901dfb",
+      "agent": "executive-assistant",
+      "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox using the helper script: python3 /Users/jarvisculberts...",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:03:45.684Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:03:45.684Z",
+      "endTime": null,
+      "inputTokens": 23035,
+      "outputTokens": 341,
+      "cachedInputTokens": 21376,
+      "tokens": 44752,
+      "model": "gpt-4o",
+      "apiModelUsed": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0877,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/806b1a1b-a65c-4629-9037-fca2f6901dfb.jsonl",
+      "sizeBytes": 16742,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~6 min"
+    },
+    {
+      "id": "26a974bb-f519-4bdf-b",
+      "sessionId": "26a974bb-f519-4bdf-bcdb-1e7b3bea69bc",
+      "agent": "ops-runner",
+      "task": "Execute comprehensive enterprise architecture audit: evaluate system architecture, data flows, security posture, perf...",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T10:00:03.682Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T10:00:03.682Z",
+      "endTime": null,
+      "inputTokens": 25182,
+      "outputTokens": 3263,
+      "cachedInputTokens": 1024256,
+      "tokens": 1052701,
+      "model": "deepseek-chat",
+      "apiModelUsed": "deepseek-chat",
+      "modelsUsed": [
+        "deepseek-chat"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/26a974bb-f519-4bdf-bcdb-1e7b3bea69bc.jsonl",
+      "sizeBytes": 210068,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~7 min"
+    },
+    {
+      "id": "a04f7a4e-ff8f-4034-b",
+      "sessionId": "a04f7a4e-ff8f-4034-b6c7-5c8d54a3cd42",
+      "agent": "executive-assistant",
+      "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox using the helper script: python3 /Users/jarvisculberts...",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T09:51:13.972Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T09:51:13.972Z",
+      "endTime": null,
+      "inputTokens": 21281,
+      "outputTokens": 125,
+      "cachedInputTokens": 0,
+      "tokens": 21406,
+      "model": "gpt-4o",
+      "apiModelUsed": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0545,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/a04f7a4e-ff8f-4034-b6c7-5c8d54a3cd42.jsonl",
+      "sizeBytes": 3200,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~10 min"
+    },
+    {
       "id": "6792ca97-d07d-4a3d-b",
       "sessionId": "6792ca97-d07d-4a3d-b3a7-bb01cf6c0363",
       "agent": "ops-runner",
@@ -476,10 +686,10 @@
       "dateFinished": null,
       "startTime": "2026-04-09T09:50:46.100Z",
       "endTime": null,
-      "inputTokens": 229,
-      "outputTokens": 120,
-      "cachedInputTokens": 49664,
-      "tokens": 50013,
+      "inputTokens": 2245,
+      "outputTokens": 313,
+      "cachedInputTokens": 101248,
+      "tokens": 103806,
       "model": "deepseek-chat",
       "apiModelUsed": "deepseek-chat",
       "modelsUsed": [
@@ -487,13 +697,13 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/6792ca97-d07d-4a3d-b3a7-bb01cf6c0363.jsonl",
-      "sizeBytes": 3973,
+      "sizeBytes": 17141,
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
       "projectId": "mission-control",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~1 min"
+      "estimatedTimeToCompletion": "~11 min"
     },
     {
       "id": "3081ec27-acf5-4417-a",
@@ -523,7 +733,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~4 min"
+      "estimatedTimeToCompletion": "~14 min"
     },
     {
       "id": "a51492be-36d1-4bf7-9",
@@ -553,7 +763,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~6 min"
+      "estimatedTimeToCompletion": "~16 min"
     },
     {
       "id": "9075212b-cd24-4718-a",
@@ -583,7 +793,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~6 min"
+      "estimatedTimeToCompletion": "~16 min"
     },
     {
       "id": "83a19b32-6785-4846-9",
@@ -613,7 +823,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~7 min"
+      "estimatedTimeToCompletion": "~17 min"
     },
     {
       "id": "5203e266-4193-476e-9",
@@ -643,7 +853,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~9 min"
+      "estimatedTimeToCompletion": "~19 min"
     },
     {
       "id": "118e946a-952e-4644-b",
@@ -673,7 +883,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~9 min"
+      "estimatedTimeToCompletion": "~19 min"
     },
     {
       "id": "bb96d10e-989e-4f1c-a",
@@ -703,7 +913,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~10 min"
+      "estimatedTimeToCompletion": "~20 min"
     },
     {
       "id": "6b749ee8-a604-4603-8",
@@ -736,46 +946,16 @@
       "estimatedTimeToCompletion": "Unknown"
     },
     {
-      "id": "3034664e-6db6-46a2-b",
-      "sessionId": "3034664e-6db6-46a2-b7d1-888d610c803d",
-      "agent": "ops-runner",
-      "task": "Mission Control Data Refresh",
-      "status": "in_progress",
-      "lane": "inprogress",
-      "dateCreated": "2026-04-09T09:20:49.287Z",
-      "dateFinished": null,
-      "startTime": "2026-04-09T09:20:49.287Z",
-      "endTime": null,
-      "inputTokens": 18088,
-      "outputTokens": 377,
-      "cachedInputTokens": 85440,
-      "tokens": 103905,
-      "model": "deepseek-chat",
-      "apiModelUsed": "deepseek-chat",
-      "modelsUsed": [
-        "deepseek-chat"
-      ],
-      "totalCost": 0.0,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/3034664e-6db6-46a2-b7d1-888d610c803d.jsonl",
-      "sizeBytes": 17420,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": "",
-      "projectId": "mission-control",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~11 min"
-    },
-    {
       "id": "80909d81-e8e9-4f3e-a",
       "sessionId": "80909d81-e8e9-4f3e-a66b-b51227a1c383",
       "agent": "ops-runner",
       "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T09:17:18.751Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T09:18:12Z",
       "startTime": "2026-04-09T09:17:18.751Z",
-      "endTime": null,
+      "endTime": "2026-04-09T09:18:12Z",
       "inputTokens": 14644,
       "outputTokens": 865,
       "cachedInputTokens": 298816,
@@ -791,51 +971,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~12 min"
-    },
-    {
-      "id": "fdf2b1f3-1912-4bbc-9",
-      "sessionId": "fdf2b1f3-1912-4bbc-930c-d63027c57048",
-      "agent": "ops-runner",
-      "task": "Ops Runner Session",
-      "status": "in_progress",
-      "lane": "inprogress",
-      "dateCreated": "2026-04-09T09:08:29.190Z",
-      "dateFinished": null,
-      "startTime": "2026-04-09T09:08:29.190Z",
-      "endTime": null,
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "cachedInputTokens": 0,
-      "tokens": 0,
-      "model": "delivery-mirror",
-      "apiModelUsed": "delivery-mirror",
-      "modelsUsed": [
-        "delivery-mirror"
-      ],
-      "totalCost": 0.0,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/fdf2b1f3-1912-4bbc-930c-d63027c57048.jsonl",
-      "sizeBytes": 1242,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": "discord:channel:1485909146070028370",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "Unknown"
+      "projectId": ""
     },
     {
       "id": "2026-04-09T09-07-21-",
       "sessionId": "2026-04-09T09-07-21-218Z_a9f22062-d6d2-4ad2-95dc-6e2fa83ebca1",
       "agent": "main",
       "task": "1. Review potential overlap between `frontend-design` and `superdesign` skills\n2.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T09:07:21.218Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T09:07:24Z",
       "startTime": "2026-04-09T09:07:21.218Z",
-      "endTime": null,
+      "endTime": "2026-04-09T09:07:24Z",
       "inputTokens": 605277,
       "outputTokens": 6558,
       "cachedInputTokens": 638096,
@@ -855,21 +1003,19 @@
       "isCron": false,
       "spawns": 2,
       "parentSession": "",
-      "projectId": "coding",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~15 min"
+      "projectId": "coding"
     },
     {
       "id": "5985c54a-6efa-40e8-a",
       "sessionId": "5985c54a-6efa-40e8-aa68-c6a44e0b398f",
       "agent": "ops-runner",
       "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T09:07:15.459Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T09:08:49Z",
       "startTime": "2026-04-09T09:07:15.459Z",
-      "endTime": null,
+      "endTime": "2026-04-09T09:08:49Z",
       "inputTokens": 9154,
       "outputTokens": 1566,
       "cachedInputTokens": 474176,
@@ -885,51 +1031,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~15 min"
-    },
-    {
-      "id": "863fe03a-d8f4-4e73-a",
-      "sessionId": "863fe03a-d8f4-4e73-a002-81cc957cc1cf",
-      "agent": "ops-runner",
-      "task": "Discord Health Check",
-      "status": "in_progress",
-      "lane": "inprogress",
-      "dateCreated": "2026-04-09T09:03:58.310Z",
-      "dateFinished": null,
-      "startTime": "2026-04-09T09:03:58.310Z",
-      "endTime": null,
-      "inputTokens": 2949,
-      "outputTokens": 503,
-      "cachedInputTokens": 123072,
-      "tokens": 126524,
-      "model": "deepseek-chat",
-      "apiModelUsed": "deepseek-chat",
-      "modelsUsed": [
-        "deepseek-chat"
-      ],
-      "totalCost": 0.0,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/863fe03a-d8f4-4e73-a002-81cc957cc1cf.jsonl",
-      "sizeBytes": 19365,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~16 min"
+      "projectId": ""
     },
     {
       "id": "f7b18f14-26a9-4619-9",
       "sessionId": "f7b18f14-26a9-4619-9bea-976f624c31c3",
       "agent": "ops-runner",
       "task": "Execute comprehensive system audit: scan memory files, skills documentation, workspace for outdated/duplicate content.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T09:00:05.254Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T09:03:15Z",
       "startTime": "2026-04-09T09:00:05.254Z",
-      "endTime": null,
+      "endTime": "2026-04-09T09:03:15Z",
       "inputTokens": 6955,
       "outputTokens": 4518,
       "cachedInputTokens": 928448,
@@ -945,21 +1059,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~18 min"
+      "projectId": ""
     },
     {
       "id": "4d0cb608-88d9-4a60-9",
       "sessionId": "4d0cb608-88d9-4a60-97ad-791cc50446c3",
       "agent": "ops-runner",
       "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T08:57:15.448Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T08:59:31Z",
       "startTime": "2026-04-09T08:57:15.448Z",
-      "endTime": null,
+      "endTime": "2026-04-09T08:59:31Z",
       "inputTokens": 15489,
       "outputTokens": 1257,
       "cachedInputTokens": 334336,
@@ -975,9 +1087,7 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~19 min"
+      "projectId": ""
     },
     {
       "id": "4698a6b6-b311-48f4-b",
@@ -1006,6 +1116,36 @@
       "spawns": 0,
       "parentSession": "heartbeat",
       "projectId": ""
+    },
+    {
+      "id": "8a8798f1-7a89-4962-b",
+      "sessionId": "8a8798f1-7a89-4962-b01d-0a9e31d7e63e",
+      "agent": "ops-runner",
+      "task": "Ops Runner Session",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-09T08:47:15.029Z",
+      "dateFinished": null,
+      "startTime": "2026-04-09T08:47:15.029Z",
+      "endTime": null,
+      "inputTokens": 22934,
+      "outputTokens": 1123,
+      "cachedInputTokens": 235264,
+      "tokens": 259321,
+      "model": "deepseek-chat",
+      "apiModelUsed": "deepseek-chat",
+      "modelsUsed": [
+        "deepseek-chat"
+      ],
+      "totalCost": 0.0,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/8a8798f1-7a89-4962-b01d-0a9e31d7e63e.jsonl",
+      "sizeBytes": 17151,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "heartbeat",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~33 min"
     },
     {
       "id": "8685d70f-cab5-4295-8",
@@ -1197,7 +1337,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/e1d4a808-44aa-4974-9014-bba303b827d9.jsonl",
-      "sizeBytes": 5834,
+      "sizeBytes": 6329,
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485163052604199013",
@@ -1210,12 +1350,12 @@
       "sessionId": "050b4285-8de5-464e-b427-02bb9117643a",
       "agent": "ops-runner",
       "task": "Email monitoring check. STEP 1: Check Victoria AgentMail inbox.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-09T07:54:28.299Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-09T09:18:39Z",
       "startTime": "2026-04-09T07:54:28.299Z",
-      "endTime": null,
+      "endTime": "2026-04-09T09:18:39Z",
       "inputTokens": 162482,
       "outputTokens": 2782,
       "cachedInputTokens": 664448,
@@ -1231,9 +1371,7 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~41 min"
+      "projectId": ""
     },
     {
       "id": "daf444b3-e366-4bc7-b",
@@ -1543,7 +1681,7 @@
       "parentSession": "heartbeat",
       "projectId": "mission-control",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~3.4 hr"
+      "estimatedTimeToCompletion": "~3.6 hr"
     },
     {
       "id": "7518f9ca-9368-4570-a",
@@ -1601,7 +1739,7 @@
       "parentSession": "",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~4.5 hr"
+      "estimatedTimeToCompletion": "~4.7 hr"
     },
     {
       "id": "580386f6-ce8b-47c5-9",
@@ -2010,25 +2148,25 @@
       "dateFinished": null,
       "startTime": "2026-04-07T16:20:26.364Z",
       "endTime": null,
-      "inputTokens": 22794,
-      "outputTokens": 158,
-      "cachedInputTokens": 22400,
-      "tokens": 45352,
+      "inputTokens": 84892,
+      "outputTokens": 1084,
+      "cachedInputTokens": 362112,
+      "tokens": 448088,
       "model": "gpt-4o",
       "apiModelUsed": "delivery-mirror, gpt-4o",
       "modelsUsed": [
         "delivery-mirror",
         "gpt-4o"
       ],
-      "totalCost": 0.0866,
+      "totalCost": 0.6757,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/50795721-da3a-4b7e-8902-501a80a70522.jsonl",
-      "sizeBytes": 7221,
+      "sizeBytes": 60227,
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485909146070028370",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~4.4 hr"
+      "estimatedTimeToCompletion": "~14.7 hr"
     },
     {
       "id": "ea2f2134-e1e3-4af7-a",
@@ -2086,7 +2224,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~17.4 hr"
+      "estimatedTimeToCompletion": "~17.5 hr"
     },
     {
       "id": "fe36b8d9-5195-4ab7-9",
@@ -2258,7 +2396,7 @@
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~19.7 hr"
+      "estimatedTimeToCompletion": "~19.9 hr"
     },
     {
       "id": "8e609c87-b9b1-4628-8",
@@ -2575,7 +2713,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~39.2 hr"
+      "estimatedTimeToCompletion": "~39.4 hr"
     },
     {
       "id": "6320fc79-469f-4ae9-a",
@@ -2663,7 +2801,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~39.2 hr"
+      "estimatedTimeToCompletion": "~39.4 hr"
     },
     {
       "id": "ad23b75b-3fc4-4377-8",
@@ -2810,7 +2948,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~39.2 hr"
+      "estimatedTimeToCompletion": "~39.4 hr"
     },
     {
       "id": "d4dd2678-dfe5-472b-8",
@@ -3082,7 +3220,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~53.8 hr"
+      "estimatedTimeToCompletion": "~53.9 hr"
     },
     {
       "id": "bdc4ba6a-413e-4490-8",
@@ -3117,7 +3255,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~53.9 hr"
+      "estimatedTimeToCompletion": "~54.1 hr"
     },
     {
       "id": "8e577605-155a-45d3-b",
@@ -3152,7 +3290,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~53.9 hr"
+      "estimatedTimeToCompletion": "~54.1 hr"
     },
     {
       "id": "65474d0b-981c-4929-8",
@@ -3187,7 +3325,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~53.9 hr"
+      "estimatedTimeToCompletion": "~54.1 hr"
     },
     {
       "id": "f94a9a03-4a3b-48ca-9",
@@ -3222,7 +3360,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~53.9 hr"
+      "estimatedTimeToCompletion": "~54.1 hr"
     },
     {
       "id": "2026-04-02T22-58-51-",
@@ -3618,10 +3756,10 @@
       "dateFinished": null,
       "startTime": "2026-03-26T20:18:51.271Z",
       "endTime": null,
-      "inputTokens": 7129210,
-      "outputTokens": 13400,
-      "cachedInputTokens": 9772331,
-      "tokens": 16914941,
+      "inputTokens": 7351855,
+      "outputTokens": 13586,
+      "cachedInputTokens": 9880363,
+      "tokens": 17245804,
       "model": "gpt-4o",
       "apiModelUsed": "claude-haiku-4-5-20251001, claude-opus-4-6, claude-sonnet-4-20250514, claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -3632,15 +3770,15 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 30.1724,
+      "totalCost": 30.866,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/887db79b-4cae-4640-bb45-65d0e9e36dca.jsonl",
-      "sizeBytes": 1201974,
+      "sizeBytes": 1221715,
       "isCron": false,
       "spawns": 8,
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~113.9 hr"
+      "estimatedTimeToCompletion": "~114.1 hr"
     },
     {
       "id": "a004d65f-4a20-4d92-b",
@@ -3768,7 +3906,7 @@
       "description": "Build structured representation of all companies, holding companies, LPs, LLCs, trust relationships, ownership percentages, and property ownership. This is the data backbone for Entity Map, Finance Command, and Risk Command.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:52Z",
+      "startTime": "2026-04-09T10:00:53Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -3826,7 +3964,7 @@
       "description": "Build a top-level dashboard showing the most important metrics, priorities, risks, opportunities, and current actions across the entire organization. Colby should see at a glance: state of business, state of holdings, state of cash/capital, state of active initiatives, state of risk, and highest-leverage next actions.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:18Z",
+      "startTime": "2026-04-09T10:00:18Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -3913,7 +4051,7 @@
       "description": "Build a system for identifying expense categories, vendor spend, inefficiencies, margin leakage, duplicate costs, and opportunities to reduce waste. Support expense reduction initiatives and margin management.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:07Z",
+      "startTime": "2026-04-09T10:00:07Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -3971,7 +4109,7 @@
       "description": "Build a place to track investment decisions, capital deployment, returns, strategic rationale, ownership value, and future opportunities. Support capital allocation decisions and long-term wealth building.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:49Z",
+      "startTime": "2026-04-09T10:00:49Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -4000,7 +4138,7 @@
       "description": "Build a view of workflows, automations, delegated tasks, recurring processes, system dependencies, and places where founder involvement can be reduced. Support autonomous operations and reduce founder drag.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:42Z",
+      "startTime": "2026-04-09T10:00:42Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -4087,7 +4225,7 @@
       "description": "Build a persistent record of major decisions, assumptions, directives, structural notes, and institutional knowledge that OpenClaw should preserve and use. This is the organizational memory system.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:39Z",
+      "startTime": "2026-04-09T10:00:39Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -4174,7 +4312,7 @@
       "description": "Wire QuickBooks OAuth connection (already started) into Mission Control to power Revenue Command, Expense Command, and Cash Flow Command with real financial data. P&L, cash position, inflows/outflows, vendor spend all come from here.",
       "dateCreated": "2026-04-05T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:11Z",
+      "startTime": "2026-04-09T10:00:11Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -4522,7 +4660,7 @@
       "description": "Build the backend data model and API endpoints for the Entity Map (CMD-2). Create a JSON schema and REST API for companies, holdings, LLCs, LPs, trusts, ownership percentages, property ownership, and entity relationships. This powers the Entity Map visualization that the designer is building.",
       "dateCreated": "2026-04-06T00:00:00Z",
       "dateFinished": null,
-      "startTime": "2026-04-09T09:30:00Z",
+      "startTime": "2026-04-09T10:00:01Z",
       "endTime": null,
       "inputTokens": 0,
       "outputTokens": 0,
@@ -4692,9 +4830,9 @@
       "name": "ACP Coding Delegations",
       "status": "active",
       "taskCount": 28,
-      "doneCount": 19,
-      "activeCount": 9,
-      "totalCost": 1392.9948,
+      "doneCount": 20,
+      "activeCount": 8,
+      "totalCost": 1393.6884,
       "apiModelsUsed": [
         "claude-haiku-4-5-20251001",
         "claude-opus-4-6",
@@ -4756,19 +4894,19 @@
         "validation"
       ],
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~135 min",
+      "estimatedTimeToCompletion": "~120 min",
       "sessions": [
         {
           "id": "2026-04-09T09-07-21-",
           "sessionId": "2026-04-09T09-07-21-218Z_a9f22062-d6d2-4ad2-95dc-6e2fa83ebca1",
           "agent": "main",
           "task": "1. Review potential overlap between `frontend-design` and `superdesign` skills\n2.",
-          "status": "in_progress",
-          "lane": "inprogress",
+          "status": "done",
+          "lane": "done",
           "dateCreated": "2026-04-09T09:07:21.218Z",
-          "dateFinished": null,
+          "dateFinished": "2026-04-09T09:07:24Z",
           "startTime": "2026-04-09T09:07:21.218Z",
-          "endTime": null,
+          "endTime": "2026-04-09T09:07:24Z",
           "inputTokens": 605277,
           "outputTokens": 6558,
           "cachedInputTokens": 638096,
@@ -4788,9 +4926,7 @@
           "isCron": false,
           "spawns": 2,
           "parentSession": "",
-          "projectId": "coding",
-          "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~15 min"
+          "projectId": "coding"
         },
         {
           "id": "1f7a95b3-d382-4ac6-a",
@@ -4848,7 +4984,7 @@
           "parentSession": "",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~4.5 hr"
+          "estimatedTimeToCompletion": "~4.7 hr"
         },
         {
           "id": "02eaaaa5-82d4-4e2a-8",
@@ -4962,7 +5098,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~17.4 hr"
+          "estimatedTimeToCompletion": "~17.5 hr"
         },
         {
           "id": "fe36b8d9-5195-4ab7-9",
@@ -5049,7 +5185,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~39.2 hr"
+          "estimatedTimeToCompletion": "~39.4 hr"
         },
         {
           "id": "ad23b75b-3fc4-4377-8",
@@ -5293,7 +5429,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~53.8 hr"
+          "estimatedTimeToCompletion": "~53.9 hr"
         },
         {
           "id": "bdc4ba6a-413e-4490-8",
@@ -5328,7 +5464,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~53.9 hr"
+          "estimatedTimeToCompletion": "~54.1 hr"
         },
         {
           "id": "8e577605-155a-45d3-b",
@@ -5363,7 +5499,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~53.9 hr"
+          "estimatedTimeToCompletion": "~54.1 hr"
         },
         {
           "id": "65474d0b-981c-4929-8",
@@ -5398,7 +5534,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~53.9 hr"
+          "estimatedTimeToCompletion": "~54.1 hr"
         },
         {
           "id": "2026-04-02T22-58-51-",
@@ -5567,10 +5703,10 @@
           "dateFinished": null,
           "startTime": "2026-03-26T20:18:51.271Z",
           "endTime": null,
-          "inputTokens": 7129210,
-          "outputTokens": 13400,
-          "cachedInputTokens": 9772331,
-          "tokens": 16914941,
+          "inputTokens": 7351855,
+          "outputTokens": 13586,
+          "cachedInputTokens": 9880363,
+          "tokens": 17245804,
           "model": "gpt-4o",
           "apiModelUsed": "claude-haiku-4-5-20251001, claude-opus-4-6, claude-sonnet-4-20250514, claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
           "modelsUsed": [
@@ -5581,15 +5717,15 @@
             "gpt-4o",
             "gpt-4o-mini"
           ],
-          "totalCost": 30.1724,
+          "totalCost": 30.866,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/887db79b-4cae-4640-bb45-65d0e9e36dca.jsonl",
-          "sizeBytes": 1201974,
+          "sizeBytes": 1221715,
           "isCron": false,
           "spawns": 8,
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~113.9 hr"
+          "estimatedTimeToCompletion": "~114.1 hr"
         },
         {
           "id": "a004d65f-4a20-4d92-b",
@@ -5902,7 +6038,7 @@
           "description": "Build structured representation of all companies, holding companies, LPs, LLCs, trust relationships, ownership percentages, and property ownership. This is the data backbone for Entity Map, Finance Command, and Risk Command.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:52Z",
+          "startTime": "2026-04-09T10:00:53Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -5960,7 +6096,7 @@
           "description": "Build a top-level dashboard showing the most important metrics, priorities, risks, opportunities, and current actions across the entire organization. Colby should see at a glance: state of business, state of holdings, state of cash/capital, state of active initiatives, state of risk, and highest-leverage next actions.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:18Z",
+          "startTime": "2026-04-09T10:00:18Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6047,7 +6183,7 @@
           "description": "Build a system for identifying expense categories, vendor spend, inefficiencies, margin leakage, duplicate costs, and opportunities to reduce waste. Support expense reduction initiatives and margin management.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:07Z",
+          "startTime": "2026-04-09T10:00:07Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6105,7 +6241,7 @@
           "description": "Build a place to track investment decisions, capital deployment, returns, strategic rationale, ownership value, and future opportunities. Support capital allocation decisions and long-term wealth building.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:49Z",
+          "startTime": "2026-04-09T10:00:49Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6134,7 +6270,7 @@
           "description": "Build a view of workflows, automations, delegated tasks, recurring processes, system dependencies, and places where founder involvement can be reduced. Support autonomous operations and reduce founder drag.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:42Z",
+          "startTime": "2026-04-09T10:00:42Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6221,7 +6357,7 @@
           "description": "Build a persistent record of major decisions, assumptions, directives, structural notes, and institutional knowledge that OpenClaw should preserve and use. This is the organizational memory system.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:39Z",
+          "startTime": "2026-04-09T10:00:39Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6308,7 +6444,7 @@
           "description": "Wire QuickBooks OAuth connection (already started) into Mission Control to power Revenue Command, Expense Command, and Cash Flow Command with real financial data. P&L, cash position, inflows/outflows, vendor spend all come from here.",
           "dateCreated": "2026-04-05T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:11Z",
+          "startTime": "2026-04-09T10:00:11Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6656,7 +6792,7 @@
           "description": "Build the backend data model and API endpoints for the Entity Map (CMD-2). Create a JSON schema and REST API for companies, holdings, LLCs, LPs, trusts, ownership percentages, property ownership, and entity relationships. This powers the Entity Map visualization that the designer is building.",
           "dateCreated": "2026-04-06T00:00:00Z",
           "dateFinished": null,
-          "startTime": "2026-04-09T09:30:00Z",
+          "startTime": "2026-04-09T10:00:01Z",
           "endTime": null,
           "inputTokens": 0,
           "outputTokens": 0,
@@ -6716,6 +6852,36 @@
       "estimatedTimeToCompletion": "~45 min",
       "sessions": [
         {
+          "id": "d7407678-b8ff-46b8-b",
+          "sessionId": "d7407678-b8ff-46b8-b33c-7268bd0ef49d",
+          "agent": "ops-runner",
+          "task": "Mission Control Data Refresh",
+          "status": "in_progress",
+          "lane": "inprogress",
+          "dateCreated": "2026-04-09T10:20:46.116Z",
+          "dateFinished": null,
+          "startTime": "2026-04-09T10:20:46.116Z",
+          "endTime": null,
+          "inputTokens": 357,
+          "outputTokens": 120,
+          "cachedInputTokens": 49536,
+          "tokens": 50013,
+          "model": "deepseek-chat",
+          "apiModelUsed": "deepseek-chat",
+          "modelsUsed": [
+            "deepseek-chat"
+          ],
+          "totalCost": 0.0,
+          "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/d7407678-b8ff-46b8-b33c-7268bd0ef49d.jsonl",
+          "sizeBytes": 3973,
+          "isCron": false,
+          "spawns": 0,
+          "parentSession": "",
+          "projectId": "mission-control",
+          "estimatedCostToCompletion": 0.0,
+          "estimatedTimeToCompletion": "~1 min"
+        },
+        {
           "id": "6792ca97-d07d-4a3d-b",
           "sessionId": "6792ca97-d07d-4a3d-b3a7-bb01cf6c0363",
           "agent": "ops-runner",
@@ -6726,10 +6892,10 @@
           "dateFinished": null,
           "startTime": "2026-04-09T09:50:46.100Z",
           "endTime": null,
-          "inputTokens": 229,
-          "outputTokens": 120,
-          "cachedInputTokens": 49664,
-          "tokens": 50013,
+          "inputTokens": 2245,
+          "outputTokens": 313,
+          "cachedInputTokens": 101248,
+          "tokens": 103806,
           "model": "deepseek-chat",
           "apiModelUsed": "deepseek-chat",
           "modelsUsed": [
@@ -6737,37 +6903,7 @@
           ],
           "totalCost": 0.0,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/6792ca97-d07d-4a3d-b3a7-bb01cf6c0363.jsonl",
-          "sizeBytes": 3973,
-          "isCron": false,
-          "spawns": 0,
-          "parentSession": "",
-          "projectId": "mission-control",
-          "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~1 min"
-        },
-        {
-          "id": "3034664e-6db6-46a2-b",
-          "sessionId": "3034664e-6db6-46a2-b7d1-888d610c803d",
-          "agent": "ops-runner",
-          "task": "Mission Control Data Refresh",
-          "status": "in_progress",
-          "lane": "inprogress",
-          "dateCreated": "2026-04-09T09:20:49.287Z",
-          "dateFinished": null,
-          "startTime": "2026-04-09T09:20:49.287Z",
-          "endTime": null,
-          "inputTokens": 18088,
-          "outputTokens": 377,
-          "cachedInputTokens": 85440,
-          "tokens": 103905,
-          "model": "deepseek-chat",
-          "apiModelUsed": "deepseek-chat",
-          "modelsUsed": [
-            "deepseek-chat"
-          ],
-          "totalCost": 0.0,
-          "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/3034664e-6db6-46a2-b7d1-888d610c803d.jsonl",
-          "sizeBytes": 17420,
+          "sizeBytes": 17141,
           "isCron": false,
           "spawns": 0,
           "parentSession": "",
@@ -6887,7 +7023,7 @@
           "parentSession": "heartbeat",
           "projectId": "mission-control",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~3.4 hr"
+          "estimatedTimeToCompletion": "~3.6 hr"
         },
         {
           "id": "580386f6-ce8b-47c5-9",
@@ -7461,9 +7597,9 @@
     }
   ],
   "metrics": {
-    "totalSessions": 144,
-    "totalTokens": 1333863923,
-    "totalCost": 2059.31,
+    "totalSessions": 149,
+    "totalTokens": 1336124926,
+    "totalCost": 2060.94,
     "activeProjects": 5,
     "cronJobsEnabled": 15
   }
