@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { C } from '../data/constants';
-import { icons, NAV_ITEMS, SETTINGS_NAV } from './Icons';
+import { icons, NAV_ITEMS, NAV_GROUPS, SETTINGS_NAV } from './Icons';
 import { Avatar, Badge } from './shared';
 import PriorityDot from './shared/PriorityDot';
 import ErrorBoundary from './ErrorBoundary';
@@ -20,6 +20,28 @@ const Layout = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+
+  // Grouped sidebar state
+  const [expandedGroups, setExpandedGroups] = useState(() => {
+    if (typeof window === "undefined") return NAV_GROUPS.map(g => g.id);
+    try {
+      const stored = JSON.parse(window.localStorage.getItem("mission-control.sidebar.expanded-groups"));
+      if (Array.isArray(stored)) return stored;
+    } catch {}
+    return NAV_GROUPS.map(g => g.id);
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("mission-control.sidebar.expanded-groups", JSON.stringify(expandedGroups));
+    }
+  }, [expandedGroups]);
+
+  const toggleGroup = (groupId) => {
+    setExpandedGroups(prev => prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]);
+  };
+
+  const activeGroup = NAV_GROUPS.find(g => g.children.some(c => c.id === currentPage));
 
   useEffect(() => {
     const handler = (e) => {
@@ -100,51 +122,99 @@ const Layout = () => {
           )}
         </div>
 
-        {/* Nav Items */}
-        <div style={{ 
-          flex: 1, 
-          overflowY: "auto", 
-          padding: "4px 8px", 
-          display: "flex", 
-          flexDirection: "column", 
-          gap: 2 
+        {/* Nav Groups */}
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "4px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2
         }}>
-          {NAV_ITEMS.map(item => {
-            const active = currentPage === item.id;
+          {NAV_GROUPS.map(group => {
+            const isExpanded = expandedGroups.includes(group.id);
+            const isActiveGroup = activeGroup?.id === group.id;
             return (
-              <button 
-                key={item.id} 
-                onClick={() => handleNavigation(item.id)} 
-                title={item.label} 
-                style={{
-                  display: "flex", 
-                  alignItems: "center", 
-                  gap: 10,
-                  padding: sidebarOpen ? "8px 10px" : "8px 0",
-                  justifyContent: sidebarOpen ? "flex-start" : "center",
-                  background: active ? C.accent + "22" : "transparent",
-                  color: active ? C.accentLight : C.muted,
-                  border: "none", 
-                  borderRadius: 8, 
-                  cursor: "pointer", 
-                  fontSize: 13, 
-                  fontWeight: 500,
-                  transition: "all 0.15s", 
-                  width: "100%", 
-                  textAlign: "left",
-                }}
-              >
-                <span style={{ flexShrink: 0, display: "flex" }}>{item.icon}</span>
-                {sidebarOpen && (
-                  <span style={{ 
-                    whiteSpace: "nowrap", 
-                    overflow: "hidden", 
-                    textOverflow: "ellipsis" 
-                  }}>
-                    {item.label}
-                  </span>
+              <div key={group.id}>
+                {/* Group header */}
+                <button
+                  onClick={() => sidebarOpen ? toggleGroup(group.id) : handleNavigation(group.children[0]?.id)}
+                  title={group.label}
+                  aria-expanded={isExpanded}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: sidebarOpen ? "7px 10px" : "7px 0",
+                    justifyContent: sidebarOpen ? "flex-start" : "center",
+                    background: isActiveGroup && !isExpanded ? C.accent + "12" : "transparent",
+                    color: isActiveGroup ? C.text : C.muted,
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    transition: "all 0.15s",
+                    width: "100%",
+                    textAlign: "left",
+                    marginTop: 6,
+                  }}
+                >
+                  <span style={{ flexShrink: 0, display: "flex", opacity: 0.7 }}>{group.icon}</span>
+                  {sidebarOpen && (
+                    <>
+                      <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {group.label}
+                      </span>
+                      <svg
+                        width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        style={{ transition: "transform 0.2s", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", opacity: 0.5, flexShrink: 0 }}
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+                {/* Child items */}
+                {sidebarOpen && isExpanded && (
+                  <div role="group" style={{ display: "flex", flexDirection: "column", gap: 1, paddingLeft: 12 }}>
+                    {group.children.map(item => {
+                      const active = currentPage === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleNavigation(item.id)}
+                          title={item.label}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            padding: "6px 10px",
+                            justifyContent: "flex-start",
+                            background: active ? C.accent + "22" : "transparent",
+                            color: active ? C.accentLight : C.muted,
+                            border: "none",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: active ? 600 : 500,
+                            transition: "all 0.15s",
+                            width: "100%",
+                            textAlign: "left",
+                            borderLeft: active ? `2px solid ${C.accent}` : "2px solid transparent",
+                          }}
+                        >
+                          <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>

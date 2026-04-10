@@ -35,32 +35,51 @@ export const icons = {
   photos: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
 };
 
-// ── Navigation items ──
-export const NAV_ITEMS = [
-  { id: "overview", label: "Executive Overview", icon: icons.command },
-  { id: "home", label: "Home", icon: icons.home },
-  { id: "command", label: "Command Deck", icon: icons.command },
-  { id: "team", label: "Team", icon: icons.team },
-  { id: "floor", label: "The Floor", icon: icons.floor },
-  { id: "projects", label: "Projects", icon: icons.projects },
-  { id: "tasks", label: "Tasks", icon: icons.tasks },
-  { id: "finance", label: "Finance", icon: icons.finance },
-  { id: "accounts", label: "Accounts", icon: icons.accounts },
-  { id: "forge", label: "The Forge", icon: icons.forge },
-  { id: "skills", label: "Skill Lab", icon: icons.skills },
-  { id: "activity", label: "Activity Feed", icon: icons.activity },
-  { id: "sessions", label: "Sessions", icon: icons.sessions },
-  { id: "memory", label: "Memory & Knowledge", icon: icons.memory },
-  { id: "docs", label: "Docs Hub", icon: icons.docs },
-  { id: "files", label: "Workspace Files", icon: icons.files },
-  { id: "system", label: "System Monitor", icon: icons.system },
-  { id: "incidents", label: "Incident Room", icon: icons.activity },
-  { id: "integrations", label: "Integrations Hub", icon: icons.apiSkills },
-  { id: "rentals", label: "Rentals", icon: icons.rentals },
-  { id: "photo-manager", label: "Photo Manager", icon: icons.photos },
-  { id: "legal-docs", label: "Legal Docs", icon: icons.docs },
-  { id: "entity-map", label: "Entity Map", icon: icons.entityMap },
+// ── Navigation groups (nested sidebar) ──
+export const NAV_GROUPS = [
+  { id: "executive", label: "Executive", icon: icons.command, children: [
+    { id: "overview", label: "Executive Overview", icon: icons.command },
+    { id: "home", label: "Home", icon: icons.home },
+    { id: "command", label: "Command Deck", icon: icons.command },
+  ]},
+  { id: "people", label: "People", icon: icons.team, children: [
+    { id: "team", label: "Team", icon: icons.team },
+    { id: "floor", label: "The Floor", icon: icons.floor },
+  ]},
+  { id: "work", label: "Work", icon: icons.projects, children: [
+    { id: "projects", label: "Projects", icon: icons.projects },
+    { id: "tasks", label: "Tasks", icon: icons.tasks },
+  ]},
+  { id: "finance-group", label: "Finance", icon: icons.finance, children: [
+    { id: "finance", label: "Dashboard", icon: icons.finance },
+    { id: "accounts", label: "Accounts", icon: icons.accounts },
+  ]},
+  { id: "documents", label: "Documents", icon: icons.docs, children: [
+    { id: "docs", label: "Docs Hub", icon: icons.docs },
+    { id: "files", label: "Workspace Files", icon: icons.files },
+    { id: "legal-docs", label: "Legal Docs", icon: icons.docs },
+    { id: "memory", label: "Memory & Knowledge", icon: icons.memory },
+  ]},
+  { id: "engineering", label: "Engineering", icon: icons.forge, children: [
+    { id: "forge", label: "The Forge", icon: icons.forge },
+    { id: "skills", label: "Skill Lab", icon: icons.skills },
+    { id: "activity", label: "Activity Feed", icon: icons.activity },
+    { id: "sessions", label: "Sessions", icon: icons.sessions },
+  ]},
+  { id: "ops", label: "Operations", icon: icons.system, children: [
+    { id: "system", label: "System Monitor", icon: icons.system },
+    { id: "incidents", label: "Incident Room", icon: icons.activity },
+    { id: "integrations", label: "Integrations Hub", icon: icons.apiSkills },
+  ]},
+  { id: "assets", label: "Assets", icon: icons.rentals, children: [
+    { id: "rentals", label: "Rentals", icon: icons.rentals },
+    { id: "photo-manager", label: "Photo Manager", icon: icons.photos },
+    { id: "entity-map", label: "Entity Map", icon: icons.entityMap },
+  ]},
 ];
+
+// Flat list for backward compat (search modal, etc.)
+export const NAV_ITEMS = NAV_GROUPS.flatMap(g => g.children);
 
 // Settings nav item (pinned to sidebar bottom)
 export const SETTINGS_NAV = { id: "settings", label: "Settings", icon: icons.settings };

@@ -147,6 +147,15 @@ function normalizeAcpSession(session, index) {
     parentSession: session?.parentSession || "",
     projectId: session?.projectId || "",
     projectName: session?.projectName || "",
+    durationMinutes: (() => {
+      const start = session?.startTime || session?.dateCreated;
+      const end = session?.endTime || session?.dateFinished;
+      if (start && end) {
+        const ms = new Date(end).getTime() - new Date(start).getTime();
+        return ms > 0 ? Math.round(ms / 60000) : 0;
+      }
+      return 0;
+    })(),
   };
 }
 

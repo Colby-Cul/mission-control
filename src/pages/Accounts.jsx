@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, KPI, Badge, Table } from "../components/shared";
 import { C } from "../data/constants";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -36,6 +37,7 @@ const fmtCategory = (cat) => {
 };
 
 const Accounts = () => {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("Overview");
   const [summary, setSummary] = useState(null);
   const [accounts, setAccounts] = useState([]);
@@ -168,6 +170,13 @@ const Accounts = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+        <button onClick={() => navigate("/finance")} style={{ background: "none", border: "none", color: C.accent, cursor: "pointer", padding: 0, fontSize: 13, fontWeight: 600 }}>Finance</button>
+        <span style={{ color: C.muted }}>/</span>
+        <span style={{ color: C.text, fontWeight: 600 }}>Accounts</span>
+      </div>
+
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
