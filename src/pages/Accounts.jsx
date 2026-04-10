@@ -475,8 +475,14 @@ const Accounts = () => {
                     </select>
                   )}
                 </div>
-                <PlaidLink onSuccess={() => fetchData()} products={["transactions"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Bank Account" />
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <PlaidLink onSuccess={() => fetchData()} products={["transactions"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Bank Account" />
+                  <PlaidLink onSuccess={() => fetchData()} products={["assets"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
+                </div>
               </Card>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: -12 }}>
+                Use "Balance Only" for Chase, Citi, Schwab, and other major banks that don't support Plaid's transactions product.
+              </div>
 
               {bankAccounts.length === 0 ? (
                 <Card><div style={{ color: C.muted, textAlign: "center", padding: 20 }}>No bank accounts linked yet.</div></Card>
@@ -570,15 +576,23 @@ const Accounts = () => {
           {/* ═══════ INVESTMENTS TAB ═══════ */}
           {tab === "Investments" && (
             <>
-              <Card style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <select value={connectScope} onChange={e => setConnectScope(e.target.value)}
-                    style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13 }}>
-                    <option value="personal">Personal</option>
-                    <option value="business">Business</option>
-                  </select>
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <select value={connectScope} onChange={e => setConnectScope(e.target.value)}
+                      style={{ background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 6, padding: "6px 10px", fontSize: 13 }}>
+                      <option value="personal">Personal</option>
+                      <option value="business">Business</option>
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <PlaidLink onSuccess={() => fetchData()} products={["investments"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Brokerage" />
+                    <PlaidLink onSuccess={() => fetchData()} products={["assets"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
+                  </div>
                 </div>
-                <PlaidLink onSuccess={() => fetchData()} products={["investments", "transactions"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Brokerage" />
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
+                  Use "Balance Only" for Schwab, Citi, Edward Jones, or other institutions that don't support full investment data in Plaid.
+                </div>
               </Card>
 
               {investmentAccounts.length === 0 ? (

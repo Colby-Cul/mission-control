@@ -1,7 +1,7 @@
 const { getPlaidClient, withCredentials, sendJson } = require("../_lib/plaid");
 const { decryptToken } = require("../_lib/crypto");
 const { supabaseRest } = require("../_lib/supabase");
-const { syncTransactions, syncHoldings } = require("./exchange");
+const { syncTransactions, syncHoldings, createAssetReport } = require("./exchange");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
@@ -14,7 +14,7 @@ module.exports = async function handler(req, res) {
 
     // Get all plaid items
     const items = await supabaseRest("plaid_items", {
-      query: "select=id,access_token_enc,account_scope,entity_id,institution_name",
+      query: "select=id,access_token_enc,account_scope,entity_id,institution_name,products",
     });
 
     if (!items || items.length === 0) {
@@ -43,15 +43,28 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Sync transactions
-        await syncTransactions(client, accessToken, item.id, item.account_scope, item.entity_id);
+        const products = item.products || ["transactions"];
+
+        // Sync transactions (only for transactions-product connections)
+        if (products.includes("transactions")) {
+          await syncTransactions(client, accessToken, item.id, item.account_scope, item.entity_id);
+        }
 
         // Sync holdings if applicable
         const hasInvestments = accountsResponse.data.accounts.some(
           (a) => a.type === "investment" || a.type === "brokerage"
         );
-        if (hasInvestments) {
+        if (hasInvestments && products.includes("investments")) {
           await syncHoldings(client, accessToken, item.account_scope, item.entity_id);
+        }
+
+        // For assets-only connections, refresh the asset report
+        if (products.includes("assets") && !products.includes("investments") && !products.includes("transactions")) {
+          try {
+            await createAssetReport(client, accessToken, item.id, item.account_scope, item.entity_id);
+          } catch (err) {
+            console.error(`Asset report refresh warning for ${item.institution_name}:`, err.message);
+          }
         }
 
         // Clear errors
