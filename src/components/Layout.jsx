@@ -13,8 +13,8 @@ const Layout = () => {
   const location = useLocation();
   const { agents, activities, projects, acpSessions, snapshot } = useMissionControlData();
   const { user, signOut } = useAuth();
-  const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'home';
-  const showFabs = ["home", "", "tasks", "projects", "command"].includes(currentPage);
+  const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'north-star';
+  const showFabs = ["home", "north-star", "", "tasks", "projects", "command"].includes(currentPage);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -57,7 +57,7 @@ const Layout = () => {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const currentLabel = NAV_ITEMS.find(n => n.id === currentPage)?.label || "Home";
+  const currentLabel = NAV_ITEMS.find(n => n.id === currentPage)?.label || "North Star";
   const searchableProjects = projects.map((p) => ({ id: p.id, name: p.name, color: C.accent }));
   const searchableTasks = acpSessions.slice(0, 20).map(s => ({
     id: s.sessionId || s.id,
@@ -67,11 +67,7 @@ const Layout = () => {
   }));
 
   const handleNavigation = (pageId) => {
-    if (pageId === 'home') {
-      navigate('/');
-    } else {
-      navigate(`/${pageId}`);
-    }
+    navigate(`/${pageId}`);
     setSearchOpen(false);
   };
 

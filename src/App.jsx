@@ -6,6 +6,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 
 const Home = lazy(() => import('./pages/Home'));
+const NorthStar = lazy(() => import('./pages/NorthStar'));
+const VisionBoard = lazy(() => import('./pages/VisionBoard'));
+const CashFlowPage = lazy(() => import('./pages/CashFlowPage'));
+const TaxCenter = lazy(() => import('./pages/TaxCenter'));
 const ExecutiveOverview = lazy(() => import('./pages/ExecutiveOverview'));
 const CommandDeck = lazy(() => import('./pages/CommandDeck'));
 const Team = lazy(() => import('./pages/Team'));
@@ -54,7 +58,12 @@ function App() {
             <Suspense fallback={<div style={{padding:40,color:"#9ca3af",textAlign:"center"}}>Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Layout />}>
-                  <Route index element={<Home />} />
+                  <Route index element={<NorthStar />} />
+                  <Route path="home" element={<Home />} />
+                  <Route path="north-star" element={<NorthStar />} />
+                  <Route path="vision-board" element={<VisionBoard />} />
+                  <Route path="cash-flow" element={<CashFlowPage />} />
+                  <Route path="tax-center" element={<TaxCenter />} />
                   <Route path="overview" element={<ExecutiveOverview />} />
                   <Route path="command" element={<CommandDeck />} />
                   <Route path="team" element={<Team />} />
