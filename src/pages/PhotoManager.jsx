@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import heic2any from "heic2any";
 import { Card } from "../components/shared";
 import { C } from "../data/constants";
 import { supabase } from "../lib/supabase";
@@ -9,6 +10,52 @@ const PROPERTIES = [
 ];
 
 const CLS_BASE = "https://californialuxurystays.com";
+
+// Convert any image file to JPEG (handles HEIC, WebP, PNG, etc.)
+const toJpeg = async (file) => {
+  // If already JPEG, return as-is
+  if (file.type === "image/jpeg") return file;
+
+  let blob = file;
+
+  // HEIC/HEIF needs special decoding
+  const isHeic = file.type === "image/heic" || file.type === "image/heif" ||
+    /\.heic$/i.test(file.name) || /\.heif$/i.test(file.name);
+  if (isHeic) {
+    try {
+      blob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+      if (Array.isArray(blob)) blob = blob[0];
+    } catch (err) {
+      console.error("HEIC conversion failed:", err);
+      return file; // return original if conversion fails
+    }
+  }
+
+  // For non-JPEG/non-HEIC (PNG, WebP, etc.), use canvas
+  if (!isHeic && file.type !== "image/jpeg") {
+    blob = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxW = 1920;
+          const scale = img.width > maxW ? maxW / img.width : 1;
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85);
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const newName = file.name.replace(/\.[^.]+$/, ".jpg");
+  return new File([blob], newName, { type: "image/jpeg" });
+};
 
 const PhotoManager = () => {
   const [property, setProperty] = useState("northstar");
@@ -74,7 +121,7 @@ const PhotoManager = () => {
     const newPhotos = [];
 
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      const file = await toJpeg(files[i]);
       const ext = file.name.split(".").pop().toLowerCase();
       const fileName = `${property}/${Date.now()}-${i}.${ext}`;
 
