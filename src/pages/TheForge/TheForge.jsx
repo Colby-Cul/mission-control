@@ -21,7 +21,7 @@ import AskAgentModal from "./components/AskAgentModal";
 export default function TheForge() {
   const {
     activeIdeas, stageCounts, recentSessions, reviewQueue,
-    deployIdea, killIdea, shelveIdea,
+    deployIdea, killIdea, shelveIdea, refresh,
   } = useForgeData();
 
   const {
