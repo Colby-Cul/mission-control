@@ -16,7 +16,12 @@ module.exports = async function handler(req, res) {
       products.includes("investments");
 
     const request = {
-      user: { client_user_id: "mission-control-user" },
+      user: {
+        client_user_id: "mission-control-user",
+        // Required for Assets product
+        email_address: body.email || "colby@culbertsonandgray.com",
+        phone_number: body.phone || "+18589676502",
+      },
       client_name: "Mission Control",
       products: products.map((p) => (typeof p === "string" ? p : p)),
       country_codes: [CountryCode.Us],
