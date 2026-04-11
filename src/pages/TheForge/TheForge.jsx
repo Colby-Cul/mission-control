@@ -1,3 +1,4 @@
+// TheForge - Supabase-powered SaaS idea tracker
 import { useState, useEffect } from "react";
 import { C } from "../../data/constants";
 
