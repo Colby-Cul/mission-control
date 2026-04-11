@@ -1,312 +1,169 @@
-import { useState, useCallback } from "react";
-import { getApiUrl } from "../../utils/api";
-import useForgeData from "./hooks/useForgeData";
-import useForgeFilters from "./hooks/useForgeFilters";
-import ForgeHeader from "./components/ForgeHeader";
-import ViewTabs from "./components/ViewTabs";
-import AgentTicker from "./components/AgentTicker";
-import PipelineFunnel from "./components/PipelineFunnel";
-import FilterBar from "./components/FilterBar";
-import IdeaCard from "./components/IdeaCard";
-import IdeaDetailPanel from "./components/IdeaDetailPanel";
-import CompareModal from "./components/CompareModal";
-import ReviewQueue from "./components/ReviewQueue";
-import KanbanView from "./components/KanbanView";
-import TableView from "./components/TableView";
-import AnalyticsPanel from "./components/AnalyticsPanel";
-import KillModal from "./components/KillModal";
-import DeployModal from "./components/DeployModal";
-import AskAgentModal from "./components/AskAgentModal";
+import { useState, useEffect } from "react";
+import { C } from "../../data/constants";
+
+const SUPABASE_URL = "https://bdlvwfobjqvnrffzxrfz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkbHZ3Zm9ianF2bnJmZnp4cmZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzUwNjAsImV4cCI6MjA4OTkxMTA2MH0.eJ0nKEHBSr8jKTAFxSvPC8VNjjYZJJRn0n-yHAnsFXI";
+
+const COMPETITION_COLORS = { Low: C.green, "Low-Medium": C.teal, Medium: C.amber, "Medium-High": "#f97316", High: C.red };
+
+const Badge = ({ color, children }) => (
+  <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: color + "18", color, fontWeight: 600 }}>{children}</span>
+);
+
+const KPI = ({ label, value, sub, color }) => (
+  <div style={{ background: C.surface, borderRadius: 12, padding: 14, border: "1px solid " + C.border }}>
+    <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+    <div style={{ fontSize: 22, fontWeight: 700, color: color || C.text }}>{value}</div>
+    <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>
+  </div>
+);
 
 export default function TheForge() {
-  const {
-    activeIdeas, stageCounts, recentSessions, reviewQueue,
-    deployIdea, killIdea, shelveIdea, refresh,
-  } = useForgeData();
-
-  const {
-    search, setSearch, activeFilter, setActiveFilter,
-    stageFilter, setStageFilter, sortBy, setSortBy,
-    compareIds, toggleCompare, clearCompare, filtered,
-  } = useForgeFilters(activeIdeas);
-
-  // View state
-  const [view, setView] = useState("factory");
+  const [ideas, setIdeas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedIdea, setSelectedIdea] = useState(null);
-  const [showCompare, setShowCompare] = useState(false);
-  const [showReview, setShowReview] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [killTarget, setKillTarget] = useState(null);
-  const [deployTarget, setDeployTarget] = useState(null);
-  const [askTarget, setAskTarget] = useState(null);
-  const [showNewIdea, setShowNewIdea] = useState(false);
-  const [newIdeaName, setNewIdeaName] = useState("");
-  const [newIdeaSource, setNewIdeaSource] = useState("Manual");
-  const [addResult, setAddResult] = useState(null);
+  const [sortBy, setSortBy] = useState("confidence_score");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  const submitNewIdea = useCallback(async () => {
-    if (!newIdeaName.trim()) return;
-    try {
-      const base = getApiUrl();
-      await fetch(`${base}/api/projects`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newIdeaName,
-          agents: ["main"],
-          status: "active",
-          description: `Source: ${newIdeaSource}. Added from The Forge pipeline.`,
-        }),
-      });
-      setAddResult({ ok: true, msg: `"${newIdeaName}" added to pipeline` });
-      setNewIdeaName("");
-      setTimeout(() => { setAddResult(null); refresh(); setShowNewIdea(false); }, 1500);
-    } catch {
-      setAddResult({ ok: false, msg: "API unreachable — idea saved locally only" });
-      setTimeout(() => setAddResult(null), 3000);
-    }
-  }, [newIdeaName, newIdeaSource, refresh]);
-
-  // Action handlers with confirmation modals
-  const handleDeploy = useCallback((id) => {
-    const idea = activeIdeas.find(i => i.id === id);
-    if (idea) setDeployTarget(idea);
-  }, [activeIdeas]);
-
-  const handleKill = useCallback((id) => {
-    const idea = activeIdeas.find(i => i.id === id);
-    if (idea) setKillTarget(idea);
-  }, [activeIdeas]);
-
-  const confirmDeploy = useCallback((id) => {
-    deployIdea(id);
-    setDeployTarget(null);
-    setSelectedIdea(null);
-  }, [deployIdea]);
-
-  const confirmKill = useCallback((id) => {
-    killIdea(id);
-    setKillTarget(null);
-    setSelectedIdea(null);
-  }, [killIdea]);
-
-  const handleStageClick = useCallback((key) => {
-    setStageFilter(prev => prev === key ? null : key);
-  }, [setStageFilter]);
-
-  const handleViewChange = useCallback((v) => {
-    if (v === "review") { setShowReview(true); return; }
-    setView(v);
+  useEffect(() => {
+    fetchIdeas();
   }, []);
 
-  // Compare items
-  const compareIdeas = activeIdeas.filter(i => compareIds.includes(i.id));
+  const fetchIdeas = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/forge_ideas?select=*&order=confidence_score.desc`, {
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setIdeas(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sorted = [...ideas]
+    .filter(i => filterStatus === "all" || i.status === filterStatus)
+    .sort((a, b) => {
+      if (sortBy === "confidence_score") return (b.confidence_score || 0) - (a.confidence_score || 0);
+      if (sortBy === "date_added") return (b.date_added || "").localeCompare(a.date_added || "");
+      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "");
+      return 0;
+    });
+
+  const avgConfidence = ideas.length > 0 ? (ideas.reduce((s, i) => s + (i.confidence_score || 0), 0) / ideas.length).toFixed(1) : 0;
+  const highConf = ideas.filter(i => i.confidence_score >= 9).length;
+  const statuses = [...new Set(ideas.map(i => i.status))];
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: C.muted }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>\u2692\uFE0F</div>
+        <div style={{ fontSize: 14 }}>Loading The Forge...</div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Ticker animation style */}
-      <style>{`
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        .animate-ticker { animation: ticker 30s linear infinite; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-      `}</style>
-
-      <ForgeHeader
-        reviewCount={reviewQueue.length}
-        onCompare={() => compareIds.length >= 2 ? setShowCompare(true) : null}
-        onAnalytics={() => setShowAnalytics(true)}
-        onReview={() => setShowReview(true)}
-        onNewIdea={() => setShowNewIdea(true)}
-      />
-
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <ViewTabs active={view} onChange={handleViewChange} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>\u2692\uFE0F The Forge</h1>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>SaaS idea factory \u2014 100% agentic, $100K+ MRR potential</div>
+        </div>
+        <button onClick={fetchIdeas} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>\u21BB Refresh</button>
       </div>
 
-      <AgentTicker sessions={recentSessions} />
+      {error && <div style={{ padding: 12, background: C.red + "22", borderRadius: 8, color: C.red, fontSize: 13 }}>Error loading ideas: {error}</div>}
 
-      <PipelineFunnel
-        stageCounts={stageCounts}
-        activeStage={stageFilter}
-        onStageClick={handleStageClick}
-      />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
+        <KPI label="Total Ideas" value={ideas.length} sub="In the forge" color={C.accent} />
+        <KPI label="Avg Confidence" value={avgConfidence} sub="Out of 10" color={C.amber} />
+        <KPI label="High Confidence" value={highConf} sub="Score \u2265 9" color={C.green} />
+        <KPI label="New Today" value={ideas.filter(i => i.date_added === new Date().toISOString().slice(0, 10)).length} sub={new Date().toLocaleDateString()} color={C.cyan} />
+      </div>
 
-      <FilterBar
-        search={search} onSearch={setSearch}
-        activeFilter={activeFilter} onFilter={setActiveFilter}
-        sortBy={sortBy} onSort={setSortBy}
-        totalCount={activeIdeas.length}
-      />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 13 }}>
+          <option value="confidence_score">Sort: Confidence</option>
+          <option value="date_added">Sort: Newest</option>
+          <option value="name">Sort: Name</option>
+        </select>
+        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 13 }}>
+          <option value="all">All Status</option>
+          {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <span style={{ fontSize: 12, color: C.muted, marginLeft: 8 }}>Showing {sorted.length} of {ideas.length}</span>
+      </div>
 
-      {/* Compare hint */}
-      {compareIds.length > 0 && compareIds.length < 2 && (
-        <div className="text-xs text-slate-500 bg-slate-900/30 rounded-lg px-3 py-2 border border-slate-700/20">
-          Select {2 - compareIds.length} more idea{compareIds.length === 0 ? "s" : ""} to compare, then click Compare.
-        </div>
-      )}
-      {compareIds.length >= 2 && (
-        <div className="flex items-center gap-2 text-xs bg-purple-500/10 border border-purple-500/20 rounded-lg px-3 py-2">
-          <span className="text-purple-400 font-medium">{compareIds.length} ideas selected</span>
-          <button onClick={() => setShowCompare(true)}
-            className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
-            Compare Now
-          </button>
-          <button onClick={clearCompare} className="text-slate-500 hover:text-slate-300">Clear</button>
-        </div>
-      )}
-
-      {/* Main content area */}
-      {view === "factory" && (
-        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))" }}>
-          {filtered.map(idea => (
-            <IdeaCard
-              key={idea.id}
-              idea={idea}
-              isComparing={compareIds.includes(idea.id)}
-              onToggleCompare={toggleCompare}
-              onClick={() => setSelectedIdea(idea)}
-              onDeploy={handleDeploy}
-              onKill={handleKill}
-              onShelve={shelveIdea}
-              onAskAgent={setAskTarget}
-            />
-          ))}
-          {filtered.length === 0 && (
-            <div className="col-span-full text-center text-slate-500 text-sm py-12">
-              No ideas match your filters
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 14 }}>
+        {sorted.map(idea => (
+          <div key={idea.id} onClick={() => setSelectedIdea(selectedIdea?.id === idea.id ? null : idea)}
+            style={{
+              background: C.surface, borderRadius: 14, padding: 16, border: `1px solid ${selectedIdea?.id === idea.id ? C.accent : C.border}`,
+              cursor: "pointer", transition: "border-color 0.15s", position: "relative", overflow: "hidden"
+            }}>
+            <div style={{ position: "absolute", top: 12, right: 12, background: idea.confidence_score >= 9 ? C.green + "22" : C.amber + "22",
+              color: idea.confidence_score >= 9 ? C.green : C.amber, padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+              {idea.confidence_score}/10
             </div>
-          )}
-        </div>
-      )}
 
-      {view === "pipeline" && (
-        <KanbanView
-          ideas={filtered}
-          onDeploy={handleDeploy}
-          onKill={handleKill}
-          onClick={setSelectedIdea}
-        />
-      )}
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4, paddingRight: 60 }}>{idea.name}</div>
+            <div style={{ fontSize: 12, color: C.accentLight, marginBottom: 10, lineHeight: 1.4 }}>{idea.tagline}</div>
 
-      {view === "table" && (
-        <TableView
-          ideas={filtered}
-          onDeploy={handleDeploy}
-          onKill={handleKill}
-          onClick={setSelectedIdea}
-        />
-      )}
-
-      {/* New Idea modal */}
-      {showNewIdea && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setShowNewIdea(false)}>
-          <div className="bg-gray-900 border border-slate-700/50 rounded-xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-100">New Idea</h3>
-            <div className="flex gap-2 mt-3">
-              <input
-                value={newIdeaName}
-                onChange={e => setNewIdeaName(e.target.value)}
-                placeholder="Idea name..."
-                autoFocus
-                className="flex-1 px-3 py-2 text-sm bg-slate-800/60 border border-slate-700/40 rounded-lg text-slate-300 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
-                onKeyDown={e => { if (e.key === "Enter") submitNewIdea(); }}
-              />
-              <select value={newIdeaSource} onChange={e => setNewIdeaSource(e.target.value)}
-                className="px-3 py-2 text-sm bg-slate-800/60 border border-slate-700/40 rounded-lg text-slate-300 focus:outline-none">
-                <option>Manual</option><option>Twitter/X</option><option>Reddit</option>
-                <option>Product Hunt</option><option>Financial Trends</option><option>Blog Monitor</option>
-              </select>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              <Badge color={COMPETITION_COLORS[idea.competition_level] || C.muted}>{idea.competition_level}</Badge>
+              <Badge color={C.cyan}>{idea.estimated_build_time}</Badge>
+              <Badge color={C.green}>{idea.monthly_revenue_potential}</Badge>
             </div>
-            {addResult && (
-              <div className={`mt-3 px-3 py-2 rounded-lg text-xs ${addResult.ok ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-                {addResult.msg}
+
+            <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{idea.problem?.slice(0, 140)}{idea.problem?.length > 140 ? "..." : ""}</div>
+
+            {selectedIdea?.id === idea.id && (
+              <div style={{ marginTop: 14, borderTop: `1px solid ${C.border}`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+                <DetailSection label="Target Audience" text={idea.target_audience} />
+                <DetailSection label="How It Works" text={idea.how_it_works} />
+                <DetailSection label="Agentic Architecture" text={idea.agentic_architecture} />
+                <DetailSection label="Revenue Model" text={idea.revenue_model} />
+                <DetailSection label="Path to $100K MRR" text={idea.path_to_100k} />
+                <DetailSection label="MVP Scope" text={idea.mvp_scope} />
+                <DetailSection label="Competition Notes" text={idea.competition_notes} />
+                {idea.source_signals?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", marginBottom: 4 }}>Source Signals</div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {idea.source_signals.map((s, i) => <span key={i} style={{ fontSize: 11, padding: "3px 8px", background: C.card, borderRadius: 6, color: C.muted, border: `1px solid ${C.border}` }}>{s}</span>)}
+                    </div>
+                  </div>
+                )}
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Added: {idea.date_added} \u00B7 ID: {idea.id}</div>
               </div>
             )}
-            <div className="flex items-center justify-end gap-2 mt-4">
-              <button onClick={() => setShowNewIdea(false)} className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200">Cancel</button>
-              <button onClick={submitNewIdea} disabled={!newIdeaName.trim()}
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 text-white disabled:opacity-40 disabled:cursor-not-allowed">
-                Add to Pipeline
-              </button>
-            </div>
           </div>
+        ))}
+      </div>
+
+      {!sorted.length && !loading && (
+        <div style={{ textAlign: "center", padding: 40, color: C.muted }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>\uD83D\uDD25</div>
+          <div>No ideas match your filters</div>
         </div>
-      )}
-
-      {/* Modals & Panels */}
-      {selectedIdea && (
-        <IdeaDetailPanel
-          idea={selectedIdea}
-          onClose={() => setSelectedIdea(null)}
-          onDeploy={handleDeploy}
-          onKill={handleKill}
-          onShelve={shelveIdea}
-          onAskAgent={setAskTarget}
-        />
-      )}
-
-      {showCompare && compareIdeas.length >= 2 && (
-        <CompareModal
-          ideas={compareIdeas}
-          onDeploy={confirmDeploy}
-          onClose={() => setShowCompare(false)}
-        />
-      )}
-
-      {showReview && reviewQueue.length > 0 && (
-        <ReviewQueue
-          ideas={reviewQueue}
-          onApprove={confirmDeploy}
-          onKill={confirmKill}
-          onNeedInfo={setAskTarget}
-          onClose={() => setShowReview(false)}
-        />
-      )}
-      {showReview && reviewQueue.length === 0 && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setShowReview(false)}>
-          <div className="bg-gray-900 border border-slate-700/50 rounded-xl shadow-2xl p-6 text-center">
-            <div className="text-2xl mb-2">✅</div>
-            <h3 className="text-lg font-bold text-gray-100">All Caught Up!</h3>
-            <p className="text-sm text-slate-400 mt-1">No ideas need review right now.</p>
-            <button onClick={() => setShowReview(false)} className="mt-4 px-4 py-2 text-sm text-slate-400 hover:text-slate-200">Close</button>
-          </div>
-        </div>
-      )}
-
-      {showAnalytics && (
-        <AnalyticsPanel
-          ideas={activeIdeas}
-          stageCounts={stageCounts}
-          onClose={() => setShowAnalytics(false)}
-        />
-      )}
-
-      {killTarget && (
-        <KillModal
-          idea={killTarget}
-          onConfirm={confirmKill}
-          onClose={() => setKillTarget(null)}
-        />
-      )}
-
-      {deployTarget && (
-        <DeployModal
-          idea={deployTarget}
-          onConfirm={confirmDeploy}
-          onClose={() => setDeployTarget(null)}
-        />
-      )}
-
-      {askTarget && (
-        <AskAgentModal
-          idea={askTarget}
-          onSend={(idea, prompt) => {
-            // In full implementation, this creates a new ACP session
-            console.log(`[Forge] Ask agent for "${idea.name}": ${prompt}`);
-          }}
-          onClose={() => setAskTarget(null)}
-        />
       )}
     </div>
   );
 }
+
+const DetailSection = ({ label, text }) => {
+  if (!text) return null;
+  return (
+    <div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5, opacity: 0.85 }}>{text}</div>
+    </div>
+  );
+};
