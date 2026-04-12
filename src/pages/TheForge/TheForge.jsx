@@ -63,7 +63,7 @@ export default function TheForge() {
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: C.muted }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>\u2692\uFE0F</div>
+        <div style={{ fontSize: 32, marginBottom: 8 }}></div>
         <div style={{ fontSize: 14 }}>Loading The Forge...</div>
       </div>
     </div>
@@ -73,10 +73,10 @@ export default function TheForge() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>\u2692\uFE0F The Forge</h1>
-          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>SaaS idea factory \u2014 100% agentic, $100K+ MRR potential</div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>The Forge</h1>
+          <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>SaaS idea factory - 100% agentic, $100K+ MRR potential</div>
         </div>
-        <button onClick={fetchIdeas} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>\u21BB Refresh</button>
+        <button onClick={fetchIdeas} style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "10px 14px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Refresh</button>
       </div>
 
       {error && <div style={{ padding: 12, background: C.red + "22", borderRadius: 8, color: C.red, fontSize: 13 }}>Error loading ideas: {error}</div>}
@@ -84,7 +84,7 @@ export default function TheForge() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         <KPI label="Total Ideas" value={ideas.length} sub="In the forge" color={C.accent} />
         <KPI label="Avg Confidence" value={avgConfidence} sub="Out of 10" color={C.amber} />
-        <KPI label="High Confidence" value={highConf} sub="Score \u2265 9" color={C.green} />
+        <KPI label="High Confidence" value={highConf} sub="Score >= 9" color={C.green} />
         <KPI label="New Today" value={ideas.filter(i => i.date_added === new Date().toISOString().slice(0, 10)).length} sub={new Date().toLocaleDateString()} color={C.cyan} />
       </div>
 
@@ -150,7 +150,7 @@ export default function TheForge() {
 
       {!sorted.length && !loading && (
         <div style={{ textAlign: "center", padding: 40, color: C.muted }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>\uD83D\uDD25</div>
+          <div style={{ fontSize: 24, marginBottom: 8 }}></div>
           <div>No ideas match your filters</div>
         </div>
       )}
