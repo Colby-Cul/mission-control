@@ -107,12 +107,13 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // For assets-only connections (Schwab, Chase, Citi, etc.), create an Asset Report
+    // For assets-only connections, create an Asset Report (only if assets product is enabled)
     if (requestedProducts.includes("assets") && !requestedProducts.includes("investments")) {
       try {
         await createAssetReport(client, accessToken, plaidItemId, account_scope, entity_id);
       } catch (err) {
         console.error("Asset report creation warning:", err.message);
+        // Non-fatal — auth/balance connections still get account data
       }
     }
 

@@ -486,11 +486,11 @@ const Accounts = () => {
                 </div>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <PlaidLink onSuccess={() => fetchData()} products={["transactions"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Bank Account" />
-                  <PlaidLink onSuccess={() => fetchData()} products={["assets"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
+                  <PlaidLink onSuccess={() => fetchData()} products={["auth"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
                 </div>
               </Card>
               <div style={{ fontSize: 11, color: C.muted, marginTop: -12 }}>
-                Use "Balance Only" for Chase, Citi, Schwab, and other major banks that don't support Plaid's transactions product.
+                Use "Balance Only" for Chase, Citi, Schwab, and other institutions that don't support Plaid's transactions product.
               </div>
 
               {bankAccounts.length === 0 ? (
@@ -596,11 +596,11 @@ const Accounts = () => {
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <PlaidLink onSuccess={() => fetchData()} products={["investments"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link Brokerage" />
-                    <PlaidLink onSuccess={() => fetchData()} products={["assets"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
+                    <PlaidLink onSuccess={() => fetchData()} products={["auth"]} accountScope={connectScope} entityId={connectEntity} buttonLabel="Link (Balance Only)" buttonStyle={{ background: C.surface, color: C.text, border: `1px solid ${C.border}` }} />
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>
-                  Use "Balance Only" for Schwab, Citi, Edward Jones, or other institutions that don't support full investment data in Plaid.
+                  Use "Balance Only" for Schwab, Citi, Edward Jones, Acorns, or other institutions that don't support Plaid's investments product.
                 </div>
               </Card>
 
