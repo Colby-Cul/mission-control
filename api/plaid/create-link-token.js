@@ -15,6 +15,8 @@ module.exports = async function handler(req, res) {
     const includeInvestments = products.includes(Products.Investments) ||
       products.includes("investments");
 
+    const redirectUri = process.env.PLAID_REDIRECT_URI || "https://mission-control-peach-omega.vercel.app/";
+
     const request = {
       user: {
         client_user_id: "mission-control-user",
@@ -27,6 +29,7 @@ module.exports = async function handler(req, res) {
       country_codes: [CountryCode.Us],
       language: "en",
       webhook: getWebhookUrl(),
+      redirect_uri: redirectUri,
     };
 
     // For update mode (re-authentication)
