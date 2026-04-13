@@ -191,26 +191,25 @@ function useQuickBooksStatus() {
 // ── QuickBooks Card Detail ──────────────────────────────────────────────────
 
 function QuickBooksDetail({ qb, onRefresh }) {
-  const [disconnecting, setDisconnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(null);
 
-  const handleDisconnect = async () => {
-    if (!confirm("Disconnect QuickBooks? This will revoke the OAuth tokens.")) return;
-    setDisconnecting(true);
+  const handleDisconnect = async (conn) => {
+    if (!confirm(`Disconnect ${conn.company_name || "QuickBooks"}? This will revoke the OAuth tokens.`)) return;
+    setDisconnecting(conn.realm_id);
     try {
       await fetch("/api/qb/disconnect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          companyId: qb.firstConn?.company_key || "",
-          realmId: qb.firstConn?.realm_id || "",
+          companyId: conn.company_key || "",
+          realmId: conn.realm_id || "",
         }),
       });
       onRefresh();
     } catch {
-      // refresh anyway to show current state
       onRefresh();
     }
-    setDisconnecting(false);
+    setDisconnecting(null);
   };
 
   if (qb.loading) {
@@ -221,67 +220,80 @@ function QuickBooksDetail({ qb, onRefresh }) {
     );
   }
 
-  if (!qb.connected) {
-    return (
-      <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
-          QuickBooks is not connected. Authorize access to enable financial data sync.
+  const allConns = qb.qbStatus?.statuses || [];
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+      {allConns.length > 0 && allConns.map((conn, i) => (
+        <div key={conn.realm_id || i} style={{ marginBottom: i < allConns.length - 1 ? 12 : 0, paddingBottom: i < allConns.length - 1 ? 12 : 0, borderBottom: i < allConns.length - 1 ? `1px solid ${C.border}` : "none" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 6 }}>
+            {conn.company_name || conn.company_key || "Unknown Company"}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
+            <div>
+              <span style={{ color: C.muted }}>Realm ID: </span>
+              <span style={{ color: C.text, fontFamily: "monospace" }}>{conn.realm_id || "—"}</span>
+            </div>
+            <div>
+              <span style={{ color: C.muted }}>Environment: </span>
+              <span style={{ color: C.text }}>{qb.qbStatus?.environment || "sandbox"}</span>
+            </div>
+            <div>
+              <span style={{ color: C.muted }}>Token: </span>
+              <Badge color={conn.token_status === "valid" ? C.green : C.red}>{conn.token_status}</Badge>
+            </div>
+            <div>
+              <span style={{ color: C.muted }}>Expires: </span>
+              <span style={{ color: C.text }}>
+                {conn.minutes_remaining > 0 ? `${conn.minutes_remaining}m` : "expired"}
+              </span>
+            </div>
+            {conn.refresh_days_remaining != null && (
+              <div>
+                <span style={{ color: C.muted }}>Refresh token: </span>
+                <span style={{ color: conn.refresh_days_remaining > 7 ? C.green : C.amber }}>
+                  {conn.refresh_days_remaining}d remaining
+                </span>
+              </div>
+            )}
+            <div>
+              <span style={{ color: C.muted }}>API test: </span>
+              <Badge color={conn.api_test === "ok" ? C.green : C.red}>{conn.api_test || "—"}</Badge>
+            </div>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => handleDisconnect(conn)}
+              disabled={disconnecting === conn.realm_id}
+              style={{
+                background: "transparent", color: C.red, border: `1px solid ${C.red}44`,
+                borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer",
+                opacity: disconnecting === conn.realm_id ? 0.5 : 1,
+              }}
+            >
+              {disconnecting === conn.realm_id ? "Disconnecting..." : "Disconnect"}
+            </button>
+          </div>
         </div>
+      ))}
+
+      {allConns.length === 0 && (
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
+          No QuickBooks companies connected yet.
+        </div>
+      )}
+
+      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <a
-          href="/api/qb/connect?returnTo=/integrations"
+          href="/api/qb/connect?returnTo=/#/integrations"
           style={{
             display: "inline-block", background: "#2ca01c", color: "#fff", border: "none",
             borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 600,
             textDecoration: "none", cursor: "pointer",
           }}
         >
-          Connect QuickBooks
+          {allConns.length > 0 ? "Connect Another Company" : "Connect QuickBooks"}
         </a>
-      </div>
-    );
-  }
-
-  const conn = qb.firstConn;
-  return (
-    <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
-      {conn.company_name && (
-        <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 6 }}>
-          {conn.company_name}
-        </div>
-      )}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
-        <div>
-          <span style={{ color: C.muted }}>Realm ID: </span>
-          <span style={{ color: C.text, fontFamily: "monospace" }}>{conn.realm_id || "—"}</span>
-        </div>
-        <div>
-          <span style={{ color: C.muted }}>Environment: </span>
-          <span style={{ color: C.text }}>{qb.qbStatus?.environment || "sandbox"}</span>
-        </div>
-        <div>
-          <span style={{ color: C.muted }}>Token: </span>
-          <Badge color={conn.token_status === "valid" ? C.green : C.red}>{conn.token_status}</Badge>
-        </div>
-        <div>
-          <span style={{ color: C.muted }}>Expires: </span>
-          <span style={{ color: C.text }}>
-            {conn.minutes_remaining > 0 ? `${conn.minutes_remaining}m` : "expired"}
-          </span>
-        </div>
-        {conn.refresh_days_remaining != null && (
-          <div>
-            <span style={{ color: C.muted }}>Refresh token: </span>
-            <span style={{ color: conn.refresh_days_remaining > 7 ? C.green : C.amber }}>
-              {conn.refresh_days_remaining}d remaining
-            </span>
-          </div>
-        )}
-        <div>
-          <span style={{ color: C.muted }}>API test: </span>
-          <Badge color={conn.api_test === "ok" ? C.green : C.red}>{conn.api_test || "—"}</Badge>
-        </div>
-      </div>
-      <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <button
           onClick={onRefresh}
           style={{
@@ -290,17 +302,6 @@ function QuickBooksDetail({ qb, onRefresh }) {
           }}
         >
           Refresh Status
-        </button>
-        <button
-          onClick={handleDisconnect}
-          disabled={disconnecting}
-          style={{
-            background: "transparent", color: C.red, border: `1px solid ${C.red}44`,
-            borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer",
-            opacity: disconnecting ? 0.5 : 1,
-          }}
-        >
-          {disconnecting ? "Disconnecting..." : "Disconnect"}
         </button>
       </div>
     </div>
