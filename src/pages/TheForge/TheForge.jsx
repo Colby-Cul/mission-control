@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { C } from "../../data/constants";
+import { supabase } from "../../lib/supabase";
 
 const Badge = ({ color, children }) => (
   <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: color + "18", color, fontWeight: 600 }}>{children}</span>
 );
-
 const KPI = ({ label, value, sub, color }) => (
   <div style={{ background: C.surface, borderRadius: 12, padding: 14, border: "1px solid " + C.border }}>
     <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
@@ -13,55 +13,36 @@ const KPI = ({ label, value, sub, color }) => (
   </div>
 );
 
-const SUPABASE_URL = "https://bdlvwfobjqvnrffzxrfz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkbHZ3Zm9ianF2bnJmZnp4cmZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzUwNjAsImV4cCI6MjA4OTkxMTA2MH0.eJ0nKEHBSr8jKTAFxSvPC8VNjjYZJJRn0n-yHAnsFXI";
-
 const COMPETITION_COLORS = { Low: C.green, "Low-Medium": C.teal, Medium: C.amber, "Medium-High": "#f97316", High: C.red };
 
 const STATUS_CONFIG = {
-  new:        { label: "New",        color: C.amber,  icon: "✦", bg: C.amber + "18" },
-  evaluating: { label: "Evaluating", color: C.cyan,   icon: "◎", bg: C.cyan + "18" },
-  building:   { label: "Building",   color: C.purple, icon: "⚡", bg: C.purple + "18" },
-  launched:   { label: "Launched",   color: C.green,  icon: "🚀", bg: C.green + "18" },
-  parked:     { label: "Parked",     color: C.muted,  icon: "⏸", bg: C.muted + "18" },
+  new:        { label: "New",        color: C.amber,  icon: "\u2728", bg: C.amber + "18" },
+  evaluating: { label: "Evaluating", color: C.cyan,   icon: "\ud83d\udd0d", bg: C.cyan + "18" },
+  building:   { label: "Building",   color: C.purple, icon: "\u2692\ufe0f", bg: C.purple + "18" },
+  launched:   { label: "Launched",   color: C.green,  icon: "\ud83d\ude80", bg: C.green + "18" },
+  parked:     { label: "Parked",     color: C.muted,  icon: "\u23f8\ufe0f", bg: C.muted + "18" },
 };
+const STATUS_FLOW = ["new", "evaluating", "building", "launched", "parked"];
 
-const STATUS_FLOW = ["new", "evaluating", "building", "launched"];
-
-const supaFetch = async (path, opts = {}) => {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: opts.method === "PATCH" ? "return=representation" : "return=minimal",
-      ...opts.headers,
-    },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  if (res.status === 204) return null;
-  return res.json();
-};
-
-/* ═══════════════════════════════════════════════════════ */
-/*  THE FORGE                                             */
-/* ═══════════════════════════════════════════════════════ */
 const TheForge = () => {
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
-  const [sortBy, setSortBy] = useState("confidence_score");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [updating, setUpdating] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("confidence_score");
+  const [updating, setUpdating] = useState(false);
 
   const fetchIdeas = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await supaFetch("forge_ideas?select=*&order=confidence_score.desc");
-      setIdeas(data);
+      const { data, error: err } = await supabase
+        .from("forge_ideas")
+        .select("*")
+        .order("confidence_score", { ascending: false });
+      if (err) throw err;
+      setIdeas(data || []);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -75,7 +56,11 @@ const TheForge = () => {
   const updateIdea = async (id, fields) => {
     setUpdating(true);
     try {
-      await supaFetch(`forge_ideas?id=eq.${id}`, { method: "PATCH", body: JSON.stringify(fields) });
+      const { error: err } = await supabase
+        .from("forge_ideas")
+        .update(fields)
+        .eq("id", id);
+      if (err) throw err;
       setIdeas(prev => prev.map(i => i.id === id ? { ...i, ...fields } : i));
       if (modal?.id === id) setModal(prev => ({ ...prev, ...fields }));
     } catch (err) {
@@ -85,7 +70,7 @@ const TheForge = () => {
     }
   };
 
-  const sorted = [...ideas]
+  const sorted = ideas
     .filter(i => filterStatus === "all" || i.status === filterStatus)
     .sort((a, b) => {
       if (sortBy === "confidence_score") return (b.confidence_score || 0) - (a.confidence_score || 0);
@@ -103,7 +88,7 @@ const TheForge = () => {
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: C.muted }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚒️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>\u2692\ufe0f</div>
         <div style={{ fontSize: 14 }}>Forging ideas...</div>
       </div>
     </div>
@@ -113,17 +98,17 @@ const TheForge = () => {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>🔥 The Forge</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>\ud83d\udd25 The Forge</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>SaaS idea factory — 100% agentic, $100K+ MRR potential</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={() => setViewMode(viewMode === "grid" ? "pipeline" : "grid")}
             style={{ background: C.surface, color: C.muted, border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 14px", cursor: "pointer", fontSize: 13 }}>
-            {viewMode === "grid" ? "⊞ Pipeline View" : "⊟ Grid View"}
+            {viewMode === "grid" ? "\u229e Pipeline View" : "\u229f Grid View"}
           </button>
           <button onClick={fetchIdeas}
             style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 10, padding: "8px 14px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
-            ↻ Refresh
+            \u21bb Refresh
           </button>
         </div>
       </div>
@@ -133,7 +118,7 @@ const TheForge = () => {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         <KPI label="Total Ideas" value={ideas.length} sub="In the forge" color={C.accent} />
         <KPI label="Avg Confidence" value={avgConf} sub="Out of 10" color={C.amber} />
-        <KPI label="High Confidence" value={highConf} sub="Score ≥ 9" color={C.green} />
+        <KPI label="High Confidence" value={highConf} sub="Score >= 9" color={C.green} />
         <KPI label="New Today" value={newToday} sub={new Date().toLocaleDateString()} color={C.cyan} />
       </div>
 
@@ -195,7 +180,7 @@ const TheForge = () => {
 
       {!sorted.length && !loading && (
         <div style={{ textAlign: "center", padding: 40, color: C.muted }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>\ud83d\udd0d</div>
           <div>No ideas match your filters</div>
         </div>
       )}
@@ -207,9 +192,6 @@ const TheForge = () => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════ */
-/*  IDEA CARD (Grid View)                                 */
-/* ═══════════════════════════════════════════════════════ */
 const IdeaCard = ({ idea, onClick }) => {
   const sCfg = STATUS_CONFIG[idea.status] || STATUS_CONFIG.new;
   return (
@@ -220,7 +202,6 @@ const IdeaCard = ({ idea, onClick }) => {
     }}
     onMouseEnter={e => { e.currentTarget.style.borderColor = sCfg.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
     onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.borderLeftColor = sCfg.color; e.currentTarget.style.transform = "none"; }}>
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: sCfg.color, background: sCfg.bg, padding: "3px 8px", borderRadius: 6, letterSpacing: 0.5 }}>
           {sCfg.icon} {sCfg.label}
@@ -233,28 +214,21 @@ const IdeaCard = ({ idea, onClick }) => {
           {idea.confidence_score}/10
         </span>
       </div>
-
       <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4, lineHeight: 1.3 }}>{idea.name}</div>
       <div style={{ fontSize: 12, color: C.accentLight, marginBottom: 12, lineHeight: 1.4 }}>{idea.tagline}</div>
-
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
         <Badge color={COMPETITION_COLORS[idea.competition_level] || C.muted}>{idea.competition_level}</Badge>
         <Badge color={C.cyan}>{idea.estimated_build_time}</Badge>
         <Badge color={C.green}>{idea.monthly_revenue_potential}</Badge>
       </div>
-
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
         {idea.problem?.slice(0, 120)}{idea.problem?.length > 120 ? "..." : ""}
       </div>
-
-      <div style={{ marginTop: 12, fontSize: 11, color: C.muted, opacity: 0.6 }}>Click to expand →</div>
+      <div style={{ marginTop: 12, fontSize: 11, color: C.muted, opacity: 0.6 }}>Click to expand \u2192</div>
     </div>
   );
 };
 
-/* ═══════════════════════════════════════════════════════ */
-/*  PIPELINE CARD (Compact for Kanban)                    */
-/* ═══════════════════════════════════════════════════════ */
 const PipelineCard = ({ idea, onClick }) => (
   <div onClick={onClick} style={{
     background: C.surface, borderRadius: 10, padding: 14, border: `1px solid ${C.border}`,
@@ -274,9 +248,6 @@ const PipelineCard = ({ idea, onClick }) => (
   </div>
 );
 
-/* ═══════════════════════════════════════════════════════ */
-/*  DETAIL MODAL                                          */
-/* ═══════════════════════════════════════════════════════ */
 const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
   const [notes, setNotes] = useState(idea.notes || "");
   const [showNotes, setShowNotes] = useState(false);
@@ -315,9 +286,8 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
               <h2 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: 0, lineHeight: 1.3 }}>{idea.name}</h2>
               <p style={{ fontSize: 14, color: C.accentLight, margin: "6px 0 0", lineHeight: 1.4 }}>{idea.tagline}</p>
             </div>
-            <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, fontSize: 24, cursor: "pointer", padding: 4, lineHeight: 1 }}>×</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, fontSize: 24, cursor: "pointer", padding: 4, lineHeight: 1 }}>\u00d7</button>
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16 }}>
             <MiniStat label="Confidence" value={`${idea.confidence_score}/10`} color={idea.confidence_score >= 9 ? C.green : C.amber} />
             <MiniStat label="Revenue Potential" value={idea.monthly_revenue_potential} color={C.green} />
@@ -326,32 +296,32 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
         </div>
 
         <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, maxHeight: "55vh", overflowY: "auto" }}>
-          <Section icon="⚠️" label="Problem" text={idea.problem} />
-          <Section icon="🎯" label="Target Audience" text={idea.target_audience} />
-          <Section icon="⚙️" label="How It Works" text={idea.how_it_works} />
+          <Section icon="\u26a0\ufe0f" label="Problem" text={idea.problem} />
+          <Section icon="\ud83c\udfaf" label="Target Audience" text={idea.target_audience} />
+          <Section icon="\u2699\ufe0f" label="How It Works" text={idea.how_it_works} />
 
           {idea.agentic_architecture && (
             <div style={{ background: C.amber + "0D", border: `1px solid ${C.amber}33`, borderRadius: 12, padding: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                🤖 Agentic Architecture <span style={{ fontSize: 10, fontWeight: 500, color: C.muted }}>(Zero Humans)</span>
+                \ud83e\udd16 Agentic Architecture <span style={{ fontSize: 10, fontWeight: 500, color: C.muted }}>(Zero Humans)</span>
               </div>
               <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6, opacity: 0.9 }}>{idea.agentic_architecture}</div>
             </div>
           )}
 
-          <Section icon="💰" label="Revenue Model" text={idea.revenue_model} />
+          <Section icon="\ud83d\udcb0" label="Revenue Model" text={idea.revenue_model} />
 
           {idea.path_to_100k && (
             <div style={{ background: C.green + "0D", border: `1px solid ${C.green}33`, borderRadius: 12, padding: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.green, textTransform: "uppercase", marginBottom: 6 }}>📈 Path to $100K MRR</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.green, textTransform: "uppercase", marginBottom: 6 }}>\ud83d\udcc8 Path to $100K MRR</div>
               <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6, opacity: 0.9 }}>{idea.path_to_100k}</div>
             </div>
           )}
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <Section icon="🚀" label="MVP Scope" text={idea.mvp_scope} />
+            <Section icon="\ud83d\ude80" label="MVP Scope" text={idea.mvp_scope} />
             <div>
-              <Section icon="🛡️" label="Competition" text={`${idea.competition_level} — ${idea.competition_notes || ""}`} />
+              <Section icon="\ud83d\udee1\ufe0f" label="Competition" text={`${idea.competition_level} — ${idea.competition_notes || ""}`} />
               <div style={{ marginTop: 8 }}>
                 <Badge color={COMPETITION_COLORS[idea.competition_level] || C.muted}>{idea.competition_level} Competition</Badge>
               </div>
@@ -360,7 +330,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
 
           {idea.source_signals?.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase", marginBottom: 8 }}>📡 Source Signals</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase", marginBottom: 8 }}>\ud83d\udce1 Source Signals</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {idea.source_signals.map((s, i) => (
                   <span key={i} style={{ fontSize: 11, padding: "4px 10px", background: C.card, borderRadius: 8, color: C.muted, border: `1px solid ${C.border}` }}>{s}</span>
@@ -371,7 +341,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
 
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase" }}>📝 Notes</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase" }}>\ud83d\udcdd Notes</span>
               <button onClick={() => setShowNotes(!showNotes)}
                 style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "4px 12px", color: C.muted, cursor: "pointer", fontSize: 12 }}>
                 {showNotes ? "Cancel" : (idea.notes ? "Edit" : "Add Notes")}
@@ -419,9 +389,6 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
   );
 };
 
-/* ═══════════════════════════════════════════════════════ */
-/*  HELPER COMPONENTS                                     */
-/* ═══════════════════════════════════════════════════════ */
 const Section = ({ icon, label, text }) => {
   if (!text) return null;
   return (
