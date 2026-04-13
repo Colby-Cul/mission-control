@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 const Badge = ({ color, children }) => (
   <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: color + "18", color, fontWeight: 600 }}>{children}</span>
 );
+
 const KPI = ({ label, value, sub, color }) => (
   <div style={{ background: C.surface, borderRadius: 12, padding: 14, border: "1px solid " + C.border }}>
     <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
@@ -18,21 +19,25 @@ const COMPETITION_COLORS = { Low: C.green, "Low-Medium": C.teal, Medium: C.amber
 const STATUS_CONFIG = {
   new:        { label: "New",        color: C.amber,  icon: "✨", bg: C.amber + "18" },
   evaluating: { label: "Evaluating", color: C.cyan,   icon: "🔍", bg: C.cyan + "18" },
-  building:   { label: "Building",   color: C.purple, icon: "⚒️", bg: C.purple + "18" },
+  building:   { label: "Building",   color: C.purple, icon: "⛏️", bg: C.purple + "18" },
   launched:   { label: "Launched",   color: C.green,  icon: "🚀", bg: C.green + "18" },
   parked:     { label: "Parked",     color: C.muted,  icon: "⏸️", bg: C.muted + "18" },
 };
-const STATUS_FLOW = ["new", "evaluating", "building", "launched", "parked"];
 
+const STATUS_FLOW = ["new", "evaluating", "building", "launched"];
+
+/* ═══════════════════════════════════════════════════════ */
+/*  THE FORGE                                             */
+/* ═══════════════════════════════════════════════════════ */
 const TheForge = () => {
   const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null);
-  const [viewMode, setViewMode] = useState("grid");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("confidence_score");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [updating, setUpdating] = useState(false);
+  const [viewMode, setViewMode] = useState("grid");
 
   const fetchIdeas = useCallback(async () => {
     try {
@@ -70,7 +75,8 @@ const TheForge = () => {
     }
   };
 
-  const sorted = ideas
+  // — Sorting & Filtering —
+  const sorted = [...ideas]
     .filter(i => filterStatus === "all" || i.status === filterStatus)
     .sort((a, b) => {
       if (sortBy === "confidence_score") return (b.confidence_score || 0) - (a.confidence_score || 0);
@@ -79,6 +85,7 @@ const TheForge = () => {
       return 0;
     });
 
+  // — Stats —
   const avgConf = ideas.length ? (ideas.reduce((s, i) => s + (i.confidence_score || 0), 0) / ideas.length).toFixed(1) : 0;
   const highConf = ideas.filter(i => i.confidence_score >= 9).length;
   const today = new Date().toISOString().slice(0, 10);
@@ -88,7 +95,7 @@ const TheForge = () => {
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: C.muted }}>
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚒️</div>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>⛏️</div>
         <div style={{ fontSize: 14 }}>Forging ideas...</div>
       </div>
     </div>
@@ -96,6 +103,7 @@ const TheForge = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* — Header — */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>🔥 The Forge</h1>
@@ -115,13 +123,15 @@ const TheForge = () => {
 
       {error && <div style={{ padding: 12, background: C.red + "22", borderRadius: 8, color: C.red, fontSize: 13 }}>Error: {error}</div>}
 
+      {/* — KPIs — */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         <KPI label="Total Ideas" value={ideas.length} sub="In the forge" color={C.accent} />
         <KPI label="Avg Confidence" value={avgConf} sub="Out of 10" color={C.amber} />
-        <KPI label="High Confidence" value={highConf} sub="Score >= 9" color={C.green} />
+        <KPI label="High Confidence" value={highConf} sub="Score ≥ 9" color={C.green} />
         <KPI label="New Today" value={newToday} sub={new Date().toLocaleDateString()} color={C.cyan} />
       </div>
 
+      {/* — Status Pipeline Summary — */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button key={key} onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
@@ -138,6 +148,7 @@ const TheForge = () => {
         ))}
       </div>
 
+      {/* — Controls — */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <select value={sortBy} onChange={e => setSortBy(e.target.value)}
           style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", color: C.text, fontSize: 13 }}>
@@ -148,6 +159,7 @@ const TheForge = () => {
         <span style={{ fontSize: 12, color: C.muted }}>Showing {sorted.length} of {ideas.length}</span>
       </div>
 
+      {/* — PIPELINE VIEW — */}
       {viewMode === "pipeline" ? (
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${STATUS_FLOW.length}, 1fr)`, gap: 12, overflowX: "auto" }}>
           {STATUS_FLOW.map(status => {
@@ -171,6 +183,7 @@ const TheForge = () => {
           })}
         </div>
       ) : (
+        /* — GRID VIEW — */
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 14 }}>
           {sorted.map(idea => (
             <IdeaCard key={idea.id} idea={idea} onClick={() => setModal(idea)} />
@@ -185,6 +198,7 @@ const TheForge = () => {
         </div>
       )}
 
+      {/* — DETAIL MODAL — */}
       {modal && (
         <IdeaModal idea={modal} onClose={() => setModal(null)} onUpdate={updateIdea} updating={updating} />
       )}
@@ -192,6 +206,9 @@ const TheForge = () => {
   );
 };
 
+/* ═══════════════════════════════════════════════════════ */
+/*  IDEA CARD (Grid View)                                 */
+/* ═══════════════════════════════════════════════════════ */
 const IdeaCard = ({ idea, onClick }) => {
   const sCfg = STATUS_CONFIG[idea.status] || STATUS_CONFIG.new;
   return (
@@ -202,6 +219,8 @@ const IdeaCard = ({ idea, onClick }) => {
     }}
     onMouseEnter={e => { e.currentTarget.style.borderColor = sCfg.color; e.currentTarget.style.transform = "translateY(-2px)"; }}
     onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.borderLeftColor = sCfg.color; e.currentTarget.style.transform = "none"; }}>
+
+      {/* Top row: status + confidence */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", color: sCfg.color, background: sCfg.bg, padding: "3px 8px", borderRadius: 6, letterSpacing: 0.5 }}>
           {sCfg.icon} {sCfg.label}
@@ -214,21 +233,30 @@ const IdeaCard = ({ idea, onClick }) => {
           {idea.confidence_score}/10
         </span>
       </div>
+
       <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 4, lineHeight: 1.3 }}>{idea.name}</div>
       <div style={{ fontSize: 12, color: C.accentLight, marginBottom: 12, lineHeight: 1.4 }}>{idea.tagline}</div>
+
+      {/* Meta badges */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
         <Badge color={COMPETITION_COLORS[idea.competition_level] || C.muted}>{idea.competition_level}</Badge>
         <Badge color={C.cyan}>{idea.estimated_build_time}</Badge>
         <Badge color={C.green}>{idea.monthly_revenue_potential}</Badge>
       </div>
+
       <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
         {idea.problem?.slice(0, 120)}{idea.problem?.length > 120 ? "..." : ""}
       </div>
+
+      {/* Bottom: click hint */}
       <div style={{ marginTop: 12, fontSize: 11, color: C.muted, opacity: 0.6 }}>Click to expand →</div>
     </div>
   );
 };
 
+/* ═══════════════════════════════════════════════════════ */
+/*  PIPELINE CARD (Compact for Kanban)                    */
+/* ═══════════════════════════════════════════════════════ */
 const PipelineCard = ({ idea, onClick }) => (
   <div onClick={onClick} style={{
     background: C.surface, borderRadius: 10, padding: 14, border: `1px solid ${C.border}`,
@@ -248,6 +276,9 @@ const PipelineCard = ({ idea, onClick }) => (
   </div>
 );
 
+/* ═══════════════════════════════════════════════════════ */
+/*  DETAIL MODAL                                          */
+/* ═══════════════════════════════════════════════════════ */
 const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
   const [notes, setNotes] = useState(idea.notes || "");
   const [showNotes, setShowNotes] = useState(false);
@@ -274,6 +305,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
         maxWidth: 780, width: "100%", padding: 0, position: "relative",
         boxShadow: "0 25px 60px rgba(0,0,0,0.5)", overflow: "hidden",
       }}>
+        {/* Modal Header */}
         <div style={{ padding: "24px 28px 20px", borderBottom: `1px solid ${C.border}`, background: C.surface }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div style={{ flex: 1 }}>
@@ -288,6 +320,8 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
             </div>
             <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, fontSize: 24, cursor: "pointer", padding: 4, lineHeight: 1 }}>×</button>
           </div>
+
+          {/* Quick Stats Row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 16 }}>
             <MiniStat label="Confidence" value={`${idea.confidence_score}/10`} color={idea.confidence_score >= 9 ? C.green : C.amber} />
             <MiniStat label="Revenue Potential" value={idea.monthly_revenue_potential} color={C.green} />
@@ -295,11 +329,13 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
           </div>
         </div>
 
+        {/* Modal Body */}
         <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, maxHeight: "55vh", overflowY: "auto" }}>
           <Section icon="⚠️" label="Problem" text={idea.problem} />
           <Section icon="🎯" label="Target Audience" text={idea.target_audience} />
           <Section icon="⚙️" label="How It Works" text={idea.how_it_works} />
 
+          {/* Agentic Architecture — highlighted */}
           {idea.agentic_architecture && (
             <div style={{ background: C.amber + "0D", border: `1px solid ${C.amber}33`, borderRadius: 12, padding: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.amber, textTransform: "uppercase", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
@@ -311,6 +347,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
 
           <Section icon="💰" label="Revenue Model" text={idea.revenue_model} />
 
+          {/* Path to $100K — highlighted */}
           {idea.path_to_100k && (
             <div style={{ background: C.green + "0D", border: `1px solid ${C.green}33`, borderRadius: 12, padding: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.green, textTransform: "uppercase", marginBottom: 6 }}>📈 Path to $100K MRR</div>
@@ -328,6 +365,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
             </div>
           </div>
 
+          {/* Source Signals */}
           {idea.source_signals?.length > 0 && (
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase", marginBottom: 8 }}>📡 Source Signals</div>
@@ -339,6 +377,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
             </div>
           )}
 
+          {/* Notes Section */}
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: "uppercase" }}>📝 Notes</span>
@@ -349,7 +388,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
             </div>
             {showNotes ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add evaluation notes..."
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add evaluation notes, next steps, concerns..."
                   style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: 12, color: C.text, fontSize: 13, minHeight: 80, resize: "vertical", outline: "none", lineHeight: 1.5 }} />
                 <button onClick={saveNotes} disabled={updating}
                   style={{ background: C.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 600, cursor: "pointer", fontSize: 13, alignSelf: "flex-end", opacity: updating ? 0.5 : 1 }}>
@@ -364,6 +403,7 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
           </div>
         </div>
 
+        {/* Modal Footer — ACTION BUTTONS */}
         <div style={{ padding: "16px 28px 20px", borderTop: `1px solid ${C.border}`, background: C.surface, display: "flex", gap: 8, flexWrap: "wrap" }}>
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
             const isActive = idea.status === key;
@@ -389,6 +429,9 @@ const IdeaModal = ({ idea, onClose, onUpdate, updating }) => {
   );
 };
 
+/* ═══════════════════════════════════════════════════════ */
+/*  HELPER COMPONENTS                                     */
+/* ═══════════════════════════════════════════════════════ */
 const Section = ({ icon, label, text }) => {
   if (!text) return null;
   return (
