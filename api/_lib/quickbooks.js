@@ -6,11 +6,10 @@ const { supabaseRest, supabaseUpsert, supabaseDelete } = require("./supabase");
 const QUICKBOOKS_AUTH_URL = "https://appcenter.intuit.com/connect/oauth2";
 const QUICKBOOKS_TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer";
 const QUICKBOOKS_REVOKE_URL = "https://developer.api.intuit.com/v2/oauth2/tokens/revoke";
-const QUICKBOOKS_SCOPES = [
-  "com.intuit.quickbooks.accounting",
-  "com.intuit.quickbooks.payment",
-  "com.intuit.quickbooks.payroll",
-];
+const QUICKBOOKS_SCOPES = (process.env.QUICKBOOKS_SCOPES || "com.intuit.quickbooks.accounting")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
 const QUICKBOOKS_REDIRECT_URI =
   process.env.QUICKBOOKS_REDIRECT_URI ||
   "https://mission-control-peach-omega.vercel.app/api/qb/callback";

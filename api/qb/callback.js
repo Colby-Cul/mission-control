@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
   clearCookie(res, "qb_oauth_state", "/api/qb/callback");
 
   if (error) {
-    const returnTo = state?.returnTo || cookies.qb_post_auth_return || "/integrations";
+    const returnTo = state?.returnTo || cookies.qb_post_auth_return || "/#/integrations";
     const failureUrl = new URL(returnTo, "https://mission-control-peach-omega.vercel.app");
     failureUrl.searchParams.set("qb_status", "error");
     failureUrl.searchParams.set("qb_error", error);
@@ -65,7 +65,7 @@ module.exports = async function handler(req, res) {
 
     clearCookie(res, "qb_post_auth_return", "/");
 
-    const returnTo = state.returnTo || cookies.qb_post_auth_return || "/integrations";
+    const returnTo = state.returnTo || cookies.qb_post_auth_return || "/#/integrations";
     const successUrl = new URL(returnTo, "https://mission-control-peach-omega.vercel.app");
     successUrl.searchParams.set("qb_status", "connected");
     if (realmId) successUrl.searchParams.set("realmId", realmId);

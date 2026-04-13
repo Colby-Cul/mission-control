@@ -143,7 +143,7 @@ module.exports = async function handler(req, res) {
 
     const { clientId, redirectUri, scopes } = requireClientConfig();
     const companyId = String(req.query.companyId || "").trim();
-    const returnTo = String(req.query.returnTo || "/integrations").trim();
+    const returnTo = String(req.query.returnTo || "/#/integrations").trim();
     const reconnect = String(req.query.reconnect || "false") === "true";
     const cookies = getCookies(req);
     const { nonce, encoded } = makeState({ companyId, returnTo, reconnect });
