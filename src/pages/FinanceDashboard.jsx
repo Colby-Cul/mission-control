@@ -1,3 +1,15 @@
+/**
+ * TECH DEBT — Temporary iframe wrapper.
+ *
+ * This renders public/finance.html inside an iframe. It ships the dashboard
+ * quickly but loses React state sharing, consistent auth, deep linking inside
+ * the frame, and the app's design-system tokens.
+ *
+ * TODO (before GA): Convert finance.html into a native React page
+ *   (split CSS into a styled component / CSS module, rewrite scripts as
+ *   useEffect hooks, source data from the existing Supabase/QuickBooks hooks).
+ * Tracking: https://github.com/Colby-Cul/mission-control/issues — file one.
+ */
 import { useEffect } from "react";
 
 const IframePage = ({ src, title }) => {

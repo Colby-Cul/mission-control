@@ -1,3 +1,8 @@
+/**
+ * TECH DEBT — Temporary iframe wrapper for public/company.html.
+ * See FinanceDashboard.jsx for the conversion plan. Convert to native React
+ * before this product goes to GA so it inherits auth, design tokens, and state.
+ */
 import { useEffect } from "react";
 
 const CompanyDashboard = () => {

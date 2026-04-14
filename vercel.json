@@ -12,5 +12,8 @@
       "path": "/api/qb/refresh",
       "schedule": "*/45 * * * *"
     }
+  ],
+  "rewrites": [
+    { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ]
 }
