@@ -59,7 +59,7 @@ export async function getRecentTransactions(limit = 50) {
   const { data, error } = await supabase
     .from('financial_transactions')
     .select('*')
-    .order('transaction_date', { ascending: false })
+    .order('date', { ascending: false })
     .limit(limit)
   if (error) throw error
   return data ?? []

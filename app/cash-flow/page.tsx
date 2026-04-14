@@ -44,7 +44,7 @@ export default async function CashFlowPage() {
           <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
             <div>
               <div style={{ fontWeight: 500 }}>{t.name || t.merchant_name || 'Transaction'}</div>
-              <div style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mo)' }}>{t.transaction_date} · {t.category ?? '—'}</div>
+              <div style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mo)' }}>{t.date ?? (t as any).transaction_date} · {t.category ?? '—'}</div>
             </div>
             <div style={{ fontFamily: 'var(--mo)', color: Number(t.amount) > 0 ? 'var(--red)' : 'var(--green)' }}>
               {Number(t.amount) > 0 ? '-' : '+'}${Math.abs(Number(t.amount)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
