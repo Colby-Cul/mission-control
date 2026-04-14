@@ -1,4 +1,4 @@
-import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas, getAccounts } from './lib/queries'
+import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas, getAccounts, accountSignedBalance } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     getForgeIdeas('new'),
     getAccounts(),
   ])
-  const netWorth = accounts.reduce((s: number, a: any) => s + Number(a.balance_current ?? 0), 0)
+  const netWorth = accounts.reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
 
   return (
     <>

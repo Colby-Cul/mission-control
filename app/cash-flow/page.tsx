@@ -1,11 +1,11 @@
-import { getAccounts, getRecentTransactions } from '../lib/queries'
+import { getAccounts, getRecentTransactions, accountSignedBalance } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CashFlowPage() {
   const [accounts, txns] = await Promise.all([getAccounts(), getRecentTransactions(100)])
 
-  const total = accounts.reduce((s, a) => s + Number(a.balance_current ?? 0), 0)
+  const total = accounts.reduce((s, a) => s + accountSignedBalance(a), 0)
   const inflow30 = txns.filter(t => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
   const outflow30 = txns.filter(t => Number(t.amount) > 0).reduce((s, t) => s + Number(t.amount), 0)
 
@@ -29,8 +29,8 @@ export default async function CashFlowPage() {
               <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{a.entity_id ?? a.account_scope}</div>
               <div style={{ fontWeight: 600, fontSize: 13, margin: '4px 0' }}>{a.name}</div>
               <div style={{ fontSize: 11, color: 'var(--t3)' }}>{a.type} · {a.subtype} · ••{a.mask}</div>
-              <div style={{ fontFamily: 'var(--mo)', fontSize: 18, marginTop: 6, color: Number(a.balance_current) < 0 ? 'var(--red)' : 'var(--t1)' }}>
-                ${Number(a.balance_current ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              <div style={{ fontFamily: 'var(--mo)', fontSize: 18, marginTop: 6, color: accountSignedBalance(a) < 0 ? 'var(--red)' : 'var(--t1)' }}>
+                {accountSignedBalance(a) < 0 ? '-' : ''}${Math.abs(Number(a.balance_current ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
               </div>
             </div>
           ))}

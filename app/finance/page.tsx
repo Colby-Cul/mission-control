@@ -1,19 +1,19 @@
-import { getAccounts } from '../lib/queries'
+import { getAccounts, accountSignedBalance } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
 export default async function FinancePage() {
   const accounts = await getAccounts()
-  const total = accounts.reduce((s, a) => s + Number(a.balance_current ?? 0), 0)
-  const assets = accounts.filter(a => Number(a.balance_current ?? 0) >= 0)
-  const liabilities = accounts.filter(a => Number(a.balance_current ?? 0) < 0)
-  const assetTotal = assets.reduce((s, a) => s + Number(a.balance_current ?? 0), 0)
-  const liabTotal = liabilities.reduce((s, a) => s + Math.abs(Number(a.balance_current ?? 0)), 0)
+  const total = accounts.reduce((s, a) => s + accountSignedBalance(a), 0)
+  const assets = accounts.filter(a => accountSignedBalance(a) >= 0)
+  const liabilities = accounts.filter(a => accountSignedBalance(a) < 0)
+  const assetTotal = assets.reduce((s, a) => s + accountSignedBalance(a), 0)
+  const liabTotal = liabilities.reduce((s, a) => s + Math.abs(accountSignedBalance(a)), 0)
 
   const byScope = accounts.reduce<Record<string, { total: number; count: number }>>((m, a) => {
     const k = a.account_scope ?? a.entity_id ?? 'Unscoped'
     if (!m[k]) m[k] = { total: 0, count: 0 }
-    m[k].total += Number(a.balance_current ?? 0)
+    m[k].total += accountSignedBalance(a)
     m[k].count += 1
     return m
   }, {})
@@ -53,8 +53,8 @@ export default async function FinancePage() {
               <div style={{ fontWeight: 500 }}>{a.name}</div>
               <div style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mo)' }}>{a.type} · {a.subtype} · ••{a.mask}</div>
             </div>
-            <div style={{ fontFamily: 'var(--mo)', color: Number(a.balance_current) < 0 ? 'var(--red)' : 'var(--t1)' }}>
-              ${Number(a.balance_current ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            <div style={{ fontFamily: 'var(--mo)', color: accountSignedBalance(a) < 0 ? 'var(--red)' : 'var(--t1)' }}>
+              {accountSignedBalance(a) < 0 ? '-' : ''}${Math.abs(Number(a.balance_current ?? 0)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
             </div>
           </div>
         ))}

@@ -46,6 +46,14 @@ export async function getVisions() {
 }
 
 // ═══ Finance ═══════════════════════════════════════════════════════
+// Sign convention for net worth: depository/investment count positive,
+// credit/loan count negative (they're debt owed, not assets held).
+export function accountSignedBalance(a: any): number {
+  const bal = Number(a?.balance_current ?? 0)
+  const t = String(a?.type ?? '').toLowerCase()
+  return (t === 'credit' || t === 'loan') ? -bal : bal
+}
+
 export async function getAccounts() {
   const { data, error } = await supabase
     .from('financial_accounts')
