@@ -1,0 +1,4823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #060610;
+      --card: rgba(255,255,255,0.025);
+      --border: rgba(255,255,255,0.06);
+      --dim: rgba(255,255,255,0.4);
+      --dim2: rgba(255,255,255,0.25);
+      --orange: #f97316;
+      --pink: #ec4899;
+      --purple: #8b5cf6;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --lime: #84cc16;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: rgba(255,255,255,0.9);
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      border-bottom: 1px solid var(--border);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6,6,16,0.95);
+      backdrop-filter: blur(20px);
+    }
+
+    .navbar-container {
+      width: 86%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .entity-select {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: rgba(255,255,255,0.9);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .entity-select:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .main-container {
+      flex: 1;
+      width: 86%;
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+
+    .hero-banner {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      border: 1px solid rgba(249,115,22,0.12);
+      background: #050510;
+      min-height: 480px;
+    }
+
+    #heroCanvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .hero-scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      z-index: 1;
+      background: linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent);
+      animation: scanDown 4s ease-in-out infinite;
+      filter: blur(1px);
+    }
+
+    @keyframes scanDown {
+      0% { top: 0; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .hud-corner {
+      position: absolute;
+      z-index: 2;
+      width: 24px;
+      height: 24px;
+    }
+
+    .hud-corner.tl {
+      top: 12px;
+      left: 12px;
+      border-top: 2px solid rgba(249,115,22,0.3);
+      border-left: 2px solid rgba(249,115,22,0.3);
+    }
+
+    .hud-corner.tr {
+      top: 12px;
+      right: 12px;
+      border-top: 2px solid rgba(139,92,246,0.3);
+      border-right: 2px solid rgba(139,92,246,0.3);
+    }
+
+    .hud-corner.bl {
+      bottom: 12px;
+      left: 12px;
+      border-bottom: 2px solid rgba(249,115,22,0.3);
+      border-left: 2px solid rgba(249,115,22,0.3);
+    }
+
+    .hud-corner.br {
+      bottom: 12px;
+      right: 12px;
+      border-bottom: 2px solid rgba(139,92,246,0.3);
+      border-right: 2px solid rgba(139,92,246,0.3);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: stretch;
+      min-height: 480px;
+      gap: 20px;
+    }
+
+    .hero-left {
+      flex: 1.2;
+      min-width: 0;
+      padding: 36px 0 36px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .hero-label {
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-badge {
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-badge.type {
+      background: rgba(249,115,22,0.12);
+      color: var(--orange);
+      border: 1px solid rgba(249,115,22,0.2);
+    }
+
+    .hero-badge.state {
+      background: rgba(16,185,129,0.12);
+      color: var(--green);
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .hero-company-greeting {
+      font-size: 13px;
+      color: var(--dim);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-primary-metric {
+      font-size: 56px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      background: linear-gradient(135deg, #f59e0b 0%, #a3e635 40%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .hero-sub-text {
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .hero-mini-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .mini-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .mini-card-number {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .mini-card-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .sparkline-bars {
+      display: flex;
+      gap: 3px;
+      justify-content: center;
+      align-items: flex-end;
+      height: 18px;
+    }
+
+    .sparkline-bar {
+      width: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 2px;
+      flex: 1;
+    }
+
+    .hero-ticker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .ticker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .ticker-label {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      font-weight: 600;
+      min-width: 60px;
+    }
+
+    .ticker-progress {
+      flex: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .ticker-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--lime));
+      width: 75%;
+    }
+
+    .ticker-value {
+      font-size: 11px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      color: var(--green);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* Stock ticker strip — scrolling marquee below hero */
+    .stock-ticker-strip {
+      position: relative;
+      margin: 16px 0 0 0;
+      padding: 14px 0;
+      background: linear-gradient(180deg, rgba(10,10,20,0.85), rgba(6,6,16,0.95));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .stock-ticker-strip::before,
+    .stock-ticker-strip::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 80px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .stock-ticker-strip::before {
+      left: 0;
+      background: linear-gradient(90deg, rgba(6,6,16,1), rgba(6,6,16,0));
+    }
+    .stock-ticker-strip::after {
+      right: 0;
+      background: linear-gradient(270deg, rgba(6,6,16,1), rgba(6,6,16,0));
+    }
+    .stock-ticker-badge {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(236,72,153,0.35);
+    }
+    .stock-ticker-badge .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #fff;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    .stock-ticker-track {
+      display: flex;
+      gap: 48px;
+      width: max-content;
+      animation: tickerScroll 60s linear infinite;
+      padding-left: 120px;
+    }
+    .stock-ticker-strip:hover .stock-ticker-track {
+      animation-play-state: paused;
+    }
+    @keyframes tickerScroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+    }
+    .ticker-item .tk-sym {
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .ticker-item .tk-val {
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+    }
+    .ticker-item .tk-chg {
+      font-weight: 700;
+      font-size: 12px;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+    .ticker-item .tk-chg.up {
+      color: var(--green);
+      background: rgba(16,185,129,0.12);
+    }
+    .ticker-item .tk-chg.down {
+      color: var(--red);
+      background: rgba(239,68,68,0.12);
+    }
+    .ticker-item .tk-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .hero-orbital {
+      flex: 0.8;
+      min-width: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+    }
+
+    #orbitalCanvas {
+      width: 100%;
+      max-width: 380px;
+      height: auto;
+    }
+
+    .hero-player {
+      flex: 0 0 320px;
+      padding: 24px 32px 24px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .health-card {
+      background: rgba(139,92,246,0.06);
+      border: 1px solid rgba(139,92,246,0.15);
+      border-radius: 16px;
+      padding: 14px 16px;
+      width: 100%;
+      max-width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 68px;
+      grid-template-rows: auto auto;
+      column-gap: 12px;
+      align-items: center;
+    }
+
+    .health-card-name {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 2px;
+      background: linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 40px rgba(167,139,250,0.15);
+      grid-column: 1 / 2;
+    }
+
+    .health-card-type {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding-bottom: 0;
+      border-bottom: none;
+      margin-bottom: 0;
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
+    }
+
+    .health-gauge-wrap {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      margin: 0;
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;
+      align-self: center;
+      justify-self: end;
+    }
+
+    .health-gauge-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .health-gauge-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .health-xp-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 10px 0 10px;
+      grid-column: 1 / 3;
+    }
+
+    .health-xp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+      width: 65%;
+    }
+
+    .health-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      padding-top: 0;
+      border-top: none;
+      grid-column: 1 / 3;
+    }
+
+    .health-stat {
+      text-align: center;
+    }
+
+    .health-stat-number {
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 0;
+      line-height: 1.1;
+    }
+
+    .health-stat-label {
+      font-size: 8px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .achieve-count {
+      font-size: 12px;
+      color: var(--dim);
+      background: rgba(255,255,255,0.04);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .xp-earned {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--orange);
+      background: rgba(249,115,22,0.1);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .view-all-btn {
+      font-size: 12px;
+      color: var(--dim);
+      background: none;
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .view-all-btn:hover {
+      color: white;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .achieve-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      padding: 8px 0;
+    }
+
+    .achieve-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 110px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .achieve-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .achieve-card.locked {
+      opacity: 0.3;
+    }
+
+    .achieve-ring-wrap {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      margin-bottom: 10px;
+    }
+
+    .achieve-ring-svg {
+      width: 88px;
+      height: 88px;
+      transform: rotate(-90deg);
+    }
+
+    .achieve-ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.06);
+      stroke-width: 4;
+    }
+
+    .achieve-ring-fill {
+      fill: none;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke: url(#achieveGrad);
+      transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .achieve-icon-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .achieve-card.earned .achieve-ring-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    .achieve-check {
+      position: absolute;
+      bottom: 4px;
+      right: 16px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      border: 2px solid var(--bg);
+      z-index: 2;
+    }
+
+    .achieve-name {
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+
+    .achieve-xp {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--orange);
+    }
+
+    .achieve-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(12,12,26,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 14px;
+      min-width: 180px;
+      max-width: 220px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .achieve-card:hover .achieve-tooltip {
+      opacity: 1;
+    }
+
+    .achieve-tooltip-name {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .achieve-tooltip-desc {
+      font-size: 11px;
+      color: var(--dim);
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .achieve-tooltip-xp {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--orange);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .kpi-card {
+      padding: 20px;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+    }
+
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      pointer-events: none;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .kpi-card.kpi-orange { border-color: rgba(249,115,22,0.15); }
+    .kpi-card.kpi-orange::after { background: linear-gradient(to top, rgba(249,115,22,0.06), transparent); }
+    .kpi-card.kpi-orange .kpi-num { color: var(--orange); }
+    .kpi-card.kpi-orange .kpi-indicator { background: var(--orange); }
+    .kpi-card.kpi-orange .kpi-indicator::after { border: 1px solid var(--orange); }
+    .kpi-card.kpi-orange .kpi-bar { background: linear-gradient(to top, rgba(249,115,22,0.15), rgba(249,115,22,0.5)); }
+
+    .kpi-card.kpi-green { border-color: rgba(16,185,129,0.15); }
+    .kpi-card.kpi-green::after { background: linear-gradient(to top, rgba(16,185,129,0.06), transparent); }
+    .kpi-card.kpi-green .kpi-num { color: var(--green); }
+    .kpi-card.kpi-green .kpi-indicator { background: var(--green); }
+    .kpi-card.kpi-green .kpi-indicator::after { border: 1px solid var(--green); }
+    .kpi-card.kpi-green .kpi-bar { background: linear-gradient(to top, rgba(16,185,129,0.15), rgba(16,185,129,0.5)); }
+
+    .kpi-card.kpi-purple { border-color: rgba(139,92,246,0.15); }
+    .kpi-card.kpi-purple::after { background: linear-gradient(to top, rgba(139,92,246,0.06), transparent); }
+    .kpi-card.kpi-purple .kpi-num { color: var(--purple); }
+    .kpi-card.kpi-purple .kpi-indicator { background: var(--purple); }
+    .kpi-card.kpi-purple .kpi-indicator::after { border: 1px solid var(--purple); }
+    .kpi-card.kpi-purple .kpi-bar { background: linear-gradient(to top, rgba(139,92,246,0.15), rgba(139,92,246,0.5)); }
+
+    .kpi-card.kpi-pink { border-color: rgba(236,72,153,0.15); }
+    .kpi-card.kpi-pink::after { background: linear-gradient(to top, rgba(236,72,153,0.06), transparent); }
+    .kpi-card.kpi-pink .kpi-num { color: var(--pink); }
+    .kpi-card.kpi-pink .kpi-indicator { background: var(--pink); }
+    .kpi-card.kpi-pink .kpi-indicator::after { border: 1px solid var(--pink); }
+    .kpi-card.kpi-pink .kpi-bar { background: linear-gradient(to top, rgba(236,72,153,0.15), rgba(236,72,153,0.5)); }
+
+    .kpi-card.kpi-amber { border-color: rgba(245,158,11,0.15); }
+    .kpi-card.kpi-amber::after { background: linear-gradient(to top, rgba(245,158,11,0.06), transparent); }
+    .kpi-card.kpi-amber .kpi-num { color: var(--amber); }
+    .kpi-card.kpi-amber .kpi-indicator { background: var(--amber); }
+    .kpi-card.kpi-amber .kpi-indicator::after { border: 1px solid var(--amber); }
+    .kpi-card.kpi-amber .kpi-bar { background: linear-gradient(to top, rgba(245,158,11,0.15), rgba(245,158,11,0.5)); }
+
+    .kpi-card.kpi-lime { border-color: rgba(132,204,22,0.15); }
+    .kpi-card.kpi-lime::after { background: linear-gradient(to top, rgba(132,204,22,0.06), transparent); }
+    .kpi-card.kpi-lime .kpi-num { color: var(--lime); }
+    .kpi-card.kpi-lime .kpi-indicator { background: var(--lime); }
+    .kpi-card.kpi-lime .kpi-indicator::after { border: 1px solid var(--lime); }
+    .kpi-card.kpi-lime .kpi-bar { background: linear-gradient(to top, rgba(132,204,22,0.15), rgba(132,204,22,0.5)); }
+
+    .kpi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .kpi-num {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .kpi-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .kpi-indicator::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      animation: kpiPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes kpiPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+
+    .kpi-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .kpi-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 28px;
+    }
+
+    .kpi-bar {
+      flex: 1;
+      border-radius: 2px 2px 0 0;
+      transition: height 1s cubic-bezier(0.22,1,0.36,1);
+      min-width: 0;
+    }
+
+    .kpi-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .kpi-meta-item {
+      font-size: 10px;
+      color: var(--dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .kpi-meta-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      overflow: hidden;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .chart-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--orange), var(--pink), transparent);
+      opacity: 0.6;
+    }
+
+    .chart-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .chart-card.expenses::before {
+      background: linear-gradient(90deg, var(--amber), var(--red), transparent);
+    }
+
+    .chart-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 180px;
+    }
+
+    .expense-mini-gauges {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .expense-gauge-mini {
+      text-align: center;
+    }
+
+    .expense-gauge-svg {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 8px;
+      transform: rotate(-90deg);
+    }
+
+    .expense-mini-label {
+      font-size: 10px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .expense-mini-value {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .waterfall-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .waterfall-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .waterfall-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .waterfall-svg {
+      width: 100%;
+      height: 80px;
+      margin-bottom: 12px;
+    }
+
+    .waterfall-value {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), transparent);
+      opacity: 0.6;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .stat-card.green::before {
+      background: linear-gradient(90deg, var(--green), var(--lime), transparent);
+    }
+
+    .stat-card.amber::before {
+      background: linear-gradient(90deg, var(--amber), var(--orange), transparent);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .bank-accounts-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+
+    .bank-accounts-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green), var(--lime), transparent);
+      opacity: 0.6;
+    }
+
+    .bank-accounts-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .portfolio-bar {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .portfolio-label {
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .portfolio-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 8px;
+    }
+
+    .portfolio-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .portfolio-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--lime));
+      width: 80%;
+    }
+
+    .account-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .account-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .account-row:last-child {
+      border-bottom: none;
+    }
+
+    .account-info {
+      flex: 1;
+    }
+
+    .account-name {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .account-mask {
+      font-size: 10px;
+      color: var(--dim);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .account-balance {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      text-align: right;
+    }
+
+    .account-balance.positive {
+      color: var(--green);
+    }
+
+    .account-balance.negative {
+      color: var(--red);
+    }
+
+    /* ==== ENHANCED STATS ROW ==== */
+    .stat-card-v2 {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 200px;
+      transition: transform 0.25s cubic-bezier(.22,1,.36,1), box-shadow 0.25s, border-color 0.25s;
+    }
+    .stat-card-v2::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), transparent);
+      opacity: 0.7;
+    }
+    .stat-card-v2.green::before { background: linear-gradient(90deg, var(--green), var(--lime), transparent); }
+    .stat-card-v2.amber::before { background: linear-gradient(90deg, var(--amber), var(--orange), transparent); }
+    .stat-card-v2:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+    }
+    .stat-head {
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .stat-head-left {
+      display:flex; align-items:center; gap:10px;
+    }
+    .stat-icon-chip {
+      width:34px; height:34px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat-card-v2.red   .stat-icon-chip { background: rgba(239,68,68,0.12); color: var(--red); }
+    .stat-card-v2.green .stat-icon-chip { background: rgba(16,185,129,0.12); color: var(--green); }
+    .stat-card-v2.amber .stat-icon-chip { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .stat-title {
+      font-size:11px; font-weight:700; letter-spacing:0.12em;
+      text-transform:uppercase; color: var(--dim);
+    }
+    .stat-delta {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:11px; font-weight:700;
+      padding: 4px 8px; border-radius:6px;
+    }
+    .stat-delta.up   { color: var(--green); background: rgba(16,185,129,0.12); }
+    .stat-delta.down { color: var(--red);   background: rgba(239,68,68,0.12); }
+
+    .stat-body {
+      display:flex; align-items:center; gap:18px;
+    }
+    .stat-ring-wrap {
+      position:relative; width:92px; height:92px; flex-shrink:0;
+    }
+    .stat-ring-wrap svg { transform: rotate(-90deg); }
+    .stat-ring-value {
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'IBM Plex Mono',monospace;
+      font-size:20px; font-weight:800; color:#fff;
+      letter-spacing:-0.02em;
+    }
+    .stat-primary {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:30px; font-weight:800;
+      letter-spacing:-0.02em;
+      line-height:1;
+    }
+    .stat-sub {
+      font-size:11px; color: var(--dim); margin-top:6px;
+      font-weight:600;
+    }
+    .stat-spark {
+      display:flex; align-items:flex-end; gap:3px; height:44px; flex:1;
+    }
+    .stat-spark .s-bar {
+      flex:1; border-radius:2px 2px 0 0;
+      background: linear-gradient(180deg, rgba(239,68,68,0.8), rgba(239,68,68,0.2));
+      transition: height 0.6s cubic-bezier(.22,1,.36,1);
+    }
+    .stat-card-v2.green .stat-spark .s-bar { background: linear-gradient(180deg, rgba(16,185,129,0.85), rgba(16,185,129,0.2)); }
+    .stat-card-v2.amber .stat-spark .s-bar { background: linear-gradient(180deg, rgba(245,158,11,0.85), rgba(245,158,11,0.2)); }
+    .stat-footnote {
+      display:flex; justify-content:space-between;
+      font-size:10px; color: var(--dim);
+      text-transform:uppercase; letter-spacing:0.1em; font-weight:600;
+      padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat-footnote b { color: #fff; font-family:'IBM Plex Mono',monospace; font-weight:700; }
+
+    /* ==== ENHANCED BANK ACCOUNTS ==== */
+    .bank-v2 {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .bank-v2::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--green), var(--lime), var(--amber), transparent);
+      opacity: 0.8;
+    }
+    .bank-v2-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:24px; padding-bottom:20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .bank-v2-title {
+      display:flex; align-items:center; gap:12px;
+    }
+    .bank-v2-title h3 {
+      font-size:20px; font-weight:800; letter-spacing:-0.02em;
+    }
+    .bank-v2-title-icon {
+      width:40px; height:40px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+      background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(132,204,22,0.12));
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .bank-v2-total-pill {
+      display:flex; flex-direction:column; align-items:flex-end;
+    }
+    .bank-v2-total-pill .bv-label {
+      font-size:10px; text-transform:uppercase; letter-spacing:0.12em;
+      color:var(--dim); font-weight:700; margin-bottom:4px;
+    }
+    .bank-v2-total-pill .bv-value {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:26px; font-weight:800;
+      background: linear-gradient(135deg, #fff 0%, #84cc16 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+
+    .bank-v2-body {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 32px;
+    }
+    .bank-donut-wrap {
+      position:relative; width:240px; height:240px; margin: 0 auto;
+    }
+    .bank-donut-wrap svg { transform: rotate(-90deg); }
+    .bank-donut-center {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center;
+    }
+    .bank-donut-center .bd-label {
+      font-size:10px; text-transform:uppercase; letter-spacing:0.14em;
+      color:var(--dim); font-weight:700; margin-bottom:6px;
+    }
+    .bank-donut-center .bd-value {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:28px; font-weight:800; letter-spacing:-0.02em;
+    }
+    .bank-donut-center .bd-sub {
+      font-size:11px; color:var(--dim); margin-top:4px;
+      font-weight:600;
+    }
+    .bank-donut-legend {
+      display:flex; flex-direction:column; gap:10px;
+      margin-top:20px;
+    }
+    .bd-legend-row {
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:11px; color:var(--dim);
+    }
+    .bd-legend-row .bd-dot {
+      width:10px; height:10px; border-radius:3px; margin-right:8px;
+      display:inline-block; vertical-align:middle;
+    }
+    .bd-legend-row .bd-pct {
+      font-family:'IBM Plex Mono',monospace; color:#fff; font-weight:700;
+    }
+
+    .bank-accounts-v2 {
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .bank-acct-group-label {
+      font-size:10px; font-weight:700; letter-spacing:0.14em;
+      text-transform:uppercase; color:var(--dim);
+      display:flex; align-items:center; gap:10px;
+      margin: 8px 0 4px;
+    }
+    .bank-acct-group-label::after {
+      content:''; flex:1; height:1px; background: rgba(255,255,255,0.06);
+    }
+    .bank-acct-item {
+      display:grid;
+      grid-template-columns: 40px 1fr 130px 90px;
+      align-items:center; gap:14px;
+      padding:14px 16px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 14px;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .bank-acct-item:hover {
+      transform: translateX(4px);
+      border-color: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.035);
+    }
+    .bank-acct-icon {
+      width:40px; height:40px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center; font-size:16px;
+    }
+    .bank-acct-icon.checking {
+      background: rgba(16,185,129,0.12); color: var(--green);
+      border: 1px solid rgba(16,185,129,0.22);
+    }
+    .bank-acct-icon.credit {
+      background: rgba(239,68,68,0.12); color: var(--red);
+      border: 1px solid rgba(239,68,68,0.22);
+    }
+    .bank-acct-icon.savings {
+      background: rgba(139,92,246,0.12); color: var(--purple);
+      border: 1px solid rgba(139,92,246,0.22);
+    }
+    .bank-acct-info .ba-name {
+      font-size:13px; font-weight:700; color:#fff; margin-bottom:3px;
+    }
+    .bank-acct-info .ba-mask {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px; color:var(--dim); letter-spacing:0.06em;
+    }
+    .bank-acct-bar-wrap {
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .bank-acct-bar-wrap .ba-pct {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px; font-weight:700; color: var(--dim);
+      text-align:right;
+    }
+    .bank-acct-bar-bg {
+      height: 6px; background: rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;
+    }
+    .bank-acct-bar-fill {
+      height:100%; border-radius:3px;
+      background: linear-gradient(90deg, var(--green), var(--lime));
+      transition: width 0.8s cubic-bezier(.22,1,.36,1);
+    }
+    .bank-acct-item.credit .bank-acct-bar-fill {
+      background: linear-gradient(90deg, var(--red), var(--orange));
+    }
+    .bank-acct-balance {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:15px; font-weight:800; text-align:right;
+    }
+    .bank-acct-balance.positive { color: var(--green); }
+    .bank-acct-balance.negative { color: var(--red); }
+
+    @media (max-width: 1100px) {
+      .bank-v2-body { grid-template-columns: 1fr; }
+      .bank-acct-item { grid-template-columns: 40px 1fr 90px; }
+      .bank-acct-bar-wrap { display:none; }
+    }
+
+    /* ===== Entity Admin (Ownership + Documents) ===== */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 1100px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .admin-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .admin-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background: linear-gradient(90deg, var(--purple), var(--pink), var(--orange), transparent);
+      opacity: 0.7;
+    }
+    .admin-card.docs::before {
+      background: linear-gradient(90deg, var(--amber), var(--orange), var(--pink), transparent);
+    }
+    .admin-head {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom: 18px; padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .admin-head-left { display:flex; align-items:center; gap:12px; }
+    .admin-icon {
+      width:40px; height:40px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.16), rgba(236,72,153,0.12));
+      border: 1px solid rgba(139,92,246,0.2);
+    }
+    .admin-card.docs .admin-icon {
+      background: linear-gradient(135deg, rgba(245,158,11,0.16), rgba(249,115,22,0.12));
+      border: 1px solid rgba(245,158,11,0.22);
+    }
+    .admin-card h3 { font-size:18px; font-weight:800; letter-spacing:-0.02em; }
+    .admin-head-sub {
+      font-size:10px; color: var(--dim); font-weight:600; margin-top:2px;
+      text-transform:uppercase; letter-spacing:0.1em;
+    }
+    .admin-btn {
+      font-family: inherit;
+      font-size: 11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+      padding: 8px 14px; border-radius: 10px; cursor:pointer;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      border: none; color: #fff;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .admin-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(236,72,153,0.35); }
+    .admin-btn.ghost {
+      background: rgba(255,255,255,0.04); color: #fff;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .admin-btn.danger { background: rgba(239,68,68,0.12); color: var(--red); border:1px solid rgba(239,68,68,0.2); }
+
+    /* Ownership rows */
+    .own-total-bar {
+      display:flex; align-items:center; gap:12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 11px; color: var(--dim); font-weight:600;
+    }
+    .own-total-bar .otb-pct {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:18px; font-weight:800; color:#fff;
+      margin-left:auto;
+    }
+    .own-total-bar.invalid .otb-pct { color: var(--red); }
+    .own-total-bar.valid   .otb-pct { color: var(--green); }
+    .own-progress-track {
+      flex:1; height:6px; border-radius:3px; background: rgba(255,255,255,0.05); overflow:hidden;
+      position:relative;
+    }
+    .own-progress-fill {
+      height:100%; transition: width 0.4s ease;
+      background: linear-gradient(90deg, var(--purple), var(--pink));
+    }
+
+    .own-list { display:flex; flex-direction:column; gap:10px; }
+    .own-row {
+      display:grid;
+      grid-template-columns: 44px 1fr 100px 80px 36px;
+      gap: 10px; align-items:center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .own-row:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.035); }
+    .own-avatar {
+      width:36px; height:36px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-size:13px; color:#fff;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    }
+    .own-avatar.entity { background: linear-gradient(135deg, #10b981, #84cc16); }
+    .own-name-field, .own-type-field, .own-pct-field {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #fff;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .own-name-field:focus, .own-type-field:focus, .own-pct-field:focus {
+      outline: none; border-color: var(--purple);
+      background: rgba(0,0,0,0.5);
+    }
+    .own-pct-field { font-family:'IBM Plex Mono',monospace; font-weight:700; text-align:right; }
+    .own-remove {
+      width:32px; height:32px; border-radius:8px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.18);
+      color: var(--red);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition: background 0.2s;
+      font-size: 14px;
+    }
+    .own-remove:hover { background: rgba(239,68,68,0.18); }
+    .own-add-row {
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding: 10px;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      color: var(--dim); font-size: 12px; font-weight:600;
+      cursor:pointer; margin-top: 10px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .own-add-row:hover { border-color: var(--purple); color: #fff; }
+
+    .own-actions {
+      display:flex; gap:8px; margin-top: 14px; padding-top:14px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .own-sync-note {
+      margin-top: 10px;
+      font-size: 10px; color: var(--dim); text-align:center;
+      text-transform: uppercase; letter-spacing: 0.1em;
+    }
+    .own-sync-note .sync-dot {
+      display:inline-block; width:6px; height:6px; border-radius:50%;
+      background: var(--green); margin-right:6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Document vault */
+    .doc-dropzone {
+      border: 2px dashed rgba(245,158,11,0.25);
+      border-radius: 14px;
+      padding: 24px 16px;
+      text-align: center;
+      background: rgba(245,158,11,0.03);
+      transition: background 0.2s, border-color 0.2s;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .doc-dropzone:hover, .doc-dropzone.drag {
+      background: rgba(245,158,11,0.06);
+      border-color: var(--amber);
+    }
+    .doc-dropzone-icon { font-size: 26px; margin-bottom: 8px; }
+    .doc-dropzone-title { font-size: 13px; font-weight:700; color:#fff; margin-bottom: 4px; }
+    .doc-dropzone-sub { font-size: 11px; color: var(--dim); }
+    .doc-dropzone input { display: none; }
+
+    .doc-list { display:flex; flex-direction:column; gap:8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+    .doc-list::-webkit-scrollbar { width: 4px; }
+    .doc-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius:2px; }
+    .doc-empty {
+      text-align:center; padding:20px; color: var(--dim);
+      font-size:11px; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;
+    }
+    .doc-row {
+      display:grid;
+      grid-template-columns: 36px 1fr auto auto;
+      gap: 10px; align-items:center;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+    }
+    .doc-icon-chip {
+      width:36px; height:36px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center; font-size:16px;
+      background: rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2);
+    }
+    .doc-name { font-size: 12px; font-weight:700; color:#fff; }
+    .doc-meta { font-size: 10px; color: var(--dim); margin-top:2px; display:flex; align-items:center; gap:6px; }
+    .doc-meta .doc-cat {
+      padding: 1px 6px; border-radius: 4px;
+      background: rgba(139,92,246,0.12); color: #c4b5fd;
+      font-weight:700; text-transform:uppercase; letter-spacing:0.06em; font-size:9px;
+    }
+    .doc-agents { display:flex; gap:4px; }
+    .doc-agent-pip {
+      width: 22px; height: 22px; border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      font-size: 11px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      opacity: 0.35;
+      transition: opacity 0.2s, background 0.2s;
+      title: '';
+    }
+    .doc-agent-pip.active { opacity:1; background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.3); }
+    .doc-agent-pip:hover { opacity: 0.85; }
+    .doc-remove {
+      width:28px; height:28px; border-radius:8px;
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.18);
+      color: var(--red);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size: 12px;
+    }
+    .doc-remove:hover { background: rgba(239,68,68,0.18); }
+
+    .properties-section {
+      margin-bottom: 40px;
+    }
+
+    .properties-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .property-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .property-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--amber), var(--orange), transparent);
+      opacity: 0.6;
+    }
+
+    .property-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .property-address {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .property-location {
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .property-value {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--amber), var(--orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .property-equity-gauge {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 12px;
+    }
+
+    .property-equity-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .property-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .property-stat {
+      text-align: center;
+    }
+
+    .property-stat-number {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      margin-bottom: 2px;
+    }
+
+    .property-stat-label {
+      font-size: 9px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .dormant-view {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dormant-view.active {
+      display: flex;
+    }
+
+    .dormant-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .dormant-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .dormant-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .dormant-message {
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.6;
+    }
+
+    .main-content {
+      display: block;
+    }
+
+    .main-content.hidden {
+      display: none;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .chart-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-text {
+      font-size: 10px;
+      color: var(--dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 8px;
+    }
+
+    .donut-container {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding-top: 8px;
+    }
+
+    .donut-chart-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      flex-shrink: 0;
+    }
+
+    .donut-chart-wrap svg {
+      transform: rotate(-90deg);
+    }
+
+    .donut-center-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .donut-center-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 40%);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .donut-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .donut-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .donut-legend-label {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      flex: 1;
+    }
+
+    .donut-legend-value {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'IBM Plex Mono', monospace;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .cashflow-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+      transition: all 0.3s;
+    }
+
+    .cashflow-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green), var(--lime), transparent);
+      opacity: 0.6;
+    }
+
+    .cashflow-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.035);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+
+    .vertical-section {
+      margin-top: 20px;
+    }
+
+    .tier-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: rgba(249,115,22,0.1);
+      color: var(--orange);
+      text-transform: uppercase;
+    }
+
+    .kpi-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .donut-wrap {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .donut-svg-wrap {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      flex-shrink: 0;
+    }
+
+    .donut-svg-wrap svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .donut-center-num {
+      font-size: 28px;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .donut-center-sub {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+
+    .donut-legend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .donut-legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .donut-legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .donut-legend-name {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      flex: 1;
+    }
+
+    .donut-legend-pct {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'IBM Plex Mono', monospace;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* ==== Quarterly Dividend Widget (hero-right, under gamification card) ==== */
+    .dividend-widget {
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.06));
+      border: 1px solid rgba(139,92,246,0.18);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+    }
+    .dividend-widget::before {
+      content:''; position:absolute; inset:0;
+      background: radial-gradient(120% 80% at 100% 0%, rgba(236,72,153,0.12), transparent 60%);
+      pointer-events:none;
+    }
+    .div-head {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:6px; position:relative;
+    }
+    .div-title {
+      font-size:10px; font-weight:800; letter-spacing:0.14em;
+      text-transform:uppercase; color: #c4b5fd;
+      display:flex; align-items:center; gap:6px;
+    }
+    .div-title::before {
+      content:''; width:6px; height:6px; border-radius:50%;
+      background: #ec4899;
+      box-shadow: 0 0 10px #ec4899;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    .div-quarter-pill {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:10px; font-weight:700; color:#fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .div-amount {
+      font-family:'IBM Plex Mono',monospace;
+      font-size:22px; font-weight:800; letter-spacing:-0.02em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #ffffff 0%, #a78bfa 50%, #ec4899 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      margin-bottom: 2px; position:relative;
+    }
+    .div-sub {
+      font-size: 10px; color: var(--dim); font-weight:600;
+      margin-bottom: 8px; position:relative;
+    }
+    .div-breakdown {
+      display: flex; height: 6px; border-radius: 3px; overflow:hidden;
+      margin-bottom: 6px; position:relative;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .div-seg { height:100%; transition: width 0.8s cubic-bezier(.22,1,.36,1); }
+    .div-seg.tax      { background: linear-gradient(90deg, #ef4444, #f59e0b); }
+    .div-seg.retained { background: linear-gradient(90deg, #f59e0b, #84cc16); }
+    .div-seg.payout   { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+    .div-legend {
+      display:grid; grid-template-columns: repeat(3, 1fr); gap:4px;
+      font-size:9px; color: var(--dim); font-weight:600;
+      margin-bottom: 6px; position:relative;
+    }
+    .div-leg-item { display:flex; flex-direction:column; align-items:flex-start; gap:1px; }
+    .div-leg-item .dl-dot { width:6px; height:6px; border-radius:2px; }
+    .div-leg-item .dl-val {
+      font-family:'IBM Plex Mono',monospace;
+      color:#fff; font-weight:700; font-size:10px;
+    }
+    .div-leg-item .dl-lbl {
+      display:flex; align-items:center; gap:4px;
+    }
+    .div-agents {
+      display:flex; align-items:center; gap:4px; justify-content:center;
+      font-size: 9px; color: var(--dim);
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      position:relative;
+    }
+    .div-agent-chip {
+      display:inline-flex; align-items:center; gap:3px;
+      padding: 2px 6px; border-radius: 4px;
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.2);
+      color: #c4b5fd;
+      font-size: 8px; font-weight:700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    .monday-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      background: rgba(249,115,22,0.04);
+      border: 1px solid rgba(249,115,22,0.1);
+      border-radius: 14px;
+      font-size: 12px;
+      color: var(--dim);
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid-5 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .kpi-grid-5 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 1400px) {
+      .hero-player { flex: 0 0 300px; }
+      #orbitalCanvas { max-width: 340px; }
+    }
+    @media (max-width: 1280px) {
+      .hero-player { flex: 0 0 280px; }
+      .hero-left { padding: 28px 0 28px 28px; }
+      .hero-player { padding: 28px 28px 28px 0; }
+      #orbitalCanvas { max-width: 300px; }
+      .div-amount { font-size: 26px; }
+    }
+    @media (max-width: 1100px) {
+      .hero-orbital { display: none; }
+      .hero-player { flex: 0 0 300px; }
+    }
+
+    @media (max-width: 1024px) {
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .properties-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-content {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .hero-left, .hero-player { flex: 1 1 auto; padding: 24px; align-items: stretch; }
+
+      .hero-orbital {
+        display: flex;
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="navbar">
+      <div class="navbar-container">
+        <div class="navbar-title">Mission Control</div>
+        <select class="entity-select" id="entitySelect" onchange="switchEntity(this.value)">
+          <option value="cabo-tropic">Cabo Tropic</option>
+          <option value="culbertson">Culbertson & Co</option>
+          <option value="xome-home">Xome Home</option>
+          <option value="ca-stays">California Stays</option>
+          <option value="blc-ca">BLC CA Properties</option>
+          <option value="alabama-shores">Alabama Shores</option>
+          <option value="lincoln-hodl">Lincoln Hodl</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dormant-view" id="dormantView">
+      <div class="dormant-card">
+        <div class="dormant-icon">💤</div>
+        <div class="dormant-title" id="dormantName"></div>
+        <div class="dormant-message">This entity is currently dormant. No active operations to display.</div>
+      </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <div class="main-container">
+        <!-- HERO BANNER -->
+        <div class="hero-banner">
+          <canvas id="heroCanvas"></canvas>
+          <div class="hero-scanline"></div>
+          <div class="hud-corner tl"></div>
+          <div class="hud-corner tr"></div>
+          <div class="hud-corner bl"></div>
+          <div class="hud-corner br"></div>
+          
+          <div class="hero-content">
+            <!-- Hero Left -->
+            <div class="hero-left">
+              <div class="hero-label">› ACTIVE ENTITY — LIVE</div>
+              <div class="hero-badges">
+                <div class="hero-badge type" id="heroType">LLC</div>
+                <div class="hero-badge state" id="heroState">CA</div>
+              </div>
+              <!-- company greeting removed -->
+              <div class="hero-primary-metric" id="heroNetIncome">$7.0K</div>
+              <div class="hero-sub-text" id="heroYTD">Net Income YTD</div>
+              
+              <div class="hero-mini-cards">
+                <div class="mini-card">
+                  <div class="mini-card-number" style="color: var(--green);">$23K</div>
+                  <div class="mini-card-label">Revenue</div>
+                  <div class="sparkline-bars">
+                    <div class="sparkline-bar" style="height: 40%;"></div>
+                    <div class="sparkline-bar" style="height: 60%;"></div>
+                    <div class="sparkline-bar" style="height: 50%;"></div>
+                    <div class="sparkline-bar" style="height: 70%;"></div>
+                    <div class="sparkline-bar" style="height: 45%;"></div>
+                    <div class="sparkline-bar" style="height: 80%;"></div>
+                    <div class="sparkline-bar" style="height: 55%;"></div>
+                    <div class="sparkline-bar" style="height: 65%;"></div>
+                  </div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-card-number" style="color: var(--amber);">$16K</div>
+                  <div class="mini-card-label">Expenses</div>
+                  <div class="sparkline-bars">
+                    <div class="sparkline-bar" style="height: 50%;"></div>
+                    <div class="sparkline-bar" style="height: 45%;"></div>
+                    <div class="sparkline-bar" style="height: 60%;"></div>
+                    <div class="sparkline-bar" style="height: 40%;"></div>
+                    <div class="sparkline-bar" style="height: 55%;"></div>
+                    <div class="sparkline-bar" style="height: 50%;"></div>
+                    <div class="sparkline-bar" style="height: 65%;"></div>
+                    <div class="sparkline-bar" style="height: 48%;"></div>
+                  </div>
+                </div>
+                <div class="mini-card">
+                  <div class="mini-card-number" style="color: var(--lime);">$8.2K</div>
+                  <div class="mini-card-label">Cash Flow</div>
+                  <div class="sparkline-bars">
+                    <div class="sparkline-bar" style="height: 35%;"></div>
+                    <div class="sparkline-bar" style="height: 55%;"></div>
+                    <div class="sparkline-bar" style="height: 40%;"></div>
+                    <div class="sparkline-bar" style="height: 60%;"></div>
+                    <div class="sparkline-bar" style="height: 38%;"></div>
+                    <div class="sparkline-bar" style="height: 70%;"></div>
+                    <div class="sparkline-bar" style="height: 42%;"></div>
+                    <div class="sparkline-bar" style="height: 65%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hero-ticker">
+                <div class="ticker-dot"></div>
+                <div class="ticker-label">CASH</div>
+                <div class="ticker-progress">
+                  <div class="ticker-progress-bar"></div>
+                </div>
+                <div class="ticker-value" id="heroTickerValue">+15%</div>
+              </div>
+
+            </div>
+
+            <!-- Hero Center: Orbital -->
+            <div class="hero-orbital">
+              <canvas id="orbitalCanvas" width="500" height="500"></canvas>
+            </div>
+
+            <!-- Hero Right: Player Card -->
+            <div class="hero-player">
+              <div class="health-card">
+                <div class="health-card-name" id="heroCompanyName">Xome Home</div>
+                <div class="health-card-type" id="heroCardType">LLC • CA</div>
+                
+                <div class="health-gauge-wrap">
+                  <svg class="health-gauge-svg" viewBox="0 0 120 120">
+                    <defs>
+                      <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#8b5cf6"/>
+                        <stop offset="100%" stop-color="#ec4899"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                    <circle id="healthRing" cx="60" cy="60" r="50" fill="none" stroke="url(#healthGrad)" stroke-width="10" stroke-dasharray="314" stroke-dashoffset="0" stroke-linecap="round"/>
+                  </svg>
+                  <div class="health-gauge-value" id="heroHealth">92%</div>
+                </div>
+
+                <div class="health-xp-bar">
+                  <div class="health-xp-fill"></div>
+                </div>
+
+                <div class="health-stats">
+                  <div class="health-stat">
+                    <div class="health-stat-number" id="heroAccounts">6</div>
+                    <div class="health-stat-label">Accounts</div>
+                  </div>
+                  <div class="health-stat">
+                    <div class="health-stat-number" id="heroProperties">0</div>
+                    <div class="health-stat-label">Properties</div>
+                  </div>
+                  <div class="health-stat">
+                    <div class="health-stat-number" id="heroOwnership">100%</div>
+                    <div class="health-stat-label">Ownership</div>
+                  </div>
+                  <div class="health-stat">
+                    <div class="health-stat-number" id="heroMultiplier">2.9x</div>
+                    <div class="health-stat-label">Multiplier</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quarterly Dividend Widget -->
+              <div class="dividend-widget">
+                <div class="div-head">
+                  <div class="div-title">Est. Qtr Dividend</div>
+                  <div class="div-quarter-pill" id="divQuarter">Q2 2026</div>
+                </div>
+                <div class="div-amount" id="divAmount">$0</div>
+                <div class="div-sub" id="divSub">Projected payout · <span id="divPayoutRate">40%</span> ratio</div>
+
+                <div class="div-breakdown">
+                  <div class="div-seg tax"      id="divSegTax"      style="width:0%"></div>
+                  <div class="div-seg retained" id="divSegRetained" style="width:0%"></div>
+                  <div class="div-seg payout"   id="divSegPayout"   style="width:0%"></div>
+                </div>
+                <div class="div-legend">
+                  <div class="div-leg-item">
+                    <div class="dl-lbl"><span class="dl-dot" style="background:#ef4444"></span>Tax</div>
+                    <span class="dl-val" id="divTaxAmt">$0</span>
+                  </div>
+                  <div class="div-leg-item">
+                    <div class="dl-lbl"><span class="dl-dot" style="background:#f59e0b"></span>Retain</div>
+                    <span class="dl-val" id="divRetAmt">$0</span>
+                  </div>
+                  <div class="div-leg-item">
+                    <div class="dl-lbl"><span class="dl-dot" style="background:#ec4899"></span>Payout</div>
+                    <span class="dl-val" id="divPayAmt">$0</span>
+                  </div>
+                </div>
+
+                <div class="div-agents">
+                  <span class="div-agent-chip">🧮 CFO</span>
+                  <span class="div-agent-chip">📑 Tax</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STOCK TICKER STRIP -->
+        <div class="stock-ticker-strip" id="stockTickerStrip">
+          <div class="stock-ticker-badge"><span class="live-dot"></span><span id="tickerBadgeLabel">LIVE</span></div>
+          <div class="stock-ticker-track" id="stockTickerTrack"></div>
+        </div>
+
+        <!-- ACHIEVEMENTS SECTION -->
+        <section class="section">
+          <div class="section-header">
+            <div class="section-header-left">
+              <span style="font-size:20px">🏆</span>
+              <h2 class="section-title">Achievements</h2>
+              <span class="achieve-count" id="achieveCount">0 of 8 earned</span>
+              <span class="xp-earned" id="xpEarned">+0 XP earned</span>
+            </div>
+            <button class="view-all-btn">View All →</button>
+          </div>
+
+          <svg width="0" height="0" style="position:absolute">
+            <defs>
+              <linearGradient id="achieveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f97316"/>
+                <stop offset="50%" stop-color="#ec4899"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <div class="achieve-grid">
+            <div class="achieve-card" id="achieve-revenue">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">💰</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Revenue Milestone</p>
+              <p class="achieve-xp">+250 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Revenue Milestone</div>
+                <div class="achieve-tooltip-desc">Reach $10K monthly revenue</div>
+                <div class="achieve-tooltip-xp">+250 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-profit">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">📈</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">First Profit</p>
+              <p class="achieve-xp">+200 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">First Profit</div>
+                <div class="achieve-tooltip-desc">Achieve positive net income</div>
+                <div class="achieve-tooltip-xp">+200 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-accounts">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">🏦</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Multi-Account</p>
+              <p class="achieve-xp">+150 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Multi-Account</div>
+                <div class="achieve-tooltip-desc">Manage 3+ bank accounts</div>
+                <div class="achieve-tooltip-xp">+150 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-property">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">🏠</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Property Owner</p>
+              <p class="achieve-xp">+300 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Property Owner</div>
+                <div class="achieve-tooltip-desc">Own 1+ real estate property</div>
+                <div class="achieve-tooltip-xp">+300 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-growth">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">🔥</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Growth Streak</p>
+              <p class="achieve-xp">+175 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Growth Streak</div>
+                <div class="achieve-tooltip-desc">Reach $15K monthly revenue</div>
+                <div class="achieve-tooltip-xp">+175 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-data">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">📊</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Data Driven</p>
+              <p class="achieve-xp">+100 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Data Driven</div>
+                <div class="achieve-tooltip-desc">Valuation exceeds $500K</div>
+                <div class="achieve-tooltip-xp">+100 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-team">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">👥</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Team Builder</p>
+              <p class="achieve-xp">+200 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Team Builder</div>
+                <div class="achieve-tooltip-desc">Manage 4+ bank accounts</div>
+                <div class="achieve-tooltip-xp">+200 XP</div>
+              </div>
+            </div>
+
+            <div class="achieve-card" id="achieve-leader">
+              <div class="achieve-ring-wrap">
+                <svg class="achieve-ring-svg" viewBox="0 0 88 88">
+                  <circle class="achieve-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="achieve-ring-fill" cx="44" cy="44" r="40" style="stroke-dasharray:251;stroke-dashoffset:251"/>
+                </svg>
+                <span class="achieve-icon-center">🏆</span>
+                <div class="achieve-check" style="display:none">✓</div>
+              </div>
+              <p class="achieve-name">Market Leader</p>
+              <p class="achieve-xp">+350 XP</p>
+              <div class="achieve-tooltip">
+                <div class="achieve-tooltip-name">Market Leader</div>
+                <div class="achieve-tooltip-desc">Valuation exceeds $800K</div>
+                <div class="achieve-tooltip-xp">+350 XP</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-orange">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal1">$14.3K</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">CASH POSITION</div>
+            <div class="kpi-bars" id="kpiBars1"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+12%</span> vs last mo</span>
+              <span class="kpi-meta-item" id="kpiAcctCount">6 accounts</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal2">$23K</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">MONTHLY REVENUE</div>
+            <div class="kpi-bars" id="kpiBars2"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+18%</span> vs last mo</span>
+              <span class="kpi-meta-item">Recurring</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal3">30.4%</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">PROFIT MARGIN</div>
+            <div class="kpi-bars" id="kpiBars3"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+2.1%</span> vs last mo</span>
+              <span class="kpi-meta-item">Healthy</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-pink">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal4">12.8m</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">CASH RUNWAY</div>
+            <div class="kpi-bars" id="kpiBars4"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item">Safe zone</span>
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--amber);">−$1.8K</span> burn</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-amber">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal5">$812K</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">COMPANY VALUATION</div>
+            <div class="kpi-bars" id="kpiBars5"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item"><span class="kpi-meta-value" id="kpiMult5">2.9x</span> multiplier</span>
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--lime);">+8%</span> from Q4</span>
+            </div>
+          </div>
+
+          <div class="kpi-card kpi-lime">
+            <div class="kpi-header">
+              <span class="kpi-num" id="kpiVal6">100%</span>
+              <span class="kpi-indicator"></span>
+            </div>
+            <div class="kpi-label">OWNERSHIP EQUITY</div>
+            <div class="kpi-bars" id="kpiBars6"></div>
+            <div class="kpi-meta">
+              <span class="kpi-meta-item">Full control</span>
+              <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">Optimal</span></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYTICS GRID -->
+        <div class="analytics-grid">
+          <!-- Revenue & Expenses Area Chart -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div class="chart-label">Revenue & Expenses</div>
+              <div class="chart-legend">
+                <span class="legend-dot" style="background: var(--green);"></span>
+                <span class="legend-text">Income</span>
+                <span class="legend-dot" style="background: var(--amber);"></span>
+                <span class="legend-text">Expenses</span>
+              </div>
+            </div>
+            <canvas id="revenueExpensesChart" style="width:100%; height:220px;"></canvas>
+          </div>
+
+          <!-- Expense Breakdown Donut Chart -->
+          <div class="chart-card expenses">
+            <div class="chart-label">Expense Breakdown</div>
+            <div class="donut-container">
+              <div class="donut-chart-wrap">
+                <svg id="donutSvg" viewBox="0 0 200 200" width="180" height="180">
+                  <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="22"/>
+                </svg>
+                <div class="donut-center-value" id="donutCenterValue">$16K</div>
+                <div class="donut-center-label">Monthly</div>
+              </div>
+              <div class="donut-legend" id="donutLegend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CASH FLOW TREND -->
+        <div class="cashflow-card">
+          <div class="chart-label">Cash Flow Trend (6 Months)</div>
+          <canvas id="cashFlowChart" style="width:100%; height:240px;"></canvas>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+          <!-- Burn Rate -->
+          <div class="stat-card-v2 red">
+            <div class="stat-head">
+              <div class="stat-head-left">
+                <div class="stat-icon-chip">🔥</div>
+                <div class="stat-title">Monthly Burn Rate</div>
+              </div>
+              <div class="stat-delta down" id="statBurnDelta">▲ 2.1%</div>
+            </div>
+            <div class="stat-body">
+              <div>
+                <div class="stat-primary" id="statBurn" style="color:var(--red);">−$16.0K</div>
+                <div class="stat-sub" id="statBurnSub">Avg 6-mo: −$15.4K</div>
+              </div>
+              <div class="stat-spark" id="statBurnSpark"></div>
+            </div>
+            <div class="stat-footnote">
+              <span>Cash Out</span>
+              <span><b id="statBurnRunway">8.4mo</b> Runway</span>
+            </div>
+          </div>
+
+          <!-- Cash Retention -->
+          <div class="stat-card-v2 green">
+            <div class="stat-head">
+              <div class="stat-head-left">
+                <div class="stat-icon-chip">💧</div>
+                <div class="stat-title">Cash Retention</div>
+              </div>
+              <div class="stat-delta up" id="statRetentionDelta">▲ 4.2%</div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-ring-wrap">
+                <svg width="92" height="92" viewBox="0 0 92 92">
+                  <circle cx="46" cy="46" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                  <circle id="statRetentionRing" cx="46" cy="46" r="40" fill="none"
+                    stroke="url(#retentionGrad)" stroke-width="8" stroke-linecap="round"
+                    stroke-dasharray="251.2" stroke-dashoffset="17.6"/>
+                  <defs>
+                    <linearGradient id="retentionGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#10b981"/>
+                      <stop offset="100%" stop-color="#84cc16"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="stat-ring-value" id="statRetention">93%</div>
+              </div>
+              <div style="flex:1;">
+                <div class="stat-primary" style="font-size:18px;" id="statRetentionDollar">$165K</div>
+                <div class="stat-sub">Held in reserves</div>
+              </div>
+            </div>
+            <div class="stat-footnote">
+              <span>Target 85%</span>
+              <span><b id="statRetentionStatus">Exceeding</b></span>
+            </div>
+          </div>
+
+          <!-- Operation Efficiency -->
+          <div class="stat-card-v2 amber">
+            <div class="stat-head">
+              <div class="stat-head-left">
+                <div class="stat-icon-chip">⚙️</div>
+                <div class="stat-title">Operation Efficiency</div>
+              </div>
+              <div class="stat-delta up" id="statEffDelta">▲ 3.7%</div>
+            </div>
+            <div class="stat-body">
+              <div class="stat-ring-wrap">
+                <svg width="92" height="92" viewBox="0 0 92 92">
+                  <circle cx="46" cy="46" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8"/>
+                  <circle id="statEffRing" cx="46" cy="46" r="40" fill="none"
+                    stroke="url(#effGrad)" stroke-width="8" stroke-linecap="round"
+                    stroke-dasharray="251.2" stroke-dashoffset="75"/>
+                  <defs>
+                    <linearGradient id="effGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#f59e0b"/>
+                      <stop offset="100%" stop-color="#f97316"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="stat-ring-value" id="statEfficiency">30%</div>
+              </div>
+              <div style="flex:1;">
+                <div class="stat-primary" style="font-size:18px;" id="statEffRatio">1.4x</div>
+                <div class="stat-sub">Revenue / Expense</div>
+              </div>
+            </div>
+            <div class="stat-footnote">
+              <span>Industry 35%</span>
+              <span><b id="statEffGap">−5pts</b> Gap</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- PROPERTIES -->
+        <div class="properties-section" id="propertiesSection" style="display:none;">
+          <div style="margin-bottom: 20px;">
+            <h2 class="section-title">Properties</h2>
+          </div>
+          <div class="properties-grid" id="propertiesGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- MORTGAGE VERTICAL SECTION -->
+        <div id="verticalMortgage" class="vertical-section" style="display:none;">
+          <!-- TOP TIER: Lending Operations — Daily/Weekly -->
+          <div class="section-header" style="margin-top:12px;">
+            <div class="section-header-left">
+              <span style="font-size:20px">⚡</span>
+              <h2 class="section-title">Lending Operations — Daily/Weekly</h2>
+              <span class="tier-badge">TOP TIER</span>
+            </div>
+          </div>
+
+          <div class="kpi-grid-5">
+            <div class="kpi-card kpi-green">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortLoanVol">$47.2M</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">LOAN VOLUME YTD</div>
+              <div class="kpi-bars" id="mortBars1"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+12%</span> vs last mo</span>
+                <span class="kpi-meta-item" id="mortGoalPct">55% of goal</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-orange">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortPipeline">$23.8M</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">PIPELINE VALUE</div>
+              <div class="kpi-bars" id="mortBars2"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+8%</span> vs last mo</span>
+                <span class="kpi-meta-item" id="mortPipeCount">142 loans</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-purple">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortLoansEmp">4.2</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">LOANS / EMPLOYEE</div>
+              <div class="kpi-bars" id="mortBars3"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+5%</span> efficiency</span>
+                <span class="kpi-meta-item" id="mortOfficerCount">12 officers</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-amber">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortCostLoan">$4,850</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">COST PER LOAN</div>
+              <div class="kpi-bars" id="mortBars4"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">−3%</span> vs last mo</span>
+                <span class="kpi-meta-item" id="mortFundedCount">38 funded</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-lime">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortWeeklyApps">28</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">WEEKLY APPLICATIONS</div>
+              <div class="kpi-bars" id="mortBars5"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+17%</span> vs avg</span>
+                <span class="kpi-meta-item" id="mortAvgApps">avg: 24</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECOND TIER: Lending Performance — Weekly/Monthly -->
+          <div class="section-header" style="margin-top:12px;">
+            <div class="section-header-left">
+              <span style="font-size:20px">📊</span>
+              <h2 class="section-title">Lending Performance — Weekly/Monthly</h2>
+              <span class="tier-badge">SECOND TIER</span>
+            </div>
+          </div>
+
+          <div class="analytics-grid">
+            <!-- Conversion Rate Donut Chart -->
+            <div class="chart-card">
+              <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">Conversion Funnel</div>
+              <div class="donut-wrap">
+                <div class="donut-svg-wrap">
+                  <svg viewBox="0 0 200 200">
+                    <!-- Funded 68% - Green -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#10b981" stroke-width="22" stroke-dasharray="299.1" stroke-dashoffset="0" stroke-linecap="round"/>
+                    <!-- In Process 18% - Amber -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#f59e0b" stroke-width="22" stroke-dasharray="79.2" stroke-dashoffset="-299.1" stroke-linecap="round"/>
+                    <!-- Withdrawn 9% - Red -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#ef4444" stroke-width="22" stroke-dasharray="39.6" stroke-dashoffset="-378.3" stroke-linecap="round"/>
+                    <!-- Denied 5% - Gray -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#6b7280" stroke-width="22" stroke-dasharray="22.0" stroke-dashoffset="-417.9" stroke-linecap="round"/>
+                  </svg>
+                  <div class="donut-center">
+                    <div class="donut-center-num">68%</div>
+                    <div class="donut-center-sub">Funded</div>
+                  </div>
+                </div>
+                <div class="donut-legend-list">
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #10b981;"></div>
+                    <div class="donut-legend-name">Funded</div>
+                    <div class="donut-legend-pct">68%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #f59e0b;"></div>
+                    <div class="donut-legend-name">In Process</div>
+                    <div class="donut-legend-pct">18%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #ef4444;"></div>
+                    <div class="donut-legend-name">Withdrawn</div>
+                    <div class="donut-legend-pct">9%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #6b7280;"></div>
+                    <div class="donut-legend-name">Denied</div>
+                    <div class="donut-legend-pct">5%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Funding Timeline Chart -->
+            <div class="chart-card">
+              <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">Avg Days to Close</div>
+              <canvas id="mortFundingChart" style="width:100%;height:220px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Second Tier KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card kpi-green">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortTeamProd">8.4</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">TEAM PRODUCTIVITY</div>
+              <div class="kpi-bars" id="mortBars6"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+2%</span> vs last mo</span>
+                <span class="kpi-meta-item">loans/officer</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-amber">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortMargin">1.82%</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">MARGIN TRENDS</div>
+              <div class="kpi-bars" id="mortBars7"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+4%</span> vs last mo</span>
+                <span class="kpi-meta-item">182 bps</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-purple">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortCsat">4.7/5</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">CUSTOMER SATISFACTION</div>
+              <div class="kpi-bars" id="mortBars8"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--purple);">NPS 72</span></span>
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">94%</span> recommend</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- THIRD TIER: Strategic Review — Monthly -->
+          <div class="section-header" style="margin-top:12px;">
+            <div class="section-header-left">
+              <span style="font-size:20px">📋</span>
+              <h2 class="section-title">Strategic Review — Monthly</h2>
+              <span class="tier-badge">THIRD TIER</span>
+            </div>
+          </div>
+
+          <div class="analytics-grid">
+            <!-- Market Share Chart -->
+            <div class="chart-card">
+              <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">Market Share Trend</div>
+              <canvas id="mortMarketChart" style="width:100%;height:220px;"></canvas>
+            </div>
+
+            <!-- Profitability by Loan Type Donut -->
+            <div class="chart-card">
+              <div style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px;">Profitability by Type</div>
+              <div class="donut-wrap">
+                <div class="donut-svg-wrap">
+                  <svg viewBox="0 0 200 200">
+                    <!-- Conventional 45% - Blue -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#3b82f6" stroke-width="22" stroke-dasharray="197.9" stroke-dashoffset="0" stroke-linecap="round"/>
+                    <!-- FHA 25% - Cyan -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#06b6d4" stroke-width="22" stroke-dasharray="110.0" stroke-dashoffset="-197.9" stroke-linecap="round"/>
+                    <!-- VA 15% - Green -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#10b981" stroke-width="22" stroke-dasharray="66.0" stroke-dashoffset="-307.9" stroke-linecap="round"/>
+                    <!-- Jumbo 10% - Orange -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#f97316" stroke-width="22" stroke-dasharray="44.0" stroke-dashoffset="-373.9" stroke-linecap="round"/>
+                    <!-- Other 5% - Purple -->
+                    <circle cx="100" cy="100" r="70" fill="none" stroke="#a855f7" stroke-width="22" stroke-dasharray="22.0" stroke-dashoffset="-417.9" stroke-linecap="round"/>
+                  </svg>
+                  <div class="donut-center">
+                    <div class="donut-center-num">45%</div>
+                    <div class="donut-center-sub">Conv.</div>
+                  </div>
+                </div>
+                <div class="donut-legend-list">
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #3b82f6;"></div>
+                    <div class="donut-legend-name">Conventional</div>
+                    <div class="donut-legend-pct">45%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #06b6d4;"></div>
+                    <div class="donut-legend-name">FHA</div>
+                    <div class="donut-legend-pct">25%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #10b981;"></div>
+                    <div class="donut-legend-name">VA</div>
+                    <div class="donut-legend-pct">15%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #f97316;"></div>
+                    <div class="donut-legend-name">Jumbo</div>
+                    <div class="donut-legend-pct">10%</div>
+                  </div>
+                  <div class="donut-legend-row">
+                    <div class="donut-legend-color" style="background: #a855f7;"></div>
+                    <div class="donut-legend-name">Other</div>
+                    <div class="donut-legend-pct">5%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Third Tier KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card kpi-green">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortCompliance">98.2%</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">COMPLIANCE STATUS</div>
+              <div class="kpi-bars" id="mortBars9"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+1%</span> vs last qtr</span>
+                <span class="kpi-meta-item">Audit score</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-pink">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortHiring">6</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">HIRING PIPELINE</div>
+              <div class="kpi-bars" id="mortBars10"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--pink);">3</span> in process</span>
+                <span class="kpi-meta-item">Open roles</span>
+              </div>
+            </div>
+
+            <div class="kpi-card kpi-lime">
+              <div class="kpi-header">
+                <span class="kpi-num" id="mortAutomation">72%</span>
+                <span class="kpi-indicator"></span>
+              </div>
+              <div class="kpi-label">PROCESS AUTOMATION</div>
+              <div class="kpi-bars" id="mortBars11"></div>
+              <div class="kpi-meta">
+                <span class="kpi-meta-item"><span class="kpi-meta-value" style="color:var(--green);">+8%</span> vs last mo</span>
+                <span class="kpi-meta-item">Workflows</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monday.com Note -->
+          <div class="monday-note">
+            <span style="font-size:16px">🔗</span>
+            <span>Monday.com CRM integration coming soon — loan pipeline, borrower tracking, and team assignments will sync automatically.</span>
+          </div>
+        </div>
+
+        <!-- ENTITY ADMIN: OWNERSHIP + DOCUMENTS -->
+        <div class="admin-grid">
+          <!-- OWNERSHIP EDITOR -->
+          <div class="admin-card">
+            <div class="admin-head">
+              <div class="admin-head-left">
+                <div class="admin-icon">🏛️</div>
+                <div>
+                  <h3>Ownership Structure</h3>
+                  <div class="admin-head-sub">Cap table · Editable</div>
+                </div>
+              </div>
+              <button class="admin-btn ghost" id="ownEditToggle">✏️ Edit</button>
+            </div>
+
+            <div class="own-total-bar valid" id="ownTotalBar">
+              <span>Total Ownership</span>
+              <div class="own-progress-track">
+                <div class="own-progress-fill" id="ownProgressFill" style="width:100%"></div>
+              </div>
+              <span class="otb-pct" id="ownTotalPct">100%</span>
+            </div>
+
+            <div class="own-list" id="ownList"></div>
+
+            <!-- Effective Colby ownership (resolved through full entity chain) -->
+            <div id="ownEffectiveRow" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;margin-top:10px;background:linear-gradient(135deg, rgba(139,92,246,0.10), rgba(236,72,153,0.10));border:1px solid rgba(139,92,246,0.28);border-radius:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 12px #10b981;"></div>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:10px;letter-spacing:1.2px;color:#8b5cf6;font-weight:700;">COLBY EFFECTIVE OWNERSHIP</div>
+                  <div id="ownEffectiveNote" style="font-size:11px;color:#64748b;">Resolved through entity chain</div>
+                </div>
+              </div>
+              <div id="ownEffectivePct" style="font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent;">100.00%</div>
+            </div>
+
+            <div class="own-add-row" id="ownAddRow" style="display:none;">＋ Add Owner</div>
+
+            <div class="own-actions" id="ownActions" style="display:none;">
+              <button class="admin-btn" id="ownSave">💾 Save Changes</button>
+              <button class="admin-btn ghost" id="ownCancel">Cancel</button>
+            </div>
+
+            <div class="own-sync-note">
+              <span class="sync-dot"></span>Synced across Net Worth · Finance · Vision Board
+            </div>
+          </div>
+
+          <!-- DOCUMENT VAULT -->
+          <div class="admin-card docs">
+            <div class="admin-head">
+              <div class="admin-head-left">
+                <div class="admin-icon">📂</div>
+                <div>
+                  <h3>Document Vault</h3>
+                  <div class="admin-head-sub">
+                    <span id="docCount">0</span> files · Agent accessible
+                  </div>
+                </div>
+              </div>
+              <button class="admin-btn ghost" onclick="document.getElementById('docFileInput').click()">📤 Upload</button>
+            </div>
+
+            <label class="doc-dropzone" id="docDropzone" for="docFileInput">
+              <input type="file" id="docFileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg">
+              <div class="doc-dropzone-icon">📎</div>
+              <div class="doc-dropzone-title">Drop legal or financial documents here</div>
+              <div class="doc-dropzone-sub">PDF · DOCX · XLSX · Operating Agreements · Tax Returns · Contracts</div>
+            </label>
+
+            <div class="doc-list" id="docList">
+              <div class="doc-empty">No documents uploaded yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BANK ACCOUNTS (V2) -->
+        <div class="bank-v2">
+          <div class="bank-v2-header">
+            <div class="bank-v2-title">
+              <div class="bank-v2-title-icon">🏦</div>
+              <div>
+                <h3>Bank Accounts</h3>
+                <div style="font-size:11px; color:var(--dim); font-weight:600; margin-top:2px;">
+                  <span id="bankAcctCount">0</span> accounts · <span id="bankInstCount">0</span> institutions
+                </div>
+              </div>
+            </div>
+            <div class="bank-v2-total-pill">
+              <div class="bv-label">Net Portfolio</div>
+              <div class="bv-value" id="portfolioTotal">$0</div>
+            </div>
+          </div>
+
+          <div class="bank-v2-body">
+            <!-- Composition Donut -->
+            <div>
+              <div class="bank-donut-wrap">
+                <svg width="240" height="240" viewBox="0 0 240 240">
+                  <circle cx="120" cy="120" r="90" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="28"/>
+                  <g id="bankDonutSlices"></g>
+                </svg>
+                <div class="bank-donut-center">
+                  <div class="bd-label">Total Assets</div>
+                  <div class="bd-value" id="bankAssetsTotal">$0</div>
+                  <div class="bd-sub" id="bankLiabSub">Liabilities: $0</div>
+                </div>
+              </div>
+              <div class="bank-donut-legend" id="bankDonutLegend"></div>
+            </div>
+
+            <!-- Account List -->
+            <div class="bank-accounts-v2" id="bankAccountsV2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ENTITIES = {
+      'cabo-tropic': {
+        name: 'Cabo Tropic',
+        fullName: 'Cabo Tropic Horizon Enterprises',
+        type: 'LP',
+        state: 'CA',
+        accounts: [
+          { name: 'Marriott Bonvoy Boundless', mask: '3981', type: 'credit', bal: -15665.57 },
+          { name: 'Owners Pay', mask: '7967', type: 'depository', bal: 12022.27 },
+          { name: 'Taxes', mask: '7944', type: 'depository', bal: 3651.58 },
+          { name: 'Profit', mask: '2335', type: 'depository', bal: 2455.33 },
+          { name: 'OpEx', mask: '7970', type: 'depository', bal: 1893.42 },
+          { name: 'Revenue', mask: '2334', type: 'depository', bal: 250 },
+        ],
+        properties: [
+          { address: '7246 Orchard Cir', city: 'Penryn', state: 'CA', value: 607400, ownedEquity: 607400, isRental: false, payment: 0, expenses: 0 },
+        ],
+        valuation: 1050000,
+        multiplier: 4.2,
+        ownership: 100,
+        monthlyRevenue: 22000,
+        monthlyExpenses: 15000,
+        netIncome: 7000,
+      },
+      'culbertson': {
+        name: 'Culbertson & Co',
+        fullName: 'Culbertson & Culbertson',
+        type: 'LLC',
+        state: 'CA',
+        accounts: [
+          { name: 'Business Adv Relationship', mask: '9165', type: 'depository', bal: 137863.33 },
+          { name: 'Business Gold Card', mask: '3009', type: 'credit', bal: -71420.05 },
+        ],
+        properties: [],
+        valuation: 836000,
+        multiplier: 3.8,
+        ownership: 100,
+        monthlyRevenue: 18000,
+        monthlyExpenses: 12000,
+        netIncome: 6000,
+      },
+      'xome-home': {
+        name: 'Xome Home',
+        fullName: 'Xome Home',
+        type: 'LLC',
+        state: 'CA',
+        accounts: [
+          { name: 'Business Adv Relationship', mask: '6502', type: 'depository', bal: 165231.84 },
+          { name: 'Business Platinum Card', mask: '1005', type: 'credit', bal: -31914.41 },
+        ],
+        properties: [],
+        valuation: 812000,
+        multiplier: 2.9,
+        ownership: 100,
+        monthlyRevenue: 23000,
+        monthlyExpenses: 16000,
+        netIncome: 7000,
+        vertical: 'mortgage',
+        verticalData: {
+          loanVolumeYTD: 47200000,
+          loanVolumeGoal: 85000000,
+          pipelineValue: 23800000,
+          pipelineLoans: 142,
+          loanOfficers: 12,
+          branches: 3,
+          avgLoanSize: 332000,
+          fundedThisMonth: 38,
+          loansPerEmployee: 4.2,
+          costPerLoan: 4850,
+          weeklyApps: 28,
+          avgWeeklyApps: 24,
+          conversionRate: 0.68,
+          inProcessRate: 0.18,
+          withdrawnRate: 0.09,
+          deniedRate: 0.05,
+          avgDaysToClose: 29,
+          pullThroughRate: 0.72,
+          teamProductivity: 8.4,
+          processingProductivity: 12.1,
+          closingProductivity: 6.8,
+          marginBps: 182,
+          csat: 4.7,
+          nps: 72,
+          recommendRate: 94,
+          marketShare: 4.1,
+          complianceScore: 98.2,
+          openRoles: 6,
+          inProcessHires: 3,
+          turnoverRate: 1.2,
+          automationRate: 72,
+        },
+      },
+      'ca-stays': {
+        name: 'California Stays',
+        fullName: 'California Stays Holdings',
+        type: 'LP',
+        state: 'CA',
+        accounts: [
+          { name: 'CA Stays Holdings — Checking', mask: '7281', type: 'depository', bal: 16317.21 },
+        ],
+        properties: [
+          { address: '210 Bitter Brush Way', city: 'Truckee', state: 'CA', value: 2540600, ownedEquity: 1270300, isRental: true, payment: 4500, expenses: 7420 },
+        ],
+        valuation: 245000,
+        multiplier: 3.5,
+        ownership: 100,
+        monthlyRevenue: 8500,
+        monthlyExpenses: 7420,
+        netIncome: 1080,
+      },
+      'blc-ca': {
+        name: 'BLC CA Properties',
+        fullName: 'BLC CA Properties',
+        type: 'LLC',
+        state: 'CA',
+        accounts: [
+          { name: 'Southwest Rapid Rewards', mask: '1944', type: 'credit', bal: -18710.45 },
+        ],
+        properties: [
+          { address: '47 Shasta Trl', city: 'Graeagle', state: 'CA', value: 685900, ownedEquity: 342950, isRental: true, payment: 2200, expenses: 3830 },
+        ],
+        valuation: 685000,
+        multiplier: 0,
+        ownership: 100,
+        monthlyRevenue: 4200,
+        monthlyExpenses: 3830,
+        netIncome: 370,
+      },
+      'alabama-shores': {
+        name: 'Alabama Shores',
+        fullName: 'Alabama Shores Management',
+        type: 'LLC',
+        state: 'AK',
+        accounts: [{ name: 'Checking', mask: '2922', type: 'depository', bal: 1000 }],
+        properties: [],
+        valuation: 0,
+        multiplier: 0,
+        ownership: 100,
+        monthlyRevenue: 0,
+        monthlyExpenses: 0,
+        netIncome: 0,
+        isDormant: true,
+      },
+      'lincoln-hodl': {
+        name: 'Lincoln Hodl',
+        fullName: 'Lincoln Hodl',
+        type: 'LLC',
+        state: 'NV',
+        accounts: [{ name: 'Checking', mask: '1868', type: 'depository', bal: 1000 }],
+        properties: [],
+        valuation: 0,
+        multiplier: 0,
+        ownership: 0,
+        monthlyRevenue: 0,
+        monthlyExpenses: 0,
+        netIncome: 0,
+        isDormant: true,
+      },
+    };
+
+    // Read entity from URL query param (e.g. ?entity=xome-home), fallback to xome-home
+    const _urlEntity = new URLSearchParams(window.location.search).get('entity');
+    let currentEntity = (_urlEntity && ENTITIES[_urlEntity]) ? _urlEntity : 'xome-home';
+
+    function formatCurrency(num) {
+      if (num === undefined || num === null) return '$0';
+      const abs = Math.abs(num);
+      const sign = num < 0 ? '-' : '';
+      if (abs >= 1000000) return sign + '$' + (abs / 1000000).toFixed(1) + 'M';
+      if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
+      return sign + '$' + abs.toFixed(0);
+    }
+
+    function updateAchievements() {
+      const entity = ENTITIES[currentEntity];
+      const achievements = [
+        { id: 'revenue', earned: entity.monthlyRevenue > 10000 },
+        { id: 'profit', earned: entity.netIncome > 0 },
+        { id: 'accounts', earned: entity.accounts.length > 2 },
+        { id: 'property', earned: entity.properties.length > 0 },
+        { id: 'growth', earned: entity.monthlyRevenue > 15000 },
+        { id: 'data', earned: entity.valuation > 500000 },
+        { id: 'team', earned: entity.accounts.length > 3 },
+        { id: 'leader', earned: entity.valuation > 800000 },
+      ];
+
+      const xpValues = [250, 200, 150, 300, 175, 100, 200, 350];
+      let totalEarned = 0;
+      let earnedCount = 0;
+
+      achievements.forEach((ach, idx) => {
+        const card = document.getElementById(`achieve-${ach.id}`);
+        const check = card.querySelector('.achieve-check');
+        const ring = card.querySelector('.achieve-ring-fill');
+        
+        if (ach.earned) {
+          card.classList.add('earned');
+          card.classList.remove('locked');
+          check.style.display = 'flex';
+          ring.style.strokeDashoffset = '0';
+          totalEarned += xpValues[idx];
+          earnedCount++;
+        } else {
+          card.classList.remove('earned');
+          card.classList.add('locked');
+          check.style.display = 'none';
+          ring.style.strokeDashoffset = '251';
+        }
+      });
+
+      document.getElementById('achieveCount').textContent = `${earnedCount} of 8 earned`;
+      document.getElementById('xpEarned').textContent = `+${totalEarned.toLocaleString()} XP earned`;
+    }
+
+    function renderDividendWidget(entity) {
+      // CFO + Tax Advisor agent logic
+      // - Quarterly net income = monthly net income × 3
+      // - Federal effective rate: 24% (pass-through LLC)
+      // - State CA rate: 9.3% — other states ~5%
+      // - SE/self-employment handled separately for active members; distributions are post-tax
+      // - Combined effective tax reserve: CA=31%, others=27%
+      // - Payout ratio: 40% default. Dormant / loss → 0%.
+      // - If negative net income: all zeros, show "No distribution"
+      const qtrNI = entity.netIncome * 3;
+      const taxRate = (entity.state === 'CA') ? 0.31 : 0.27;
+      const payoutRatio = 0.40;
+
+      let taxReserve = 0, retained = 0, payout = 0, distributable = 0;
+      if (qtrNI > 0) {
+        taxReserve   = qtrNI * taxRate;
+        distributable = qtrNI - taxReserve;
+        payout    = distributable * payoutRatio;
+        retained  = distributable - payout;
+      }
+
+      // Apply ownership %
+      const ownerPayout = payout * (entity.ownership / 100);
+
+      const total = Math.max(1, taxReserve + retained + payout);
+      const pctTax = (taxReserve / total) * 100;
+      const pctRet = (retained   / total) * 100;
+      const pctPay = (payout     / total) * 100;
+
+      // Determine current quarter
+      const now = new Date();
+      const q = Math.floor(now.getMonth() / 3) + 1;
+      const yr = now.getFullYear();
+
+      document.getElementById('divQuarter').textContent = 'Q' + q + ' ' + yr;
+      document.getElementById('divAmount').textContent = qtrNI > 0 ? formatCurrency(ownerPayout) : '$0';
+      document.getElementById('divSub').innerHTML = qtrNI > 0
+        ? `Projected payout · <span id="divPayoutRate">${Math.round(payoutRatio*100)}%</span> ratio · ${entity.ownership}% owner share`
+        : 'No distribution — negative / zero net income';
+      document.getElementById('divPayoutRate') && (document.getElementById('divPayoutRate').textContent = Math.round(payoutRatio*100) + '%');
+
+      document.getElementById('divSegTax').style.width      = pctTax + '%';
+      document.getElementById('divSegRetained').style.width = pctRet + '%';
+      document.getElementById('divSegPayout').style.width   = pctPay + '%';
+
+      document.getElementById('divTaxAmt').textContent = formatCurrency(taxReserve);
+      document.getElementById('divRetAmt').textContent = formatCurrency(retained);
+      document.getElementById('divPayAmt').textContent = formatCurrency(payout);
+    }
+
+    function renderBankV2(entity, totalCash) {
+      const assetSum = entity.accounts.filter(a => a.bal > 0).reduce((s,a)=>s+a.bal, 0);
+      const liabSum  = Math.abs(entity.accounts.filter(a => a.bal < 0).reduce((s,a)=>s+a.bal, 0));
+
+      document.getElementById('portfolioTotal').textContent = formatCurrency(totalCash);
+      document.getElementById('bankAcctCount').textContent = entity.accounts.length;
+      document.getElementById('bankInstCount').textContent = Math.max(1, Math.min(entity.accounts.length, 3));
+      document.getElementById('bankAssetsTotal').textContent = formatCurrency(assetSum);
+      document.getElementById('bankLiabSub').textContent = 'Liabilities: ' + formatCurrency(-liabSum);
+
+      // Donut: composition of positive balances
+      const slices = document.getElementById('bankDonutSlices');
+      slices.innerHTML = '';
+      const legend = document.getElementById('bankDonutLegend');
+      legend.innerHTML = '';
+      const palette = ['#10b981','#84cc16','#8b5cf6','#ec4899','#f59e0b','#f97316','#06b6d4','#ef4444'];
+      const cx=120, cy=120, r=90, circ=2*Math.PI*r;
+      const positives = entity.accounts.filter(a => a.bal > 0);
+      const totalPos = positives.reduce((s,a)=>s+a.bal,0) || 1;
+      let offset = 0;
+      positives.forEach((acc, i) => {
+        const pct = acc.bal / totalPos;
+        const color = palette[i % palette.length];
+        const dash = pct * circ;
+        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', r);
+        c.setAttribute('fill','none');
+        c.setAttribute('stroke', color);
+        c.setAttribute('stroke-width','28');
+        c.setAttribute('stroke-dasharray', dash + ' ' + (circ - dash));
+        c.setAttribute('stroke-dashoffset', -offset);
+        c.style.transition = 'stroke-dashoffset 0.8s cubic-bezier(.22,1,.36,1)';
+        slices.appendChild(c);
+        offset += dash;
+
+        const row = document.createElement('div');
+        row.className = 'bd-legend-row';
+        row.innerHTML = `
+          <span><span class="bd-dot" style="background:${color}"></span>${acc.name.substring(0,22)}</span>
+          <span class="bd-pct">${(pct*100).toFixed(0)}%</span>`;
+        legend.appendChild(row);
+      });
+
+      // Account list
+      const container = document.getElementById('bankAccountsV2');
+      container.innerHTML = '';
+      const groups = { checking: [], credit: [], savings: [] };
+      entity.accounts.forEach(a => {
+        if (a.type === 'credit') groups.credit.push(a);
+        else if (/sav/i.test(a.name)) groups.savings.push(a);
+        else groups.checking.push(a);
+      });
+      const groupMeta = {
+        checking: { label:'Depository Accounts', icon:'💵', cls:'checking' },
+        savings:  { label:'Savings & Reserves',  icon:'🏆', cls:'savings' },
+        credit:   { label:'Credit Lines',        icon:'💳', cls:'credit' },
+      };
+      const maxAbs = Math.max(1, ...entity.accounts.map(a => Math.abs(a.bal)));
+
+      Object.entries(groups).forEach(([key, accts]) => {
+        if (!accts.length) return;
+        const gl = document.createElement('div');
+        gl.className = 'bank-acct-group-label';
+        gl.textContent = groupMeta[key].label + ' · ' + accts.length;
+        container.appendChild(gl);
+        accts.forEach(a => {
+          const pct = (Math.abs(a.bal) / maxAbs) * 100;
+          const item = document.createElement('div');
+          item.className = 'bank-acct-item ' + groupMeta[key].cls;
+          item.innerHTML = `
+            <div class="bank-acct-icon ${groupMeta[key].cls}">${groupMeta[key].icon}</div>
+            <div class="bank-acct-info">
+              <div class="ba-name">${a.name}</div>
+              <div class="ba-mask">•••• ${a.mask}</div>
+            </div>
+            <div class="bank-acct-bar-wrap">
+              <div class="bank-acct-bar-bg"><div class="bank-acct-bar-fill" style="width:${pct}%"></div></div>
+              <div class="ba-pct">${pct.toFixed(0)}% of peak</div>
+            </div>
+            <div class="bank-acct-balance ${a.bal >= 0 ? 'positive' : 'negative'}">${formatCurrency(a.bal)}</div>
+          `;
+          container.appendChild(item);
+        });
+      });
+    }
+
+    // ===== OWNERSHIP + DOCUMENT VAULT (per-entity, localStorage-backed, Supabase-ready) =====
+    // Schema note (Supabase target):
+    //   entity_ownership (entity_id, owner_id, owner_name, owner_type, pct, updated_at)
+    //   entity_documents (entity_id, file_name, category, size, uploaded_at, agent_access[])
+    //   Recompute user_net_worth_view on any ownership change.
+    const OWN_KEY  = (eid) => 'mc.ownership.' + eid;
+    const DOCS_KEY = (eid) => 'mc.documents.' + eid;
+    let ownEditMode = false;
+    let ownWorking = []; // edit buffer
+
+    function defaultOwners(entity) {
+      return [{ id: 'owner-1', name: 'Colby Culbertson', type: 'Individual', entityId: null, pct: entity.ownership || 100 }];
+    }
+    function loadOwners(entityId) {
+      try {
+        const raw = localStorage.getItem(OWN_KEY(entityId));
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return defaultOwners(ENTITIES[entityId]);
+    }
+    // Recursive resolver: walks the cap-table chain to compute Colby's effective %
+    // (e.g. Xome 40% → Cabo Tropic 100% → Colby = 40% effective ownership of Xome).
+    // visited prevents infinite loops from circular references.
+    function resolveColbyEffectivePct(entityId, visited) {
+      visited = visited || new Set();
+      if (visited.has(entityId)) return 0; // cycle guard
+      visited.add(entityId);
+      const owners = loadOwners(entityId);
+      let total = 0;
+      owners.forEach(o => {
+        const pct = (+o.pct || 0) / 100;
+        if (o.type === 'Individual' && /colby/i.test(o.name || '')) {
+          total += pct * 100;
+        } else if (o.type === 'Trust' && /colby|culbertson/i.test(o.name || '')) {
+          // Treat Colby's trust as 100% Colby unless a cap table is defined for the trust
+          total += pct * 100;
+        } else if (o.type === 'Entity' && o.entityId && ENTITIES[o.entityId]) {
+          // Recurse into the parent entity's own cap table
+          const parentEffective = resolveColbyEffectivePct(o.entityId, new Set(visited));
+          total += pct * parentEffective;
+        }
+      });
+      return total;
+    }
+    function saveOwners(entityId, owners) {
+      localStorage.setItem(OWN_KEY(entityId), JSON.stringify(owners));
+      // Update entity in memory so cross-dashboard calcs pick up the change
+      ENTITIES[entityId].ownershipDetail = owners;
+      // Resolve Colby's effective % through the full ownership chain
+      const effective = resolveColbyEffectivePct(entityId);
+      ENTITIES[entityId].ownership = +effective.toFixed(2);
+      ENTITIES[entityId].ownershipEffective = +effective.toFixed(2);
+      // Re-run everything that depends on ownership
+      switchEntity(entityId);
+      // Broadcast to other dashboards (finance / vision board) listening on storage
+      localStorage.setItem('mc.lastOwnershipUpdate', JSON.stringify({ entityId, effectivePct: effective, ts: Date.now() }));
+    }
+
+    function renderOwnership(entity) {
+      const list = document.getElementById('ownList');
+      const owners = ownEditMode ? ownWorking : loadOwners(currentEntity);
+      list.innerHTML = '';
+
+      // Build an options list of linkable entities (exclude self to prevent circular refs)
+      const linkableEntities = Object.keys(ENTITIES).filter(id => id !== currentEntity);
+
+      owners.forEach((o, idx) => {
+        const row = document.createElement('div');
+        row.className = 'own-row';
+        const displayName = o.type === 'Entity' && o.entityId && ENTITIES[o.entityId]
+          ? ENTITIES[o.entityId].name
+          : (o.name || '');
+        const initials = (displayName || '?').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+        const isEntity = o.type === 'Entity';
+
+        // Name cell: free text for Individual/Trust, entity picker for Entity
+        let nameCell;
+        if (isEntity) {
+          const opts = linkableEntities.map(id =>
+            `<option value="${id}"${o.entityId===id?' selected':''}>${ENTITIES[id].name}</option>`
+          ).join('');
+          nameCell = `<select class="own-name-field" ${ownEditMode?'':'disabled'} data-i="${idx}" data-f="entityId">
+            <option value="">— Select entity —</option>${opts}
+          </select>`;
+        } else {
+          nameCell = `<input class="own-name-field" value="${(o.name||'').replace(/"/g,'&quot;')}" ${ownEditMode?'':'readonly'} data-i="${idx}" data-f="name" placeholder="${o.type==='Trust'?'e.g. Culbertson Family Trust':'Full name'}">`;
+        }
+
+        // Effective chain preview chip (only shows for Entity owners)
+        let chainChip = '';
+        if (isEntity && o.entityId && ENTITIES[o.entityId]) {
+          const parentEff = resolveColbyEffectivePct(o.entityId, new Set([currentEntity]));
+          const thisEff = ((+o.pct||0)/100) * parentEff;
+          chainChip = `<div style="grid-column:2/4;font-size:10px;color:#8b5cf6;margin-top:-4px;letter-spacing:0.4px;">↳ ${o.pct||0}% × ${parentEff.toFixed(1)}% Colby = <span style="color:#10b981;font-weight:700;">${thisEff.toFixed(2)}% effective</span></div>`;
+        }
+
+        row.innerHTML = `
+          <div class="own-avatar ${isEntity ? 'entity' : ''}">${initials}</div>
+          ${nameCell}
+          <select class="own-type-field" ${ownEditMode?'':'disabled'} data-i="${idx}" data-f="type">
+            <option${o.type==='Individual'?' selected':''}>Individual</option>
+            <option${o.type==='Entity'?' selected':''}>Entity</option>
+            <option${o.type==='Trust'?' selected':''}>Trust</option>
+          </select>
+          <input class="own-pct-field" type="number" min="0" max="100" step="0.01" value="${o.pct}" ${ownEditMode?'':'readonly'} data-i="${idx}" data-f="pct">
+          <div class="own-remove" data-i="${idx}" style="${ownEditMode?'':'visibility:hidden;'}">✕</div>
+          ${chainChip}
+        `;
+        list.appendChild(row);
+      });
+
+      // Total bar
+      const total = owners.reduce((s,o)=>s+(+o.pct||0),0);
+      const bar = document.getElementById('ownTotalBar');
+      const pill = document.getElementById('ownTotalPct');
+      const fill = document.getElementById('ownProgressFill');
+      pill.textContent = total.toFixed(2) + '%';
+      fill.style.width = Math.min(100,total) + '%';
+      bar.classList.toggle('valid',   Math.abs(total - 100) < 0.01);
+      bar.classList.toggle('invalid', Math.abs(total - 100) >= 0.01);
+
+      // Compute Colby's effective ownership through the entity chain (uses working buffer in edit mode)
+      let effective = 0;
+      owners.forEach(o => {
+        const pct = (+o.pct || 0) / 100;
+        if (o.type === 'Individual' && /colby/i.test(o.name || '')) {
+          effective += pct * 100;
+        } else if (o.type === 'Trust' && /colby|culbertson/i.test(o.name || '')) {
+          effective += pct * 100;
+        } else if (o.type === 'Entity' && o.entityId && ENTITIES[o.entityId]) {
+          const parentEff = resolveColbyEffectivePct(o.entityId, new Set([currentEntity]));
+          effective += pct * parentEff;
+        }
+      });
+      const effEl = document.getElementById('ownEffectivePct');
+      const effNote = document.getElementById('ownEffectiveNote');
+      if (effEl) effEl.textContent = effective.toFixed(2) + '%';
+      if (effNote) {
+        const hasEntity = owners.some(o => o.type === 'Entity' && o.entityId);
+        effNote.textContent = hasEntity
+          ? 'Resolved through entity chain → net worth updated'
+          : 'Direct ownership → net worth updated';
+      }
+
+      document.getElementById('ownAddRow').style.display = ownEditMode ? 'flex' : 'none';
+      document.getElementById('ownActions').style.display = ownEditMode ? 'flex' : 'none';
+      document.getElementById('ownEditToggle').textContent = ownEditMode ? '👁 View' : '✏️ Edit';
+
+      // Wire field inputs
+      if (ownEditMode) {
+        list.querySelectorAll('input, select').forEach(el => {
+          el.addEventListener('input', () => {
+            const i = +el.dataset.i;
+            const f = el.dataset.f;
+            let v = f === 'pct' ? parseFloat(el.value)||0 : el.value;
+            ownWorking[i][f] = v;
+            // When type changes, reset the name/entityId so the right picker shows
+            if (f === 'type') {
+              if (v === 'Entity') { ownWorking[i].entityId = ownWorking[i].entityId || ''; ownWorking[i].name = ''; }
+              else { ownWorking[i].entityId = null; ownWorking[i].name = ownWorking[i].name || ''; }
+            }
+            // When entityId changes, sync the display name
+            if (f === 'entityId' && v && ENTITIES[v]) { ownWorking[i].name = ENTITIES[v].name; }
+            renderOwnership(entity);
+          });
+        });
+        list.querySelectorAll('.own-remove').forEach(el => {
+          el.addEventListener('click', () => {
+            ownWorking.splice(+el.dataset.i, 1);
+            renderOwnership(entity);
+          });
+        });
+      }
+    }
+
+    function wireOwnershipControls() {
+      const toggle = document.getElementById('ownEditToggle');
+      const addBtn = document.getElementById('ownAddRow');
+      const save   = document.getElementById('ownSave');
+      const cancel = document.getElementById('ownCancel');
+      if (toggle.dataset.wired) return;
+      toggle.dataset.wired = '1';
+
+      toggle.addEventListener('click', () => {
+        if (!ownEditMode) {
+          ownWorking = JSON.parse(JSON.stringify(loadOwners(currentEntity)));
+          ownEditMode = true;
+        } else {
+          ownEditMode = false;
+        }
+        renderOwnership(ENTITIES[currentEntity]);
+      });
+      addBtn.addEventListener('click', () => {
+        ownWorking.push({ id: 'owner-' + Date.now(), name: 'New Owner', type: 'Individual', entityId: null, pct: 0 });
+        renderOwnership(ENTITIES[currentEntity]);
+      });
+      save.addEventListener('click', () => {
+        const total = ownWorking.reduce((s,o)=>s+(+o.pct||0),0);
+        if (Math.abs(total - 100) >= 0.01) {
+          alert('Ownership must total exactly 100%. Current: ' + total.toFixed(2) + '%');
+          return;
+        }
+        saveOwners(currentEntity, ownWorking);
+        ownEditMode = false;
+      });
+      cancel.addEventListener('click', () => {
+        ownEditMode = false;
+        renderOwnership(ENTITIES[currentEntity]);
+      });
+    }
+
+    // ===== DOCUMENT VAULT =====
+    const AGENTS = [
+      { id:'cfo',   icon:'🧮', label:'CFO Agent' },
+      { id:'tax',   icon:'📑', label:'Tax Advisor' },
+      { id:'legal', icon:'⚖️', label:'Legal Counsel' },
+      { id:'ops',   icon:'⚙️', label:'Operations' },
+    ];
+    function loadDocs(entityId) {
+      try { return JSON.parse(localStorage.getItem(DOCS_KEY(entityId)) || '[]'); }
+      catch(e) { return []; }
+    }
+    function saveDocs(entityId, docs) {
+      localStorage.setItem(DOCS_KEY(entityId), JSON.stringify(docs));
+    }
+    function inferCategory(name) {
+      const n = name.toLowerCase();
+      if (/operating|articles|llc|bylaws|ein|formation/.test(n)) return 'Legal';
+      if (/tax|1040|k-1|k1|1120|schedule/.test(n))              return 'Tax';
+      if (/p&l|pnl|balance|income|statement|cash-flow/.test(n))  return 'Financial';
+      if (/contract|agreement|nda|msa|sow/.test(n))              return 'Contracts';
+      return 'Other';
+    }
+    function renderDocs(entity) {
+      const list = document.getElementById('docList');
+      const docs = loadDocs(currentEntity);
+      document.getElementById('docCount').textContent = docs.length;
+      list.innerHTML = '';
+      if (!docs.length) {
+        list.innerHTML = '<div class="doc-empty">No documents uploaded yet</div>';
+        return;
+      }
+      docs.forEach((d, idx) => {
+        const row = document.createElement('div');
+        row.className = 'doc-row';
+        const agentPips = AGENTS.map(a =>
+          `<div class="doc-agent-pip ${d.agents && d.agents.includes(a.id) ? 'active' : ''}"
+                data-i="${idx}" data-a="${a.id}" title="${a.label}">${a.icon}</div>`
+        ).join('');
+        row.innerHTML = `
+          <div class="doc-icon-chip">📄</div>
+          <div>
+            <div class="doc-name">${d.name}</div>
+            <div class="doc-meta">
+              <span class="doc-cat">${d.category}</span>
+              <span>${(d.size/1024).toFixed(1)} KB</span>
+              <span>• ${d.uploadedAt}</span>
+            </div>
+          </div>
+          <div class="doc-agents">${agentPips}</div>
+          <div class="doc-remove" data-i="${idx}">✕</div>
+        `;
+        list.appendChild(row);
+      });
+      list.querySelectorAll('.doc-agent-pip').forEach(el => {
+        el.addEventListener('click', () => {
+          const i = +el.dataset.i, aid = el.dataset.a;
+          const ds = loadDocs(currentEntity);
+          ds[i].agents = ds[i].agents || [];
+          const j = ds[i].agents.indexOf(aid);
+          if (j >= 0) ds[i].agents.splice(j,1); else ds[i].agents.push(aid);
+          saveDocs(currentEntity, ds);
+          renderDocs(entity);
+        });
+      });
+      list.querySelectorAll('.doc-remove').forEach(el => {
+        el.addEventListener('click', () => {
+          const ds = loadDocs(currentEntity);
+          ds.splice(+el.dataset.i, 1);
+          saveDocs(currentEntity, ds);
+          renderDocs(entity);
+        });
+      });
+    }
+    function wireDocsControls() {
+      const input = document.getElementById('docFileInput');
+      const zone = document.getElementById('docDropzone');
+      if (input.dataset.wired) return;
+      input.dataset.wired = '1';
+
+      const handleFiles = (files) => {
+        const ds = loadDocs(currentEntity);
+        const today = new Date().toISOString().slice(0,10);
+        [...files].forEach(f => {
+          ds.unshift({
+            name: f.name,
+            size: f.size,
+            category: inferCategory(f.name),
+            uploadedAt: today,
+            agents: ['cfo','tax'],
+          });
+        });
+        saveDocs(currentEntity, ds);
+        renderDocs(ENTITIES[currentEntity]);
+      };
+      input.addEventListener('change', e => handleFiles(e.target.files));
+      ['dragover','dragenter'].forEach(ev => zone.addEventListener(ev, e => {
+        e.preventDefault(); zone.classList.add('drag');
+      }));
+      ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => {
+        e.preventDefault(); zone.classList.remove('drag');
+      }));
+      zone.addEventListener('drop', e => {
+        if (e.dataTransfer && e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+      });
+    }
+
+    function populateStockTicker(entity) {
+      const track = document.getElementById('stockTickerTrack');
+      const badge = document.getElementById('tickerBadgeLabel');
+      if (!track) return;
+
+      const items = [];
+      const push = (sym, val, chg, dir) => items.push({ sym, val, chg, dir });
+
+      if (entity.vertical === 'mortgage' && entity.verticalData) {
+        const d = entity.verticalData;
+        badge.textContent = 'LOANS LIVE';
+        push('FUNDED MTD',    d.fundedThisMonth + ' loans',                 '+12.4%', 'up');
+        push('VOLUME YTD',    '$' + (d.loanVolumeYTD/1e6).toFixed(1) + 'M',  '+8.7%',  'up');
+        push('PIPELINE',      '$' + (d.pipelineValue/1e6).toFixed(1) + 'M',  '+5.2%',  'up');
+        push('AVG LOAN',      '$' + (d.avgLoanSize/1000).toFixed(0) + 'K',   '+2.1%',  'up');
+        push('WEEKLY APPS',   d.weeklyApps,                                  '+16.7%', 'up');
+        push('PULL-THROUGH',  (d.pullThroughRate*100).toFixed(0) + '%',      '+3.0%',  'up');
+        push('DAYS TO CLOSE', d.avgDaysToClose + 'd',                        '-2.1%',  'up');
+        push('MARGIN',        d.marginBps + ' bps',                          '+14 bps','up');
+        push('COST/LOAN',     '$' + d.costPerLoan.toLocaleString(),          '-4.2%',  'up');
+        push('CONVERSION',   (d.conversionRate*100).toFixed(0) + '%',        '+5.1%',  'up');
+        push('NPS',           d.nps,                                         '+6',     'up');
+        push('MARKET SHARE', d.marketShare + '%',                            '+0.4%',  'up');
+      } else {
+        badge.textContent = 'LIVE METRICS';
+        const totalCash = entity.accounts.reduce((s,a)=>s+a.bal,0);
+        const margin = entity.monthlyRevenue>0 ? (entity.netIncome/entity.monthlyRevenue)*100 : 0;
+        push('REVENUE',   '$' + (entity.monthlyRevenue/1000).toFixed(1) + 'K', '+6.8%', 'up');
+        push('EXPENSES',  '$' + (entity.monthlyExpenses/1000).toFixed(1) + 'K','+2.1%', 'down');
+        push('NET INCOME','$' + (entity.netIncome/1000).toFixed(1) + 'K',      '+11.2%','up');
+        push('CASH',      '$' + (totalCash/1000).toFixed(1) + 'K',             '+4.4%', 'up');
+        push('MARGIN',    margin.toFixed(1) + '%',                             '+1.8%', 'up');
+        push('VALUATION', '$' + (entity.valuation/1e6).toFixed(2) + 'M',       '+9.3%', 'up');
+        push('MULTIPLE',  entity.multiplier.toFixed(1) + 'x',                  '+0.2x', 'up');
+        push('OWNERSHIP', entity.ownership + '%',                              '—',     'up');
+        push('ACCOUNTS',  entity.accounts.length,                              '',      'up');
+        push('PROPERTIES',entity.properties.length,                            '',      'up');
+      }
+
+      const itemHTML = (it) => `
+        <div class="ticker-item">
+          <span class="tk-sym">${it.sym}</span>
+          <span class="tk-val">${it.val}</span>
+          ${it.chg ? `<span class="tk-chg ${it.dir}">${it.dir==='up'?'▲':'▼'} ${it.chg}</span>` : ''}
+          <span class="tk-divider"></span>
+        </div>`;
+      // Duplicate the content so the scroll loop is seamless
+      track.innerHTML = items.map(itemHTML).join('') + items.map(itemHTML).join('');
+    }
+
+    function switchEntity(entityId) {
+      currentEntity = entityId;
+      const entity = ENTITIES[entityId];
+
+      if (entity.isDormant) {
+        document.getElementById('mainContent').classList.add('hidden');
+        document.getElementById('dormantView').classList.add('active');
+        document.getElementById('dormantName').textContent = entity.name;
+        return;
+      }
+
+      document.getElementById('mainContent').classList.remove('hidden');
+      document.getElementById('dormantView').classList.remove('active');
+
+      // Update hero
+      document.getElementById('heroType').textContent = entity.type;
+      document.getElementById('heroState').textContent = entity.state;
+      document.getElementById('heroCompanyName').textContent = entity.name;
+      document.getElementById('heroCardType').textContent = `${entity.type} • ${entity.state}`;
+      document.getElementById('heroNetIncome').textContent = formatCurrency(entity.netIncome);
+
+      // Health gauge
+      const profitMargin = (entity.monthlyRevenue > 0) ? (entity.netIncome / entity.monthlyRevenue) * 100 : 0;
+      const runwayScore = Math.min((entity.monthlyRevenue / Math.max(1, entity.monthlyExpenses)) * 10, 100);
+      const valuationScore = Math.min(100, Math.max(0, (entity.valuation / 1000000) * 100));
+      const healthPercent = (profitMargin * 0.3) + (runwayScore * 0.35) + (valuationScore * 0.35);
+      const healthRing = document.getElementById('healthRing');
+      healthRing.style.strokeDashoffset = (314 * (1 - healthPercent / 100)).toString();
+      document.getElementById('heroHealth').textContent = Math.round(healthPercent) + '%';
+
+      document.getElementById('heroAccounts').textContent = entity.accounts.length;
+      document.getElementById('heroProperties').textContent = entity.properties.length;
+      document.getElementById('heroOwnership').textContent = entity.ownership + '%';
+      document.getElementById('heroMultiplier').textContent = entity.multiplier.toFixed(1) + 'x';
+
+      // KPI cards
+      const totalCash = entity.accounts.reduce((sum, acc) => sum + acc.bal, 0);
+      document.getElementById('kpiVal1').textContent = formatCurrency(totalCash);
+      document.getElementById('kpiVal2').textContent = formatCurrency(entity.monthlyRevenue);
+
+      const margin = entity.monthlyRevenue > 0 ? ((entity.netIncome / entity.monthlyRevenue) * 100) : 0;
+      document.getElementById('kpiVal3').textContent = margin.toFixed(1) + '%';
+
+      const runwayMonths = entity.monthlyExpenses > 0 ? (totalCash / entity.monthlyExpenses) : 0;
+      document.getElementById('kpiVal4').textContent = runwayMonths.toFixed(1) + 'm';
+
+      document.getElementById('kpiVal5').textContent = formatCurrency(entity.valuation);
+      document.getElementById('kpiMult5').textContent = entity.multiplier.toFixed(1) + 'x';
+      document.getElementById('kpiVal6').textContent = entity.ownership + '%';
+      document.getElementById('kpiAcctCount').textContent = entity.accounts.length + ' accounts';
+
+      // Populate sparkline bars for each KPI card
+      function fillBars(containerId, barHeights) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        barHeights.forEach(h => {
+          const bar = document.createElement('div');
+          bar.className = 'kpi-bar';
+          bar.style.height = Math.max(4, h) + '%';
+          container.appendChild(bar);
+        });
+      }
+      // Generate pseudo-random sparkline data based on entity metrics
+      const cashBars = [45, 52, 48, 60, 55, 72, 68, 58, 75, 80, 70, 85];
+      const revBars = [40, 55, 48, 62, 58, 50, 65, 72, 60, 78, 82, 90];
+      const marginBars = [30, 42, 38, 50, 55, 48, 60, 58, 65, 55, 70, 68];
+      const runwayBars = [60, 65, 58, 70, 72, 68, 75, 80, 70, 82, 78, 85];
+      const valBars = [35, 40, 45, 42, 50, 55, 52, 60, 65, 62, 70, 75];
+      const ownerBars = [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90];
+
+      fillBars('kpiBars1', cashBars);
+      fillBars('kpiBars2', revBars);
+      fillBars('kpiBars3', marginBars);
+      fillBars('kpiBars4', runwayBars);
+      fillBars('kpiBars5', valBars);
+      fillBars('kpiBars6', ownerBars);
+
+      // Populate stock ticker
+      populateStockTicker(entity);
+
+      // ==== Enhanced Stats ====
+      const burnAmt = entity.monthlyExpenses;
+      document.getElementById('statBurn').textContent = formatCurrency(-burnAmt);
+      const runway = entity.monthlyExpenses > 0 ? (totalCash / entity.monthlyExpenses) : 0;
+      document.getElementById('statBurnRunway').textContent = runway.toFixed(1) + 'mo';
+      document.getElementById('statBurnSub').textContent = 'Avg 6-mo: ' + formatCurrency(-burnAmt * 0.96);
+      // Burn sparkline
+      const burnSpark = document.getElementById('statBurnSpark');
+      if (burnSpark) {
+        burnSpark.innerHTML = '';
+        [55,62,48,70,58,68,72,65,78,72,80,75].forEach(h => {
+          const b = document.createElement('div');
+          b.className = 's-bar';
+          b.style.height = h + '%';
+          burnSpark.appendChild(b);
+        });
+      }
+
+      const retentionPct = Math.min(100, Math.max(0, Math.round((totalCash > 0 ? 93 : 0))));
+      document.getElementById('statRetention').textContent = retentionPct + '%';
+      document.getElementById('statRetentionDollar').textContent = formatCurrency(Math.max(0, totalCash));
+      const retRing = document.getElementById('statRetentionRing');
+      if (retRing) retRing.style.strokeDashoffset = (251.2 * (1 - retentionPct/100));
+      document.getElementById('statRetentionStatus').textContent = retentionPct >= 85 ? 'Exceeding' : 'Below Target';
+
+      const effPct = Math.max(0, Math.round(((entity.monthlyRevenue - entity.monthlyExpenses) / Math.max(1, entity.monthlyRevenue)) * 100));
+      document.getElementById('statEfficiency').textContent = effPct + '%';
+      const effRatio = entity.monthlyExpenses > 0 ? (entity.monthlyRevenue / entity.monthlyExpenses) : 0;
+      document.getElementById('statEffRatio').textContent = effRatio.toFixed(1) + 'x';
+      const effRing = document.getElementById('statEffRing');
+      if (effRing) effRing.style.strokeDashoffset = (251.2 * (1 - effPct/100));
+      const gap = effPct - 35;
+      const gapEl = document.getElementById('statEffGap');
+      gapEl.textContent = (gap >= 0 ? '+' : '') + gap + 'pts';
+      gapEl.style.color = gap >= 0 ? 'var(--green)' : 'var(--red)';
+
+      // ==== Quarterly Dividend (CFO + Tax Advisor agents) ====
+      renderDividendWidget(entity);
+
+      // ==== Enhanced Bank Accounts ====
+      renderBankV2(entity, totalCash);
+
+      // ==== Ownership + Document Vault ====
+      renderOwnership(entity);
+      renderDocs(entity);
+
+      // Properties
+      const propertiesSection = document.getElementById('propertiesSection');
+      if (entity.properties.length > 0) {
+        propertiesSection.style.display = 'block';
+        const grid = document.getElementById('propertiesGrid');
+        grid.innerHTML = '';
+
+        entity.properties.forEach(prop => {
+          const equity = prop.ownedEquity / prop.value;
+          const offset = 314 * (1 - equity);
+
+          const card = document.createElement('div');
+          card.className = 'property-card';
+          card.innerHTML = `
+            <div class="property-address">${prop.address}</div>
+            <div class="property-location">${prop.city}, ${prop.state}</div>
+            <div class="property-value">${formatCurrency(prop.value)}</div>
+            <div style="text-align: center;">
+              <div class="property-equity-gauge">
+                <svg class="property-equity-svg" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="propGrad" x1="0%" y1="0%" x2="100%" y2="100%" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#f59e0b"/>
+                      <stop offset="100%" stop-color="#fbbf24"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="35" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
+                  <circle cx="50" cy="50" r="35" fill="none" stroke="url(#propGrad)" stroke-width="5" stroke-dasharray="220" stroke-dashoffset="${offset.toFixed(1)}" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="property-stats">
+              <div class="property-stat">
+                <div class="property-stat-number">${(equity * 100).toFixed(0)}%</div>
+                <div class="property-stat-label">Equity</div>
+              </div>
+              <div class="property-stat">
+                <div class="property-stat-number">${prop.isRental ? 'Rental' : 'Primary'}</div>
+                <div class="property-stat-label">Type</div>
+              </div>
+              <div class="property-stat">
+                <div class="property-stat-number">${formatCurrency(prop.payment)}</div>
+                <div class="property-stat-label">Payment</div>
+              </div>
+              <div class="property-stat">
+                <div class="property-stat-number">${formatCurrency(prop.expenses)}</div>
+                <div class="property-stat-label">Expenses</div>
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } else {
+        propertiesSection.style.display = 'none';
+      }
+
+      updateAchievements();
+    updateAreaCharts();
+    updateDonutChart();
+    updateCashFlowChart();
+
+    // Show/hide vertical sections
+    document.querySelectorAll('.vertical-section').forEach(el => el.style.display = 'none');
+    if (entity.vertical === 'mortgage') {
+      document.getElementById('verticalMortgage').style.display = 'block';
+      updateMortgageWidgets(entity);
+    }
+    }
+
+    // Canvas animation for hero
+    function animateHeroCanvas() {
+      const canvas = document.getElementById('heroCanvas');
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+
+      let animationId;
+      const symbols = ['$', '%', '↗'];
+      const particles = Array(20).fill(null).map(() => ({
+        x: Math.random() * canvas.width / dpr,
+        y: Math.random() * canvas.height / dpr,
+        vy: Math.random() * 0.02 + 0.01,
+        symbol: symbols[Math.floor(Math.random() * symbols.length)],
+        opacity: Math.random() * 0.03 + 0.01,
+      }));
+
+      const glows = [
+        { x: canvas.width / dpr * 0.2, y: canvas.height / dpr * 0.3, color: 'rgba(249,115,22,0.03)' },
+        { x: canvas.width / dpr * 0.8, y: canvas.height / dpr * 0.4, color: 'rgba(139,92,246,0.03)' },
+        { x: canvas.width / dpr * 0.5, y: canvas.height / dpr * 0.7, color: 'rgba(16,185,129,0.03)' },
+      ];
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.015)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i < canvas.width / dpr; i += 40) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, canvas.height / dpr);
+          ctx.stroke();
+        }
+        for (let i = 0; i < canvas.height / dpr; i += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, i);
+          ctx.lineTo(canvas.width / dpr, i);
+          ctx.stroke();
+        }
+
+        // Glows
+        glows.forEach(glow => {
+          glow.x += (Math.random() - 0.5) * 0.5;
+          glow.y += (Math.random() - 0.5) * 0.5;
+          const gradient = ctx.createRadialGradient(glow.x, glow.y, 0, glow.x, glow.y, 150);
+          gradient.addColorStop(0, glow.color);
+          gradient.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(glow.x - 150, glow.y - 150, 300, 300);
+        });
+
+        // Particles
+        particles.forEach(p => {
+          p.y -= p.vy;
+          if (p.y < 0) {
+            p.y = canvas.height / dpr;
+            p.x = Math.random() * canvas.width / dpr;
+          }
+          ctx.fillStyle = `rgba(255,255,255,${p.opacity})`;
+          ctx.font = '14px IBM Plex Mono';
+          ctx.fillText(p.symbol, p.x, p.y);
+        });
+
+        animationId = requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+
+    // Orbital canvas
+    function animateOrbitalCanvas() {
+      const canvas = document.getElementById('orbitalCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = 500 * dpr;
+      canvas.height = 500 * dpr;
+      ctx.scale(dpr, dpr);
+
+      let time = 0;
+      function animate() {
+        ctx.clearRect(0, 0, 500, 500);
+        const cx = 250, cy = 250;
+
+        // Rings
+        ctx.strokeStyle = 'rgba(139,92,246,0.1)';
+        ctx.lineWidth = 1;
+        for (let r = 80; r <= 200; r += 40) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Center: subtle crosshair instead of balance
+        ctx.strokeStyle = 'rgba(139,92,246,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx - 12, cy); ctx.lineTo(cx + 12, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, cy - 12); ctx.lineTo(cx, cy + 12); ctx.stroke();
+
+        // Orbiting dots
+        const orbits = [80, 140, 200];
+        const colors = ['rgba(249,115,22,0.6)', 'rgba(139,92,246,0.6)', 'rgba(16,185,129,0.6)'];
+        orbits.forEach((r, i) => {
+          const angle = (time * 0.01 + (i * Math.PI * 2 / 3)) % (Math.PI * 2);
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          ctx.fillStyle = colors[i];
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        time++;
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      animateHeroCanvas();
+      animateOrbitalCanvas();
+      document.getElementById('entitySelect').value = currentEntity;
+      switchEntity(currentEntity);
+      wireOwnershipControls();
+      wireDocsControls();
+    });
+  
+    // Smooth bezier helper: takes array of {x,y} points, draws smooth curve
+    // If skipMove=true, continues existing path instead of starting new moveTo
+    function smoothCurveTo(ctx, points, skipMove) {
+      if (points.length < 2) return;
+      if (!skipMove) ctx.moveTo(points[0].x, points[0].y);
+      else ctx.lineTo(points[0].x, points[0].y);
+      for (let i = 0; i < points.length - 1; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+      }
+      const last = points[points.length - 1];
+      ctx.lineTo(last.x, last.y);
+    }
+
+    // Generate varied monthly data from a base value with realistic fluctuation
+    function generateMonthlyData(base, months, seed) {
+      const variance = [0.82, 0.91, 0.88, 1.05, 1.12, 0.95, 1.08, 1.15, 0.97, 1.02, 1.18, 1.22];
+      return Array.from({length: months}, (_, i) => Math.round(base * variance[(i + seed) % 12]));
+    }
+
+    function updateAreaCharts() {
+      const canvas = document.getElementById('revenueExpensesChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const entity = ENTITIES[currentEntity];
+      if (!entity) return;
+
+      const pad = {top: 20, right: 20, bottom: 32, left: 50};
+      const gw = w - pad.left - pad.right;
+      const gh = h - pad.top - pad.bottom;
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      const revData = generateMonthlyData(entity.monthlyRevenue, 12, 0);
+      const expData = generateMonthlyData(entity.monthlyExpenses, 12, 3);
+      const maxVal = Math.max(...revData, ...expData) * 1.15;
+
+      // Horizontal grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (gh / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+        // Y-axis labels
+        const val = maxVal - (maxVal / 4) * i;
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px IBM Plex Mono';
+        ctx.textAlign = 'right';
+        ctx.fillText('$' + (val / 1000).toFixed(0) + 'K', pad.left - 8, y + 3);
+      }
+
+      // Month labels
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '9px DM Sans';
+      ctx.textAlign = 'center';
+      months.forEach((m, i) => {
+        const x = pad.left + (gw / 11) * i;
+        ctx.fillText(m, x, h - 8);
+      });
+
+      function getPoints(data) {
+        return data.map((v, i) => ({
+          x: pad.left + (gw / (data.length - 1)) * i,
+          y: pad.top + gh - (v / maxVal) * gh
+        }));
+      }
+
+      // Draw revenue area (green)
+      const revPts = getPoints(revData);
+      const revGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + gh);
+      revGrad.addColorStop(0, 'rgba(16,185,129,0.25)');
+      revGrad.addColorStop(1, 'rgba(16,185,129,0)');
+      ctx.fillStyle = revGrad;
+      ctx.beginPath();
+      ctx.moveTo(revPts[0].x, pad.top + gh);
+      smoothCurveTo(ctx, revPts, true);
+      ctx.lineTo(revPts[revPts.length-1].x, pad.top + gh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Revenue line
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      smoothCurveTo(ctx, revPts, false);
+      ctx.stroke();
+
+      // Draw expense area (amber)
+      const expPts = getPoints(expData);
+      const expGrad = ctx.createLinearGradient(0, pad.top, 0, pad.top + gh);
+      expGrad.addColorStop(0, 'rgba(245,158,11,0.2)');
+      expGrad.addColorStop(1, 'rgba(245,158,11,0)');
+      ctx.fillStyle = expGrad;
+      ctx.beginPath();
+      ctx.moveTo(expPts[0].x, pad.top + gh);
+      smoothCurveTo(ctx, expPts, true);
+      ctx.lineTo(expPts[expPts.length-1].x, pad.top + gh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Expense line
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      smoothCurveTo(ctx, expPts, false);
+      ctx.stroke();
+
+      // Data point dots
+      revPts.forEach(p => {
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+      });
+      expPts.forEach(p => {
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+
+    function updateDonutChart() {
+      const svg = document.getElementById('donutSvg');
+      if (!svg) return;
+      const entity = ENTITIES[currentEntity];
+      if (!entity) return;
+
+      // Remove old segments (keep the background circle which is first child)
+      while (svg.children.length > 1) svg.removeChild(svg.lastChild);
+
+      const segments = [
+        { label: 'Payroll', pct: 35, color: '#ec4899' },
+        { label: 'Operations', pct: 30, color: '#f59e0b' },
+        { label: 'SaaS', pct: 20, color: '#8b5cf6' },
+        { label: 'Marketing', pct: 15, color: '#10b981' },
+      ];
+
+      const cx = 100, cy = 100, r = 70;
+      const circ = 2 * Math.PI * r; // ~439.8
+      let offset = 0;
+
+      segments.forEach(seg => {
+        const dashLen = (seg.pct / 100) * circ;
+        const gapLen = circ - dashLen;
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', r);
+        circle.setAttribute('fill', 'none');
+        circle.setAttribute('stroke', seg.color);
+        circle.setAttribute('stroke-width', '22');
+        circle.setAttribute('stroke-dasharray', `${dashLen} ${gapLen}`);
+        circle.setAttribute('stroke-dashoffset', `${-offset}`);
+        circle.setAttribute('stroke-linecap', 'butt');
+        circle.setAttribute('opacity', '0.85');
+        svg.appendChild(circle);
+        offset += dashLen;
+      });
+
+      // Update center value
+      document.getElementById('donutCenterValue').textContent = formatCurrency(entity.monthlyExpenses);
+
+      // Update legend
+      const legend = document.getElementById('donutLegend');
+      legend.innerHTML = segments.map(seg => {
+        const amount = Math.round(entity.monthlyExpenses * seg.pct / 100);
+        return `<div class="donut-legend-item">
+          <div class="donut-legend-dot" style="background:${seg.color}"></div>
+          <span class="donut-legend-label">${seg.label}</span>
+          <span class="donut-legend-value">${formatCurrency(amount)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function updateCashFlowChart() {
+      const canvas = document.getElementById('cashFlowChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const entity = ENTITIES[currentEntity];
+      if (!entity) return;
+
+      const pad = {top: 20, right: 20, bottom: 32, left: 50};
+      const gw = w - pad.left - pad.right;
+      const gh = h - pad.top - pad.bottom;
+      const monthLabels = ['Nov','Dec','Jan','Feb','Mar','Apr'];
+
+      const cfData = [
+        entity.netIncome * 0.78,
+        entity.netIncome * 0.92,
+        entity.netIncome * 1.05,
+        entity.netIncome * 0.88,
+        entity.netIncome * 1.15,
+        entity.netIncome * 1.28,
+      ];
+      const maxVal = Math.max(...cfData) * 1.2;
+      const minVal = Math.min(0, Math.min(...cfData) * 0.8);
+      const range = maxVal - minVal;
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (gh / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+        const val = maxVal - (range / 4) * i;
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px IBM Plex Mono';
+        ctx.textAlign = 'right';
+        ctx.fillText('$' + (val / 1000).toFixed(1) + 'K', pad.left - 8, y + 3);
+      }
+
+      // Month labels
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '10px DM Sans';
+      ctx.textAlign = 'center';
+      monthLabels.forEach((m, i) => {
+        const x = pad.left + (gw / (monthLabels.length - 1)) * i;
+        ctx.fillText(m, x, h - 8);
+      });
+
+      const points = cfData.map((v, i) => ({
+        x: pad.left + (gw / (cfData.length - 1)) * i,
+        y: pad.top + gh - ((v - minVal) / range) * gh
+      }));
+
+      // Area fill
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + gh);
+      grad.addColorStop(0, 'rgba(16,185,129,0.3)');
+      grad.addColorStop(1, 'rgba(16,185,129,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, pad.top + gh);
+      smoothCurveTo(ctx, points, true);
+      ctx.lineTo(points[points.length-1].x, pad.top + gh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Line
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      smoothCurveTo(ctx, points, false);
+      ctx.stroke();
+
+      // Data points
+      points.forEach(p => {
+        ctx.fillStyle = '#060610';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.stroke();
+      });
+    }
+
+    function updateMortgageWidgets(entity) {
+      const d = entity.verticalData;
+      if (!d) return;
+
+      // Top tier KPI values
+      document.getElementById('mortLoanVol').textContent = '$' + (d.loanVolumeYTD / 1000000).toFixed(1) + 'M';
+      document.getElementById('mortPipeline').textContent = '$' + (d.pipelineValue / 1000000).toFixed(1) + 'M';
+      document.getElementById('mortLoansEmp').textContent = d.loansPerEmployee.toFixed(1);
+      document.getElementById('mortCostLoan').textContent = '$' + d.costPerLoan.toLocaleString();
+      document.getElementById('mortWeeklyApps').textContent = d.weeklyApps;
+
+      // Top tier meta
+      document.getElementById('mortGoalPct').textContent = Math.round((d.loanVolumeYTD / d.loanVolumeGoal) * 100) + '% of goal';
+      document.getElementById('mortPipeCount').textContent = d.pipelineLoans + ' loans';
+      document.getElementById('mortOfficerCount').textContent = d.loanOfficers + ' officers';
+      document.getElementById('mortFundedCount').textContent = d.fundedThisMonth + ' funded';
+      document.getElementById('mortAvgApps').textContent = 'avg: ' + d.avgWeeklyApps;
+
+      // Second tier KPI values
+      document.getElementById('mortTeamProd').textContent = d.teamProductivity.toFixed(1);
+      document.getElementById('mortMargin').textContent = (d.marginBps / 100).toFixed(2) + '%';
+      document.getElementById('mortCsat').textContent = d.csat.toFixed(1) + '/5';
+
+      // Third tier KPI values
+      document.getElementById('mortCompliance').textContent = d.complianceScore.toFixed(1) + '%';
+      document.getElementById('mortHiring').textContent = d.openRoles;
+      document.getElementById('mortAutomation').textContent = d.automationRate + '%';
+
+      // Sparkline bars for mortgage KPIs
+      function fillBars(id, heights) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = '';
+        heights.forEach(h => {
+          const bar = document.createElement('div');
+          bar.className = 'kpi-bar';
+          bar.style.height = Math.max(4, h) + '%';
+          el.appendChild(bar);
+        });
+      }
+      fillBars('mortBars1', [35,42,48,55,50,60,65,58,70,75,68,82]);
+      fillBars('mortBars2', [40,50,45,55,60,52,65,70,58,72,78,85]);
+      fillBars('mortBars3', [50,48,55,52,60,58,65,62,68,70,72,75]);
+      fillBars('mortBars4', [80,75,72,70,68,65,62,60,58,55,52,50]);
+      fillBars('mortBars5', [30,40,35,50,45,55,60,48,65,55,70,80]);
+      fillBars('mortBars6', [50,55,58,60,62,65,70,72,68,75,78,82]);
+      fillBars('mortBars7', [60,65,62,68,70,65,72,75,70,78,80,82]);
+      fillBars('mortBars8', [55,60,58,65,68,62,70,72,68,75,78,80]);
+      fillBars('mortBars9', [70,72,75,78,80,82,85,82,88,85,90,92]);
+      fillBars('mortBars10', [40,45,48,50,52,55,58,60,55,62,65,68]);
+      fillBars('mortBars11', [65,68,70,72,75,78,72,75,80,78,82,85]);
+
+      // Funding Timeline chart
+      drawMortgageFundingChart(d);
+      // Market Share chart
+      drawMortgageMarketChart(d);
+    }
+
+    function drawMortgageFundingChart(d) {
+      const canvas = document.getElementById('mortFundingChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = {top:20, right:20, bottom:32, left:50};
+      const gw = w - pad.left - pad.right;
+      const gh = h - pad.top - pad.bottom;
+      const months = ['Nov','Dec','Jan','Feb','Mar','Apr'];
+      const data = [35, 32, 30, 28, 31, d.avgDaysToClose];
+      const maxVal = 40;
+      const minVal = 20;
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (gh / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px IBM Plex Mono';
+        ctx.textAlign = 'right';
+        const val = maxVal - ((maxVal - minVal) / 4) * i;
+        ctx.fillText(val.toFixed(0) + 'd', pad.left - 8, y + 3);
+      }
+
+      // Month labels
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '10px DM Sans';
+      ctx.textAlign = 'center';
+      months.forEach((m, i) => {
+        ctx.fillText(m, pad.left + (gw / (months.length - 1)) * i, h - 8);
+      });
+
+      const points = data.map((v, i) => ({
+        x: pad.left + (gw / (data.length - 1)) * i,
+        y: pad.top + gh - ((v - minVal) / (maxVal - minVal)) * gh
+      }));
+
+      // Area
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + gh);
+      grad.addColorStop(0, 'rgba(16,185,129,0.25)');
+      grad.addColorStop(1, 'rgba(16,185,129,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, pad.top + gh);
+      smoothCurveTo(ctx, points, true);
+      ctx.lineTo(points[points.length-1].x, pad.top + gh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Line
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      smoothCurveTo(ctx, points, false);
+      ctx.stroke();
+
+      // Dots
+      points.forEach(p => {
+        ctx.fillStyle = '#060610';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.stroke();
+      });
+    }
+
+    function drawMortgageMarketChart(d) {
+      const canvas = document.getElementById('mortMarketChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const pad = {top:20, right:20, bottom:32, left:50};
+      const gw = w - pad.left - pad.right;
+      const gh = h - pad.top - pad.bottom;
+      const months = ['May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+      const data = [3.2, 3.3, 3.4, 3.3, 3.5, 3.6, 3.5, 3.7, 3.8, 3.9, 4.0, d.marketShare];
+      const maxVal = 5.0;
+      const minVal = 2.5;
+
+      // Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + (gh / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px IBM Plex Mono';
+        ctx.textAlign = 'right';
+        const val = maxVal - ((maxVal - minVal) / 4) * i;
+        ctx.fillText(val.toFixed(1) + '%', pad.left - 8, y + 3);
+      }
+
+      // Month labels
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '9px DM Sans';
+      ctx.textAlign = 'center';
+      months.forEach((m, i) => {
+        ctx.fillText(m, pad.left + (gw / (months.length - 1)) * i, h - 8);
+      });
+
+      const points = data.map((v, i) => ({
+        x: pad.left + (gw / (data.length - 1)) * i,
+        y: pad.top + gh - ((v - minVal) / (maxVal - minVal)) * gh
+      }));
+
+      // Area
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + gh);
+      grad.addColorStop(0, 'rgba(249,115,22,0.25)');
+      grad.addColorStop(1, 'rgba(249,115,22,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, pad.top + gh);
+      smoothCurveTo(ctx, points, true);
+      ctx.lineTo(points[points.length-1].x, pad.top + gh);
+      ctx.closePath();
+      ctx.fill();
+
+      // Line
+      ctx.strokeStyle = '#f97316';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      smoothCurveTo(ctx, points, false);
+      ctx.stroke();
+
+      // Dots
+      points.forEach(p => {
+        ctx.fillStyle = '#060610';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.stroke();
+      });
+    }
+</script>
+</body>
+</html>

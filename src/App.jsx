@@ -34,6 +34,9 @@ const EntityMap = lazy(() => import('./pages/EntityMap'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const LegalDocs = lazy(() => import('./pages/LegalDocs'));
 const PhotoManager = lazy(() => import('./pages/PhotoManager'));
+const FinanceDashboard = lazy(() => import('./pages/FinanceDashboard'));
+const XomeDashboard = lazy(() => import('./pages/XomeDashboard'));
+const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -70,7 +73,10 @@ function App() {
                   <Route path="floor" element={<TheFloor />} />
                   <Route path="projects" element={<Projects />} />
                   <Route path="tasks" element={<Tasks />} />
-                  <Route path="finance" element={<Finance />} />
+                  <Route path="finance" element={<FinanceDashboard />} />
+                  <Route path="finance-legacy" element={<Finance />} />
+                  <Route path="xome" element={<XomeDashboard />} />
+                  <Route path="company" element={<CompanyDashboard />} />
                   <Route path="forge" element={<TheForge />} />
                   <Route path="skills" element={<SkillLab />} />
                   <Route path="api-skills" element={<ApiSkills />} />
