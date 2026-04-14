@@ -193,6 +193,41 @@ export async function getAchievements(dashboardKey?: string) {
   return data ?? []
 }
 
+// ═══ Docs Hub ══════════════════════════════════════════════════════
+export async function getDocs() {
+  const { data, error } = await supabase.from('docs').select('*').order('updated_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Memory & Knowledge ════════════════════════════════════════════
+export async function getMemoryEntries() {
+  const { data, error } = await supabase.from('memory_entries').select('*').order('created_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Incidents ═════════════════════════════════════════════════════
+export async function getIncidents() {
+  const { data, error } = await supabase.from('incidents').select('*').order('created_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Skill Lab ═════════════════════════════════════════════════════
+export async function getSkills() {
+  const { data, error } = await supabase.from('skills').select('*').order('name', { ascending: true })
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Sessions ══════════════════════════════════════════════════════
+export async function getSessions() {
+  const { data, error } = await supabase.from('sessions').select('*').order('started_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
 // ═══ Integrations Hub ══════════════════════════════════════════════
 export async function getIntegrations() {
   const { data, error } = await supabase

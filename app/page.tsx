@@ -1,23 +1,25 @@
-import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas } from './lib/queries'
+import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas, getAccounts } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const [entities, agents, visions, achievements, deadlines, ideas] = await Promise.all([
+  const [entities, agents, visions, achievements, deadlines, ideas, accounts] = await Promise.all([
     getEntities(),
     getAgents(),
     getVisions(),
     getAchievements('dashboard'),
     getUpcomingTaxDeadlines(),
     getForgeIdeas('new'),
+    getAccounts(),
   ])
+  const netWorth = accounts.reduce((s: number, a: any) => s + Number(a.balance_current ?? 0), 0)
 
   return (
     <>
       <div className="hero">
         <div className="hero-label">◆ NORTH STAR · LIVE FROM SUPABASE</div>
         <h1>Good morning, Colby.</h1>
-        <div className="big">${'2,571,480'}</div>
+        <div className="big">${netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
         <p>
           {entities.length} active entities · {agents.filter(a => a.status === 'active').length} of {agents.length} agents online ·
           {' '}{ideas.length} new Forge ideas waiting review · {deadlines.length} upcoming tax deadlines
