@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 
-const BASE = import.meta.env.BASE_URL || "/";
-
 const IframePage = ({ src, title }) => {
   useEffect(() => { document.title = `${title} — Mission Control`; }, [title]);
   return (
@@ -15,5 +13,5 @@ const IframePage = ({ src, title }) => {
   );
 };
 
-const FinanceDashboard = () => <IframePage src={`${BASE}finance.html`} title="Finance" />;
+const FinanceDashboard = () => <IframePage src="/finance.html" title="Finance" />;
 export default FinanceDashboard;
