@@ -34,6 +34,8 @@ import {
 import HeroCanvas from './HeroCanvas'
 import OwnershipCard from '../../_components/OwnershipCard'
 import SlugEditButton from './_SlugEditButton'
+import CompanyTabs, { type TabDef } from './CompanyTabs'
+import SalesRevenueTab from './SalesRevenueTab'
 
 export const dynamic = 'force-dynamic'
 
@@ -184,13 +186,31 @@ export default async function CompanyPage({ params }: Props) {
   }
 
   // ── Entity metadata with graceful fallbacks ───────────────────
-  // display_name is an optional override (e.g. 'Xome Home Loans'); falls back to entity_name
-  const displayName = (entity as any)?.display_name ?? entity?.entity_name ?? slug
+  // display_name is an optional override (e.g. 'The Culbertson and Gray Group',
+  // 'Xome Home Loans'); falls back to entity_name (legal name).
+  // dba is the "Doing Business As" override; formation_state is legal state.
+  const legalName   = entity?.entity_name ?? slug
+  const displayName = (entity as any)?.display_name ?? legalName
+  const dba         = (entity as any)?.dba ?? null
+  const entityType  = entity?.entity_type ?? null
+  const formationSt = (entity as any)?.formation_state ?? entity?.state ?? null
+
+  // Subtitle: "LegalName · Type · State · DBA: dba" — skip empty fragments
+  const subtitleFragments: string[] = []
+  if (legalName && legalName !== displayName) subtitleFragments.push(legalName)
+  if (entityType) subtitleFragments.push(entityType)
+  if (formationSt) subtitleFragments.push(formationSt)
+  if (dba) subtitleFragments.push(`DBA: ${dba}`)
+  const entitySubtitle = subtitleFragments.join(' · ')
+
   const E = {
     name:      displayName,
     fullName:  displayName,
-    type:      entity?.entity_type ?? 'LLC',
-    state:     entity?.state ?? 'CA',
+    legalName: legalName,
+    dba:       dba,
+    subtitle:  entitySubtitle,
+    type:      entityType ?? 'LLC',
+    state:     formationSt ?? 'CA',
     purpose:   entity?.notes ?? '',
     teamCount: team.length || 0,
     accounts: accounts.map((a: any) => ({
@@ -535,7 +555,8 @@ export default async function CompanyPage({ params }: Props) {
             Mission Control / Companies / ${E.fullName}
           </div>
           <div class="navbar-title" style="font-size:28px;font-weight:700;">${E.fullName}</div>
-          <div style="display:flex;gap:8px;margin-top:4px;">
+          ${E.subtitle ? `<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;letter-spacing:0.01em;">${E.subtitle}</div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:6px;">
             <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,0.2);">${E.type}</span>
             <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.2);">${E.state}</span>
             ${entity?.notes ? `<span style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">${entity.notes}</span>` : ''}
@@ -560,6 +581,7 @@ export default async function CompanyPage({ params }: Props) {
               <span class="hero-badge operational">Operational</span>
             </div>
             <div class="hero-company-greeting">${E.name}</div>
+            ${E.subtitle ? `<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-bottom:10px;letter-spacing:0.02em;">${E.subtitle}</div>` : ''}
             <div class="hero-primary-metric">${heroPrimary}</div>
             <div class="hero-sub-text">${heroSub}</div>
             <div class="hero-mini-cards">
@@ -621,7 +643,7 @@ export default async function CompanyPage({ params }: Props) {
       </div>
 
       <!-- ACHIEVEMENTS -->
-      <section class="section">
+      <section class="section" data-tab="overview">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">🏆</span>
@@ -665,7 +687,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- KPIs -->
-      <section class="section">
+      <section class="section" data-tab="overview">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">⚡</span>
@@ -716,7 +738,7 @@ export default async function CompanyPage({ params }: Props) {
 
       ${isXome ? `
       <!-- LOAN ANALYTICS (Xome only, Monday.com) -->
-      <section class="section">
+      <section class="section" data-tab="sales">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">📊</span>
@@ -826,7 +848,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- LOAN OFFICER ROSTER (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="crm">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">👤</span>
@@ -868,7 +890,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- LOAN PIPELINE STAGES (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="sales">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">🏗️</span>
@@ -908,7 +930,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- RECENT CLOSED LOANS (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="sales">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">✅</span>
@@ -951,7 +973,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- COMPLIANCE TRACKER (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="financials">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">🛡️</span>
@@ -1027,7 +1049,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- WAREHOUSE RECONCILIATION (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="financials">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">🏦</span>
@@ -1071,7 +1093,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- XOME POWER (Xome only) -->
-      <section class="section">
+      <section class="section" data-tab="sales">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">⚡</span>
@@ -1114,7 +1136,7 @@ export default async function CompanyPage({ params }: Props) {
       ` : ''}
 
       <!-- REVENUE / CASH FLOW -->
-      <section class="section">
+      <section class="section" data-tab="financials">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">💰</span>
@@ -1143,7 +1165,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- TEAM -->
-      <section class="section">
+      <section class="section" data-tab="team">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">👥</span>
@@ -1170,7 +1192,7 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- MILESTONES -->
-      <section class="section">
+      <section class="section" data-tab="milestones">
         <div class="section-header">
           <div class="section-header-left">
             <span style="font-size:20px">🎯</span>
@@ -1200,74 +1222,251 @@ export default async function CompanyPage({ params }: Props) {
       </section>
 
       <!-- BANK ACCOUNTS -->
-      ${E.accounts.length > 0
-        ? `<div class="bank-accounts-card">
-            <div class="card-title">Bank Accounts</div>
-            <div class="account-list">
-              ${E.accounts.map((a: any) => {
-                const isNeg = a.bal < 0
-                const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Math.abs(a.bal))
-                return `<div class="account-row">
-                  <div class="account-info">
-                    <div class="account-name">${a.name}</div>
-                    <div class="account-mask">•••• ${a.mask}</div>
-                  </div>
-                  <div class="account-balance ${isNeg ? 'negative' : 'positive'}">${isNeg ? '-' : ''}${fmt}</div>
-                </div>`
-              }).join('')}
-            </div>
-          </div>`
-        : `<div class="coming-soon-inline" data-source="financial_accounts:${slug}">
-            <span class="cs-icon">🔮</span>
-            <div class="cs-label">Coming Soon</div>
-            Bank accounts from <code>financial_accounts</code> will display here once linked via Plaid.
-          </div>`
-      }
+      <section data-tab="financials" style="margin-bottom:40px;">
+        ${E.accounts.length > 0
+          ? `<div class="bank-accounts-card">
+              <div class="card-title">Bank Accounts</div>
+              <div class="account-list">
+                ${E.accounts.map((a: any) => {
+                  const isNeg = a.bal < 0
+                  const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Math.abs(a.bal))
+                  return `<div class="account-row">
+                    <div class="account-info">
+                      <div class="account-name">${a.name}</div>
+                      <div class="account-mask">•••• ${a.mask}</div>
+                    </div>
+                    <div class="account-balance ${isNeg ? 'negative' : 'positive'}">${isNeg ? '-' : ''}${fmt}</div>
+                  </div>`
+                }).join('')}
+              </div>
+            </div>`
+          : `<div class="coming-soon-inline" data-source="financial_accounts:${slug}">
+              <span class="cs-icon">🔮</span>
+              <div class="cs-label">Coming Soon</div>
+              Bank accounts from <code>financial_accounts</code> will display here once linked via Plaid.
+            </div>`
+        }
+      </section>
 
       <!-- DOCUMENTS -->
-      ${hasDocs
-        ? `<div class="bank-accounts-card" style="border-color:rgba(139,92,246,0.15)">
-            <div class="card-title">Entity Documents (${documents.length})</div>
-            <div class="account-list">
-              ${documents.map((d: any) => `
-                <div class="account-row">
-                  <div class="account-info">
-                    <div class="account-name">${d.document_name ?? d.document_type ?? 'Document'}</div>
-                    <div class="account-mask">${d.document_type ?? ''}</div>
-                  </div>
-                  <div style="font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace;">${d.created_at ? d.created_at.split('T')[0] : ''}</div>
-                </div>`).join('')}
-            </div>
-          </div>`
-        : ''
-      }
+      <section data-tab="documents" style="margin-bottom:40px;">
+        ${hasDocs
+          ? `<div class="bank-accounts-card" style="border-color:rgba(139,92,246,0.15)">
+              <div class="card-title">Entity Documents (${documents.length})</div>
+              <div class="account-list">
+                ${documents.map((d: any) => `
+                  <div class="account-row">
+                    <div class="account-info">
+                      <div class="account-name">${d.document_name ?? d.document_type ?? 'Document'}</div>
+                      <div class="account-mask">${d.document_type ?? ''}</div>
+                    </div>
+                    <div style="font-size:11px;color:var(--dim);font-family:'IBM Plex Mono',monospace;">${d.created_at ? d.created_at.split('T')[0] : ''}</div>
+                  </div>`).join('')}
+              </div>
+            </div>`
+          : `<div class="coming-soon-inline" data-source="entity_documents:${slug}">
+              <span class="cs-icon">📄</span>
+              <div class="cs-label">Coming Soon</div>
+              Entity documents will display here once uploaded to <code>entity_documents</code>.
+            </div>`
+        }
+      </section>
 
       <!-- NOTE SECTION -->
-      <div class="note-section">
-        ${isXome
-          ? `Xome Monday integration active — primary board is "New Pipeline Xome" (5842083369, Main workspace, 928 items). Compliance Tracker (18140546461) and Warehouse Reconciliation (18140546824) also wired. Env var: <code>MONDAY_XOME_API_KEY</code>. 60s in-memory cache. ${mondayError ? '<br><span style="color:var(--amber);">' + mondayError + '</span>' : ''}`
-          : E.purpose
-          ? E.purpose
-          : `${E.fullName} · ${E.type} · ${E.state} · Data updates automatically as KPIs, transactions, and team members are added.`
-        }
-      </div>
+      <section data-tab="overview">
+        <div class="note-section">
+          ${isXome
+            ? `Xome Monday integration active — primary board is "New Pipeline Xome" (5842083369, Main workspace, 928 items). Compliance Tracker (18140546461) and Warehouse Reconciliation (18140546824) also wired. Env var: <code>MONDAY_XOME_API_KEY</code>. 60s in-memory cache. ${mondayError ? '<br><span style="color:var(--amber);">' + mondayError + '</span>' : ''}`
+            : E.purpose
+            ? E.purpose
+            : `${E.fullName} · ${E.type} · ${E.state} · Data updates automatically as KPIs, transactions, and team members are added.`
+          }
+        </div>
+      </section>
 
     </div>
   </div>
 </body>
 </html>`
 
+  // ── Tab definitions ───────────────────────────────────────────
+  // Counts reflect data availability; `empty: true` grays the tab out.
+  // Tabs with no source for this entity are `hidden: true`.
+  const CG_SLUG = 'culbertson-gray'
+  const isCG = slug === CG_SLUG
+
+  // CRM & Activity is only shown for entities with a wired CRM source:
+  //   - C&G: FUB is wired (dedicated /companies/culbertson-gray page handles
+  //     it, but we also show a pointer here)
+  //   - Xome: loan-officer roster from Monday
+  const hasCrmSource = isXome || isCG
+
+  const tabs: TabDef[] = [
+    { id: 'overview',    label: 'Overview' },
+    {
+      id: 'sales',
+      label: 'Sales & Revenue',
+      count: isXome ? (mondayKpis ? 1 : 0) : null,
+    },
+    {
+      id: 'crm',
+      label: 'CRM & Activity',
+      hidden: !hasCrmSource,
+      count: isXome ? (mondayOfficers?.length ?? 0) : null,
+    },
+    {
+      id: 'team',
+      label: 'Team',
+      count: team.length,
+      empty: team.length === 0,
+    },
+    { id: 'financials',  label: 'Financials' },
+    {
+      id: 'documents',
+      label: 'Documents',
+      count: documents.length,
+      empty: documents.length === 0,
+    },
+    {
+      id: 'milestones',
+      label: 'Milestones',
+      count: milestones.length,
+      empty: milestones.length === 0,
+    },
+    { id: 'ownership',   label: 'Ownership', hidden: !entity?.id },
+  ]
+
   return (
     <>
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <HeroCanvas />
-      {entity?.id && (
-        <div style={{
+
+      {/* ── Tab bar (sticky) ─────────────────────────────────── */}
+      <CompanyTabs tabs={tabs} defaultTab="overview" />
+
+      {/* ── Sales & Revenue tab (React-rendered, separate from HTML blob) ── */}
+      <div
+        data-tab="sales"
+        style={{
           width: '86%',
           margin: '0 auto',
-          paddingBottom: 40,
           fontFamily: 'DM Sans, sans-serif',
-        }}>
+        }}
+      >
+        {isCG && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 20,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>📈</span>
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.9)',
+                margin: 0,
+              }}
+            >
+              Sales & Revenue — Culbertson & Gray
+            </h2>
+          </div>
+        )}
+        <SalesRevenueTab
+          slug={slug}
+          entityName={E.name}
+          revenue30d={revenue30d}
+          expenses30d={expenses30d}
+        />
+      </div>
+
+      {/* ── CRM & Activity pointer (for C&G only — dedicated page) ── */}
+      {isCG && (
+        <div
+          data-tab="crm"
+          style={{
+            width: '86%',
+            margin: '0 auto 40px',
+            fontFamily: 'DM Sans, sans-serif',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 20,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>🏁</span>
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.9)',
+                margin: 0,
+              }}
+            >
+              CRM & Activity — Follow Up Boss
+            </h2>
+          </div>
+          <div
+            style={{
+              background: 'rgba(139,92,246,0.04)',
+              border: '1px solid rgba(139,92,246,0.12)',
+              borderRadius: 16,
+              padding: '32px 24px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.4)',
+              fontSize: 13,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                fontWeight: 700,
+                color: '#8b5cf6',
+                marginBottom: 10,
+              }}
+            >
+              Full FUB Dashboard
+            </div>
+            Lead pipeline, agent roster, call volume, appointments, smart lists,
+            recent closings, and response time live on the dedicated
+            FUB-powered page.
+            <div style={{ marginTop: 16 }}>
+              <a
+                href="/companies/culbertson-gray"
+                style={{
+                  color: '#8b5cf6',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  fontSize: 13,
+                }}
+              >
+                Open Culbertson & Gray — FUB Dashboard →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ownership tab ───────────────────────────────────── */}
+      {entity?.id && (
+        <div
+          data-tab="ownership"
+          style={{
+            width: '86%',
+            margin: '0 auto',
+            paddingBottom: 40,
+            fontFamily: 'DM Sans, sans-serif',
+          }}
+        >
           {/* ⚙ Edit button in top-right of the section */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
