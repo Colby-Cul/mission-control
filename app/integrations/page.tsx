@@ -203,13 +203,36 @@ export default async function IntegrationsPage() {
             const isConnected = resolvedStatus === 'connected' || intg.connected || isActive
             const isPending   = resolvedStatus === 'pending'
             const isError     = resolvedStatus === 'error'
-            const stale = intg.last_sync ? staleness(intg.last_sync) : null
+            // Prefer last_sync_at (new column) then last_sync (legacy)
+            const lastSyncTs = intg.last_sync_at ?? intg.last_sync ?? null
+            const stale = lastSyncTs ? staleness(lastSyncTs) : null
 
             const borderColor = isConnected ? 'rgba(16,185,129,0.2)' : isError ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
             const statusClr   = isConnected ? 'var(--green)' : isPending ? 'var(--amber)' : isError ? 'var(--red)' : 'var(--dim)'
             const statusText  = isConnected ? 'ACTIVE' : isPending ? 'PENDING' : isError ? 'ERROR' : (resolvedStatus ?? 'NOT CONFIGURED').toUpperCase()
-            // Monogram icon from name (first 2 chars), matching original v6 IntegrationsHub style
             const monogram = (intg.name ?? intg.provider ?? '??').slice(0, 2).toUpperCase()
+
+            // OAuth expiry warning
+            const oauthExpires = intg.oauth_expires_at ?? null
+            const oauthExpiresSoon = oauthExpires
+              ? (new Date(oauthExpires).getTime() - Date.now()) < 7 * 24 * 3600 * 1000
+              : false
+
+            // Masked key last 4
+            const maskedKey = intg.masked_key ?? intg.maskedKey ?? null
+
+            // Record count
+            const recordCount = intg.record_count ?? null
+
+            // Monthly cost
+            const monthlyCost = intg.monthly_cost != null ? Number(intg.monthly_cost) : null
+
+            // Rate limit remaining
+            const rateLimit = intg.rate_limit_remaining ?? null
+
+            // Webhook health
+            const webhookHealth = intg.webhook_health ?? null
+            const whColor = webhookHealth === 'healthy' ? 'var(--green)' : webhookHealth === 'degraded' ? 'var(--amber)' : webhookHealth === 'down' ? 'var(--red)' : null
 
             return (
               <div key={intg.provider} style={{
@@ -217,6 +240,7 @@ export default async function IntegrationsPage() {
                 border: `1px solid ${borderColor}`,
                 display: 'flex', flexDirection: 'column', gap: 10,
               }}>
+                {/* ── Header ── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
@@ -232,69 +256,102 @@ export default async function IntegrationsPage() {
                       <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1 }}>{intg.category}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: statusClr, background: statusClr + '18', padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {statusText}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: statusClr, background: statusClr + '18', padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                      {statusText}
+                    </div>
+                    {whColor && (
+                      <div style={{ fontSize: 9, color: whColor, fontFamily: 'var(--mo)', letterSpacing: '0.04em' }}>
+                        webhook {webhookHealth}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.4 }}>{intg.description}</div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                  <div style={{ fontSize: 10, color: stale ? stale.color : 'var(--dim)', fontFamily: 'var(--mo)' }}>
-                    {stale && isConnected ? stale.label : '—'}
+                {/* ── Stats row: last sync + cost + rate limit + record count ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, fontSize: 10 }}>
+                  <div>
+                    <span style={{ color: 'var(--dim)' }}>Last sync: </span>
+                    <span style={{ color: stale && isConnected ? stale.color : 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                      {stale && isConnected ? stale.label : '—'}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {/* QuickBooks: OAuth connect button */}
-                    {intg.provider === 'quickbooks' && (
-                      <a href="/api/qb/connect?returnTo=/integrations" style={{
-                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                        background: '#2ca01c', color: '#fff', textDecoration: 'none',
-                        border: '1px solid rgba(44,160,28,0.5)',
-                      }}>
-                        {isConnected ? '+ Connect Company' : 'Connect QuickBooks'}
-                      </a>
-                    )}
-                    {/* Plaid: Link bank account */}
-                    {intg.provider === 'plaid' && (
-                      <Link href="/accounts" style={{
-                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                        background: 'rgba(16,185,129,0.15)', color: 'var(--green)',
-                        border: '1px solid rgba(16,185,129,0.3)', textDecoration: 'none',
-                      }}>
-                        {isConnected ? 'Manage Accounts' : 'Link Bank'}
-                      </Link>
-                    )}
-                    {/* Lodgify: open portal */}
-                    {intg.provider === 'lodgify' && (
-                      <a href="https://app.lodgify.com" target="_blank" rel="noopener noreferrer" style={{
-                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                        background: 'rgba(16,185,129,0.1)', color: 'var(--green)',
-                        border: '1px solid rgba(16,185,129,0.2)', textDecoration: 'none',
-                      }}>
-                        Open Lodgify ↗
-                      </a>
-                    )}
-                    {/* Default: settings link */}
-                    {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && (
-                      <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
-                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                        background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
-                        color: isConnected ? 'var(--green)' : 'var(--orange)',
-                        border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.3)'}`,
-                        textDecoration: 'none',
-                      }}>
-                        {isConnected ? 'Manage' : 'Connect'}
-                      </Link>
-                    )}
-                  </div>
+                  {monthlyCost != null && monthlyCost > 0 && (
+                    <div>
+                      <span style={{ color: 'var(--dim)' }}>Cost: </span>
+                      <span style={{ color: 'var(--amber)', fontFamily: 'var(--mo)' }}>${monthlyCost.toFixed(0)}/mo</span>
+                    </div>
+                  )}
+                  {recordCount != null && (
+                    <div>
+                      <span style={{ color: 'var(--dim)' }}>Records: </span>
+                      <span style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{recordCount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {rateLimit != null && (
+                    <div>
+                      <span style={{ color: 'var(--dim)' }}>Rate limit: </span>
+                      <span style={{ color: rateLimit < 100 ? 'var(--red)' : 'var(--green)', fontFamily: 'var(--mo)' }}>{rateLimit}</span>
+                    </div>
+                  )}
                 </div>
-                {/* Credential status detail for QB */}
-                {intg.provider === 'quickbooks' && intg.credential_status && (
-                  <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.04)' }}>
-                    Token: <span style={{ color: intg.credential_status === 'valid' ? 'var(--green)' : 'var(--red)' }}>{intg.credential_status}</span>
-                    {intg.company_name && <span> · {intg.company_name}</span>}
+
+                {/* ── Credential info ── */}
+                {(maskedKey ?? intg.credential_status ?? oauthExpiresSoon) && (
+                  <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', padding: '5px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {maskedKey && <span>Key: ···{String(maskedKey).slice(-4)}</span>}
+                    {intg.credential_status && (
+                      <span>Token: <span style={{ color: intg.credential_status === 'valid' ? 'var(--green)' : 'var(--red)' }}>{intg.credential_status}</span></span>
+                    )}
+                    {oauthExpiresSoon && oauthExpires && (
+                      <span style={{ color: 'var(--amber)' }}>OAuth expires {new Date(oauthExpires).toLocaleDateString()}</span>
+                    )}
                   </div>
                 )}
+
+                {/* ── Action buttons ── */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {intg.provider === 'quickbooks' && (
+                    <a href="/api/qb/connect?returnTo=/integrations" style={{
+                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                      background: '#2ca01c', color: '#fff', textDecoration: 'none',
+                      border: '1px solid rgba(44,160,28,0.5)',
+                    }}>
+                      {isConnected ? '+ Connect Company' : 'Connect QuickBooks'}
+                    </a>
+                  )}
+                  {intg.provider === 'plaid' && (
+                    <Link href="/accounts" style={{
+                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                      background: 'rgba(16,185,129,0.15)', color: 'var(--green)',
+                      border: '1px solid rgba(16,185,129,0.3)', textDecoration: 'none',
+                    }}>
+                      {isConnected ? 'Manage Accounts' : 'Link Bank'}
+                    </Link>
+                  )}
+                  {intg.provider === 'lodgify' && (
+                    <a href="https://app.lodgify.com" target="_blank" rel="noopener noreferrer" style={{
+                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                      background: 'rgba(16,185,129,0.1)', color: 'var(--green)',
+                      border: '1px solid rgba(16,185,129,0.2)', textDecoration: 'none',
+                    }}>
+                      Open Lodgify ↗
+                    </a>
+                  )}
+                  {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && (
+                    <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
+                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                      background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
+                      color: isConnected ? 'var(--green)' : 'var(--orange)',
+                      border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.3)'}`,
+                      textDecoration: 'none',
+                    }}>
+                      {isConnected ? 'Manage' : 'Connect'}
+                    </Link>
+                  )}
+                </div>
               </div>
             )
           })}

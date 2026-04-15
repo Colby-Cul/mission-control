@@ -102,25 +102,55 @@ export default async function PropertiesPage() {
           const equityPct = p.current_value
             ? Math.round((Number(p.equity ?? 0) / Number(p.current_value)) * 100)
             : 0
+          // Derived fields
+          const monthlyPayment  = Number(p.mortgage_payment ?? 0)
+          const mortgageRate    = p.mortgage_rate != null ? Number(p.mortgage_rate) : null
+          const occupancy       = p.occupancy_pct != null ? Number(p.occupancy_pct) : null
+          const adr             = p.adr != null ? Number(p.adr) : null
+          const revpar          = p.revpar != null ? Number(p.revpar) : null
+          const monthlyRent     = p.monthly_rent != null ? Number(p.monthly_rent) : null
+          const maintOpen       = Number(p.maintenance_open_count ?? 0)
+          const stars           = p.last_review_stars != null ? Number(p.last_review_stars) : null
+          const equityGrowthYtd = p.equity_growth_ytd != null ? Number(p.equity_growth_ytd) : null
+          const photoUrl        = p.photo_url_primary ?? null
+
           return (
             <Link key={p.id} href={`/properties/${slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <SpecCard accent dataSource="property_assets" style={{ cursor: 'pointer', transition: 'transform 0.25s', display: 'block' }}>
-                {/* Photo placeholder */}
+              <SpecCard accent dataSource="property_assets" style={{ cursor: 'pointer', transition: 'transform 0.25s', display: 'block', padding: 0 }}>
+                {/* Photo or gradient hero */}
                 <div style={{
-                  height: 140, borderRadius: '12px 12px 0 0', marginBottom: 16, overflow: 'hidden',
-                  background: 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15))',
+                  height: 140, borderRadius: '12px 12px 0 0', overflow: 'hidden',
+                  background: photoUrl ? 'none' : 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 36,
+                  fontSize: 36, position: 'relative',
                 }}>
-                  🏠
+                  {photoUrl
+                    ? <img src={photoUrl} alt={p.address ?? 'Property'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : '🏠'}
+                  {/* Rental / Occupied badges */}
+                  <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5 }}>
+                    {p.is_rental && (
+                      <span style={{ fontSize: 9, fontFamily: 'var(--mo)', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(16,185,129,0.85)', color: '#fff', backdropFilter: 'blur(4px)' }}>RENTAL</span>
+                    )}
+                    {maintOpen > 0 && (
+                      <span style={{ fontSize: 9, fontFamily: 'var(--mo)', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.85)', color: '#fff', backdropFilter: 'blur(4px)' }}>{maintOpen} maint</span>
+                    )}
+                  </div>
+                  {stars != null && (
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 10, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: 5, backdropFilter: 'blur(4px)' }}>
+                      {'★'.repeat(Math.round(stars))} {stars.toFixed(1)}
+                    </div>
+                  )}
                 </div>
-                <div style={{ padding: '0 4px 4px' }}>
+                <div style={{ padding: '14px 16px 16px' }}>
                   <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
                     {p.property_type ?? 'Residential'} · {p.is_rental ? 'Rental' : 'Owner-occupied'}
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{p.name ?? p.address ?? 'Unnamed Property'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 12 }}>{p.address ?? '—'}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 12 }}>{p.city ?? ''}{p.city && p.state ? ', ' : ''}{p.state ?? ''}</div>
+
+                  {/* Core 3-col KPI row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
                     {[
                       { label: 'VALUE',    value: USD(Number(p.current_value ?? 0)),    color: 'var(--orange)' },
                       { label: 'EQUITY',   value: USD(Number(p.equity ?? 0)),           color: 'var(--green)'  },
@@ -132,8 +162,73 @@ export default async function PropertiesPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Mortgage detail row */}
+                  {(monthlyPayment > 0 || mortgageRate != null) && (
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 10, fontSize: 11 }}>
+                      {monthlyPayment > 0 && (
+                        <span style={{ color: 'var(--dim)' }}>
+                          Payment: <span style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{USD(monthlyPayment)}/mo</span>
+                        </span>
+                      )}
+                      {mortgageRate != null && (
+                        <span style={{ color: 'var(--dim)' }}>
+                          Rate: <span style={{ color: 'var(--amber)', fontFamily: 'var(--mo)' }}>{mortgageRate.toFixed(2)}%</span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Rental KPIs (if is_rental) */}
+                  {p.is_rental && (monthlyRent != null || occupancy != null || adr != null || revpar != null) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10, padding: '8px', background: 'rgba(16,185,129,0.06)', borderRadius: 6, border: '1px solid rgba(16,185,129,0.12)' }}>
+                      {monthlyRent != null && (
+                        <div>
+                          <div style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>RENT/MO</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--mo)', color: 'var(--green)', marginTop: 2 }}>{USD(monthlyRent)}</div>
+                        </div>
+                      )}
+                      {occupancy != null && (
+                        <div>
+                          <div style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>OCC%</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--mo)', color: occupancy >= 80 ? 'var(--green)' : 'var(--amber)', marginTop: 2 }}>{occupancy.toFixed(0)}%</div>
+                        </div>
+                      )}
+                      {adr != null && (
+                        <div>
+                          <div style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>ADR</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--mo)', color: 'var(--amber)', marginTop: 2 }}>${adr.toFixed(0)}</div>
+                        </div>
+                      )}
+                      {revpar != null && (
+                        <div>
+                          <div style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>RevPAR</div>
+                          <div style={{ fontSize: 11, fontWeight: 600, fontFamily: 'var(--mo)', color: 'var(--purple)', marginTop: 2 }}>${revpar.toFixed(0)}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Next booking + equity growth YTD */}
+                  {(p.next_booking_date != null || equityGrowthYtd != null) && (
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 10, fontSize: 11 }}>
+                      {p.next_booking_date && (
+                        <span style={{ color: 'var(--dim)' }}>
+                          Next booking: <span style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{String(p.next_booking_date)}</span>
+                        </span>
+                      )}
+                      {equityGrowthYtd != null && (
+                        <span style={{ color: 'var(--dim)' }}>
+                          Equity YTD: <span style={{ color: equityGrowthYtd >= 0 ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--mo)' }}>
+                            {equityGrowthYtd >= 0 ? '+' : ''}{USD(equityGrowthYtd)}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Equity bar */}
-                  <div style={{ marginTop: 12 }}>
+                  <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--dim)', marginBottom: 4 }}>
                       <span>Equity</span><span style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{equityPct}%</span>
                     </div>

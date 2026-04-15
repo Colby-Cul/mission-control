@@ -125,26 +125,98 @@ export default async function TeamPage() {
               {members.map((m: any) => {
                 const initials = (m.full_name ?? m.name ?? '?')
                   .split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()
+                const skills = Array.isArray(m.skills) ? m.skills as string[] : []
+                const directReports = Number(m.direct_reports_count ?? 0)
+                const activeProjects = Number(m.active_projects_count ?? 0)
+                const startDate = m.start_date ?? m.joined_date ?? null
+                const isActive = (m.status ?? 'active') !== 'inactive'
                 return (
                   <div key={m.id} style={{
                     padding: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 12,
-                    border: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex', flexDirection: 'column', gap: 10,
                   }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-                      background: 'linear-gradient(135deg, var(--orange), var(--purple))',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 700, fontSize: 14, color: '#fff',
-                    }}>{initials}</div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {m.full_name ?? m.name ?? 'Unknown'}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 2 }}>{m.role ?? '—'}</div>
-                      <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>
-                        {m.entity?.entity_name ?? m.entity_id ?? '—'} · {m.joined_date?.slice(0,10) ?? '—'}
+                    {/* ── Avatar + name row ── */}
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      {m.avatar_url
+                        ? <img src={m.avatar_url} alt={initials} style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '2px solid rgba(249,115,22,0.3)' }} />
+                        : (
+                          <div style={{
+                            width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                            background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 700, fontSize: 14, color: '#fff',
+                          }}>{initials}</div>
+                        )
+                      }
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {m.full_name ?? m.name ?? 'Unknown'}
+                          </div>
+                          <div style={{
+                            fontSize: 9, padding: '1px 6px', borderRadius: 5, flexShrink: 0, marginLeft: 6,
+                            background: isActive ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
+                            color: isActive ? 'var(--green)' : 'var(--dim)', fontFamily: 'var(--mo)',
+                            textTransform: 'uppercase', letterSpacing: '0.06em',
+                          }}>{m.status ?? 'active'}</div>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--orange)', marginTop: 1, fontWeight: 500 }}>
+                          {m.title ?? m.role ?? '—'}
+                        </div>
+                        {m.email && (
+                          <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {m.email}
+                          </div>
+                        )}
                       </div>
                     </div>
+
+                    {/* ── Bio ── */}
+                    {m.bio && (
+                      <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.5 }}>
+                        {String(m.bio).slice(0, 80)}{String(m.bio).length > 80 ? '…' : ''}
+                      </div>
+                    )}
+
+                    {/* ── Stats row ── */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, fontSize: 10 }}>
+                      <div>
+                        <div style={{ color: 'var(--dim)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Projects</div>
+                        <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)', marginTop: 1 }}>{activeProjects > 0 ? activeProjects : '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--dim)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reports</div>
+                        <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)', marginTop: 1 }}>{directReports > 0 ? directReports : '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: 'var(--dim)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Since</div>
+                        <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)', marginTop: 1, fontSize: 9 }}>
+                          {startDate ? String(startDate).slice(0, 10) : '—'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Timezone + entity ── */}
+                    <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', display: 'flex', gap: 10 }}>
+                      {m.entity?.entity_name ?? m.entity_id ? (
+                        <span style={{ color: 'var(--purple)' }}>{m.entity?.entity_name ?? m.entity_id}</span>
+                      ) : null}
+                      {m.timezone && <span>{m.timezone}</span>}
+                    </div>
+
+                    {/* ── Skills pills ── */}
+                    {skills.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {skills.slice(0, 5).map((s: string) => (
+                          <span key={s} style={{
+                            fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--mo)',
+                            background: 'rgba(249,115,22,0.08)', color: 'var(--orange)',
+                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                          }}>{s}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}
