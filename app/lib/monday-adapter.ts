@@ -29,7 +29,15 @@ export type WidgetKey =
   | 'xome.warehouse_reconciliation'
   | 'xome.power'
   | 'xome.recent_closed_loans'
-  | 'culbertson.loan_pipeline'     // legacy — not yet wired
+  | 'culbertson.loan_pipeline'            // legacy — not yet wired
+  | 'culbertson.sales_volume_ytd'         // C&C Monday — Sales Volume YTD/MTD
+  | 'culbertson.gci_ytd'                  // Gross commission income
+  | 'culbertson.closed_transactions'      // Closed transaction count by period
+  | 'culbertson.avg_commission_pct'       // Average commission %
+  | 'culbertson.top_producers'            // Agent leaderboard by closed volume
+  | 'culbertson.pipeline_value'           // Total $ in active deals
+  | 'culbertson.revenue_by_source'        // Self-gen vs team-gen vs referral
+  | 'culbertson.monthly_revenue'          // 12-month trend
 
 export interface BoardMapping {
   tenant: Tenant
@@ -310,6 +318,90 @@ export const BOARD_MAPPINGS: BoardMapping[] = [
       new_group22822: 'Completed',
       new_group: 'Nurture',
       new_group45402: 'Dead',
+    },
+  },
+
+  // ─── Culbertson & Culbertson (C&G) — pending MONDAY_CULBERTSON_API_KEY ───
+  // TODO: Column IDs below are placeholders. Fill after the C&C Monday
+  // discovery scan runs against the real workspace (the scan is blocked
+  // on the key landing in Vercel env).
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.sales_volume_ytd',
+    boardId: 'TODO',
+    columns: {
+      // TODO: real column ids — sale price, close date, status, agent
+      sale_price: 'TODO_numbers',
+      close_date: 'TODO_date',
+      status: 'TODO_status',
+      agent: 'TODO_people',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.gci_ytd',
+    boardId: 'TODO',
+    columns: {
+      gci: 'TODO_numbers',
+      commission_pct: 'TODO_numbers',
+      close_date: 'TODO_date',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.closed_transactions',
+    boardId: 'TODO',
+    columns: {
+      status: 'TODO_status',
+      close_date: 'TODO_date',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.avg_commission_pct',
+    boardId: 'TODO',
+    columns: {
+      commission_pct: 'TODO_numbers',
+      close_date: 'TODO_date',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.top_producers',
+    boardId: 'TODO',
+    columns: {
+      agent: 'TODO_people',
+      sale_price: 'TODO_numbers',
+      gci: 'TODO_numbers',
+      close_date: 'TODO_date',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.pipeline_value',
+    boardId: 'TODO',
+    columns: {
+      deal_value: 'TODO_numbers',
+      stage: 'TODO_status',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.revenue_by_source',
+    boardId: 'TODO',
+    columns: {
+      source: 'TODO_status', // self-gen / team-gen / referral
+      gci: 'TODO_numbers',
+      close_date: 'TODO_date',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.monthly_revenue',
+    boardId: 'TODO',
+    columns: {
+      gci: 'TODO_numbers',
+      close_date: 'TODO_date',
     },
   },
 ]
