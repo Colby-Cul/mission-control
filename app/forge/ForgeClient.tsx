@@ -94,12 +94,14 @@ function IdeaCard({
   onClick,
   onDeploy,
   onKill,
+  onShelve,
   onAskAgent,
 }: {
   idea: EnrichedIdea
   onClick: () => void
   onDeploy: (id: string) => void
   onKill: (id: string) => void
+  onShelve: (id: string) => void
   onAskAgent: (idea: EnrichedIdea) => void
 }) {
   const stageDef = getStageDef(idea.forgeStage)
@@ -140,24 +142,48 @@ function IdeaCard({
         </div>
       )}
 
-      {/* Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
-        <div>
-          <div style={{ fontSize: 10, color: 'var(--t4)', marginBottom: 2 }}>Revenue Est.</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#4ade80', fontFamily: 'var(--mo)' }}>
+      {/* 3-col metrics: Revenue / Build Cost / Time to MVP */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', fontFamily: 'var(--mo)' }}>
             {fmtRevenue(idea.revenueEstimate)}
           </div>
+          <div style={{ fontSize: 9, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Rev/mo</div>
         </div>
-        <div>
-          <div style={{ fontSize: 10, color: 'var(--t4)', marginBottom: 2 }}>Build Cost</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t2)', fontFamily: 'var(--mo)' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)', fontFamily: 'var(--mo)' }}>
             {fmtBuildCost(idea.buildCostEstimate)}
           </div>
+          <div style={{ fontSize: 9, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Build Cost</div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '6px 8px', textAlign: 'center' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--t2)' }}>
+            {idea.timeToMVP}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>MVP</div>
         </div>
       </div>
 
+      {/* ROI badge (when positive) */}
+      {idea.roi !== null && idea.roi > 0 && (
+        <div style={{ marginBottom: 8, fontSize: 11, color: idea.roi >= 5 ? '#4ade80' : 'var(--t3)', fontFamily: 'var(--mo)', fontWeight: 600 }}>
+          ROI: {idea.roi}x
+        </div>
+      )}
+
+      {/* Tags */}
+      {Array.isArray((idea as any).tags) && (idea as any).tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+          {((idea as any).tags as string[]).slice(0, 4).map((tag: string) => (
+            <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'var(--t3)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Confidence */}
-      <div style={{ marginBottom: 10 }}>
+      <div style={{ marginBottom: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
           <span style={{ fontSize: 10, color: 'var(--t4)' }}>Confidence</span>
           <span style={{ fontSize: 10, color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{idea.confidenceScore}%</span>
@@ -165,19 +191,41 @@ function IdeaCard({
         <ConfidenceBar score={idea.confidenceScore} />
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', gap: 6 }}>
+      {/* Task progress bar */}
+      {(() => {
+        const doneCount = Number((idea as any).done_count ?? (idea as any).doneCount ?? 0)
+        const taskCount = Number((idea as any).task_count ?? (idea as any).taskCount ?? 0)
+        const pct = taskCount > 0 ? Math.round((doneCount / taskCount) * 100) : 0
+        return taskCount > 0 ? (
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ height: 3, borderRadius: 3, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: '#a78bfa', borderRadius: 3 }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+              <span style={{ fontSize: 10, color: 'var(--t4)' }}>{doneCount}/{taskCount} tasks</span>
+              <span style={{ fontSize: 10, color: 'var(--t4)' }}>{pct}%</span>
+            </div>
+          </div>
+        ) : null
+      })()}
+
+      {/* Actions: Advance / Ask / Shelve / Kill */}
+      <div style={{ display: 'flex', gap: 4, borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 8 }}>
         <button onClick={(e) => { e.stopPropagation(); onDeploy(idea.id) }}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 0', fontSize: 11, fontWeight: 600, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 8, color: '#4ade80', cursor: 'pointer' }}>
-          <Rocket size={11} /> Advance
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 0', fontSize: 10, fontWeight: 600, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 6, color: '#4ade80', cursor: 'pointer' }}>
+          <Rocket size={10} /> Advance
         </button>
         <button onClick={(e) => { e.stopPropagation(); onAskAgent(idea) }}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 0', fontSize: 11, fontWeight: 600, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 8, color: '#a78bfa', cursor: 'pointer' }}>
-          <Bot size={11} /> Ask
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 0', fontSize: 10, fontWeight: 600, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 6, color: '#a78bfa', cursor: 'pointer' }}>
+          <Bot size={10} /> Ask
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onShelve(idea.id) }}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 0', fontSize: 10, fontWeight: 600, background: 'rgba(100,116,139,0.15)', border: '1px solid rgba(100,116,139,0.3)', borderRadius: 6, color: '#94a3b8', cursor: 'pointer' }}>
+          ⏸ Shelve
         </button>
         <button onClick={(e) => { e.stopPropagation(); onKill(idea.id) }}
-          style={{ padding: '6px 8px', fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, color: '#f87171', cursor: 'pointer' }}>
-          <X size={11} />
+          style={{ padding: '5px 8px', fontSize: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, color: '#f87171', cursor: 'pointer' }}>
+          <X size={10} />
         </button>
       </div>
     </div>
@@ -190,12 +238,14 @@ function KanbanView({
   ideas,
   onDeploy,
   onKill,
+  onShelve,
   onAskAgent,
   onClick,
 }: {
   ideas: EnrichedIdea[]
   onDeploy: (id: string) => void
   onKill: (id: string) => void
+  onShelve: (id: string) => void
   onAskAgent: (idea: EnrichedIdea) => void
   onClick: (idea: EnrichedIdea) => void
 }) {
@@ -231,7 +281,7 @@ function KanbanView({
                 <div style={{ textAlign: 'center', padding: '20px 0', fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>Empty</div>
               ) : stageIdeas.map((idea) => (
                 <IdeaCard key={idea.id} idea={idea} onClick={() => onClick(idea)}
-                  onDeploy={onDeploy} onKill={onKill} onAskAgent={onAskAgent} />
+                  onDeploy={onDeploy} onKill={onKill} onShelve={onShelve} onAskAgent={onAskAgent} />
               ))}
             </div>
           </div>
@@ -650,12 +700,20 @@ export default function ForgeClient({
       const next = nextStage(idea.forgeStage)
       return { ...prev, [id]: { ...(prev[id] ?? {}), forge_stage: next, status: next } }
     })
-    await supabase.from('forge_ideas').update({ forge_stage: nextStage(enriched.find((i) => i.id === id)?.forgeStage ?? 'sourced'), status: nextStage(enriched.find((i) => i.id === id)?.forgeStage ?? 'sourced') }).eq('id', id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await supabase.from('forge_ideas').update({ forge_stage: nextStage(enriched.find((i) => i.id === id)?.forgeStage ?? 'sourced') as never, status: nextStage(enriched.find((i) => i.id === id)?.forgeStage ?? 'sourced') }).eq('id', id)
   }, [enriched])
 
   const handleKill = useCallback(async (id: string) => {
     setKilled((prev) => new Set([...prev, id]))
     await supabase.from('forge_ideas').update({ status: 'killed' }).eq('id', id)
+  }, [])
+
+  const handleShelve = useCallback(async (id: string) => {
+    setOverrides((prev) => {
+      return { ...prev, [id]: { ...(prev[id] ?? {}), forge_stage: 'parked', status: 'parked' } }
+    })
+    await supabase.from('forge_ideas').update({ forge_stage: 'parked' as never, status: 'parked' }).eq('id', id)
   }, [])
 
   const handleAdded = (idea: ForgeIdea) => {
@@ -778,7 +836,7 @@ export default function ForgeClient({
 
       {/* ── Main view ── */}
       {viewMode === 'kanban' && (
-        <KanbanView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill}
+        <KanbanView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill} onShelve={handleShelve}
           onAskAgent={(idea) => setAgentModal({ open: true, idea })}
           onClick={setDetailModal} />
       )}

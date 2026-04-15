@@ -239,20 +239,62 @@ export default async function IntegrationsPage() {
 
                 <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.4 }}>{intg.description}</div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                   <div style={{ fontSize: 10, color: stale ? stale.color : 'var(--dim)', fontFamily: 'var(--mo)' }}>
                     {stale && isConnected ? stale.label : '—'}
                   </div>
-                  <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
-                    fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                    background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
-                    color: isConnected ? 'var(--green)' : 'var(--orange)',
-                    border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.3)'}`,
-                    textDecoration: 'none',
-                  }}>
-                    {isConnected ? 'Manage' : 'Connect'}
-                  </Link>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {/* QuickBooks: OAuth connect button */}
+                    {intg.provider === 'quickbooks' && (
+                      <a href="/api/qb/connect?returnTo=/integrations" style={{
+                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                        background: '#2ca01c', color: '#fff', textDecoration: 'none',
+                        border: '1px solid rgba(44,160,28,0.5)',
+                      }}>
+                        {isConnected ? '+ Connect Company' : 'Connect QuickBooks'}
+                      </a>
+                    )}
+                    {/* Plaid: Link bank account */}
+                    {intg.provider === 'plaid' && (
+                      <Link href="/accounts" style={{
+                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                        background: 'rgba(16,185,129,0.15)', color: 'var(--green)',
+                        border: '1px solid rgba(16,185,129,0.3)', textDecoration: 'none',
+                      }}>
+                        {isConnected ? 'Manage Accounts' : 'Link Bank'}
+                      </Link>
+                    )}
+                    {/* Lodgify: open portal */}
+                    {intg.provider === 'lodgify' && (
+                      <a href="https://app.lodgify.com" target="_blank" rel="noopener noreferrer" style={{
+                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                        background: 'rgba(16,185,129,0.1)', color: 'var(--green)',
+                        border: '1px solid rgba(16,185,129,0.2)', textDecoration: 'none',
+                      }}>
+                        Open Lodgify ↗
+                      </a>
+                    )}
+                    {/* Default: settings link */}
+                    {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && (
+                      <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
+                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                        background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
+                        color: isConnected ? 'var(--green)' : 'var(--orange)',
+                        border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.3)'}`,
+                        textDecoration: 'none',
+                      }}>
+                        {isConnected ? 'Manage' : 'Connect'}
+                      </Link>
+                    )}
+                  </div>
                 </div>
+                {/* Credential status detail for QB */}
+                {intg.provider === 'quickbooks' && intg.credential_status && (
+                  <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.04)' }}>
+                    Token: <span style={{ color: intg.credential_status === 'valid' ? 'var(--green)' : 'var(--red)' }}>{intg.credential_status}</span>
+                    {intg.company_name && <span> · {intg.company_name}</span>}
+                  </div>
+                )}
               </div>
             )
           })}
