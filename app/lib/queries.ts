@@ -708,7 +708,52 @@ export async function getAllEntitiesForGraph() {
 export interface NetWorthBreakdown {
   total: number
   direct: number
-  byEntity: { entityId: string; entityName: string; amount: number; effectivePct: number }[]
+  byEntity: { entityId: string; entityName: string; amount: number; effectivePct: number; rentalRevenueYtd?: number }[]
+  /** Portfolio-level YTD rental revenue from Lodgify (undefined when not configured) */
+  rentalRevenueYtd?: number
+}
+
+/**
+ * Per-property YTD rental revenue sourced from Lodgify bookings. Keyed by the
+ * Supabase `property_assets.id` so the caller can feed it into the ownership
+ * cascade (DFS through `entity_ownership_edges`).
+ *
+ * Returns `{}` when Lodgify is not configured or an error is raised.
+ */
+export async function getLodgifyPropertyRevenueYtdMap(): Promise<Record<string, number>> {
+  try {
+    const [{ isLodgifyConfigured, getLodgifyBookings }, propsRes] = await Promise.all([
+      import('./lodgify'),
+      supabase.from('property_assets').select('id, lodgify_property_id, lodgify_id'),
+    ])
+    if (!isLodgifyConfigured()) return {}
+    const props = propsRes.data ?? []
+    const pidToSupabase: Record<string, string> = {}
+    for (const p of props as any[]) {
+      const lp = p.lodgify_property_id != null ? String(p.lodgify_property_id)
+               : p.lodgify_id != null ? String(p.lodgify_id)
+               : null
+      if (lp) pidToSupabase[lp] = p.id
+    }
+    const bookings = await getLodgifyBookings({ stayFilter: 'All', max: 1000 })
+    const year = new Date().getFullYear()
+    const revMap: Record<string, number> = {}
+    for (const b of bookings) {
+      const s = String(b.status ?? '').toLowerCase()
+      const src = String(b.source ?? '').toLowerCase()
+      if (s === 'declined' || s === 'cancelled' || s === 'canceled') continue
+      if (src === 'oh' || src === 'ownerhold') continue
+      if (!(b.arrival?.slice(0, 4) === String(year))) continue
+      const amt = Number(b.total_amount ?? 0)
+      if (amt <= 0) continue
+      const propId = pidToSupabase[String(b.property_id)]
+      if (!propId) continue
+      revMap[propId] = (revMap[propId] ?? 0) + amt
+    }
+    return revMap
+  } catch {
+    return {}
+  }
 }
 
 /**
@@ -717,20 +762,26 @@ export interface NetWorthBreakdown {
  * Also cascades through property edges: equity = current_value − mortgage_balance,
  * multiplied by cumulative ownership %.
  * Returns total + per-entity breakdown.
+ *
+ * Also cascades live Lodgify YTD rental revenue onto each entity via
+ * a second DFS so the entity tooltip / hover can show
+ * "X properties, $Y equity, $Z YTD rental revenue".
  */
 export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
-  // Fetch all edges, financial accounts, entities, and properties in parallel
-  const [edgesResult, accountsResult, entitiesResult, propertiesResult] = await Promise.allSettled([
+  // Fetch all edges, financial accounts, entities, properties, and Lodgify
+  // per-property revenue in parallel.
+  const [edgesResult, accountsResult, entitiesResult, propertiesResult, rentalRevMap] = await Promise.all([
     supabase.from('entity_ownership_edges').select('parent_entity_id, parent_type, child_entity_id, child_type, ownership_pct'),
     supabase.from('financial_accounts').select('entity_id, account_scope, balance_current, type'),
     supabase.from('entity_ownership').select('id, entity_name'),
     supabase.from('property_assets').select('id, address, city, current_value, mortgage_balance'),
+    getLodgifyPropertyRevenueYtdMap().catch(() => ({} as Record<string, number>)),
   ])
 
-  const edges: any[] = edgesResult.status === 'fulfilled' ? (edgesResult.value.data ?? []) : []
-  const accounts: any[] = accountsResult.status === 'fulfilled' ? (accountsResult.value.data ?? []) : []
-  const entities: any[] = entitiesResult.status === 'fulfilled' ? (entitiesResult.value.data ?? []) : []
-  const properties: any[] = propertiesResult.status === 'fulfilled' ? (propertiesResult.value.data ?? []) : []
+  const edges: any[] = edgesResult.data ?? []
+  const accounts: any[] = accountsResult.data ?? []
+  const entities: any[] = entitiesResult.data ?? []
+  const properties: any[] = propertiesResult.data ?? []
 
   const entityNameMap: Record<string, string> = {}
   entities.forEach((e: any) => { entityNameMap[e.id] = e.entity_name })
@@ -823,6 +874,35 @@ export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
   const directBal = balanceMap['colby'] ?? 0
   const total = directBal + breakdown.reduce((s, r) => s + r.amount, 0)
 
+  // ── Rental revenue cascade: for each entity, sum downstream property revenue
+  //    weighted by ownership %. Walk starting at every entity (not only Colby)
+  //    so child entities also see the share they directly hold.
+  function rentalRevenueFor(entityId: string): number {
+    const seen = new Set<string>()
+    let sum = 0
+    function walk(nodeId: string, frac: number) {
+      if (seen.has(nodeId)) return
+      seen.add(nodeId)
+      const children = childMap[nodeId] ?? []
+      for (const { childId, pct, childType } of children) {
+        if (childType === 'property') {
+          const propRev = rentalRevMap[childId] ?? 0
+          if (propRev) sum += propRev * frac * pct
+        } else {
+          walk(childId, frac * pct)
+        }
+      }
+      seen.delete(nodeId)
+    }
+    walk(entityId, 1.0)
+    return sum
+  }
+  for (const row of breakdown) {
+    const rr = rentalRevenueFor(row.entityId)
+    if (rr > 0) row.rentalRevenueYtd = Math.round(rr)
+  }
+  const portfolioRentalRevenueYtd = Object.values(rentalRevMap).reduce((s, v) => s + v, 0)
+
   // If graph has no data, fall back to sum of all accounts
   if (total === 0) {
     const fallback = accounts.reduce((s: number, a: any) => {
@@ -830,10 +910,10 @@ export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
       const t = String(a.type ?? '').toLowerCase()
       return s + ((t === 'credit' || t === 'loan') ? -bal : bal)
     }, 0)
-    return { total: fallback, direct: fallback, byEntity: [] }
+    return { total: fallback, direct: fallback, byEntity: [], rentalRevenueYtd: portfolioRentalRevenueYtd }
   }
 
-  return { total, direct: directBal, byEntity: breakdown }
+  return { total, direct: directBal, byEntity: breakdown, rentalRevenueYtd: portfolioRentalRevenueYtd }
 }
 
 // ═══ Tax Structure (for tax advisor agent) ════════════════════════

@@ -12,6 +12,7 @@ import HeroCanvas from './HeroCanvas'
 import { getAgentRunFeed, getUserProfile, getAgentActivityFeed } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 import { getFubActivityFeed, isFubConfigured, type FubActivityItem } from '../lib/fub'
+import { isLodgifyConfigured, getLodgifyActivityFeed, type LodgifyActivityItem } from '../lib/lodgify'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,7 @@ async function getAuditLog() {
 }
 
 export default async function ActivityPage() {
-  const [activityLog, auditLog, agentRuns, profile, unifiedFeed, fubFeedR] = await Promise.all([
+  const [activityLog, auditLog, agentRuns, profile, unifiedFeed, fubFeedR, lodgifyFeedR] = await Promise.all([
     getActivityLog(),
     getAuditLog(),
     getAgentRunFeed(50).catch(() => []),
@@ -52,17 +53,22 @@ export default async function ActivityPage() {
     isFubConfigured()
       ? getFubActivityFeed(100).catch(() => ({ data: null, error: 'fetch failed' }))
       : Promise.resolve({ data: null, error: 'not configured' }),
+    isLodgifyConfigured()
+      ? getLodgifyActivityFeed({ max: 100 }).catch(() => null)
+      : Promise.resolve(null),
   ])
   const fubFeed: FubActivityItem[] = fubFeedR.data ?? []
+  const lodgifyFeed: LodgifyActivityItem[] = lodgifyFeedR ?? []
 
   const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
   const runs = (agentRuns as any[]) ?? []
   const activityList = (activityLog as any[]) ?? []
 
-  // Count today's events from agent_runs
+  // Count today's events from agent_runs + Lodgify
   const todayStr = new Date().toISOString().slice(0, 10)
   const todayRuns = runs.filter((r: any) => (r.started_at ?? '').startsWith(todayStr))
-  const eventsToday = activityLog !== null ? activityList.filter((e: any) => (e.created_at ?? '').startsWith(todayStr)).length : todayRuns.length
+  const todayLodgify = lodgifyFeed.filter(e => (e.when ?? '').startsWith(todayStr))
+  const eventsToday = (activityLog !== null ? activityList.filter((e: any) => (e.created_at ?? '').startsWith(todayStr)).length : todayRuns.length) + todayLodgify.length
 
   const running = runs.filter((r: any) => r.status === 'running')
   const completed = runs.filter((r: any) => r.status === 'completed' || r.status === 'success')
@@ -124,22 +130,22 @@ export default async function ActivityPage() {
         ))}
       </div>
 
-      {/* ─── Unified Global Activity (MC + FUB) ─────────────────── */}
-      {(fubFeed.length > 0 || runs.length > 0) && (
-        <SpecCard accent dataSource="unified:agent+fub" style={{ marginBottom: 24 }}>
+      {/* ─── Unified Global Activity (MC + FUB + Lodgify) ─────── */}
+      {(fubFeed.length > 0 || runs.length > 0 || lodgifyFeed.length > 0) && (
+        <SpecCard accent dataSource="unified:agent+fub+lodgify" style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-              Global Activity Feed (agent + FUB)
+              Global Activity Feed (agent + FUB + Lodgify)
             </div>
             <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
-              {fubFeed.length} FUB events · {runs.length} agent runs
+              {fubFeed.length} FUB · {lodgifyFeed.length} Lodgify · {runs.length} agent runs
             </div>
           </div>
           {(() => {
             type UnifiedItem = {
               id: string
               when: string
-              kind: 'agent_run' | 'fub_call' | 'fub_text' | 'fub_appt' | 'fub_event' | 'fub_deal' | 'system'
+              kind: 'agent_run' | 'fub_call' | 'fub_text' | 'fub_appt' | 'fub_event' | 'fub_deal' | 'system' | 'lodgify_booking_new' | 'lodgify_booking_modified' | 'lodgify_booking_cancelled' | 'lodgify_message' | 'lodgify_review'
               title: string
               actor: string
               pill: string
@@ -182,6 +188,29 @@ export default async function ActivityPage() {
                 actor: e.actor || 'FUB',
                 pill,
                 color,
+              })
+            }
+            for (const e of lodgifyFeed) {
+              const kind: UnifiedItem['kind'] =
+                e.kind === 'booking_new' ? 'lodgify_booking_new'
+                : e.kind === 'booking_modified' ? 'lodgify_booking_modified'
+                : e.kind === 'booking_cancelled' ? 'lodgify_booking_cancelled'
+                : e.kind === 'message' ? 'lodgify_message'
+                : 'lodgify_review'
+              const pill =
+                kind === 'lodgify_booking_new' ? '🏠 Booking created'
+                : kind === 'lodgify_booking_modified' ? '🏠 Booking modified'
+                : kind === 'lodgify_booking_cancelled' ? '🏠 Booking cancelled'
+                : kind === 'lodgify_message' ? '📩 Guest message'
+                : '⭐ Review'
+              items.push({
+                id: `lodgify:${e.id}`,
+                when: e.when,
+                kind,
+                title: e.title,
+                actor: 'Lodgify',
+                pill,
+                color: e.color,
               })
             }
 
