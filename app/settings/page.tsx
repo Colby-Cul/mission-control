@@ -1,93 +1,226 @@
+/**
+ * Settings — profile, preferences, integrations, billing, security, theme.
+ * Hero metric: user display name (no big number — avatar & level prominent)
+ * Animation: subtle particles + gear rotation motif
+ * Sources: users_profile (live), integrations (live)
+ */
+import Hero from '../_components/Hero'
+import Achievements from '../_components/Achievements'
+import { SpecCard } from '../_components/SpecCard'
+import ComingSoon from '../_components/ComingSoon'
+import HeroCanvas from './HeroCanvas'
 import { getUserProfile, getIntegrations } from '../lib/queries'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-export default async function SettingsPage() {
-  let profile: any = null
-  try { profile = await getUserProfile() } catch { profile = null }
-  let integrations: any[] = []
-  try { integrations = await getIntegrations() } catch { integrations = [] }
+const ACHIEVEMENTS = [
+  { name: 'Profile Set',   description: 'Completed your user profile.',                  xp: 100, progress: 100, icon: '👤', earned: true  },
+  { name: 'Bank Linked',   description: 'Connected Plaid to at least one bank.',          xp: 250, progress: 100, icon: '🏦', earned: true  },
+  { name: '2FA Enabled',   description: 'Two-factor authentication is active.',           xp: 300, progress: 40,  icon: '🛡️', earned: false },
+  { name: 'Team Invited',  description: 'Invited a team member to Mission Control.',      xp: 200, progress: 20,  icon: '🤝', earned: false },
+  { name: 'API Key Made',  description: 'Generated your first API key.',                  xp: 150, progress: 10,  icon: '🔑', earned: false },
+  { name: 'Fully Integrated', description: 'Connected all recommended integrations.',    xp: 750, progress: 15,  icon: '🌐', earned: false },
+]
 
-  const connected = integrations.filter((i: any) => i.status === 'connected' || i.connected === true)
+export default async function SettingsPage() {
+  const [profile, integrations] = await Promise.all([
+    getUserProfile().catch(() => null),
+    getIntegrations().catch(() => []),
+  ])
+
+  const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
+  const intgList = (integrations as any[]) ?? []
+  const connected = intgList.filter((i: any) => i.status === 'connected' || i.connected)
   const settings = (profile?.settings as Record<string, any>) ?? {}
+  const displayName = profile?.full_name ?? profile?.display_name ?? 'You'
+  const initials = displayName.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+  const xpPct = profile ? Math.round(((profile.xp ?? 0) / (profile.xp_next ?? 1000)) * 100) : 0
+
+  const playerCard = profile ? {
+    name: displayName,
+    role: profile.role ?? 'Chief Executive',
+    level: profile.level ?? 1,
+    xpCurrent: profile.xp ?? 0,
+    xpNext: profile.xp_next ?? 1000,
+    since: profile.since ?? profile.created_at?.slice(0, 7),
+    stats: [
+      { key: 'Level',      value: String(profile.level ?? 1) },
+      { key: 'XP',         value: String((profile.xp ?? 0).toLocaleString()) },
+      { key: 'Integrations', value: String(connected.length) },
+      { key: 'Since',      value: (profile.since ?? profile.created_at)?.slice(0, 7) ?? '—' },
+    ],
+  } : undefined
 
   return (
     <>
-      <div className="hero">
-        <div className="hero-label">⚙ SETTINGS · PROFILE &amp; ACCESS</div>
-        <h1>Settings</h1>
-        <div className="big">{profile?.display_name ?? 'Unnamed operator'}</div>
-        <p>
-          {profile?.role ?? 'principal'} · level {profile?.level ?? 1} · {connected.length} of {integrations.length} integrations connected
-        </p>
-      </div>
+      <Hero
+        label="⚙ SETTINGS · PROFILE &amp; PREFERENCES"
+        greeting="Welcome back,"
+        primaryMetric={displayName}
+        metricSubtitle={`Level ${profile?.level ?? 1} · ${(profile?.xp ?? 0).toLocaleString()} XP`}
+        kpiCards={[
+          { label: 'XP / Level',   value: `L${profile?.level ?? 1}`,  delta: `${(profile?.xp ?? 0).toLocaleString()} XP`, deltaPositive: true },
+          { label: 'Streak',       value: `${profile?.streak ?? 0}d`,  delta: profile?.streak ? 'active' : 'start today'                      },
+          { label: 'Connected',    value: String(connected.length),    delta: `of ${intgList.length} integrations`,         deltaPositive: connected.length > 0 },
+          { label: 'Badges',       value: String(ACHIEVEMENTS.filter(a => a.earned).length), delta: `of ${ACHIEVEMENTS.length}`               },
+        ]}
+        playerCard={playerCard}
+        animationSlot={<HeroCanvas />}
+      />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <div className="mc-card accent">
-          <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Profile</h3>
+      <Achievements items={ACHIEVEMENTS} xpEarned={xpEarned} />
+
+      {/* Profile Card + XP */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <SpecCard accent dataSource="users_profile">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Profile
+          </div>
           {profile ? (
-            <div style={{ fontSize: 13, lineHeight: 1.8 }}>
-              <Row label="Display name" value={profile.display_name} />
-              <Row label="Role" value={profile.role} />
-              <Row label="Member since" value={profile.since?.slice(0, 10)} />
-              <Row label="Level" value={`${profile.level ?? 1} · ${profile.xp ?? 0}/${profile.xp_next ?? '—'} XP`} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Avatar row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 800, fontSize: 20, color: '#fff', flexShrink: 0,
+                }}>{initials}</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 18 }}>{displayName}</div>
+                  <div style={{ fontSize: 12, color: 'var(--dim)', marginTop: 2 }}>{profile.role ?? 'Chief Executive'}</div>
+                  <div style={{ fontSize: 10, color: 'var(--orange)', fontWeight: 600, marginTop: 2, fontFamily: 'var(--mo)' }}>
+                    LVL {profile.level ?? 1}
+                  </div>
+                </div>
+              </div>
+
+              {/* XP bar */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginBottom: 4 }}>
+                  <span>{(profile.xp ?? 0).toLocaleString()} XP</span>
+                  <span>{(profile.xp_next ?? 1000).toLocaleString()} XP</span>
+                </div>
+                <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${xpPct}%`, background: 'linear-gradient(90deg, var(--orange), var(--pink))', borderRadius: 3 }} />
+                </div>
+              </div>
+
+              {/* Profile fields */}
+              {[
+                { label: 'Email',   value: profile.email ?? '—' },
+                { label: 'Since',   value: (profile.since ?? profile.created_at)?.slice(0, 10) ?? '—' },
+                { label: 'Streak',  value: `${profile.streak ?? 0} days` },
+              ].map(f => (
+                <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--dim)' }}>{f.label}</span>
+                  <span style={{ fontSize: 12, fontFamily: 'var(--mo)' }}>{f.value}</span>
+                </div>
+              ))}
             </div>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--t3)' }}>No profile on file yet — one will be created on first sign-in.</div>
+            <p style={{ fontSize: 13, color: 'var(--dim)' }}>No profile found — one will be created on first sign-in.</p>
           )}
-        </div>
+        </SpecCard>
 
-        <div className="mc-card accent">
-          <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Preferences</h3>
+        <SpecCard accent dataSource="users_profile">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Preferences
+          </div>
           {Object.keys(settings).length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--t3)' }}>No custom preferences saved. Defaults in effect.</div>
+            <div>
+              <p style={{ fontSize: 13, color: 'var(--dim)', marginBottom: 16 }}>No custom preferences saved — defaults are in effect.</p>
+              {/* Default preference tiles */}
+              {[
+                { key: 'Theme',         value: 'Dark (Default)' },
+                { key: 'Currency',      value: 'USD' },
+                { key: 'Notifications', value: 'Enabled' },
+                { key: 'Timezone',      value: 'America/Los_Angeles' },
+              ].map(pref => (
+                <div key={pref.key} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--dim)' }}>{pref.key}</span>
+                  <span style={{ fontSize: 12, fontFamily: 'var(--mo)' }}>{pref.value}</span>
+                </div>
+              ))}
+            </div>
           ) : (
-            <div style={{ fontSize: 13, lineHeight: 1.8 }}>
+            <div>
               {Object.entries(settings).map(([k, v]) => (
-                <Row key={k} label={k} value={typeof v === 'object' ? JSON.stringify(v) : String(v)} />
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--dim)', textTransform: 'capitalize' }}>{k.replace(/_/g, ' ')}</span>
+                  <span style={{ fontSize: 12, fontFamily: 'var(--mo)' }}>{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+                </div>
               ))}
             </div>
           )}
-        </div>
+        </SpecCard>
       </div>
 
-      <div className="mc-card accent">
-        <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Integrations</h3>
-        {integrations.length === 0 ? (
-          <div style={{ fontSize: 12, color: 'var(--t3)' }}>No integrations wired up yet. Plaid, Gmail, and Supabase MCP come online as credentials are added.</div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
-            {integrations.map((i: any) => {
-              const ok = i.status === 'connected' || i.connected === true
+      {/* Integrations summary — link to /integrations */}
+      <SpecCard accent dataSource="integrations" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Integrations ({connected.length} connected)
+          </div>
+          <Link href="/integrations" style={{ fontSize: 11, color: 'var(--orange)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(249,115,22,0.3)', padding: '4px 12px', borderRadius: 6 }}>
+            Manage All
+          </Link>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+          {intgList.length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--dim)' }}>No integrations configured yet.</p>
+          ) : (
+            intgList.map((i: any) => {
+              const isOn = i.status === 'connected' || i.connected
               return (
-                <div key={i.id ?? i.provider} style={{ padding: 12, background: 'rgba(255,255,255,.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: ok ? 'var(--green)' : 'var(--t4)' }} />
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{i.provider}</div>
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4, fontFamily: 'var(--mo)' }}>
-                    {i.status ?? (ok ? 'connected' : 'disconnected')}
-                  </div>
-                  {i.last_sync_at && (
-                    <div style={{ fontSize: 10, color: 'var(--t4)', marginTop: 4, fontFamily: 'var(--mo)' }}>
-                      last sync {String(i.last_sync_at).slice(0, 16).replace('T', ' ')}
+                <div key={i.id ?? i.provider} style={{
+                  padding: 10, background: 'rgba(255,255,255,0.025)', borderRadius: 10,
+                  border: `1px solid ${isOn ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: isOn ? 'var(--green)' : 'var(--dim)', flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>{i.provider ?? i.name}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1, fontFamily: 'var(--mo)' }}>
+                      {isOn ? 'connected' : (i.status ?? 'disconnected')}
                     </div>
-                  )}
+                  </div>
                 </div>
               )
-            })}
-          </div>
-        )}
-      </div>
-    </>
-  )
-}
+            })
+          )}
+        </div>
+      </SpecCard>
 
-function Row({ label, value }: { label: string; value: any }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', padding: '6px 0' }}>
-      <div style={{ color: 'var(--t3)', fontSize: 12, textTransform: 'capitalize' }}>{label.replace(/_/g, ' ')}</div>
-      <div style={{ fontFamily: 'var(--mo)', fontSize: 12 }}>{value ?? '—'}</div>
-    </div>
+      {/* Billing & Security — ComingSoon */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <ComingSoon
+          title="Billing & Plan"
+          reason="Manage your Mission Control subscription, seats, and payment method via Stripe."
+          icon="💳"
+          connect="stripe"
+          dataSource="coming-soon:settings_billing"
+          skeleton="kpi"
+        />
+        <ComingSoon
+          title="Security"
+          reason="Two-factor authentication, active sessions, trusted devices, and API key management."
+          icon="🔒"
+          dataSource="coming-soon:security"
+          skeleton="table"
+        />
+      </div>
+
+      {/* Team Members — ComingSoon */}
+      <ComingSoon
+        title="Team Members"
+        reason="Invite and manage team members with role-based access control."
+        icon="👥"
+        dataSource="coming-soon:team_members"
+        skeleton="table"
+        minHeight={140}
+      />
+    </>
   )
 }
