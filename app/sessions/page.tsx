@@ -1,16 +1,23 @@
 /**
- * Sessions — active sessions, device types, security events.
- * Hero metric: Active sessions
+ * Sessions — AI session cost analytics, cron job breakdown, optimization candidates.
+ * Hero metric: Total AI spend
  * Animation: Concentric presence rings pulsing outward + device icons drifting
- * Sources: user_sessions (ComingSoon), auth_events (ComingSoon), sessions (live if exists)
+ * Sources: sessions (live), user_sessions (ComingSoon), auth_events (ComingSoon)
  */
 import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getSessions, getUserProfile } from '../lib/queries'
+import {
+  getSessions,
+  getUserProfile,
+  getDistinctAgents,
+  getDistinctCronIds,
+  type TimeWindow,
+} from '../lib/queries'
 import { supabase } from '../lib/supabase'
+import CronAnalytics, { type SessionRow, cleanTitle } from './CronAnalytics'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,11 +49,13 @@ async function getAuthEvents() {
 }
 
 export default async function SessionsPage() {
-  const [userSessions, authEvents, sessionHistory, profile] = await Promise.all([
+  const [userSessions, authEvents, sessionHistory, profile, agents, cronIds] = await Promise.all([
     getUserSessions(),
     getAuthEvents(),
-    getSessions().catch(() => []),
+    getSessions().catch(() => [] as any[]),
     getUserProfile().catch(() => null),
+    getDistinctAgents().catch(() => [] as string[]),
+    getDistinctCronIds().catch(() => [] as string[]),
   ])
 
   const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
@@ -54,19 +63,43 @@ export default async function SessionsPage() {
   const uSessions = (userSessions as any[]) ?? []
   const aEvents = (authEvents as any[]) ?? []
 
+  // Cron analytics — pass all sessions to the client component
+  const allSessions: SessionRow[] = historyList.map((s: any) => ({
+    id: s.id,
+    title: s.title,
+    agent_name: s.agent_name,
+    status: s.status,
+    cron_id: s.cron_id ?? s.metadata?.cron_id ?? null,
+    trigger_source: s.trigger_source,
+    input_tokens: s.input_tokens,
+    output_tokens: s.output_tokens,
+    cost_usd: s.cost_usd ?? s.cost,
+    tokens: s.tokens,
+    cost: s.cost,
+    started_at: s.started_at,
+    ended_at: s.ended_at,
+    metadata: s.metadata,
+  }))
+
+  const totalCostAll = historyList.reduce((s: number, r: any) =>
+    s + Number(r.cost_usd ?? r.cost ?? 0), 0)
+  const cronSessionCount = historyList.filter((s: any) =>
+    s.trigger_source === 'cron' || s.cron_id).length
+  const avgCostPerSession = historyList.length > 0 ? totalCostAll / historyList.length : 0
+
   const activeSessions = userSessions !== null
     ? uSessions.filter((s: any) => s.status === 'active' || !s.ended_at).length
     : historyList.filter((s: any) => !s.ended_at).length
 
-  // Device breakdown
   const deviceMap: Record<string, number> = {}
   uSessions.forEach((s: any) => {
     const d = s.device_type ?? s.device ?? 'unknown'
     deviceMap[d] = (deviceMap[d] ?? 0) + 1
   })
-  const deviceTypes = Object.keys(deviceMap).length || historyList.length > 0 ? String(Object.keys(deviceMap).length || 1) : '—'
+  const deviceTypes = Object.keys(deviceMap).length
+    ? String(Object.keys(deviceMap).length)
+    : historyList.length > 0 ? '1' : '—'
 
-  // Avg session length (minutes)
   const sessionsWithDuration = historyList.filter((s: any) => s.started_at && s.ended_at)
   const avgMinutes = sessionsWithDuration.length > 0
     ? Math.round(sessionsWithDuration.reduce((sum: number, s: any) => {
@@ -82,25 +115,25 @@ export default async function SessionsPage() {
     xpNext: profile.xp_next ?? 1000,
     since: profile.since ?? profile.created_at?.slice(0, 7),
     stats: [
-      { key: 'Active',   value: String(activeSessions) },
-      { key: 'Devices',  value: deviceTypes },
-      { key: 'Avg Time', value: avgMinutes ? `${avgMinutes}m` : '—' },
-      { key: 'Level',    value: String(profile.level ?? 1) },
+      { key: 'AI Spend',  value: `$${totalCostAll.toFixed(2)}` },
+      { key: 'Sessions',  value: String(historyList.length) },
+      { key: 'Cron Jobs', value: String(cronIds.length) },
+      { key: 'Level',     value: String(profile.level ?? 1) },
     ],
   } : undefined
 
   return (
     <>
       <Hero
-        label="◉ SESSIONS · USER PRESENCE"
-        greeting="Active Sessions"
-        primaryMetric={String(activeSessions)}
-        metricSubtitle="sessions active now"
+        label="◉ SESSIONS · AI COST ANALYTICS"
+        greeting="AI Session Costs"
+        primaryMetric={`$${totalCostAll.toFixed(2)}`}
+        metricSubtitle="total AI spend across all sessions"
         kpiCards={[
-          { label: 'Active Now',   value: String(activeSessions),                           deltaPositive: activeSessions > 0 },
-          { label: 'Avg Duration', value: avgMinutes ? `${avgMinutes}m` : '—'                                                  },
-          { label: 'Device Types', value: deviceTypes                                                                           },
-          { label: 'Security',     value: aEvents.length > 0 ? 'Review' : 'Clear', delta: String(aEvents.length) + ' events', deltaPositive: aEvents.length === 0 },
+          { label: 'Total Sessions',  value: String(historyList.length),           deltaPositive: historyList.length > 0 },
+          { label: 'Cron Sessions',   value: String(cronSessionCount),             deltaPositive: true },
+          { label: 'Avg Cost/Session',value: `$${avgCostPerSession.toFixed(4)}`,   deltaPositive: avgCostPerSession < 0.05 },
+          { label: 'Cron Job Types',  value: String(cronIds.length),               deltaPositive: cronIds.length > 0 },
         ]}
         playerCard={playerCard}
         animationSlot={<HeroCanvas />}
@@ -111,23 +144,26 @@ export default async function SessionsPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Active Now',   value: String(activeSessions),                 color: activeSessions > 0 ? 'var(--green)' : 'var(--dim)' },
-          { label: 'Avg Duration', value: avgMinutes ? `${avgMinutes}m` : '—',    color: 'var(--orange)' },
-          { label: 'Device Types', value: deviceTypes,                            color: 'var(--purple)' },
-          { label: 'Security Events', value: String(aEvents.length),              color: aEvents.length === 0 ? 'var(--green)' : 'var(--amber)' },
+          { label: 'Total Spend',     value: `$${totalCostAll.toFixed(4)}`,        color: totalCostAll > 5 ? 'var(--red)' : totalCostAll > 1 ? 'var(--amber)' : 'var(--green)' },
+          { label: 'Total Sessions',  value: String(historyList.length),            color: 'var(--blue)' },
+          { label: 'Cron Job Types',  value: String(cronIds.length),                color: 'var(--orange)' },
+          { label: 'Avg / Session',   value: `$${avgCostPerSession.toFixed(4)}`,    color: 'var(--purple)' },
         ].map(k => (
-          <SpecCard key={k.label} accent dataSource="user_sessions">
+          <SpecCard key={k.label} accent dataSource="sessions">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{k.label}</div>
-            <div style={{ fontSize: 32, fontWeight: 700, fontFamily: 'var(--mo)', color: k.color }}>{k.value}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: k.color }}>{k.value}</div>
           </SpecCard>
         ))}
       </div>
 
-      {/* Active Sessions list */}
+      {/* ── Cron Analytics (client component with all charts) ── */}
+      <CronAnalytics sessions={allSessions} agents={agents} cronIds={cronIds} />
+
+      {/* ── Active Sessions (user_sessions table) ── */}
       {userSessions !== null ? (
-        <SpecCard accent dataSource="user_sessions" style={{ marginBottom: 24 }}>
+        <SpecCard accent dataSource="user_sessions" style={{ marginBottom: 24, marginTop: 24 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-            Active Sessions ({uSessions.length})
+            Active User Sessions ({uSessions.length})
           </div>
           {uSessions.length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--dim)' }}>No active sessions — add rows to <code>user_sessions</code>.</p>
@@ -136,7 +172,13 @@ export default async function SessionsPage() {
               {uSessions.map((s: any) => {
                 const isActive = s.status === 'active' || !s.ended_at
                 return (
-                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: `1px solid ${isActive ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}` }}>
+                  <div key={s.id} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '10px 12px',
+                    background: 'rgba(255,255,255,0.025)',
+                    borderRadius: 10,
+                    border: `1px solid ${isActive ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'}`,
+                  }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: isActive ? 'var(--green)' : 'var(--dim)', flexShrink: 0 }} />
                       <div>
@@ -156,9 +198,9 @@ export default async function SessionsPage() {
           )}
         </SpecCard>
       ) : (
-        <div style={{ marginBottom: 24 }}>
+        <div style={{ marginBottom: 24, marginTop: 24 }}>
           <ComingSoon
-            title="Active Sessions"
+            title="Active User Sessions"
             reason="Live list of all active user sessions — device, IP, location, and last activity."
             icon="🔑"
             dataSource="coming-soon:user_sessions"
@@ -167,31 +209,7 @@ export default async function SessionsPage() {
         </div>
       )}
 
-      {/* Session History from sessions table */}
-      {historyList.length > 0 && (
-        <SpecCard accent dataSource="sessions" style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-            Session History ({historyList.length})
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {historyList.slice(0, 15).map((s: any) => (
-              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 12 }}>
-                <div>
-                  <span style={{ fontWeight: 600 }}>{s.title ?? s.summary ?? 'Session'}</span>
-                  <span style={{ color: 'var(--dim)', marginLeft: 8, fontFamily: 'var(--mo)', fontSize: 10 }}>
-                    {s.agent_name ?? s.platform ?? '—'}
-                  </span>
-                </div>
-                <div style={{ fontFamily: 'var(--mo)', fontSize: 10, color: 'var(--dim)' }}>
-                  {s.started_at?.slice(0, 10) ?? '—'}
-                </div>
-              </div>
-            ))}
-          </div>
-        </SpecCard>
-      )}
-
-      {/* Auth Events / Suspicious Activity */}
+      {/* ── Auth Events ── */}
       {authEvents !== null ? (
         <SpecCard accent dataSource="auth_events" style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
@@ -202,9 +220,14 @@ export default async function SessionsPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {aEvents.map((e: any) => (
-                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, fontSize: 12 }}>
+                <div key={e.id} style={{
+                  display: 'flex', justifyContent: 'space-between', padding: '8px 10px',
+                  background: 'rgba(255,255,255,0.02)', borderRadius: 8, fontSize: 12,
+                }}>
                   <span style={{ fontWeight: 600 }}>{e.event_type ?? e.type ?? 'auth event'}</span>
-                  <span style={{ fontFamily: 'var(--mo)', fontSize: 10, color: 'var(--dim)' }}>{e.created_at?.slice(0, 16)?.replace('T', ' ') ?? '—'}</span>
+                  <span style={{ fontFamily: 'var(--mo)', fontSize: 10, color: 'var(--dim)' }}>
+                    {e.created_at?.slice(0, 16)?.replace('T', ' ') ?? '—'}
+                  </span>
                 </div>
               ))}
             </div>

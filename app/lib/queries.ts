@@ -236,6 +236,67 @@ export async function getSessions() {
   return data ?? []
 }
 
+export type TimeWindow = '24h' | '7d' | '30d' | '90d'
+
+function windowStart(w: TimeWindow): string {
+  const ms: Record<TimeWindow, number> = {
+    '24h': 1, '7d': 7, '30d': 30, '90d': 90,
+  }
+  const d = new Date(Date.now() - ms[w] * 24 * 60 * 60 * 1000)
+  return d.toISOString()
+}
+
+/** All cron sessions in a time window, raw rows for client-side aggregation */
+export async function getCronSessions(window: TimeWindow = '7d') {
+  const since = windowStart(window)
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('id, title, agent_name, status, cron_id, trigger_source, input_tokens, output_tokens, cost_usd, tokens, cost, started_at, ended_at, metadata')
+    .eq('trigger_source', 'cron')
+    .gte('started_at', since)
+    .order('started_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+/** All sessions (cron + manual) for filter dropdowns */
+export async function getSessionsForWindow(window: TimeWindow = '7d', agentFilter?: string, cronFilter?: string) {
+  const since = windowStart(window)
+  let q = supabase
+    .from('sessions')
+    .select('id, title, agent_name, status, cron_id, trigger_source, input_tokens, output_tokens, cost_usd, tokens, cost, started_at, ended_at, metadata')
+    .gte('started_at', since)
+    .order('started_at', { ascending: false })
+  if (agentFilter) q = q.eq('agent_name', agentFilter)
+  if (cronFilter)  q = q.eq('cron_id', cronFilter)
+  const { data, error } = await q
+  if (error) throw error
+  return data ?? []
+}
+
+/** Distinct agent names for filter dropdown */
+export async function getDistinctAgents(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('agent_name')
+    .not('agent_name', 'is', null)
+  if (error) return []
+  const names = (data ?? []).map((r: any) => r.agent_name as string).filter(Boolean)
+  return [...new Set(names)].sort()
+}
+
+/** Distinct cron_ids for filter dropdown */
+export async function getDistinctCronIds(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('cron_id')
+    .not('cron_id', 'is', null)
+    .eq('trigger_source', 'cron')
+  if (error) return []
+  const ids = (data ?? []).map((r: any) => r.cron_id as string).filter(Boolean)
+  return [...new Set(ids)].sort()
+}
+
 // ═══ Integrations Hub ══════════════════════════════════════════════
 export async function getIntegrations() {
   const { data, error } = await supabase
