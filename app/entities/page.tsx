@@ -8,7 +8,7 @@ import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import HeroCanvas from './HeroCanvas'
-import { getEntities, getAchievements, getOwnershipEdges, getAllEntitiesForGraph, getProperties } from '../lib/queries'
+import { getEntities, getAchievements, getOwnershipEdges, getAllEntitiesForGraph, getProperties, getAccountsForGraph } from '../lib/queries'
 import EntityOrgChart from './EntityOrgChart'
 import WizardNudgeBanner from '../_components/WizardNudgeBanner'
 import WizardSuccessToast from '../_components/WizardSuccessToast'
@@ -23,17 +23,19 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function EntitiesPage() {
-  const [entities, dbAchievements, edges, allEntities, properties] = await Promise.allSettled([
+  const [entities, dbAchievements, edges, allEntities, properties, accounts] = await Promise.allSettled([
     getEntities(),
     getAchievements('entities'),
     getOwnershipEdges(),
     getAllEntitiesForGraph(),
     getProperties(),
+    getAccountsForGraph(),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const entityList = (entities as any[])
   const edgeList = (edges as any[])
   const allEntityList = (allEntities as any[])
+  const accountList = (accounts as any[])
   const propertyList = (properties as any[]).map((p: any) => ({
     id: p.id,
     address: p.address ?? p.city ?? 'Property',
@@ -42,6 +44,8 @@ export default async function EntitiesPage() {
     slug: p.slug ?? null,
     purpose: p.purpose ?? (p.is_rental ? 'rental' : null),
     ownership_pct: p.ownership_pct ?? null,
+    current_value: p.current_value ?? null,
+    mortgage_balance: p.mortgage_balance ?? null,
   }))
   const achievements = (dbAchievements as any[]).length > 0
     ? (dbAchievements as any[]).map((a: any) => ({
@@ -103,13 +107,14 @@ export default async function EntitiesPage() {
           <div className="section-header">
             <div className="section-header-left">
               <h2 className="section-title">Ownership Graph</h2>
-              <span className="achieve-count">{allEntityList.length} nodes · {edgeList.length} edges</span>
+              <span className="achieve-count">{allEntityList.length} entities · {propertyList.length} props · {accountList.length} accounts · {edgeList.length} edges</span>
             </div>
           </div>
           <EntityOrgChart
             entities={allEntityList}
             edges={edgeList}
             properties={propertyList}
+            accounts={accountList}
           />
         </section>
       )}

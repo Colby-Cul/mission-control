@@ -82,6 +82,43 @@ export async function getAccountsByEntityId(entityId: string) {
   return data ?? []
 }
 
+/** Slim account rows for the Entity Org Chart leaf layer. */
+export async function getAccountsForGraph() {
+  // Try joining plaid_items for institution_name; fall back if join unavailable.
+  const joined = await supabase
+    .from('financial_accounts')
+    .select('id, name, mask, balance_current, type, subtype, account_scope, entity_id, plaid_item:plaid_items(institution_name)')
+    .order('balance_current', { ascending: false })
+  if (!joined.error && joined.data) {
+    return (joined.data as any[]).map(a => ({
+      id: a.id,
+      name: a.name,
+      mask: a.mask ?? null,
+      balance: Number(a.balance_current ?? 0),
+      type: a.type ?? null,
+      subtype: a.subtype ?? null,
+      scope: a.account_scope ?? 'personal',
+      entity_id: a.entity_id ?? null,
+      institution: a.plaid_item?.institution_name ?? null,
+    }))
+  }
+  const { data } = await supabase
+    .from('financial_accounts')
+    .select('id, name, mask, balance_current, type, subtype, account_scope, entity_id')
+    .order('balance_current', { ascending: false })
+  return (data ?? []).map((a: any) => ({
+    id: a.id,
+    name: a.name,
+    mask: a.mask ?? null,
+    balance: Number(a.balance_current ?? 0),
+    type: a.type ?? null,
+    subtype: a.subtype ?? null,
+    scope: a.account_scope ?? 'personal',
+    entity_id: a.entity_id ?? null,
+    institution: null,
+  }))
+}
+
 export async function getRecentTransactions(limit = 50) {
   const { data, error } = await supabase
     .from('financial_transactions')
