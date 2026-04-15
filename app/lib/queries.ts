@@ -373,6 +373,29 @@ export async function getIntegrations() {
   return data ?? []
 }
 
+/**
+ * Look up the current user's Google OAuth token row (for Calendar / Gmail).
+ * Returns null if no token row exists or the table hasn't been created yet —
+ * callers should fall back to the ComingSoon UI.
+ */
+export async function getGoogleToken(): Promise<{
+  access_token: string
+  refresh_token: string | null
+  expires_at: string | null
+  scope: string[] | null
+} | null> {
+  const userId = process.env.NEXT_PUBLIC_SEED_USER_ID
+  if (!userId) return null
+  const { data, error } = await (supabase as any)
+    .from('user_tokens')
+    .select('access_token, refresh_token, expires_at, scope')
+    .eq('user_id', userId)
+    .eq('provider', 'google')
+    .maybeSingle()
+  if (error) return null
+  return data ?? null
+}
+
 // ═══ Entity Documents (Files / Legal) ═════════════════════════════
 export async function getEntityDocuments(docTypes?: string[]) {
   let q = supabase.from('entity_documents').select('*').order('created_at', { ascending: false, nullsFirst: false })

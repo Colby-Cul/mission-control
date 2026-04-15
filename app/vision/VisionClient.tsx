@@ -452,15 +452,26 @@ function PhotoUpload({
       >
         {uploading ? (
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Uploading…</p>
-        ) : value ? (
+        ) : value && value.trim() && value !== 'null' ? (
           <div>
-            <img src={value} alt="Preview" style={{ maxHeight: 100, borderRadius: 8, maxWidth: '100%', objectFit: 'cover' }} />
+            <img
+              src={value}
+              alt="Vision preview"
+              style={{ maxHeight: 100, borderRadius: 8, maxWidth: '100%', objectFit: 'cover' }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; onChange('') }}
+            />
             <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Click to replace</p>
           </div>
         ) : (
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>
-            Drag &amp; drop an image, or click to upload
-          </p>
+          <div>
+            <div style={{ fontSize: 32, opacity: 0.3, marginBottom: 6 }}>📸</div>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: 500 }}>
+              Drag &amp; drop an image here
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginTop: 4 }}>
+              or click to upload · paste from clipboard
+            </p>
+          </div>
         )}
       </div>
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />

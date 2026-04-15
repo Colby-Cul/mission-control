@@ -52,7 +52,8 @@ export default function ComingSoon({
   minHeight,
   dataSource,
 }: ComingSoonProps) {
-  const connectHref = connect ? `/settings?tab=integrations&connect=${connect}` : '/settings'
+  // Route through integrations hub so the provider card highlights + scrolls into view.
+  const connectHref = connect ? `/integrations?highlight=${connect}` : '/settings'
   const connectLabel = connect
     ? `Connect ${connect.charAt(0).toUpperCase() + connect.slice(1)} to activate`
     : 'Configure in Settings'

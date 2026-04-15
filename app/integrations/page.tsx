@@ -9,8 +9,11 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getIntegrations, getUserProfile } from '../lib/queries'
+import HighlightOnMount from './HighlightOnMount'
+import { getIntegrations, getUserProfile, getGoogleToken } from '../lib/queries'
+import { isGoogleOAuthConfigured } from '../lib/google'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,10 +83,13 @@ function staleness(lastSync?: string | null): { label: string; color: string } {
 }
 
 export default async function IntegrationsPage() {
-  const [integrations, profile] = await Promise.all([
+  const [integrations, profile, googleToken] = await Promise.all([
     getIntegrations().catch(() => []),
     getUserProfile().catch(() => null),
+    getGoogleToken().catch(() => null),
   ])
+  const googleOAuthReady = isGoogleOAuthConfigured()
+  const isGoogleConnected = !!googleToken
 
   const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
   const intgList = (integrations as any[]) ?? []
@@ -136,6 +142,9 @@ export default async function IntegrationsPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <HighlightOnMount />
+      </Suspense>
       <Hero
         label="◈ INTEGRATIONS · CONNECTED SERVICES"
         greeting="Connected Services"
@@ -234,12 +243,20 @@ export default async function IntegrationsPage() {
             const webhookHealth = intg.webhook_health ?? null
             const whColor = webhookHealth === 'healthy' ? 'var(--green)' : webhookHealth === 'degraded' ? 'var(--amber)' : webhookHealth === 'down' ? 'var(--red)' : null
 
+            const isGoogleFamily =
+              intg.provider === 'google' ||
+              intg.provider === 'google-calendar' ||
+              intg.provider === 'gmail'
+
             return (
-              <div key={intg.provider} style={{
-                padding: 16, background: 'rgba(255,255,255,0.025)', borderRadius: 14,
-                border: `1px solid ${borderColor}`,
-                display: 'flex', flexDirection: 'column', gap: 10,
-              }}>
+              <div
+                key={intg.provider}
+                data-integration-provider={intg.provider.toLowerCase()}
+                style={{
+                  padding: 16, background: 'rgba(255,255,255,0.025)', borderRadius: 14,
+                  border: `1px solid ${borderColor}`,
+                  display: 'flex', flexDirection: 'column', gap: 10,
+                }}>
                 {/* ── Header ── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -311,10 +328,24 @@ export default async function IntegrationsPage() {
                   </div>
                 )}
 
+                {/* ── Google-family: live OAuth pill ── */}
+                {isGoogleFamily && isGoogleConnected && (
+                  <div style={{
+                    fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                    background: 'rgba(16,185,129,0.12)', color: 'var(--green)',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                    display: 'inline-flex', alignItems: 'center', gap: 6, width: 'fit-content',
+                    fontFamily: 'var(--mo)', letterSpacing: '0.04em',
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+                    CONNECTED
+                  </div>
+                )}
+
                 {/* ── Action buttons ── */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {intg.provider === 'quickbooks' && (
-                    <a href="/api/qb/connect?returnTo=/integrations" style={{
+                    <a href="/api/qb/connect?returnTo=/integrations" data-integration-action style={{
                       fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
                       background: '#2ca01c', color: '#fff', textDecoration: 'none',
                       border: '1px solid rgba(44,160,28,0.5)',
@@ -323,7 +354,7 @@ export default async function IntegrationsPage() {
                     </a>
                   )}
                   {intg.provider === 'plaid' && (
-                    <Link href="/accounts" style={{
+                    <Link href="/accounts" data-integration-action style={{
                       fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
                       background: 'rgba(16,185,129,0.15)', color: 'var(--green)',
                       border: '1px solid rgba(16,185,129,0.3)', textDecoration: 'none',
@@ -332,7 +363,7 @@ export default async function IntegrationsPage() {
                     </Link>
                   )}
                   {intg.provider === 'lodgify' && (
-                    <a href="https://app.lodgify.com" target="_blank" rel="noopener noreferrer" style={{
+                    <a href="https://app.lodgify.com" target="_blank" rel="noopener noreferrer" data-integration-action style={{
                       fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
                       background: 'rgba(16,185,129,0.1)', color: 'var(--green)',
                       border: '1px solid rgba(16,185,129,0.2)', textDecoration: 'none',
@@ -340,8 +371,41 @@ export default async function IntegrationsPage() {
                       Open Lodgify ↗
                     </a>
                   )}
-                  {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && (
-                    <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
+                  {isGoogleFamily && googleOAuthReady && (
+                    <>
+                      <a href="/api/auth/google" data-integration-action style={{
+                        fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                        background: isGoogleConnected ? 'rgba(249,115,22,0.12)' : 'rgba(249,115,22,0.15)',
+                        color: 'var(--orange)',
+                        border: '1px solid rgba(249,115,22,0.3)', textDecoration: 'none',
+                      }}>
+                        {isGoogleConnected ? 'Reconnect' : 'Connect Google'}
+                      </a>
+                      {isGoogleConnected && (
+                        <form action="/api/auth/google/disconnect" method="post" style={{ display: 'inline' }}>
+                          <button type="submit" style={{
+                            fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
+                            background: 'rgba(239,68,68,0.08)', color: 'var(--red)',
+                            border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer',
+                            fontFamily: 'inherit',
+                          }}>
+                            Disconnect
+                          </button>
+                        </form>
+                      )}
+                    </>
+                  )}
+                  {isGoogleFamily && !googleOAuthReady && (
+                    <div style={{
+                      fontSize: 10, color: 'var(--dim)', fontStyle: 'italic',
+                      padding: '4px 8px', background: 'rgba(255,255,255,0.02)',
+                      borderRadius: 6, border: '1px dashed rgba(255,255,255,0.08)',
+                    }}>
+                      Waiting on OAuth setup — contact admin
+                    </div>
+                  )}
+                  {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && !isGoogleFamily && (
+                    <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} data-integration-action style={{
                       fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
                       background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
                       color: isConnected ? 'var(--green)' : 'var(--orange)',
