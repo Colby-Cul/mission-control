@@ -279,6 +279,18 @@ export default async function CompaniesPage() {
               const empCount  = e.employee_count != null ? Number(e.employee_count) : null
               const bankCount = e.bank_account_count != null ? Number(e.bank_account_count) : null
               const fmtRev    = (n: number) => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(0) + 'K' : '$' + n.toFixed(0)
+              // Header: prefer display_name as large title; put legal name in subtitle.
+              const cardDisplayName = e.display_name ?? e.entity_name
+              const cardLegalName   = e.entity_name
+              const cardDba         = e.dba ?? null
+              const cardFormationSt = e.formation_state ?? e.state ?? null
+              // Subtitle fragments (skip nulls + don't duplicate legal name).
+              const cardSubFragments: string[] = []
+              if (cardLegalName && cardLegalName !== cardDisplayName) cardSubFragments.push(cardLegalName)
+              if (e.entity_type) cardSubFragments.push(e.entity_type)
+              if (cardFormationSt) cardSubFragments.push(cardFormationSt)
+              if (cardDba) cardSubFragments.push('DBA: ' + cardDba)
+              const cardSubtitle = cardSubFragments.join(' · ')
               return `<a href="/companies/${e.slug ?? e.id ?? ''}" class="entity-card" style="--accent:${accent}" data-entity-id="${e.id}" data-entity-name="${(e.entity_name ?? '').replace(/"/g, '&quot;')}" data-entity-slug="${e.slug ?? ''}">
                 <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${accent};opacity:0.7;border-radius:20px 20px 0 0;"></div>
                 <div class="entity-card-top">
@@ -290,8 +302,8 @@ export default async function CompaniesPage() {
                     <span class="entity-pulse" style="background:${accent};margin-top:4px;"></span>
                   </div>
                 </div>
-                <div class="entity-name">${e.entity_name}</div>
-                <div class="entity-type-state">${e.entity_type ?? '—'} · ${e.state ?? '—'}${e.fiscal_year_end ? ' · FY ' + e.fiscal_year_end : ''}</div>
+                <div class="entity-name">${cardDisplayName}</div>
+                <div class="entity-type-state" title="${cardSubtitle.replace(/"/g, '&quot;')}">${cardSubtitle || (e.entity_type ?? '—') + ' · ' + (e.state ?? '—')}${e.fiscal_year_end ? ' · FY ' + e.fiscal_year_end : ''}</div>
                 ${e.notes ? `<div class="entity-notes">${e.notes}</div>` : ''}
                 ${(annualRev != null || pnlYtd != null || empCount != null || bankCount != null) ? `
                 <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
@@ -319,7 +331,16 @@ export default async function CompaniesPage() {
           </div>
         </div>
         <div class="entities-grid">
-          ${legalOnly.map((e: any) => `
+          ${legalOnly.map((e: any) => {
+            const lDisplay = e.display_name ?? e.entity_name
+            const lFrags: string[] = []
+            if (e.entity_name && e.entity_name !== lDisplay) lFrags.push(e.entity_name)
+            if (e.entity_type) lFrags.push(e.entity_type)
+            const lFormationSt = e.formation_state ?? e.state
+            if (lFormationSt) lFrags.push(lFormationSt)
+            if (e.dba) lFrags.push('DBA: ' + e.dba)
+            const lSub = lFrags.join(' · ')
+            return `
             <div class="entity-card legal" data-entity-id="${e.id}" data-entity-name="${(e.entity_name ?? '').replace(/"/g, '&quot;')}" data-entity-slug="${e.slug ?? ''}">
               <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#64748b;opacity:0.4;border-radius:20px 20px 0 0;"></div>
               <div class="entity-card-top">
@@ -329,14 +350,15 @@ export default async function CompaniesPage() {
                   <span class="badge badge-legal">Legal Entity</span>
                 </div>
               </div>
-              <div class="entity-name">${e.entity_name}</div>
-              <div class="entity-type-state">${e.entity_type ?? '—'} · ${e.state ?? '—'}</div>
+              <div class="entity-name">${lDisplay}</div>
+              <div class="entity-type-state">${lSub || ((e.entity_type ?? '—') + ' · ' + (e.state ?? '—'))}</div>
               ${e.notes ? `<div class="entity-notes">${e.notes}</div>` : ''}
               <div class="entity-footer">
                 <span class="entity-ownership">${e.ownership_pct != null ? e.ownership_pct + '% owned' : '100% owned'}</span>
                 <a href="/companies/${e.slug ?? ''}" style="font-size:10px;color:var(--dim);text-decoration:none;">View entity info →</a>
               </div>
-            </div>`).join('')}
+            </div>`
+          }).join('')}
         </div>
       ` : ''}
 
