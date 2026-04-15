@@ -184,7 +184,7 @@ function TaskRow({
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: '20px 20px 1fr auto',
-      gap: 12, alignItems: 'center', padding: '10px 14px',
+      gap: 12, alignItems: 'center', padding: '11px 18px',
       borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: isDone ? 0.5 : 1, transition: 'background 0.1s',
     }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)' }}
@@ -466,7 +466,7 @@ export default function TasksClient({
           { label: 'Overdue',   value: overdue.length,   color: 'var(--red)'    },
           { label: 'Total',     value: tasks.length,     color: 'var(--purple)' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="mc-card accent" style={{ padding: 14 }}>
+          <div key={label} className="mc-card accent" style={{ padding: '16px 18px' }}>
             <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{label}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color }}>{value}</div>
           </div>

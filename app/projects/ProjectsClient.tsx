@@ -144,7 +144,7 @@ function ProjectCard({
     <div className="mc-card" style={{
       borderLeft: `3px solid ${color}`,
       borderRadius: 14,
-      padding: 16,
+      padding: '18px 20px',
       cursor: 'default',
       position: 'relative',
     }}>

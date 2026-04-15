@@ -140,13 +140,21 @@ function computeCascade(entities: Entity[], edges: Edge[]): CascadeEntry[] {
   const entityMap: Record<string, Entity> = {}
   entities.forEach(e => { entityMap[e.id] = e })
 
-  function walk(nodeId: string, accumulated: number, chain: { name: string; pct: number }[]) {
+  function walk(
+    nodeId: string,
+    accumulated: number,
+    chain: { name: string; pct: number }[],
+    visited: Set<string>,
+  ) {
+    if (visited.has(nodeId)) return // cycle guard
+    const nextVisited = new Set(visited); nextVisited.add(nodeId)
     const childEdges = edges.filter(e => e.parent_entity_id === nodeId && e.child_type !== 'property')
     for (const edge of childEdges) {
       const pct = Number(edge.ownership_pct)
       const effective = (accumulated * pct) / 100
       const childEntity = entityMap[edge.child_entity_id]
       if (!childEntity) continue
+      if (nextVisited.has(childEntity.id)) continue // skip self-loops + back-edges
       const newChain = [...chain, { name: childEntity.entity_name, pct }]
       result.push({
         entityId: childEntity.id,
@@ -155,12 +163,12 @@ function computeCascade(entities: Entity[], edges: Edge[]): CascadeEntry[] {
         effectivePct: effective,
         chain: newChain,
       })
-      walk(childEntity.id, effective, newChain)
+      walk(childEntity.id, effective, newChain, nextVisited)
     }
   }
 
   for (const root of roots) {
-    walk(root.id, 100, [{ name: root.entity_name, pct: 100 }])
+    walk(root.id, 100, [{ name: root.entity_name, pct: 100 }], new Set())
   }
 
   // Deduplicate — keep highest effective % per entity
