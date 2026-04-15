@@ -8,8 +8,10 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
+import RentalsWidgets from './RentalsWidgets'
 import {
   getRentalProperties,
+  getRentalBookings,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +31,10 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function RentalsPage() {
-  const rentals = await getRentalProperties().catch(() => [])
+  const [rentals, bookings] = await Promise.all([
+    getRentalProperties().catch(() => []),
+    getRentalBookings().catch(() => []),
+  ])
 
   const monthlyRent = rentals.reduce((s, p: any) => s + Number(p.mortgage_payment ?? 0), 0)
   const totalValue = rentals.reduce((s, p: any) => s + Number(p.current_value ?? 0), 0)
@@ -37,8 +42,17 @@ export default async function RentalsPage() {
   const totalExpenses = rentals.reduce((s, p: any) => s + Number(p.monthly_expenses ?? 0), 0)
   const netMonthly = monthlyRent - totalExpenses
 
-  // KPIs based on available fields
-  // monthly_payment = gross rent estimate; monthly_expenses = running costs
+  // Compute hero KPIs from bookings when available
+  const totalRevenue = bookings.reduce((s: number, b: any) => s + Number(b.total_amount ?? 0), 0)
+  function nightsBetweenServer(a: string, d: string) {
+    return Math.max(1, Math.round((new Date(d).getTime() - new Date(a).getTime()) / 86400000))
+  }
+  const totalNights = bookings.reduce((s: number, b: any) => s + nightsBetweenServer(b.arrival, b.departure), 0)
+  const availableNights = 2 * 300  // 2 properties × 300-day window
+  const heroADR    = totalNights > 0 ? Math.round(totalRevenue / totalNights) : 0
+  const heroRevPAR = availableNights > 0 ? Math.round(totalRevenue / availableNights) : 0
+  const heroOcc    = availableNights > 0 ? ((totalNights / availableNights) * 100).toFixed(1) : '—'
+
   const xpEarned = DEFAULT_ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
 
   return (
@@ -49,10 +63,25 @@ export default async function RentalsPage() {
         primaryMetric={USD(monthlyRent)}
         metricSubtitle="Monthly Rental Income · mortgage payments"
         kpiCards={[
-          { label: 'Occupancy Rate', value: '—',                delta: 'wire bookings table', deltaPositive: false },
-          { label: 'ADR',            value: '—',                delta: 'wire bookings table', deltaPositive: false },
-          { label: 'RevPAR',         value: '—',                delta: 'wire bookings table', deltaPositive: false },
-          { label: 'Properties',     value: String(rentals.length), delta: 'active rentals',  deltaPositive: true },
+          {
+            label: 'Occupancy Rate',
+            value: bookings.length > 0 ? `${heroOcc}%` : '—',
+            delta: bookings.length > 0 ? `${totalNights} nights booked` : 'wire bookings table',
+            deltaPositive: bookings.length > 0,
+          },
+          {
+            label: 'ADR',
+            value: bookings.length > 0 ? `$${heroADR.toLocaleString()}` : '—',
+            delta: bookings.length > 0 ? 'avg nightly rate' : 'wire bookings table',
+            deltaPositive: bookings.length > 0,
+          },
+          {
+            label: 'RevPAR',
+            value: bookings.length > 0 ? `$${heroRevPAR.toLocaleString()}` : '—',
+            delta: bookings.length > 0 ? 'rev per avail night' : 'wire bookings table',
+            deltaPositive: bookings.length > 0,
+          },
+          { label: 'Properties', value: String(rentals.length), delta: 'active rentals', deltaPositive: true },
         ]}
         playerCard={{
           name: 'Colby Culbertson',
@@ -195,40 +224,46 @@ export default async function RentalsPage() {
         )}
       </section>
 
-      {/* Booking Calendar + Maintenance + Reviews — all Coming Soon (tables not present) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Booking Calendar"
-          reason="Wire bookings table (Lodgify or direct) to see occupancy calendar and ADR/RevPAR."
-          icon="📅"
-          dataSource="coming-soon:bookings"
-          skeleton="chart"
-        />
-        <ComingSoon
-          title="Maintenance Requests"
-          reason="Open maintenance tickets from maintenance_requests table. Not yet populated."
-          icon="🔧"
-          dataSource="coming-soon:maintenance_requests"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Recent Reviews"
-          reason="Guest reviews from property_reviews table. Connect Lodgify to activate."
-          icon="⭐"
-          dataSource="coming-soon:property_reviews"
-          skeleton="table"
-        />
-      </div>
+      {/* ── Full booking analytics (ported from live Rentals.jsx) ── */}
+      {bookings.length > 0 ? (
+        <RentalsWidgets bookings={bookings} />
+      ) : (
+        <>
+          {/* Stubs shown until rental_bookings table is populated */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
+            <ComingSoon
+              title="Booking Analytics (KPIs + Charts)"
+              reason="Populate the rental_bookings table (Lodgify export or direct entry) to unlock: Revenue, Occupancy, ADR, RevPAR, P&L, Source breakdown."
+              icon="📊"
+              dataSource="coming-soon:rental_bookings"
+              skeleton="chart"
+            />
+            <ComingSoon
+              title="Maintenance Requests"
+              reason="Open maintenance tickets from maintenance_requests table. Not yet populated."
+              icon="🔧"
+              dataSource="coming-soon:maintenance_requests"
+              skeleton="table"
+            />
+            <ComingSoon
+              title="Recent Reviews"
+              reason="Guest reviews from property_reviews table. Connect Lodgify to activate."
+              icon="⭐"
+              dataSource="coming-soon:property_reviews"
+              skeleton="table"
+            />
+          </div>
 
-      {/* Upcoming bookings KPI */}
-      <ComingSoon
-        title="Upcoming Bookings (7d)"
-        reason="Connect Lodgify via bookings table to see check-ins, check-outs, and guest details."
-        icon="🏨"
-        dataSource="coming-soon:bookings.checkin_date"
-        skeleton="table"
-        minHeight={120}
-      />
+          <ComingSoon
+            title="Bookings Table"
+            reason="Connect Lodgify or populate rental_bookings to see sortable check-ins, guest names, and nightly revenue."
+            icon="🏨"
+            dataSource="coming-soon:rental_bookings"
+            skeleton="table"
+            minHeight={120}
+          />
+        </>
+      )}
     </>
   )
 }
