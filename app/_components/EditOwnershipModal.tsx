@@ -8,6 +8,37 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
+// ── Inline ⓘ tooltip for non-expert users ────────────────────────
+function Tip({ text }: { text: string }) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <span style={{ position: 'relative', display: 'inline-block', verticalAlign: 'middle', marginLeft: 4 }}>
+      <span
+        onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}
+        tabIndex={0} role="button" aria-label="More info"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          width: 14, height: 14, borderRadius: '50%',
+          background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+          color: '#a78bfa', fontSize: 9, fontWeight: 700, cursor: 'default', lineHeight: 1,
+        }}
+      >i</span>
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(100% + 7px)', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(10,10,30,0.97)', border: '1px solid rgba(139,92,246,0.25)',
+          borderRadius: 8, padding: '8px 12px', fontSize: 11, color: 'rgba(255,255,255,0.78)',
+          width: 200, lineHeight: 1.5, zIndex: 9999, boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+          whiteSpace: 'normal' as const, textAlign: 'left' as const, pointerEvents: 'none' as const,
+        }}>
+          {text}
+        </div>
+      )}
+    </span>
+  )
+}
+
 interface Edge {
   id?: string
   counterpart_id: string
@@ -203,8 +234,23 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
         <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
-                Ownership Structure
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+                  Ownership Structure
+                </div>
+                <a
+                  href="/setup/ownership"
+                  style={{
+                    fontSize: 11,
+                    color: '#a78bfa',
+                    textDecoration: 'none',
+                    borderBottom: '1px dotted rgba(167,139,250,0.4)',
+                    paddingBottom: 1,
+                    whiteSpace: 'nowrap' as const,
+                  }}
+                >
+                  New to this? Try guided setup →
+                </a>
               </div>
               <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
                 {entityName}
@@ -374,7 +420,10 @@ function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete 
     <div style={rowContainer('#8b5cf6')}>
       {/* Entity select */}
       <div style={{ flex: '0 0 220px' }}>
-        <label style={rowLabel}>Parent entity</label>
+        <label style={rowLabel}>
+          Parent entity
+          <Tip text="The person, trust, or business that owns a stake in this entity. You can add multiple owners — percentages should add up to 100%." />
+        </label>
         <select style={cellSelect} value={row.counterpart_id} onChange={e => onChange({ counterpart_id: e.target.value })}>
           <option value="">— select owner —</option>
           {allEntities.filter(e => e.id !== entityId).map(e => (
@@ -388,7 +437,10 @@ function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete 
 
       {/* % */}
       <div style={{ flex: '0 0 90px' }}>
-        <label style={rowLabel}>Ownership %</label>
+        <label style={rowLabel}>
+          Ownership %
+          <Tip text="How much of this entity this person/entity owns. All owners must add up to 100%." />
+        </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <input
             style={{ ...cellInput, width: '100%' }}
@@ -406,7 +458,10 @@ function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete 
 
       {/* Role */}
       <div style={{ flex: '1 1 150px', minWidth: 120 }}>
-        <label style={rowLabel}>Role</label>
+        <label style={rowLabel}>
+          Role
+          <Tip text="Your title in this entity — e.g. 'managing member' for the main person running an LLC, 'member' for other owners." />
+        </label>
         <select style={cellSelect} value={row.role} onChange={e => onChange({ role: e.target.value })}>
           <option value="">— role —</option>
           {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -441,7 +496,10 @@ function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }
 
       {/* % */}
       <div style={{ flex: '0 0 90px' }}>
-        <label style={rowLabel}>Ownership %</label>
+        <label style={rowLabel}>
+          Ownership %
+          <Tip text="How much of the child entity this entity owns. Must add up to 100% across all owners." />
+        </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <input
             style={{ ...cellInput, width: '100%' }}
@@ -459,7 +517,10 @@ function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }
 
       {/* Child entity select */}
       <div style={{ flex: '0 0 220px' }}>
-        <label style={rowLabel}>Child entity</label>
+        <label style={rowLabel}>
+          Child entity
+          <Tip text="A legal entity (LLC, trust, corporation, etc.) that this entity owns a stake in." />
+        </label>
         <select style={cellSelect} value={row.counterpart_id} onChange={e => onChange({ counterpart_id: e.target.value })}>
           <option value="">— select entity —</option>
           {allEntities.filter(e => e.id !== entityId).map(e => (
@@ -470,7 +531,10 @@ function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }
 
       {/* Role */}
       <div style={{ flex: '1 1 150px', minWidth: 120 }}>
-        <label style={rowLabel}>Role</label>
+        <label style={rowLabel}>
+          Role
+          <Tip text="The position this entity holds in the child entity — e.g. 'managing member', 'shareholder', 'general partner'." />
+        </label>
         <select style={cellSelect} value={row.role} onChange={e => onChange({ role: e.target.value })}>
           <option value="">— role —</option>
           {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}

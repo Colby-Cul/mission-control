@@ -6,10 +6,11 @@
  *
  * Hero animation: entity-mosaic — tiles pulsing at different rates.
  */
-import { getEntities, getTransactions30d, getAchievements } from '../lib/queries'
+import { getEntities, getTransactions30d, getAchievements, getOwnershipEdges } from '../lib/queries'
 import CompaniesHeroCanvas from './_CompaniesHeroCanvas'
 import Achievements from '../_components/Achievements'
 import CompaniesQuickActions from './_CompaniesQuickActions'
+import WizardNudgeBanner from '../_components/WizardNudgeBanner'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,9 @@ function entityAccentColor(entity: any): string {
 export default async function CompaniesPage() {
   let entities: any[] = []
   try { entities = await getEntities() } catch {}
+
+  let edgeCount = 0
+  try { edgeCount = (await getOwnershipEdges()).length } catch {}
 
   // Combined revenue from last 30d transactions (for KPI card)
   let txns: any[] = []
@@ -343,6 +347,7 @@ export default async function CompaniesPage() {
 
   return (
     <>
+      <WizardNudgeBanner edgeCount={edgeCount} />
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <CompaniesHeroCanvas entityCount={entities.length} operationalCount={operational.length} />
       {/* Quick-action modals — DOM-injected buttons + modal portal */}

@@ -3,12 +3,15 @@
  * Hero metric: total active entities
  * Sources: entity_ownership, entity_ownership_edges
  */
+import { Suspense } from 'react'
 import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import HeroCanvas from './HeroCanvas'
 import { getEntities, getAchievements, getOwnershipEdges, getAllEntitiesForGraph, getProperties } from '../lib/queries'
 import EntityOrgChart from './EntityOrgChart'
+import WizardNudgeBanner from '../_components/WizardNudgeBanner'
+import WizardSuccessToast from '../_components/WizardSuccessToast'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +77,7 @@ export default async function EntitiesPage() {
 
   return (
     <>
+      <Suspense fallback={null}><WizardSuccessToast /></Suspense>
       <Hero
         label="≈ ENTITY MAP · OWNERSHIP STRUCTURE"
         greeting="Your legal constellation."
@@ -89,6 +93,9 @@ export default async function EntitiesPage() {
       />
 
       <Achievements items={achievements} xpEarned={xpEarned} />
+
+      {/* Wizard nudge — only visible when zero ownership edges */}
+      <WizardNudgeBanner edgeCount={edgeList.length} />
 
       {/* Full Org-Chart */}
       {(allEntityList.length > 0 || edgeList.length > 0) && (

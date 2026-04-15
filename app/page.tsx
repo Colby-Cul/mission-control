@@ -8,6 +8,7 @@ import Achievements from './_components/Achievements'
 import { SpecCard } from './_components/SpecCard'
 import ComingSoon from './_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
+import WizardNudgeBanner from './_components/WizardNudgeBanner'
 import {
   getAccounts,
   accountSignedBalance,
@@ -19,6 +20,7 @@ import {
   getAchievements,
   getProperties,
   getNetWorthFromGraph,
+  getOwnershipEdges,
 } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -38,7 +40,7 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph] = await Promise.allSettled([
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph, ownershipEdges] = await Promise.allSettled([
     getAccounts(),
     getVisions(),
     getOpenTasks(),
@@ -48,7 +50,9 @@ export default async function DashboardPage() {
     getDoneTasksCount(),
     getProperties().catch(() => []),
     getNetWorthFromGraph().catch(() => null),
+    getOwnershipEdges().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : (r.status === 'rejected' ? null : null))))
+  const dashEdgeCount = Array.isArray(ownershipEdges) ? (ownershipEdges as any[]).length : 0
 
   const netWorthGraph = nwGraph as Awaited<ReturnType<typeof getNetWorthFromGraph>> | null
   // Use graph-cascaded total if available, otherwise fall back to raw account sum
@@ -122,6 +126,9 @@ export default async function DashboardPage() {
       />
 
       <Achievements items={achievements} xpEarned={xpEarned} />
+
+      {/* Wizard nudge — shown when zero ownership edges exist */}
+      <WizardNudgeBanner edgeCount={dashEdgeCount} />
 
       {/* Empire Rollup KPI Grid */}
       <section style={{ marginBottom: 28 }}>
