@@ -49,12 +49,21 @@ interface Edge {
   acquired: string
   _deleted?: boolean
   _dirty?: boolean
+  /** preserved from DB for existing rows so UPDATE uses the right child_type */
+  _child_type?: string
 }
 
 interface EntityOption {
   id: string
   entity_name: string
   entity_type: string | null
+}
+
+interface PropertyOption {
+  id: string
+  name: string | null
+  address: string
+  purpose: string | null
 }
 
 const ROLE_OPTIONS = [
@@ -74,6 +83,8 @@ interface Props {
 export default function EditOwnershipModal({ entityId, entityName, childType = 'entity', onClose, onSaved }: Props) {
   const [rows, setRows] = useState<Edge[]>([])
   const [allEntities, setAllEntities] = useState<EntityOption[]>([])
+  const [allProperties, setAllProperties] = useState<PropertyOption[]>([])
+  const [entityFormationDate, setEntityFormationDate] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
@@ -81,19 +92,30 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [parentRes, childRes, entRes] = await Promise.all([
+    const [parentRes, childRes, entRes, propRes, thisEntityRes] = await Promise.all([
       childType === 'property'
         ? supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).eq('child_type', 'property')
         : supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).neq('child_type', 'property'),
       childType === 'entity'
-        ? supabase.from('entity_ownership_edges').select('*').eq('parent_entity_id', entityId).neq('child_type', 'property')
+        ? supabase.from('entity_ownership_edges').select('*').eq('parent_entity_id', entityId)
         : Promise.resolve({ data: [] }),
       supabase.from('entity_ownership').select('id, entity_name, entity_type'),
+      supabase.from('property_assets').select('id, name, address, purpose'),
+      supabase.from('entity_ownership').select('formation_date').eq('id', entityId).single(),
     ])
 
     const entityMap: Record<string, EntityOption> = {}
     ;(entRes.data ?? []).forEach((e: any) => { entityMap[e.id] = e })
     setAllEntities(entRes.data ?? [])
+    setAllProperties(propRes.data ?? [])
+
+    // Formation date for Bug 2 auto-fill
+    const formDate = (thisEntityRes as any)?.data?.formation_date ?? ''
+    setEntityFormationDate(formDate)
+
+    // Build a property map for display names in child rows
+    const propMap: Record<string, PropertyOption> = {}
+    ;(propRes.data ?? []).forEach((p: any) => { propMap[p.id] = p })
 
     const parentRows: Edge[] = (parentRes.data ?? []).map((e: any) => ({
       id: e.id,
@@ -103,16 +125,25 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
       pct: String(Number(e.ownership_pct)),
       role: e.role ?? '',
       acquired: e.acquired_at ?? '',
+      _child_type: e.child_type ?? 'entity',
     }))
-    const childRows: Edge[] = (childRes.data ?? []).map((e: any) => ({
-      id: e.id,
-      counterpart_id: e.child_entity_id,
-      counterpart_name: entityMap[e.child_entity_id]?.entity_name,
-      direction: 'owns' as const,
-      pct: String(Number(e.ownership_pct)),
-      role: e.role ?? '',
-      acquired: e.acquired_at ?? '',
-    }))
+    const childRows: Edge[] = ((childRes as any).data ?? []).map((e: any) => {
+      // For child rows, the counterpart is the child (entity or property)
+      const isProperty = e.child_type === 'property'
+      const name = isProperty
+        ? (propMap[e.child_entity_id]?.name || propMap[e.child_entity_id]?.address || e.child_entity_id)
+        : entityMap[e.child_entity_id]?.entity_name
+      return {
+        id: e.id,
+        counterpart_id: e.child_entity_id,
+        counterpart_name: name,
+        direction: 'owns' as const,
+        pct: String(Number(e.ownership_pct)),
+        role: e.role ?? '',
+        acquired: e.acquired_at ?? '',
+        _child_type: e.child_type ?? 'entity',
+      }
+    })
 
     setRows([...parentRows, ...childRows])
     setLoading(false)
@@ -140,10 +171,12 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
   }
 
   function addParentRow() {
-    setRows(prev => [...prev, { counterpart_id: '', direction: 'owned-by', pct: '', role: '', acquired: '', _dirty: true }])
+    // Bug 2: default Since to this entity's formation_date if available
+    setRows(prev => [...prev, { counterpart_id: '', direction: 'owned-by', pct: '', role: '', acquired: entityFormationDate, _dirty: true }])
   }
 
   function addChildRow() {
+    // Bug 2: for child rows, leave Since blank — child entity may not exist yet
     setRows(prev => [...prev, { counterpart_id: '', direction: 'owns', pct: '', role: '', acquired: '', _dirty: true }])
   }
 
@@ -173,7 +206,19 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
         const pctNum = parseFloat(row.pct)
         if (isNaN(pctNum)) { setErr('All rows need a valid % value'); setSaving(false); return }
 
-        const effectiveChildType = childType === 'property' ? 'property' : 'entity'
+        // Bug 1 + Bug 4: for existing rows, preserve the original child_type from DB
+        // For new rows: if direction=owns and counterpart is a property, use 'property'; else use modal's childType
+        let effectiveChildType: string
+        if (row.id && row._child_type) {
+          // existing edge — preserve the stored child_type so UPDATE is correct
+          effectiveChildType = row._child_type
+        } else if (row.direction === 'owns' && allProperties.some(p => p.id === row.counterpart_id)) {
+          // Bug 4: new child edge targeting a property asset
+          effectiveChildType = 'property'
+        } else {
+          effectiveChildType = childType === 'property' ? 'property' : 'entity'
+        }
+
         const payload = row.direction === 'owned-by'
           ? {
               parent_entity_id: row.counterpart_id,
@@ -195,6 +240,7 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
             }
 
         if (row.id) {
+          // Bug 1: explicit UPDATE on all editable fields for existing rows
           const { error } = await supabase.from('entity_ownership_edges').update(payload).eq('id', row.id)
           if (error) throw error
         } else {
@@ -333,6 +379,7 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
                             row={row}
                             entityName={entityName}
                             allEntities={allEntities}
+                            allProperties={allProperties}
                             entityId={entityId}
                             onChange={patch => updateRow(actualIdx, patch)}
                             onDelete={() => removeRow(actualIdx)}
@@ -409,6 +456,7 @@ interface RowProps {
   row: { counterpart_id: string; pct: string; role: string; acquired: string }
   entityName: string
   allEntities: { id: string; entity_name: string; entity_type: string | null }[]
+  allProperties?: PropertyOption[]
   entityId: string
   onChange: (patch: any) => void
   onDelete: () => void
@@ -480,8 +528,8 @@ function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete 
   )
 }
 
-/** Sentence: [Entity name] owns [X]% of [child entity] · [role] */
-function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }: RowProps) {
+/** Sentence: [Entity name] owns [X]% of [child entity/property] · [role] */
+function ChildRow({ row, entityName, allEntities, allProperties = [], entityId, onChange, onDelete }: RowProps) {
   return (
     <div style={rowContainer('#f97316')}>
       {/* Entity name label */}
@@ -498,7 +546,7 @@ function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }
       <div style={{ flex: '0 0 90px' }}>
         <label style={rowLabel}>
           Ownership %
-          <Tip text="How much of the child entity this entity owns. Must add up to 100% across all owners." />
+          <Tip text="How much of the child entity or property this entity owns. Must add up to 100% across all owners." />
         </label>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <input
@@ -515,17 +563,30 @@ function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }
       {/* Sentence connector */}
       <div style={connectorText}>of</div>
 
-      {/* Child entity select */}
-      <div style={{ flex: '0 0 220px' }}>
+      {/* Child entity/property select — Bug 4: includes properties as children */}
+      <div style={{ flex: '0 0 240px' }}>
         <label style={rowLabel}>
-          Child entity
-          <Tip text="A legal entity (LLC, trust, corporation, etc.) that this entity owns a stake in." />
+          Child entity or property
+          <Tip text="A legal entity (LLC, trust, etc.) or real estate property that this entity owns a stake in." />
         </label>
         <select style={cellSelect} value={row.counterpart_id} onChange={e => onChange({ counterpart_id: e.target.value })}>
-          <option value="">— select entity —</option>
-          {allEntities.filter(e => e.id !== entityId).map(e => (
-            <option key={e.id} value={e.id}>{e.entity_name}</option>
-          ))}
+          <option value="">— select —</option>
+          {allEntities.filter(e => e.id !== entityId).length > 0 && (
+            <optgroup label="── Entities ──">
+              {allEntities.filter(e => e.id !== entityId).map(e => (
+                <option key={e.id} value={e.id}>{e.entity_name}</option>
+              ))}
+            </optgroup>
+          )}
+          {allProperties.length > 0 && (
+            <optgroup label="── Properties ──">
+              {allProperties.map(p => (
+                <option key={p.id} value={p.id}>
+                  ⌂ {p.name || p.address}{p.purpose ? ` (${p.purpose.replace(/-/g, ' ')})` : ''}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </div>
 
