@@ -13,6 +13,7 @@ import {
   accountSignedBalance,
   getVisions,
   getOpenTasks,
+  getDoneTasksCount,
   getEntities,
   getUpcomingTaxDeadlines,
   getAchievements,
@@ -35,13 +36,14 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements] = await Promise.allSettled([
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount] = await Promise.allSettled([
     getAccounts(),
     getVisions(),
     getOpenTasks(),
     getEntities(),
     getUpcomingTaxDeadlines(),
     getAchievements('dashboard'),
+    getDoneTasksCount(),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const netWorth = (accounts as any[]).reduce((s, a) => s + accountSignedBalance(a), 0)
@@ -86,7 +88,7 @@ export default async function DashboardPage() {
             { key: 'Entities',   value: String(entityCount || 7) },
             { key: 'Properties', value: '3' },
             { key: 'Visions',    value: String((visions as any[]).length) },
-            { key: 'Tasks Done', value: '142' },
+            { key: 'Tasks Done', value: String(doneCount || 0) },
           ],
         }}
         animationSlot={<HeroCanvas />}
@@ -117,10 +119,10 @@ export default async function DashboardPage() {
             <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{entityCount || 7}</div>
             <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>LLCs &amp; LPs active</div>
           </SpecCard>
-          <SpecCard accent dataSource="property_assets.current_value">
+          <SpecCard accent dataSource="coming-soon:property_assets.current_value">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Properties Value</div>
-            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--purple)' }}>$3.8M</div>
-            <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>3 properties · Zillow</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--amber)', marginBottom: 4 }}>COMING SOON</div>
+            <div style={{ fontSize: 11, color: 'var(--dim)' }}>Wire <code style={{ fontFamily: 'var(--mo)', fontSize: 10 }}>property_assets</code> table to activate</div>
           </SpecCard>
         </div>
       </section>

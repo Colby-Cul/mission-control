@@ -6,8 +6,9 @@
  *
  * Hero animation: entity-mosaic — tiles pulsing at different rates.
  */
-import { getEntities, getTransactions30d } from '../lib/queries'
+import { getEntities, getTransactions30d, getAchievements } from '../lib/queries'
 import CompaniesHeroCanvas from './_CompaniesHeroCanvas'
+import Achievements from '../_components/Achievements'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,29 @@ export default async function CompaniesPage() {
   const combinedRevenue = txns
     .filter((t: any) => Number(t.amount) < 0)
     .reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount)), 0)
+
+  // Achievements — companies dashboard key
+  let rawAchievements: any[] = []
+  try { rawAchievements = await getAchievements('companies') } catch {}
+  const DEFAULT_COMPANY_ACHIEVEMENTS = [
+    { name: 'First LLC',       description: 'Formed your first LLC.',                  xp: 100, progress: 100, icon: '🏢', earned: true  },
+    { name: 'Multi-State',     description: 'Active LLCs in 2+ states.',               xp: 200, progress: 100, icon: '🗺️', earned: true  },
+    { name: 'Cash Flow+',      description: 'First cash-flow positive entity.',         xp: 150, progress: 100, icon: '📈', earned: true  },
+    { name: 'Profitable Co',   description: 'First profitable company quarter.',        xp: 300, progress: 70,  icon: '💰', earned: false },
+    { name: '7 Companies',     description: 'Built a portfolio of 7+ entities.',        xp: 500, progress: 80,  icon: '🏛️', earned: false },
+    { name: 'Exit Ready',      description: 'One entity valued at exit multiple.',      xp: 750, progress: 20,  icon: '🚀', earned: false },
+  ]
+  const achievements = rawAchievements.length > 0
+    ? rawAchievements.slice(0, 8).map((a: any) => ({
+        name: a.achievement_key ?? a.name ?? 'Achievement',
+        description: a.description ?? '',
+        xp: a.xp ?? 100,
+        progress: a.progress_pct ?? (a.earned_at ? 100 : 0),
+        icon: a.icon ?? '🏆',
+        earned: !!a.earned_at,
+      }))
+    : DEFAULT_COMPANY_ACHIEVEMENTS
+  const xpEarned = achievements.filter((a: any) => a.earned).reduce((s: number, a: any) => s + a.xp, 0)
 
   const fmtCurrency = (n: number) =>
     n >= 1_000_000 ? '$' + (n / 1_000_000).toFixed(1) + 'M' :
@@ -77,7 +101,7 @@ export default async function CompaniesPage() {
     .main-container { width: 86%; margin: 0 auto; padding: 40px 0; }
 
     /* ── Hero ── */
-    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 32px; border: 1px solid rgba(249,115,22,0.12); background: #050510; min-height: 380px; }
+    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 32px; border: 1px solid rgba(249,115,22,0.12); background: #050510; min-height: 480px; }
     #mosaicCanvas { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
     .hero-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent); animation: scanDown 4s ease-in-out infinite; filter: blur(1px); }
     @keyframes scanDown { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
@@ -86,7 +110,7 @@ export default async function CompaniesPage() {
     .hud-corner.tr { top:12px;right:12px;border-top:2px solid rgba(139,92,246,0.3);border-right:2px solid rgba(139,92,246,0.3); }
     .hud-corner.bl { bottom:12px;left:12px;border-bottom:2px solid rgba(249,115,22,0.3);border-left:2px solid rgba(249,115,22,0.3); }
     .hud-corner.br { bottom:12px;right:12px;border-bottom:2px solid rgba(139,92,246,0.3);border-right:2px solid rgba(139,92,246,0.3); }
-    .hero-content { position: relative; z-index: 3; padding: 48px 48px; display: flex; align-items: center; justify-content: space-between; min-height: 380px; }
+    .hero-content { position: relative; z-index: 3; padding: 48px 48px; display: flex; align-items: center; justify-content: space-between; min-height: 480px; }
     .hero-left { max-width: 480px; }
     .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--orange); margin-bottom: 10px; }
     .hero-title { font-size: 48px; font-weight: 700; line-height: 1.05; margin-bottom: 12px; }
@@ -133,6 +157,26 @@ export default async function CompaniesPage() {
 
     /* ── Type group labels ── */
     .type-group { margin-bottom: 40px; }
+
+    /* ── Achievements (spec §2 locked) ── */
+    .achievements-section { margin-bottom: 28px; }
+    .ach-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .ach-header-left { display:flex; align-items:center; gap:10px; }
+    .ach-title { font-size:18px; font-weight:600; letter-spacing:0.02em; }
+    .ach-count { font-size:12px; color:var(--dim); background:rgba(255,255,255,0.04); padding:3px 10px; border-radius:6px; }
+    .ach-xp { font-size:12px; font-weight:600; color:var(--orange); background:rgba(249,115,22,0.1); padding:3px 10px; border-radius:6px; }
+    .ach-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-start; padding:8px 0; }
+    .ach-card { display:flex; flex-direction:column; align-items:center; text-align:center; width:110px; position:relative; cursor:pointer; transition:transform 0.2s; }
+    .ach-card:hover { transform:translateY(-4px); }
+    .ach-card.locked { opacity:0.3; }
+    .ach-ring-wrap { position:relative; width:88px; height:88px; margin-bottom:10px; }
+    .ach-ring-svg { width:88px; height:88px; transform:rotate(-90deg); }
+    .ach-ring-bg { fill:none; stroke:rgba(255,255,255,0.06); stroke-width:4; }
+    .ach-ring-fill { fill:none; stroke-width:4; stroke-linecap:round; stroke:url(#achieveGrad2); transition:stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
+    .ach-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:30px; line-height:1; }
+    .ach-check { position:absolute; bottom:4px; right:16px; width:20px; height:20px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; border:2px solid var(--bg); }
+    .ach-name { font-size:11px; font-weight:600; margin-bottom:2px; line-height:1.3; }
+    .ach-xp-val { font-size:10px; font-weight:600; color:var(--orange); }
   </style>
 </head>
 <body>
@@ -172,6 +216,44 @@ export default async function CompaniesPage() {
           </div>
         </div>
       </div>
+
+      <!-- ACHIEVEMENTS (spec §2) -->
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <linearGradient id="achieveGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f97316"/>
+            <stop offset="50%" stop-color="#ec4899"/>
+            <stop offset="100%" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <section class="achievements-section">
+        <div class="ach-header">
+          <div class="ach-header-left">
+            <h2 class="ach-title">Achievements</h2>
+            <span class="ach-count">${achievements.filter((a:any)=>a.earned).length} / ${achievements.length}</span>
+            <span class="ach-xp">+${xpEarned} XP</span>
+          </div>
+        </div>
+        <div class="ach-grid">
+          ${achievements.map((a: any) => {
+            const circ = 2 * Math.PI * 40
+            const offset = circ * (1 - a.progress / 100)
+            return `<div class="ach-card${a.earned ? '' : ' locked'}">
+              <div class="ach-ring-wrap">
+                <svg class="ach-ring-svg" viewBox="0 0 88 88">
+                  <circle class="ach-ring-bg" cx="44" cy="44" r="40"/>
+                  <circle class="ach-ring-fill" cx="44" cy="44" r="40" stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"/>
+                </svg>
+                <span class="ach-icon">${a.icon}</span>
+                ${a.earned ? '<div class="ach-check">✓</div>' : ''}
+              </div>
+              <p class="ach-name">${a.name}</p>
+              <p class="ach-xp-val">+${a.xp} XP</p>
+            </div>`
+          }).join('')}
+        </div>
+      </section>
 
       <!-- OPERATIONAL ENTITIES, grouped by type -->
       ${Object.entries(grouped).map(([type, ents]) => `

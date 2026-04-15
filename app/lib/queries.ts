@@ -375,6 +375,15 @@ export async function getOpenTasks() {
   return data ?? []
 }
 
+export async function getDoneTasksCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .in('status', ['done', 'completed'])
+  if (error) return 0
+  return count ?? 0
+}
+
 // ═══ Per-entity revenue / expense (last 30 days) ════════════════
 export async function getEntityRevenue30d(entityId: string): Promise<number> {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
