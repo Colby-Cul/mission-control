@@ -84,7 +84,10 @@ export default function EntityQuickActions({ entityId, entityName = '', slug, on
         <EditEntityModal
           entityId={entityId}
           onClose={() => setShowEditEntity(false)}
-          onSaved={() => { onSaved?.(); setShowEditEntity(false) }}
+          onSaved={() => {
+            setShowEditEntity(false)
+            if (onSaved) { onSaved() } else { window.location.reload() }
+          }}
         />
       )}
 
@@ -94,7 +97,10 @@ export default function EntityQuickActions({ entityId, entityName = '', slug, on
           entityName={entityName}
           childType="entity"
           onClose={() => setShowEditOwnership(false)}
-          onSaved={() => { onSaved?.(); setShowEditOwnership(false) }}
+          onSaved={() => {
+            setShowEditOwnership(false)
+            if (onSaved) { onSaved() } else { window.location.reload() }
+          }}
         />
       )}
     </>

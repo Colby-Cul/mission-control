@@ -78,7 +78,10 @@ export default function PropertyQuickActions({ propertyId, propertyName = '', sl
         <EditPropertyModal
           propertyId={propertyId}
           onClose={() => setShowEditProperty(false)}
-          onSaved={() => { onSaved?.(); setShowEditProperty(false) }}
+          onSaved={() => {
+            setShowEditProperty(false)
+            if (onSaved) { onSaved() } else { window.location.reload() }
+          }}
         />
       )}
 
@@ -88,7 +91,10 @@ export default function PropertyQuickActions({ propertyId, propertyName = '', sl
           entityName={propertyName}
           childType="property"
           onClose={() => setShowEditOwnership(false)}
-          onSaved={() => { onSaved?.(); setShowEditOwnership(false) }}
+          onSaved={() => {
+            setShowEditOwnership(false)
+            if (onSaved) { onSaved() } else { window.location.reload() }
+          }}
         />
       )}
     </>
