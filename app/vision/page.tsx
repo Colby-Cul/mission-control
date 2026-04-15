@@ -1556,14 +1556,22 @@ ___LINKED_ACCOUNTS___
   const activeVisionCount = visions.filter((v: any) => v.status === 'active').length
   const planningCount = visions.filter((v: any) => v.status === 'planning').length
 
+  // Vision portfolio range = sum of target_low..target_high across all visions
+  const visionLow  = visions.reduce((s: number, v: any) => s + Number(v.target_low ?? 0), 0)
+  const visionHigh = visions.reduce((s: number, v: any) => s + Number(v.target_high ?? v.target_low ?? 0), 0)
+  const fmtM = (n: number) => n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(0)}K` : `$${Math.round(n)}`
+  const portfolioRange = visionHigh > 0
+    ? (visionLow === visionHigh ? fmtM(visionHigh) : `${fmtM(visionLow)} — ${fmtM(visionHigh)}`)
+    : '$0'
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: pageCss }} />
       <Hero
         label="VISION CONTROL SYSTEM v5.0"
         greeting={`Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, ${userName} — scanning your financial universe`}
-        primaryMetric={`$${(netWorth / 1e6).toFixed(1)}M`}
-        metricSubtitle={`TOTAL VISION PORTFOLIO · ${activeVisionCount} active visions`}
+        primaryMetric={portfolioRange}
+        metricSubtitle={`TOTAL VISION PORTFOLIO · ${activeVisionCount} active · ${visions.length} total`}
         kpiCards={[
           { label: 'ON TRACK', value: String(activeVisionCount), delta: '+active', deltaPositive: true },
           { label: 'PLANNING', value: String(planningCount) },

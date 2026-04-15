@@ -43,8 +43,20 @@ export default async function AgentsPage() {
     getAchievements('agents'),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
-  // Use DB agents if present, otherwise built-in fallback
-  const agents: any[] = (agentsRaw as any[]).length > 0 ? (agentsRaw as any[]) : BUILTIN_AGENTS
+  // Merge DB agents with BUILTIN_AGENTS — DB rows override builtins by id/slug
+  const dbList = agentsRaw as any[]
+  const dbById = new Map(dbList.map((a: any) => [String(a.id ?? a.slug ?? a.name).toLowerCase(), a]))
+  const agents: any[] = [
+    ...BUILTIN_AGENTS.map((b: any) => {
+      const key = String(b.id).toLowerCase()
+      return dbById.has(key) ? { ...b, ...dbById.get(key) } : b
+    }),
+    // Any DB agents not present in builtins
+    ...dbList.filter((a: any) => {
+      const key = String(a.id ?? a.slug ?? a.name).toLowerCase()
+      return !BUILTIN_AGENTS.some((b: any) => String(b.id).toLowerCase() === key)
+    }),
+  ]
   const runList = (runs as any[])
   const achievements = (dbAchievements as any[]).length > 0
     ? (dbAchievements as any[]).map((a: any) => ({

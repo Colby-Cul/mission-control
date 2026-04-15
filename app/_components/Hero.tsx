@@ -55,7 +55,8 @@ export default function Hero({
 
   return (
     <div className="hero-banner" aria-label={`${label} hero banner`}>
-      {/* Canvas layer — either custom or default */}
+      {/* Canvas element — HeroCanvas client components attach to #heroCanvas via useEffect */}
+      <canvas id="heroCanvas" aria-hidden="true" />
       {animationSlot ?? <HeroCanvasDefault />}
 
       {/* HUD corner brackets */}
