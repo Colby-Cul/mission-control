@@ -47,27 +47,27 @@ interface NavGroup { id: string; label: string; icon: React.ReactNode; children:
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    id: 'ceo', label: 'CEO', icon: <Star size={18} />,
+    id: 'home', label: 'Home', icon: <Home size={18} />,
     children: [
-      { label: 'North Star',   icon: <Star size={15} />,        href: '/' },
-      { label: 'Vision Board', icon: <Target size={15} />,      href: '/vision' },
-      { label: 'Cash Flow',    icon: <DollarSign size={15} />,  href: '/cash-flow' },
-      { label: 'Tax Center',   icon: <Shield size={15} />,      href: '/tax' },
+      { label: 'Home',         icon: <Home size={15} />,           href: '/home' },
+      { label: 'North Star',   icon: <Star size={15} />,           href: '/' },
+      { label: 'Vision Board', icon: <Target size={15} />,         href: '/vision' },
+      { label: 'Cash Flow',    icon: <DollarSign size={15} />,     href: '/cash-flow' },
+      { label: 'Tax Center',   icon: <Shield size={15} />,         href: '/tax' },
     ],
   },
   {
     id: 'executive', label: 'Executive', icon: <Command size={18} />,
     children: [
       { label: 'Executive Overview', icon: <Command size={15} />,        href: '/executive' },
-      { label: 'Home',               icon: <Home size={15} />,            href: '/home' },
       { label: 'Command Deck',       icon: <LayoutDashboard size={15} />, href: '/command' },
     ],
   },
   {
     id: 'people', label: 'People', icon: <Users size={18} />,
     children: [
-      { label: 'Team',      icon: <Users size={15} />,    href: '/team' },
-      { label: 'The Floor', icon: <Building size={15} />, href: '/floor' },
+      { label: 'Team',   icon: <Users size={15} />, href: '/team' },
+      { label: 'Agents', icon: <Bot size={15} />,   href: '/agents' },
     ],
   },
   {
@@ -123,7 +123,6 @@ const NAV_GROUPS: NavGroup[] = [
 ]
 
 const BOTTOM_ITEMS: NavItem[] = [
-  { label: 'Agents',   icon: <Bot size={18} />,      href: '/agents' },
   { label: 'Settings', icon: <Settings size={18} />, href: '/settings' },
 ]
 
