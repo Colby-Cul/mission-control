@@ -9,10 +9,17 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import IntegrationActionButton from '../_components/IntegrationActionButton'
+import QuickBooksManageButton from '../_components/QuickBooksManageButton'
 import HeroCanvas from './HeroCanvas'
 import HighlightOnMount from './HighlightOnMount'
-import { getIntegrations, getUserProfile, getGoogleToken } from '../lib/queries'
+import {
+  getEntities,
+  getIntegrations,
+  getUserProfile,
+  getGoogleToken,
+} from '../lib/queries'
 import { isGoogleOAuthConfigured } from '../lib/google'
+import { listQbConnections } from '../lib/quickbooks'
 import { getProvider } from '../lib/integration-providers'
 import { getEnvMaskedValues, isVercelApiConfigured } from '../lib/vercel-env'
 import Link from 'next/link'
@@ -88,13 +95,31 @@ function staleness(lastSync?: string | null): { label: string; color: string } {
 }
 
 export default async function IntegrationsPage() {
-  const [integrations, profile, googleToken] = await Promise.all([
+  const [integrations, profile, googleToken, qbConnections, entityList] = await Promise.all([
     getIntegrations().catch(() => []),
     getUserProfile().catch(() => null),
     getGoogleToken().catch(() => null),
+    listQbConnections().catch(() => []),
+    getEntities().catch(() => []),
   ])
   const googleOAuthReady = isGoogleOAuthConfigured()
   const isGoogleConnected = !!googleToken
+
+  // Build the entity picker options for the QuickBooks modal. We expose every
+  // active entity with a slug — the modal filters out already-connected ones.
+  const qbEntityOptions = (entityList as any[])
+    .filter(e => e?.slug)
+    .map(e => ({
+      slug: String(e.slug),
+      name: String(e.entity_name ?? e.slug),
+    }))
+  const qbConnRows = qbConnections.map(c => ({
+    company_key: c.company_key,
+    realm_id: c.realm_id ?? null,
+    expires_at: c.expires_at,
+    refresh_token_expires_at: c.refresh_token_expires_at ?? null,
+    updated_at: c.updated_at,
+  }))
 
   // Ask Vercel which env vars are actually set — used to override per-card
   // status below so the UI reflects real credential presence, not a guess.
@@ -137,6 +162,17 @@ export default async function IntegrationsPage() {
       else resolvedStatus = 'partial'
     }
 
+    // QuickBooks is only "active" when at least one entity is connected. Env
+    // vars being present means the *app* is configured — we still need a row
+    // in quickbooks_connections to call it connected.
+    if (known.provider === 'quickbooks') {
+      if (qbConnRows.length > 0) {
+        resolvedStatus = 'active'
+      } else if (resolvedStatus === 'active') {
+        resolvedStatus = 'partial'
+      }
+    }
+
     // Best masked key we can show on the card — prefer DB value, fall back to Vercel.
     const maskedFromVercel = cfg.envVars.find((k: string) => envStatus[k])
       ? envStatus[cfg.envVars.find((k: string) => envStatus[k]) as string]?.masked
@@ -151,6 +187,10 @@ export default async function IntegrationsPage() {
       category: known.category,
       status: resolvedStatus,
       masked_key: dbRecord?.masked_key ?? maskedFromVercel ?? null,
+      record_count:
+        known.provider === 'quickbooks'
+          ? qbConnRows.length
+          : dbRecord?.record_count ?? null,
     }
   })
 
@@ -380,13 +420,12 @@ export default async function IntegrationsPage() {
                 {/* ── Action buttons ── */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {intg.provider === 'quickbooks' && (
-                    <a href="/api/qb/connect?returnTo=/integrations" data-integration-action style={{
-                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                      background: '#2ca01c', color: '#fff', textDecoration: 'none',
-                      border: '1px solid rgba(44,160,28,0.5)',
-                    }}>
-                      {isConnected ? '+ Connect Company' : 'Connect QuickBooks'}
-                    </a>
+                    <QuickBooksManageButton
+                      connections={qbConnRows}
+                      entities={qbEntityOptions}
+                      hasAny={qbConnRows.length > 0}
+                      returnTo="/integrations"
+                    />
                   )}
                   {intg.provider === 'plaid' && (
                     <Link href="/accounts" data-integration-action style={{
