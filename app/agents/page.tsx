@@ -116,7 +116,7 @@ export default async function AgentsPage() {
             </span>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}
              data-source="agents">
           {agents.map((agent: any) => {
             const color = agentTypeColor(agent)
@@ -125,62 +125,171 @@ export default async function AgentsPage() {
             )
             const lastRun = runList.find((r: any) => r.agent_id === agent.id)
             const isActive = agent.status === 'active'
+
+            // Resolve health color
+            const healthColor: Record<string, string> = {
+              healthy: 'var(--green)', degraded: 'var(--amber)', down: 'var(--red)', unknown: 'var(--dim)',
+            }
+            const hColor = healthColor[agent.health_status ?? 'unknown'] ?? 'var(--dim)'
+
+            // Success rate bar color
+            const srPct = agent.success_rate != null ? Number(agent.success_rate) : null
+            const srColor = srPct == null ? 'var(--dim)' : srPct >= 90 ? 'var(--green)' : srPct >= 70 ? 'var(--amber)' : 'var(--red)'
+
+            // Cost YTD formatting
+            const costYtd = Number(agent.cost_ytd ?? 0)
+            const costStr = costYtd >= 1000 ? `$${(costYtd/1000).toFixed(1)}k` : costYtd > 0 ? `$${costYtd.toFixed(0)}` : '—'
+
+            // Latency formatting
+            const latMs = agent.avg_latency_ms != null ? Number(agent.avg_latency_ms) : null
+            const latStr = latMs == null ? '—' : latMs > 60000 ? `${(latMs/60000).toFixed(1)}m` : latMs > 1000 ? `${(latMs/1000).toFixed(1)}s` : `${Math.round(latMs)}ms`
+
+            // Runs today: prefer DB-derived live count, fallback to builtin field
+            const runsToday = agentRunsToday.length > 0 ? agentRunsToday.length : (agent.runs_today ?? 0)
+
             return (
               <SpecCard key={agent.id} accent dataSource="agents">
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                {/* ── Row 1: name + tier badge ── */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* Status dot */}
+                    {/* Health/status dot */}
                     <div style={{
-                      width: 10, height: 10, borderRadius: '50%',
-                      background: isActive ? 'var(--green)' : 'var(--dim)',
-                      boxShadow: isActive ? '0 0 8px var(--green)' : 'none',
-                      flexShrink: 0,
+                      width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                      background: hColor,
+                      boxShadow: isActive ? `0 0 8px ${hColor}` : 'none',
                     }} />
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: color }}>{agent.name}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color }}>{agent.name}</div>
                       <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                         {agent.status ?? 'idle'}
+                        {agent.health_status && agent.health_status !== 'unknown' && (
+                          <span style={{ color: hColor, marginLeft: 6 }}>· {agent.health_status}</span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div style={{
-                    fontSize: 10, fontFamily: 'var(--mo)', padding: '2px 8px',
-                    borderRadius: 6, border: `1px solid ${color}40`,
-                    color, background: color + '12',
-                  }}>
-                    {agent.tier ?? agent.type ?? 'agent'}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    <div style={{
+                      fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 8px',
+                      borderRadius: 6, border: `1px solid ${color}40`, color, background: color + '12',
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                    }}>
+                      {agent.tier ?? 'agent'}
+                    </div>
+                    {agent.trigger_type && (
+                      <div style={{
+                        fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 6px',
+                        borderRadius: 4, background: 'rgba(255,255,255,0.04)',
+                        color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                      }}>
+                        {agent.trigger_type}
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* ── Description ── */}
                 {agent.description && (
                   <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 10, lineHeight: 1.5 }}>
                     {agent.description}
                   </div>
                 )}
 
-                {/* Capabilities */}
+                {/* ── Model + knowledge level ── */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                  {agent.model && (
+                    <span style={{
+                      fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 7px', borderRadius: 4,
+                      background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)',
+                      color: 'var(--purple)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>{agent.model}</span>
+                  )}
+                  {agent.knowledge_level && (
+                    <span style={{
+                      fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 7px', borderRadius: 4,
+                      background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)',
+                      color: 'var(--orange)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    }}>{agent.knowledge_level}</span>
+                  )}
+                </div>
+
+                {/* ── Current task ── */}
+                {agent.current_task && (
+                  <div style={{
+                    fontSize: 11, color: 'var(--t2)', marginBottom: 10, lineHeight: 1.4,
+                    padding: '6px 8px', background: 'rgba(255,255,255,0.03)', borderRadius: 6,
+                    borderLeft: `2px solid ${color}`,
+                  }}>
+                    <span style={{ color: 'var(--dim)', fontSize: 9, fontFamily: 'var(--mo)', display: 'block', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Current Task</span>
+                    {String(agent.current_task).slice(0, 80)}{String(agent.current_task).length > 80 ? '…' : ''}
+                  </div>
+                )}
+
+                {/* ── Capabilities ── */}
                 {Array.isArray(agent.capabilities) && agent.capabilities.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
-                    {agent.capabilities.slice(0, 4).map((cap: string) => (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+                    {agent.capabilities.slice(0, 5).map((cap: string) => (
                       <span key={cap} style={{
-                        fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 6px',
-                        borderRadius: 4, background: 'rgba(255,255,255,0.05)',
-                        color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.06em',
+                        fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 6px', borderRadius: 4,
+                        background: 'rgba(255,255,255,0.05)', color: 'var(--dim)',
+                        textTransform: 'uppercase', letterSpacing: '0.06em',
                       }}>{cap}</span>
                     ))}
                   </div>
                 )}
 
+                {/* ── Stats grid: runs, latency, cost, success rate ── */}
+                <div style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                  gap: 8, marginBottom: 10,
+                  padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: 8,
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: 'white' }}>{runsToday}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>runs/day</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: srColor }}>{srPct != null ? `${srPct}%` : '—'}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>success</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--amber)' }}>{latStr}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>latency</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: costYtd > 100 ? 'var(--red)' : costYtd > 20 ? 'var(--amber)' : 'var(--green)' }}>{costStr}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>cost YTD</div>
+                  </div>
+                </div>
+
+                {/* ── Last run + owner ── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--dim)', marginBottom: 12 }}>
-                  <span>Runs today: <strong style={{ color: 'white' }}>{agentRunsToday.length}</strong></span>
-                  {lastRun && (
-                    <span>Last: <strong style={{ color: 'white' }}>
-                      {new Date(lastRun.started_at ?? lastRun.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </strong></span>
+                  <span>
+                    {lastRun
+                      ? <>Last run: <strong style={{ color: 'white' }}>{new Date(lastRun.started_at ?? lastRun.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                      : agent.last_run_ts
+                        ? <>Last run: <strong style={{ color: 'white' }}>{new Date(agent.last_run_ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                        : 'No runs yet'}
+                  </span>
+                  {agent.owner && (
+                    <span>Owner: <strong style={{ color: 'var(--t2)' }}>{agent.owner}</strong></span>
                   )}
                 </div>
 
-                {/* Invoke button — client-side modal trigger */}
+                {/* ── Dependencies ── */}
+                {Array.isArray(agent.dependencies) && agent.dependencies.length > 0 && (
+                  <div style={{ fontSize: 10, color: 'var(--dim)', marginBottom: 10 }}>
+                    <span style={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: 9, fontFamily: 'var(--mo)' }}>Deps: </span>
+                    {agent.dependencies.map((dep: string) => (
+                      <span key={dep} style={{
+                        marginLeft: 4, padding: '1px 5px', borderRadius: 3,
+                        background: 'rgba(255,255,255,0.04)', fontSize: 9, fontFamily: 'var(--mo)',
+                      }}>{dep}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* ── Invoke button ── */}
                 <AgentsClient agentId={agent.id} agentName={agent.name} />
               </SpecCard>
             )
