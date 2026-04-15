@@ -1,53 +1,42 @@
 /**
- * GET /api/monday/loans
+ * GET /api/monday/loans   (legacy — kept for backward compatibility)
  *
- * Returns Xome Home loan data from Monday.com.
- * Requires env var: MONDAY_API_KEY
+ * Proxies to the multi-tenant Monday adapter (`app/lib/monday-adapter.ts`).
+ * New widgets should call `getMondayData('xome.*')` directly in server
+ * components instead of hitting this route.
  *
  * Query params:
- *   type = "pipeline" | "kpis" | "officers"  (default: "kpis")
+ *   type = "pipeline" | "kpis" | "officers" | "closed" | "compliance" | "warehouse" | "power"
  */
 
 import { NextResponse } from 'next/server'
-import {
-  getXomeLoanOfficers,
-  getXomeLoanPipeline,
-  getXomeLoanVolumeKPIs,
-} from '../../../lib/monday'
+import { getMondayData, type WidgetKey } from '../../../lib/monday-adapter'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+const TYPE_TO_WIDGET: Record<string, WidgetKey> = {
+  pipeline: 'xome.loan_pipeline',
+  kpis: 'xome.loan_volume_kpis',
+  officers: 'xome.loan_officer_roster',
+  closed: 'xome.recent_closed_loans',
+  compliance: 'xome.compliance',
+  warehouse: 'xome.warehouse_reconciliation',
+  power: 'xome.power',
+}
+
 export async function GET(request: Request) {
-  if (!process.env.MONDAY_API_KEY) {
+  const { searchParams } = new URL(request.url)
+  const type = searchParams.get('type') ?? 'kpis'
+  const widgetKey = TYPE_TO_WIDGET[type]
+
+  if (!widgetKey) {
     return NextResponse.json(
-      { error: 'MONDAY_API_KEY not configured', data: null },
-      { status: 200 }   // 200 so the page can render ComingSoon gracefully
+      { error: `Unknown type: ${type}`, data: null },
+      { status: 200 }
     )
   }
 
-  const { searchParams } = new URL(request.url)
-  const type = searchParams.get('type') ?? 'kpis'
-
-  try {
-    switch (type) {
-      case 'pipeline': {
-        const data = await getXomeLoanPipeline()
-        return NextResponse.json({ data })
-      }
-      case 'officers': {
-        const data = await getXomeLoanOfficers()
-        return NextResponse.json({ data })
-      }
-      case 'kpis':
-      default: {
-        const data = await getXomeLoanVolumeKPIs()
-        return NextResponse.json({ data })
-      }
-    }
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('[monday/loans]', message)
-    return NextResponse.json({ error: message, data: null }, { status: 200 })
-  }
+  const { data, error, cached } = await getMondayData(widgetKey)
+  return NextResponse.json({ data, error, cached, widgetKey }, { status: 200 })
 }
