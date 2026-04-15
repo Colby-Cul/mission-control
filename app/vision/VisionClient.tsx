@@ -338,62 +338,6 @@ function Btn({
   )
 }
 
-// ── URL Parse Field ───────────────────────────────────────────────────────────
-
-function UrlParseField({
-  onParsed,
-}: {
-  onParsed: (result: { title?: string; description?: string; image?: string; price?: string }) => void
-}) {
-  const [url, setUrl] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState('')
-
-  const handleFetch = async () => {
-    if (!url.trim()) return
-    setLoading(true)
-    setErr('')
-    try {
-      const res = await fetch(`/api/vision/parse-url?url=${encodeURIComponent(url.trim())}`)
-      const data = await res.json()
-      if (data.error) {
-        setErr(data.error)
-      } else {
-        onParsed(data)
-        setUrl('')
-      }
-    } catch {
-      setErr('Network error — please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <label style={labelStyle}>Paste a link (auto-fill)</label>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleFetch()}
-          placeholder="https://zillow.com/... or https://tesla.com/..."
-          style={{ ...inputStyle, flex: 1 }}
-        />
-        <Btn onClick={handleFetch} disabled={loading || !url.trim()} style={{ whiteSpace: 'nowrap' }}>
-          {loading ? '…' : 'Fetch →'}
-        </Btn>
-      </div>
-      {err && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{err}</p>}
-      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
-        We&apos;ll auto-pull the image, name, and price from the URL
-      </p>
-      <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.06)', margin: '16px 0' }} />
-    </div>
-  )
-}
-
 // ── Photo Upload ──────────────────────────────────────────────────────────────
 
 function PhotoUpload({
@@ -633,6 +577,189 @@ function VisionForm({
   )
 }
 
+// ── AI Intake Types ───────────────────────────────────────────────────────────
+
+interface AiIntakeResponse {
+  name: string
+  category: string
+  target_low: number
+  target_high: number
+  target_label: string
+  description: string
+  deadline_suggestion?: string
+  priority_suggestion?: number
+  image_url?: string
+  source_url?: string
+  used_ai: boolean
+  notes?: string
+}
+
+// ── AI Intake Step (Step A) ──────────────────────────────────────────────────
+
+function AiIntakeStep({
+  onGenerated,
+  onSkip,
+}: {
+  onGenerated: (result: AiIntakeResponse) => void
+  onSkip: () => void
+}) {
+  const [description, setDescription] = useState('')
+  const [url, setUrl] = useState('')
+  const [image, setImage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function uploadFile(file: File) {
+    if (!file.type.startsWith('image/')) return
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg'
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('vision-photos').upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data } = supabase.storage.from('vision-photos').getPublicUrl(path)
+      setImage(data.publicUrl)
+    } catch (e) {
+      console.error('Upload failed', e)
+    }
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file) uploadFile(file)
+  }
+
+  // Clipboard paste → upload image
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile()
+          if (file) uploadFile(file)
+        }
+      }
+    }
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [])
+
+  async function handleGenerate() {
+    if (!description.trim() && !url.trim() && !image) {
+      setErr('Give me something to work with — a description, a link, or an image.')
+      return
+    }
+    setLoading(true)
+    setErr('')
+    try {
+      const res = await fetch('/api/vision/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: description.trim(), url: url.trim(), image: image || undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErr(data.error ?? 'Generation failed — try editing manually instead.')
+        setLoading(false)
+        return
+      }
+      onGenerated(data as AiIntakeResponse)
+    } catch (e) {
+      setErr('Network error — please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <div style={{ marginBottom: 20 }}>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 0, marginBottom: 16, lineHeight: '1.6' }}>
+          Describe your vision in your own words. Paste a link to anything — Zillow, YachtWorld, a vacation rental, a car, an image on Instagram.
+          Drop in a photo, magazine clipping, or screenshot. The AI fills in the rest.
+        </p>
+      </div>
+
+      <Field label="Describe your vision *">
+        <textarea
+          style={{ ...inputStyle, height: 120, resize: 'vertical', lineHeight: '1.6' }}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={`e.g. Yacht for cruising the Mediterranean with the family, something around 60 feet, in the $2-5M range. Want to have this in about 4 years.`}
+        />
+      </Field>
+
+      <Field label="Paste a link (optional)">
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://yachtworld.com/... or https://vrbo.com/... or any URL"
+          style={inputStyle}
+        />
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
+          Works with any URL — property listings, cars, yachts, vacation rentals, products, social posts.
+        </p>
+      </Field>
+
+      <Field label="Or add an image (drag, click, or paste)">
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => fileRef.current?.click()}
+          style={{
+            border: '2px dashed rgba(255,255,255,0.12)',
+            borderRadius: 12, padding: '16px 12px', cursor: 'pointer',
+            textAlign: 'center', background: 'transparent',
+          }}
+        >
+          {image ? (
+            <div>
+              <img src={image} alt="Preview" style={{ maxHeight: 120, borderRadius: 8, maxWidth: '100%', objectFit: 'cover' }} />
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Click to replace</p>
+            </div>
+          ) : (
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, margin: 0 }}>
+              Drag an image here from your computer, browser, or screenshot.
+              <br />
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>⌘V works too — paste a clipboard image anywhere.</span>
+            </p>
+          )}
+        </div>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) uploadFile(f)
+          }}
+        />
+      </Field>
+
+      {err && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{err}</p>}
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+        <button
+          onClick={onSkip}
+          style={{
+            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer', fontSize: 13, padding: '10px 0', fontFamily: 'inherit',
+          }}
+        >
+          Or add manually →
+        </button>
+        <Btn onClick={handleGenerate} disabled={loading || (!description.trim() && !url.trim() && !image)}>
+          {loading ? 'Thinking…' : 'Generate vision card with AI ✦'}
+        </Btn>
+      </div>
+    </>
+  )
+}
+
 // ── Add Vision Modal ──────────────────────────────────────────────────────────
 
 function AddVisionModal({
@@ -644,18 +771,30 @@ function AddVisionModal({
   onClose: () => void
   onSaved: () => void
 }) {
+  const [step, setStep] = useState<'intake' | 'review'>('intake')
   const [form, setForm] = useState<VisionFormData>(emptyVisionForm())
   const [saving, setSaving] = useState(false)
+  const [aiNote, setAiNote] = useState('')
 
-  function handleParsed(data: { title?: string; description?: string; image?: string; price?: string }) {
+  function handleAiGenerated(result: AiIntakeResponse) {
+    const deadline = result.deadline_suggestion
+      ? result.deadline_suggestion.slice(0, 10)
+      : ''
     setForm((f) => ({
       ...f,
-      name: data.title ?? f.name,
-      note: data.description ?? f.note,
-      img: data.image ?? f.img,
-      target_low: data.price ? data.price.replace(/[^0-9.]/g, '') : f.target_low,
-      target_high: data.price ? data.price.replace(/[^0-9.]/g, '') : f.target_high,
+      name: result.name,
+      category: result.category ?? f.category,
+      target_low: result.target_low ? String(Math.round(result.target_low)) : '',
+      target_high: result.target_high ? String(Math.round(result.target_high)) : '',
+      target_label: result.target_label ?? '',
+      note: result.description ?? '',
+      img: result.image_url ?? f.img,
+      source_url: result.source_url ?? '',
+      deadline,
+      priority: result.priority_suggestion ? String(result.priority_suggestion) : f.priority,
     }))
+    if (result.notes) setAiNote(result.notes)
+    setStep('review')
   }
 
   async function handleSave() {
@@ -691,11 +830,276 @@ function AddVisionModal({
   }
 
   return (
-    <ModalShell title="Add New Vision" onClose={onClose} wide>
-      <UrlParseField onParsed={handleParsed} />
-      <label style={{ ...labelStyle, marginBottom: 12 }}>Or add manually</label>
-      <VisionForm form={form} setForm={setForm} accounts={accounts} onSave={handleSave} saving={saving} />
+    <ModalShell title={step === 'intake' ? 'Tell me about your vision' : 'Review & save'} onClose={onClose} wide>
+      {step === 'intake' ? (
+        <AiIntakeStep onGenerated={handleAiGenerated} onSkip={() => setStep('review')} />
+      ) : (
+        <>
+          {aiNote && (
+            <div style={{
+              background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+              borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+              fontSize: 12, color: 'rgba(249,115,22,0.9)', lineHeight: '1.5',
+            }}>
+              ✦ {aiNote}
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Review & edit any field</label>
+            <button
+              onClick={() => { setStep('intake'); setAiNote('') }}
+              style={{
+                background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer', fontSize: 12, padding: '4px 8px', fontFamily: 'inherit',
+              }}
+            >
+              ← Back to AI intake
+            </button>
+          </div>
+          <VisionForm form={form} setForm={setForm} accounts={accounts} onSave={handleSave} saving={saving} />
+        </>
+      )}
     </ModalShell>
+  )
+}
+
+// ── Financial Plan Tab ────────────────────────────────────────────────────────
+
+interface PlanRecommendation {
+  title: string
+  detail: string
+  impact: string
+  category: 'savings' | 'expenses' | 'revenue' | 'tax' | 'other'
+}
+
+interface PlanData {
+  headline: string
+  time_to_target_months: number | null
+  pct_of_net_worth: number | null
+  pct_of_liquid: number | null
+  target_midpoint: number
+  monthly_savings: number
+  recommendations: PlanRecommendation[]
+  used_ai: boolean
+  notes?: string
+}
+
+const REC_COLORS: Record<PlanRecommendation['category'], string> = {
+  savings: 'var(--green)',
+  expenses: 'var(--amber)',
+  revenue: 'var(--orange, #f97316)',
+  tax: 'var(--purple)',
+  other: 'var(--pink)',
+}
+
+function PlanTab({ vision }: { vision: Vision }) {
+  const [plan, setPlan] = useState<PlanData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState('')
+  const [spawning, setSpawning] = useState<number | null>(null)
+  const [spawnedIdx, setSpawnedIdx] = useState<Set<number>>(new Set())
+
+  useEffect(() => {
+    let aborted = false
+    async function load() {
+      setLoading(true)
+      setErr('')
+      try {
+        const res = await fetch('/api/vision/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visionId: vision.id }),
+        })
+        const data = await res.json()
+        if (aborted) return
+        if (!res.ok) {
+          setErr(data.error ?? 'Could not load plan.')
+        } else {
+          setPlan(data as PlanData)
+        }
+      } catch {
+        if (!aborted) setErr('Network error — please retry.')
+      } finally {
+        if (!aborted) setLoading(false)
+      }
+    }
+    load()
+    return () => { aborted = true }
+  }, [vision.id])
+
+  async function handleCreateAction(rec: PlanRecommendation, idx: number) {
+    setSpawning(idx)
+    try {
+      const { error } = await supabase.from('tasks').insert({
+        name: `${rec.title} (vision: ${vision.name})`,
+        description: `${rec.detail}\n\nImpact: ${rec.impact}\nFrom Vision Board plan for "${vision.name}".`,
+        status: 'pending',
+        priority: 'medium',
+      })
+      if (error) throw error
+      setSpawnedIdx((prev) => new Set(prev).add(idx))
+    } catch (e) {
+      console.error('Create task error', e)
+    } finally {
+      setSpawning(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>
+        ✦ Building your financial plan…
+      </div>
+    )
+  }
+  if (err) {
+    return <p style={{ color: '#ef4444', fontSize: 13 }}>{err}</p>
+  }
+  if (!plan) return null
+
+  const midpointPct =
+    plan.target_midpoint > 0 && plan.monthly_savings > 0 && plan.time_to_target_months
+      ? Math.min(100, ((plan.monthly_savings * 3) / plan.target_midpoint) * 100)
+      : 0
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Headline */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(249,115,22,0.10), rgba(139,92,246,0.10))',
+          border: '1px solid rgba(249,115,22,0.25)', borderRadius: 14, padding: '16px 18px',
+        }}
+      >
+        <p style={{ margin: 0, fontSize: 14, color: '#fff', lineHeight: '1.55', fontWeight: 500 }}>
+          {plan.headline}
+        </p>
+        {plan.notes && (
+          <p style={{ margin: '10px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: '1.5' }}>
+            {plan.notes}
+          </p>
+        )}
+      </div>
+
+      {/* KPI strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <KpiTile
+          label="Time to target"
+          value={
+            plan.time_to_target_months != null
+              ? `${plan.time_to_target_months} mo`
+              : '—'
+          }
+          color="var(--amber)"
+        />
+        <KpiTile
+          label="Monthly savings"
+          value={plan.monthly_savings > 0 ? USD(plan.monthly_savings) : '—'}
+          color="var(--green)"
+        />
+        <KpiTile
+          label="% of net worth"
+          value={plan.pct_of_net_worth != null ? `${plan.pct_of_net_worth.toFixed(1)}%` : '—'}
+          color="var(--purple)"
+        />
+        <KpiTile
+          label="% of liquid"
+          value={plan.pct_of_liquid != null ? `${plan.pct_of_liquid.toFixed(1)}%` : '—'}
+          color="var(--pink)"
+        />
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>
+            Quarterly pace vs target
+          </span>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontFamily: "'IBM Plex Mono', monospace" }}>
+            {midpointPct.toFixed(1)}%
+          </span>
+        </div>
+        <div style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' }}>
+          <div
+            style={{
+              width: `${midpointPct}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #f97316, #8b5cf6)',
+              transition: 'width 0.6s ease',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Recommendations */}
+      <div>
+        <h3 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+          {plan.used_ai ? 'AI-generated recommendations' : 'Baseline recommendations'}
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {plan.recommendations.map((rec, idx) => {
+            const spawned = spawnedIdx.has(idx)
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${REC_COLORS[rec.category]}33`,
+                  borderRadius: 10, padding: '12px 14px',
+                  borderLeft: `3px solid ${REC_COLORS[rec.category]}`,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 4 }}>
+                  <h4 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: '1.4' }}>{rec.title}</h4>
+                  <span
+                    style={{
+                      fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600,
+                      color: REC_COLORS[rec.category], whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {rec.impact}
+                  </span>
+                </div>
+                <p style={{ margin: '0 0 8px', fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: '1.5' }}>
+                  {rec.detail}
+                </p>
+                <button
+                  onClick={() => !spawned && handleCreateAction(rec, idx)}
+                  disabled={spawned || spawning === idx}
+                  style={{
+                    background: spawned ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${spawned ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 600,
+                    color: spawned ? 'var(--green)' : 'rgba(255,255,255,0.55)',
+                    cursor: spawned ? 'default' : 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {spawning === idx ? 'Creating…' : spawned ? '✓ Task created' : '+ Create action'}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function KpiTile({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 10, padding: '10px 12px',
+      }}
+    >
+      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 18, fontFamily: "'IBM Plex Mono', monospace", color, fontWeight: 600 }}>
+        {value}
+      </div>
+    </div>
   )
 }
 
@@ -714,6 +1118,7 @@ function EditDrawer({
 }) {
   const [form, setForm] = useState<VisionFormData>(visionToForm(vision))
   const [saving, setSaving] = useState(false)
+  const [tab, setTab] = useState<'details' | 'plan'>('details')
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -789,21 +1194,48 @@ function EditDrawer({
           display: 'flex', flexDirection: 'column', gap: 0,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff' }}>Edit Vision</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#fff' }}>{vision.name}</h2>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 16, padding: '6px 10px' }}>
             ✕
           </button>
         </div>
-        <VisionForm
-          form={form}
-          setForm={setForm}
-          accounts={accounts}
-          editMode
-          onDelete={handleDelete}
-          onSave={handleSave}
-          saving={saving}
-        />
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 18, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          {[
+            { id: 'details' as const, label: 'Details' },
+            { id: 'plan' as const, label: 'Financial Plan ✦' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                background: 'transparent', border: 'none',
+                borderBottom: `2px solid ${tab === t.id ? '#f97316' : 'transparent'}`,
+                color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.45)',
+                fontSize: 13, fontWeight: 600, padding: '8px 14px', cursor: 'pointer',
+                fontFamily: 'inherit', marginBottom: -1,
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'details' ? (
+          <VisionForm
+            form={form}
+            setForm={setForm}
+            accounts={accounts}
+            editMode
+            onDelete={handleDelete}
+            onSave={handleSave}
+            saving={saving}
+          />
+        ) : (
+          <PlanTab vision={vision} />
+        )}
       </div>
     </>
   )
