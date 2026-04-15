@@ -148,9 +148,28 @@ export async function GET(req: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[qb callback] error', msg)
     await logQbEvent({ kind: 'token-exchange', status: 'error', detail: msg })
-    return bounce(origin, returnTo, {
-      highlight: 'quickbooks',
-      error: encodeURIComponent(msg.slice(0, 120)),
-    })
+
+    // Special-case the SUPABASE_SERVICE_ROLE_KEY missing error — this is a
+    // common first-deploy mistake and deserves a specific error code so the
+    // /integrations page can render a helpful admin hint instead of a raw
+    // encoded message. Everything else falls through with the full message.
+    const isServiceRoleMissing = msg.includes('SUPABASE_SERVICE_ROLE_KEY')
+    const errorCode = isServiceRoleMissing
+      ? 'service-role-missing'
+      : encodeURIComponent(msg.slice(0, 200))
+
+    const dest = new URL(
+      returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/integrations',
+      origin,
+    )
+    dest.searchParams.set('highlight', 'quickbooks')
+    dest.searchParams.set('error', errorCode)
+    if (isServiceRoleMissing) {
+      dest.searchParams.set(
+        'error_detail',
+        'admin must set SUPABASE_SERVICE_ROLE_KEY in Vercel env to enable QB token storage',
+      )
+    }
+    return NextResponse.redirect(dest.toString(), 303)
   }
 }

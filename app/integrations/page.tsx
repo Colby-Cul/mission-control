@@ -12,6 +12,7 @@ import IntegrationActionButton from '../_components/IntegrationActionButton'
 import QuickBooksManageButton from '../_components/QuickBooksManageButton'
 import HeroCanvas from './HeroCanvas'
 import HighlightOnMount from './HighlightOnMount'
+import QbErrorBanner from './QbErrorBanner'
 import {
   getEntities,
   getIntegrations,
@@ -218,6 +219,9 @@ export default async function IntegrationsPage() {
     <>
       <Suspense fallback={null}>
         <HighlightOnMount />
+      </Suspense>
+      <Suspense fallback={null}>
+        <QbErrorBanner />
       </Suspense>
       <Hero
         label="◈ INTEGRATIONS · CONNECTED SERVICES"
