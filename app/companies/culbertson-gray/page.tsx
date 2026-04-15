@@ -36,6 +36,13 @@ import {
   getEntityDocumentsByEntityId,
 } from '../../lib/queries'
 import {
+  currentCompanyKey,
+  getQbConnection,
+  getQbProfitLoss,
+  parseProfitLoss,
+  type ParsedPL,
+} from '../../lib/quickbooks'
+import {
   getFubIdentity,
   getFubKpis,
   getFubLeadPipeline,
@@ -114,6 +121,20 @@ export default async function CulbertsonGrayPage() {
   try { documents = await getEntityDocumentsByEntityId(CG_SLUG) } catch {}
   try { revenue30d = await getEntityRevenue30d(CG_SLUG) } catch {}
   try { expenses30d = await getEntityExpenses30d(CG_SLUG) } catch {}
+
+  // QuickBooks YTD P&L — only when this entity's QB realm is connected.
+  // Today we match on the default company_key; future work maps entity slug
+  // → realm via a lookup on entity_ownership.meta.qb_realm_id.
+  let qbPL: ParsedPL | null = null
+  try {
+    const connection = await getQbConnection(currentCompanyKey())
+    if (connection?.realm_id) {
+      const raw = await getQbProfitLoss(currentCompanyKey())
+      qbPL = parseProfitLoss(raw)
+    }
+  } catch {
+    qbPL = null
+  }
 
   // Fetch everything in parallel. Each returns { data, error } — no throw.
   const [
@@ -1103,6 +1124,32 @@ export default async function CulbertsonGrayPage() {
 
       {/* ─── Financials tab ─────────────────────────────────────── */}
       <div data-tab="financials">
+        {qbPL && (
+          <SpecCard accent dataSource="quickbooks:ProfitAndLoss" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                QuickBooks P&amp;L — YTD
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                {qbPL.periodLabel}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {([
+                ['Income',   qbPL.totalIncome,   'var(--green)'],
+                ['Expenses', qbPL.totalExpenses, 'var(--red)'],
+                ['Net',      qbPL.netIncome,     qbPL.netIncome >= 0 ? 'var(--green)' : 'var(--red)'],
+              ] as [string, number, string][]).map(([label, val, color]) => (
+                <div key={label} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color }}>
+                    {fmtCurrency(val)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SpecCard>
+        )}
         {revenue30d > 0 || expenses30d > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
             <SpecCard accent dataSource={`financial_transactions:revenue:${CG_SLUG}`}>

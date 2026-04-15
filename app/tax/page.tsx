@@ -20,6 +20,12 @@ import {
   getEntityDocuments,
   getProperties,
 } from '../lib/queries'
+import {
+  currentCompanyKey,
+  getQbProfitLoss,
+  parseProfitLoss,
+  type ParsedPL,
+} from '../lib/quickbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,6 +55,15 @@ export default async function TaxPage() {
     getEntityDocuments(['tax', 'ein', 'annual_report', 'filing', 'operating_agreement', 'formation']).catch(() => []),
     getProperties().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
+
+  // QuickBooks P&L (YTD) — null when not connected or QB not configured.
+  let qbPL: ParsedPL | null = null
+  try {
+    const raw = await getQbProfitLoss(currentCompanyKey())
+    qbPL = parseProfitLoss(raw)
+  } catch {
+    qbPL = null
+  }
 
   // Prefer derivedMoves (falls back to static suggestions when tax_moves empty)
   const taxMoves = (taxMovesBase as any[]).length > 0 ? taxMovesBase : derivedMoves
@@ -284,6 +299,47 @@ export default async function TaxPage() {
           />
         )}
       </div>
+
+      {/* QuickBooks P&L (YTD) */}
+      <section style={{ marginBottom: 28 }}>
+        <div className="section-header">
+          <div className="section-header-left">
+            <h2 className="section-title">QuickBooks P&amp;L (YTD)</h2>
+            {qbPL && (
+              <span className="achieve-count">live · {qbPL.periodLabel}</span>
+            )}
+          </div>
+        </div>
+        {qbPL ? (
+          <SpecCard accent dataSource="quickbooks:ProfitAndLoss">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {([
+                ['Total Income',    USD(qbPL.totalIncome),   'var(--green)',  'YTD'],
+                ['Total Expenses',  USD(qbPL.totalExpenses), 'var(--red)',    'YTD'],
+                ['Net Income',      USD(qbPL.netIncome),     qbPL.netIncome >= 0 ? 'var(--green)' : 'var(--red)', 'bottom line'],
+              ] as [string, string, string, string][]).map(([label, val, color, sub]) => (
+                <div key={label} style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color }}>{val}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4 }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 12, lineHeight: 1.5 }}>
+              Pulled live from QuickBooks Online · {qbPL.currency} · cached 60s
+            </div>
+          </SpecCard>
+        ) : (
+          <ComingSoon
+            title="QuickBooks P&L (YTD)"
+            reason="Connect QuickBooks on the Integrations page to pull live Income, Expenses, and Net Income straight from QBO."
+            icon="📊"
+            connect="qb"
+            dataSource="coming-soon:quickbooks_profit_loss"
+            skeleton="kpi"
+          />
+        )}
+      </section>
 
       {/* Deductions by Category */}
       <section style={{ marginBottom: 28 }}>

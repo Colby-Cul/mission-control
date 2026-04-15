@@ -11,6 +11,14 @@ import {
 } from '../lib/queries'
 import HeroCanvas from './HeroCanvas'
 import Hero from '../_components/Hero'
+import { SpecCard } from '../_components/SpecCard'
+import ComingSoon from '../_components/ComingSoon'
+import {
+  currentCompanyKey,
+  getQbBalanceSheet,
+  parseBalanceSheet,
+  type ParsedBS,
+} from '../lib/quickbooks'
 
 export const dynamic = 'force-dynamic'
 
@@ -132,6 +140,15 @@ export default async function FinancePage() {
   // Cascaded net worth from ownership graph
   let nwGraph: Awaited<ReturnType<typeof getNetWorthFromGraph>> | null = null
   try { nwGraph = await getNetWorthFromGraph() } catch {}
+
+  // QuickBooks Balance Sheet — null when not connected or QB not configured.
+  let qbBS: ParsedBS | null = null
+  try {
+    const raw = await getQbBalanceSheet(currentCompanyKey())
+    qbBS = parseBalanceSheet(raw)
+  } catch {
+    qbBS = null
+  }
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -4089,6 +4106,53 @@ ___ACCOUNTS_GRID___
         }}
         animationSlot={<HeroCanvas />}
       />
+
+      {/* QuickBooks Balance Sheet — live when connected */}
+      <section style={{ marginBottom: 28 }}>
+        <div className="section-header">
+          <div className="section-header-left">
+            <h2 className="section-title">QuickBooks Balance Sheet</h2>
+            {qbBS && <span className="achieve-count">live · as of {qbBS.asOf}</span>}
+          </div>
+        </div>
+        {qbBS ? (
+          <SpecCard accent dataSource="quickbooks:BalanceSheet">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {([
+                ['Total Assets',      USD(qbBS.totalAssets),      'var(--green)'],
+                ['Total Liabilities', USD(qbBS.totalLiabilities), 'var(--red)'],
+                ['Total Equity',      USD(qbBS.totalEquity),      'var(--orange)'],
+              ] as [string, string, string][]).map(([label, val, color]) => (
+                <div
+                  key={label}
+                  style={{
+                    padding: '14px 16px',
+                    background: 'rgba(255,255,255,0.02)',
+                    borderRadius: 12,
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color }}>{val}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 12, lineHeight: 1.5 }}>
+              Pulled live from QuickBooks Online · {qbBS.currency} · cached 60s
+            </div>
+          </SpecCard>
+        ) : (
+          <ComingSoon
+            title="QuickBooks Balance Sheet"
+            reason="Connect QuickBooks on the Integrations page to pull live Assets, Liabilities, and Equity directly from QBO."
+            icon="📒"
+            connect="qb"
+            dataSource="coming-soon:quickbooks_balance_sheet"
+            skeleton="kpi"
+          />
+        )}
+      </section>
+
       <div dangerouslySetInnerHTML={{ __html: bodyContent }} />
     </>
   )
