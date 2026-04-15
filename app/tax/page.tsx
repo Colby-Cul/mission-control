@@ -83,6 +83,39 @@ export default async function TaxPage() {
 
       <Achievements items={DEFAULT_ACHIEVEMENTS} xpEarned={xpEarned} />
 
+      {/* Tax KPI Strip — matches live TaxCenter 5-up */}
+      {(taxEntities as any[]).length > 0 && (() => {
+        const totalOwed      = (taxEntities as any[]).reduce((s: number, e: any) => s + Number(e.est_owed   ?? 0), 0)
+        const totalPaid      = (taxEntities as any[]).reduce((s: number, e: any) => s + Number(e.ytd_paid   ?? 0), 0)
+        const totalIncome    = (taxEntities as any[]).reduce((s: number, e: any) => s + Number(e.ytd_income ?? 0), 0)
+        const totalDeductions= (taxEntities as any[]).reduce((s: number, e: any) => s + Number(e.ytd_deductions ?? 0), 0)
+        const potentialSavings = (taxMoves as any[]).reduce((s: number, m: any) => s + Number(m.savings_estimate ?? 0), 0)
+        return (
+          <section style={{ marginBottom: 28 }}>
+            <div className="section-header">
+              <div className="section-header-left">
+                <h2 className="section-title">Tax Summary</h2>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }} data-source="tax_entities_meta">
+              {([
+                ['Next Quarter Due',  USD(totalOwed),       'var(--red)',    'due Jun 15, 2026'],
+                ['YTD Taxes Paid',    USD(totalPaid),       'var(--green)',  'across all entities'],
+                ['YTD Income',        USD(totalIncome),     'inherit',       'all sources'],
+                ['YTD Deductions',    USD(totalDeductions), 'var(--purple)', 'claimed so far'],
+                ['Potential Savings', USD(potentialSavings) + '+', 'var(--orange)', 'from open tax moves'],
+              ] as [string, string, string, string][]).map(([label, val, color, sub]) => (
+                <SpecCard key={label} accent dataSource="tax_entities_meta">
+                  <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color }}>{val}</div>
+                  <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>{sub}</div>
+                </SpecCard>
+              ))}
+            </div>
+          </section>
+        )
+      })()}
+
       {/* Next Deadline Countdown */}
       <section style={{ marginBottom: 28 }}>
         <div className="section-header">
@@ -129,30 +162,45 @@ export default async function TaxPage() {
 
       {/* Entity Tax Grid + Tax Moves */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
-        {/* Entity Tax Status Grid */}
+        {/* Entity Tax Status — Quarterly Estimates Table */}
         {(taxEntities as any[]).length > 0 ? (
           <SpecCard accent dataSource="tax_entities_meta">
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Entity Tax Status</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(taxEntities as any[]).slice(0, 6).map((e: any) => (
-                <div key={e.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600 }}>{e.entity?.entity_name ?? e.entity_id ?? 'Entity'}</div>
-                      <div style={{ fontSize: 10, color: 'var(--dim)' }}>{e.entity?.entity_type ?? ''} · {e.entity?.state ?? ''}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      {e.est_owed && <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--amber)' }}>{USD(Number(e.est_owed))} est.</div>}
-                      {e.ytd_paid && <div style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--mo)' }}>{USD(Number(e.ytd_paid))} paid</div>}
-                    </div>
-                  </div>
-                  {e.next_due && (
-                    <div style={{ fontSize: 10, color: 'var(--dim)' }}>
-                      Next: {new Date(e.next_due).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Quarterly Estimates by Entity</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                <thead>
+                  <tr>
+                    {(['Entity', 'State', 'Type', 'Q Est.', 'YTD Paid', 'Next Due'] as string[]).map(h => (
+                      <th key={h} style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '8px 8px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {(taxEntities as any[]).map((e: any, i: number) => {
+                    const state = e.entity?.state ?? e.state ?? 'US'
+                    const stateColor = state === 'CA' ? '#fb923c' : state === 'AL' ? '#34d399' : state === 'NV' ? '#818cf8' : '#fbbf24'
+                    const stateBg   = state === 'CA' ? 'rgba(249,115,22,.08)' : state === 'AL' ? 'rgba(52,211,153,.08)' : state === 'NV' ? 'rgba(129,140,248,.08)' : 'rgba(251,191,36,.08)'
+                    return (
+                      <tr key={e.id} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                        <td style={{ padding: '8px 8px', fontWeight: 600 }}>{e.entity?.entity_name ?? e.entity_id ?? 'Entity'}</td>
+                        <td style={{ padding: '8px 8px' }}>
+                          <span style={{ fontFamily: 'var(--mo)', fontSize: 10, background: stateBg, color: stateColor, padding: '2px 5px', borderRadius: 3 }}>{state}</span>
+                        </td>
+                        <td style={{ padding: '8px 8px', color: 'var(--dim)' }}>{e.entity?.entity_type ?? '—'}</td>
+                        <td style={{ padding: '8px 8px', fontFamily: 'var(--mo)', color: Number(e.est_owed ?? 0) > 0 ? 'var(--red)' : 'var(--dim)' }}>
+                          {Number(e.est_owed ?? 0) > 0 ? USD(Number(e.est_owed)) : '—'}
+                        </td>
+                        <td style={{ padding: '8px 8px', fontFamily: 'var(--mo)', color: 'var(--green)' }}>
+                          {Number(e.ytd_paid ?? 0) > 0 ? USD(Number(e.ytd_paid)) : '—'}
+                        </td>
+                        <td style={{ padding: '8px 8px', color: 'var(--dim)' }}>
+                          {e.next_due ? new Date(e.next_due).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </SpecCard>
         ) : (
@@ -165,29 +213,51 @@ export default async function TaxPage() {
           />
         )}
 
-        {/* Tax Moves Gamified */}
+        {/* Tax Strategy Moves — priority-colored cards matching live */}
         {(taxMoves as any[]).length > 0 ? (
           <SpecCard accent dataSource="tax_moves">
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Tax Moves</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(taxMoves as any[]).slice(0, 5).map((m: any) => (
-                <div key={m.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ flex: 1, marginRight: 12 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600 }}>{m.action ?? m.title ?? 'Tax Move'}</div>
-                      {m.detail && <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>{m.detail}</div>}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Tax Strategy Moves</div>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: 'rgba(249,115,22,0.1)', color: 'var(--orange)' }}>
+                {(taxMoves as any[]).filter((m: any) => m.status === 'open' || m.status === 'upcoming').length} actionable
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 480, overflowY: 'auto' }}>
+              {(taxMoves as any[]).map((m: any) => {
+                const priorityColor = m.priority === 'critical' ? '#f43f5e' : m.priority === 'high' ? 'var(--orange)' : 'var(--purple)'
+                const statusBg    = m.status === 'open'     ? 'rgba(52,211,153,.1)'   :
+                                    m.status === 'upcoming' ? 'rgba(251,191,36,.1)'   :
+                                    m.status === 'evaluate' ? 'rgba(129,140,248,.1)'  :
+                                    m.status === 'active'   ? 'rgba(249,115,22,.1)'   :
+                                                              'rgba(100,116,139,.06)'
+                const statusColor = m.status === 'open'     ? '#34d399'  :
+                                    m.status === 'upcoming' ? '#fbbf24'  :
+                                    m.status === 'evaluate' ? '#818cf8'  :
+                                    m.status === 'active'   ? '#f97316'  : 'var(--dim)'
+                return (
+                  <div key={m.id} style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid var(--border)',
+                    borderLeft: `3px solid ${priorityColor}`,
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, flex: 1, marginRight: 8 }}>{m.action ?? m.title ?? 'Tax Move'}</div>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: statusBg, color: statusColor, flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{m.status}</span>
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      {m.savings_estimate && (
-                        <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--green)', fontWeight: 600 }}>
-                          +{USD(Number(m.savings_estimate))}
-                        </div>
-                      )}
-                      <div style={{ fontSize: 9, color: 'var(--orange)', fontFamily: 'var(--mo)' }}>+XP</div>
-                    </div>
+                    {m.savings_estimate && (
+                      <div style={{ marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, fontFamily: 'var(--mo)', background: 'rgba(249,115,22,0.08)', color: 'var(--orange)', padding: '2px 6px', borderRadius: 4 }}>
+                          Saves {USD(Number(m.savings_estimate))}+
+                        </span>
+                      </div>
+                    )}
+                    {m.detail && <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.5, marginBottom: 4 }}>{m.detail}</div>}
+                    {m.deadline && <div style={{ fontSize: 10, color: 'var(--dim)' }}>Deadline: {m.deadline}</div>}
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </SpecCard>
         ) : (

@@ -17,6 +17,7 @@ import {
   getEntities,
   getUpcomingTaxDeadlines,
   getAchievements,
+  getProperties,
 } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,7 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount] = await Promise.allSettled([
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties] = await Promise.allSettled([
     getAccounts(),
     getVisions(),
     getOpenTasks(),
@@ -44,12 +45,33 @@ export default async function DashboardPage() {
     getUpcomingTaxDeadlines(),
     getAchievements('dashboard'),
     getDoneTasksCount(),
+    getProperties().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const netWorth = (accounts as any[]).reduce((s, a) => s + accountSignedBalance(a), 0)
   const activeVisions = (visions as any[]).filter((v: any) => v.status === 'active').length
   const openTaskCount = (tasks as any[]).length
   const entityCount = (entities as any[]).length
+
+  // Portfolio breakdown (for Goal Tracker + Portfolio bars)
+  const GOAL_TARGET = 10_000_000
+  const goalPct = Math.min(100, parseFloat(((netWorth / GOAL_TARGET) * 100).toFixed(1)))
+
+  const liquidCash = (accounts as any[])
+    .filter((a: any) => String(a.type ?? '').toLowerCase() === 'depository')
+    .reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
+  const investments = (accounts as any[])
+    .filter((a: any) => ['investment', 'brokerage'].includes(String(a.type ?? '').toLowerCase()))
+    .reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
+  const realEstateEquity = (properties as any[])
+    .reduce((s: number, p: any) => s + Number(p.owned_equity ?? p.equity ?? 0), 0)
+  const totalAssets = Math.max(1, liquidCash + investments + realEstateEquity)
+
+  const portfolioRows = [
+    { label: 'Real Estate (Owned Equity)', val: realEstateEquity, color: 'var(--orange)', pct: Math.round((realEstateEquity / totalAssets) * 100) },
+    { label: 'Liquid Cash',               val: liquidCash,        color: 'var(--green)',  pct: Math.round((liquidCash        / totalAssets) * 100) },
+    { label: 'Investments',               val: investments,       color: 'var(--purple)', pct: Math.round((investments       / totalAssets) * 100) },
+  ]
 
   const achievements = (rawAchievements as any[]).length > 0
     ? (rawAchievements as any[]).slice(0, 8).map((a: any) => ({
@@ -163,6 +185,79 @@ export default async function DashboardPage() {
         )}
       </section>
 
+      {/* Goal Tracker + Portfolio Breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
+        {/* Goal Tracker — $10M by 2030 */}
+        <SpecCard accent dataSource="financial_accounts.balance_current">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>50-Year Goal · $10M Milestone</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* SVG donut */}
+            <div style={{ position: 'relative', width: 100, height: 100, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width={100} height={100} style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
+                <defs>
+                  <linearGradient id="ns-dg-v7" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%"   stopColor="#f97316" />
+                    <stop offset="50%"  stopColor="#ec4899" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+                <circle cx={50} cy={50} r={42} fill="none" stroke="rgba(255,255,255,.05)" strokeWidth={8} />
+                <circle cx={50} cy={50} r={42} fill="none" stroke="url(#ns-dg-v7)" strokeWidth={8}
+                  strokeDasharray={2 * Math.PI * 42}
+                  strokeDashoffset={2 * Math.PI * 42 * (1 - goalPct / 100)}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, fontFamily: 'var(--mo)' }}>{goalPct}%</div>
+                <div style={{ fontSize: 9, color: 'var(--dim)' }}>TO $10M</div>
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 8 }}>
+                Next milestone: <strong style={{ color: 'inherit' }}>$10M by 2030</strong>
+              </div>
+              <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
+                <div style={{ height: '100%', width: `${goalPct}%`, background: 'linear-gradient(90deg,var(--orange),var(--pink),var(--purple))', borderRadius: 3, transition: 'width .6s ease' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--dim)', marginBottom: 10 }}>
+                <span>Current: {USD(netWorth)}</span>
+                <span>Gap: {USD(Math.max(0, GOAL_TARGET - netWorth))}</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.6 }}>
+                At 18% annual growth, reaching $10M by{' '}
+                <strong style={{ color: 'var(--green)' }}>2031</strong>.{' '}
+                +$8K/mo cash flow accelerates to{' '}
+                <strong style={{ color: 'var(--orange)' }}>2029</strong>.
+              </div>
+            </div>
+          </div>
+        </SpecCard>
+
+        {/* Portfolio Breakdown */}
+        <SpecCard accent dataSource="financial_accounts,property_assets">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Portfolio Breakdown</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {portfolioRows.map((r, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                  <span style={{ fontSize: 12, color: 'var(--dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: r.color, display: 'inline-block' }} />
+                    {r.label}
+                  </span>
+                  <span style={{ fontSize: 12, fontFamily: 'var(--mo)' }}>
+                    {USD(Math.round(r.val))} <span style={{ color: 'var(--dim)', fontSize: 10 }}>{r.pct}%</span>
+                  </span>
+                </div>
+                <div style={{ height: 4, background: 'rgba(255,255,255,.05)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${r.pct}%`, background: r.color, borderRadius: 2, transition: 'width .5s ease' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </SpecCard>
+      </div>
+
       {/* Top Priorities + Tax Deadlines */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
         <SpecCard accent dataSource="tasks">
@@ -227,6 +322,31 @@ export default async function DashboardPage() {
           skeleton="table"
         />
       </div>
+
+      {/* Entity List */}
+      {(entities as any[]).length > 0 && (
+        <section style={{ marginBottom: 28 }}>
+          <div className="section-header">
+            <div className="section-header-left">
+              <h2 className="section-title">Entities</h2>
+              <span className="achieve-count">{(entities as any[]).length} active</span>
+            </div>
+          </div>
+          <SpecCard accent dataSource="entity_ownership">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {(entities as any[]).map((e: any) => (
+                <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: 11, fontFamily: 'var(--mo)', color: 'var(--dim)', background: 'rgba(255,255,255,0.04)', padding: '2px 6px', borderRadius: 4, minWidth: 28, textAlign: 'center' }}>
+                    {e.state ?? 'US'}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{e.entity_name}</span>
+                  <span style={{ fontSize: 12, color: 'var(--dim)' }}>{e.entity_type}</span>
+                </div>
+              ))}
+            </div>
+          </SpecCard>
+        </section>
+      )}
 
       {/* Quick Actions */}
       <SpecCard accent dataSource="navigation">
