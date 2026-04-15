@@ -250,8 +250,8 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
   const filteredEntities = useMemo(() => entities.filter(e => filteredIds.has(e.id)), [entities, filteredIds])
   const entityOnlyEdges  = useMemo(() => edges.filter(e => e.child_type !== 'property' && filteredIds.has(e.parent_entity_id) && filteredIds.has(e.child_entity_id)), [edges, filteredIds])
   const propertyEdges    = useMemo(() => showProperties && filter !== 'legal' ? edges.filter(e => e.child_type === 'property' && filteredIds.has(e.parent_entity_id)) : [], [edges, filteredIds, showProperties, filter])
-  const visiblePropIds   = useMemo(() => new Set(propertyEdges.map(e => e.child_entity_id)), [propertyEdges])
-  const visibleProperties = useMemo(() => properties.filter(p => visiblePropIds.has(p.id)), [properties, visiblePropIds])
+  // Show ALL properties when toggle is on — unassigned ones appear as floating nodes with a dashed "unassigned" border
+  const visibleProperties = useMemo(() => showProperties && filter !== 'legal' ? properties : [], [properties, showProperties, filter])
 
   // Hover path highlight
   const hoveredChain = useMemo(() => {
