@@ -7,7 +7,7 @@ import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import HeroCanvas from './HeroCanvas'
-import { getEntities, getAchievements, getOwnershipEdges, getAllEntitiesForGraph } from '../lib/queries'
+import { getEntities, getAchievements, getOwnershipEdges, getAllEntitiesForGraph, getProperties } from '../lib/queries'
 import EntityOrgChart from './EntityOrgChart'
 
 export const dynamic = 'force-dynamic'
@@ -20,16 +20,26 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function EntitiesPage() {
-  const [entities, dbAchievements, edges, allEntities] = await Promise.allSettled([
+  const [entities, dbAchievements, edges, allEntities, properties] = await Promise.allSettled([
     getEntities(),
     getAchievements('entities'),
     getOwnershipEdges(),
     getAllEntitiesForGraph(),
+    getProperties(),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const entityList = (entities as any[])
   const edgeList = (edges as any[])
   const allEntityList = (allEntities as any[])
+  const propertyList = (properties as any[]).map((p: any) => ({
+    id: p.id,
+    address: p.address ?? p.city ?? 'Property',
+    city: p.city ?? null,
+    state: p.state ?? null,
+    slug: p.slug ?? null,
+    purpose: p.purpose ?? (p.is_rental ? 'rental' : null),
+    ownership_pct: p.ownership_pct ?? null,
+  }))
   const achievements = (dbAchievements as any[]).length > 0
     ? (dbAchievements as any[]).map((a: any) => ({
         name:        a.name ?? '',
@@ -89,7 +99,11 @@ export default async function EntitiesPage() {
               <span className="achieve-count">{allEntityList.length} nodes · {edgeList.length} edges</span>
             </div>
           </div>
-          <EntityOrgChart entities={allEntityList} edges={edgeList} />
+          <EntityOrgChart
+            entities={allEntityList}
+            edges={edgeList}
+            properties={propertyList}
+          />
         </section>
       )}
 

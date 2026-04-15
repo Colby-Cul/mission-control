@@ -12,6 +12,7 @@ import RentalsWidgets from './RentalsWidgets'
 import {
   getRentalProperties,
   getRentalBookings,
+  getPropertyOwnershipMap,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -31,9 +32,10 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function RentalsPage() {
-  const [rentals, bookings] = await Promise.all([
+  const [rentals, bookings, ownershipMap] = await Promise.all([
     getRentalProperties().catch(() => []),
     getRentalBookings().catch(() => []),
+    getPropertyOwnershipMap().catch(() => ({})),
   ])
 
   const monthlyRent = rentals.reduce((s, p: any) => s + Number(p.mortgage_payment ?? 0), 0)
@@ -170,9 +172,32 @@ export default async function RentalsPage() {
                   <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 2 }}>
                     {p.address}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 6 }}>
                     {p.city}, {p.state} {p.zip} · {p.entity_name}
                   </div>
+                  {/* Compact ownership line from entity_ownership_edges */}
+                  {(() => {
+                    const owners = (ownershipMap as any)[p.id] ?? []
+                    if (!owners.length) return null
+                    return (
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 9 }}>Owned by:</span>
+                        {owners.map((o: any, i: number) => (
+                          <span key={i}>
+                            {o.slug ? (
+                              <a href={`/companies/${o.slug}`} style={{ color: 'var(--orange)', textDecoration: 'none', fontWeight: 600 }}>
+                                {o.entityName}
+                              </a>
+                            ) : (
+                              <span style={{ fontWeight: 600 }}>{o.entityName}</span>
+                            )}
+                            <span style={{ color: 'rgba(255,255,255,0.3)' }}> {o.pct}%{o.role ? ` · ${o.role}` : ''}</span>
+                            {i < owners.length - 1 && <span style={{ color: 'rgba(255,255,255,0.2)' }}> · </span>}
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                     <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>

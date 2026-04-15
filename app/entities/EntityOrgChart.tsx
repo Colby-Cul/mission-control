@@ -3,7 +3,7 @@
  * EntityOrgChart — SVG-based org-chart of the full entity ownership graph.
  * Layout: layers by BFS depth from root nodes (nodes with no incoming edges).
  * Color-coded by entity_type. Click → navigate to /companies/[slug].
- * Filters: all / operating / trusts / holding.
+ * Filters: all / operating / trusts / holding. Toggle: Show Properties.
  */
 import React, { useMemo, useState } from 'react'
 
@@ -16,9 +16,20 @@ interface Entity {
   is_active: boolean | null
 }
 
+interface PropertyNode {
+  id: string
+  address: string
+  city: string | null
+  state: string | null
+  slug: string | null
+  purpose: string | null  // 'primary-residence' | 'rental' | 'vacation' | 'investment'
+  ownership_pct: number | null
+}
+
 interface Edge {
   parent_entity_id: string
   child_entity_id: string
+  child_type?: string
   ownership_pct: number | string
   role: string | null
 }
@@ -26,6 +37,7 @@ interface Edge {
 interface Props {
   entities: Entity[]
   edges: Edge[]
+  properties?: PropertyNode[]
 }
 
 // Color palette per entity_type
@@ -51,6 +63,15 @@ const PURPOSE_BADGE: Record<string, { label: string; color: string }> = {
   operating:   { label: 'OPERATING',  color: '#10b981' },
 }
 
+// Property purpose → color
+const PROP_PURPOSE_COLOR: Record<string, { stroke: string; fill: string; text: string }> = {
+  'primary-residence': { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.15)',  text: '#93c5fd' },
+  'rental':            { stroke: '#10b981', fill: 'rgba(16,185,129,0.15)',  text: '#6ee7b7' },
+  'vacation':          { stroke: '#06b6d4', fill: 'rgba(6,182,212,0.15)',   text: '#67e8f9' },
+  'investment':        { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.15)',  text: '#fcd34d' },
+}
+const DEFAULT_PROP_COLOR = { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.15)', text: '#93c5fd' }
+
 const NODE_W = 160
 const NODE_H = 54
 const H_GAP = 40
@@ -58,8 +79,9 @@ const V_GAP = 80
 
 type Filter = 'all' | 'operating' | 'trusts' | 'holding'
 
-export default function EntityOrgChart({ entities, edges }: Props) {
+export default function EntityOrgChart({ entities, edges, properties = [] }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
+  const [showProperties, setShowProperties] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
 
   const entityMap = useMemo(() => {
@@ -67,6 +89,12 @@ export default function EntityOrgChart({ entities, edges }: Props) {
     entities.forEach(e => { m[e.id] = e })
     return m
   }, [entities])
+
+  const propertyMap = useMemo(() => {
+    const m: Record<string, PropertyNode> = {}
+    properties.forEach(p => { m[p.id] = p })
+    return m
+  }, [properties])
 
   // Apply filter
   const filteredIds = useMemo(() => {
@@ -79,11 +107,26 @@ export default function EntityOrgChart({ entities, edges }: Props) {
   }, [entities, filter])
 
   const filteredEntities = useMemo(() => entities.filter(e => filteredIds.has(e.id)), [entities, filteredIds])
-  const filteredEdges = useMemo(() => edges.filter(e => filteredIds.has(e.parent_entity_id) && filteredIds.has(e.child_entity_id)), [edges, filteredIds])
 
-  // BFS layout
+  // Property edges: child_type='property', only show if showProperties is on
+  const propertyEdges = useMemo(() =>
+    showProperties
+      ? edges.filter(e => e.child_type === 'property' && filteredIds.has(e.parent_entity_id))
+      : []
+  , [edges, filteredIds, showProperties])
+
+  // Entity-only edges (exclude property edges)
+  const filteredEdges = useMemo(() =>
+    edges.filter(e => e.child_type !== 'property' && filteredIds.has(e.parent_entity_id) && filteredIds.has(e.child_entity_id))
+  , [edges, filteredIds])
+
+  // Property nodes to show (those referenced by visible property edges)
+  const visiblePropertyIds = useMemo(() => new Set(propertyEdges.map(e => e.child_entity_id)), [propertyEdges])
+  const visibleProperties = useMemo(() => properties.filter(p => visiblePropertyIds.has(p.id)), [properties, visiblePropertyIds])
+
+  // BFS layout (entity nodes only; property nodes are appended as an extra layer)
   const layout = useMemo(() => {
-    if (!filteredEntities.length) return { nodes: [], svgW: 400, svgH: 200 }
+    if (!filteredEntities.length) return { nodes: [], propNodes: [], svgW: 400, svgH: 200 }
 
     const childSet = new Set(filteredEdges.map(e => e.child_entity_id))
     // Root nodes: no incoming edges among filtered
@@ -109,7 +152,7 @@ export default function EntityOrgChart({ entities, edges }: Props) {
       }
       queue = next.filter(id => !visited.has(id))
     }
-    // Append any disconnected nodes
+    // Append any disconnected entity nodes
     filteredEntities.forEach(e => {
       if (!visited.has(e.id)) layers.push([e.id])
     })
@@ -133,14 +176,35 @@ export default function EntityOrgChart({ entities, edges }: Props) {
       layer.forEach(id => { nodePos[id].x += offset })
     })
 
-    const svgH = layers.length * (NODE_H + V_GAP) + 20
+    const entitySvgH = layers.length * (NODE_H + V_GAP) + 20
 
     const nodes = filteredEntities
       .filter(e => nodePos[e.id])
       .map(e => ({ entity: e, ...nodePos[e.id] }))
 
-    return { nodes, svgW: Math.max(svgW, 400), svgH }
-  }, [filteredEntities, filteredEdges])
+    // Property nodes: place them in an extra layer below entity nodes
+    let propNodes: { prop: PropertyNode; x: number; y: number }[] = []
+    if (visibleProperties.length > 0) {
+      const propY = entitySvgH + V_GAP / 2
+      const propTotalW = visibleProperties.length * NODE_W + (visibleProperties.length - 1) * H_GAP
+      svgW = Math.max(svgW, propTotalW)
+      const propOffset = (svgW - propTotalW) / 2
+      propNodes = visibleProperties.map((p, xi) => ({
+        prop: p,
+        x: propOffset + xi * (NODE_W + H_GAP),
+        y: propY,
+      }))
+      visibleProperties.forEach((p, xi) => {
+        nodePos[p.id] = { x: propOffset + xi * (NODE_W + H_GAP), y: propY }
+      })
+    }
+
+    const svgH = visibleProperties.length > 0
+      ? (layers.length + 1) * (NODE_H + V_GAP) + 20
+      : entitySvgH
+
+    return { nodes, propNodes, svgW: Math.max(svgW, 400), svgH }
+  }, [filteredEntities, filteredEdges, visibleProperties])
 
   const filterBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
@@ -154,6 +218,7 @@ export default function EntityOrgChart({ entities, edges }: Props) {
 
   const nodePos: Record<string, { x: number; y: number }> = {}
   layout.nodes.forEach(n => { nodePos[n.entity.id] = { x: n.x, y: n.y } })
+  ;(layout.propNodes ?? []).forEach(n => { nodePos[n.prop.id] = { x: n.x, y: n.y } })
 
   return (
     <div style={{
@@ -170,16 +235,31 @@ export default function EntityOrgChart({ entities, edges }: Props) {
             {f === 'all' ? 'All Entities' : f.charAt(0).toUpperCase() + f.slice(1)}
           </button>
         ))}
+        {/* Show Properties toggle */}
+        {properties.length > 0 && (
+          <button
+            style={{
+              ...filterBtnStyle(showProperties),
+              borderColor: showProperties ? 'rgba(59,130,246,0.4)' : undefined,
+              color: showProperties ? '#93c5fd' : undefined,
+              background: showProperties ? 'rgba(59,130,246,0.12)' : undefined,
+            }}
+            onClick={() => setShowProperties(v => !v)}
+          >
+            ⌂ Properties
+          </button>
+        )}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           {[
-            { label: 'Person', color: '#8b5cf6' },
-            { label: 'Trust',  color: '#f59e0b' },
-            { label: 'LLC',    color: '#f97316' },
-            { label: 'Corp',   color: '#10b981' },
-            { label: 'Holding', color: '#ec4899' },
+            { label: 'Person',    color: '#8b5cf6' },
+            { label: 'Trust',     color: '#f59e0b' },
+            { label: 'LLC',       color: '#f97316' },
+            { label: 'Corp',      color: '#10b981' },
+            { label: 'Holding',   color: '#ec4899' },
+            { label: 'Property',  color: '#3b82f6' },
           ].map(({ label, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
+              <div style={{ width: 8, height: 8, borderRadius: label === 'Property' ? '50%' : 2, background: color }} />
               {label}
             </div>
           ))}
@@ -204,7 +284,7 @@ export default function EntityOrgChart({ entities, edges }: Props) {
             </marker>
           </defs>
 
-          {/* Edges */}
+          {/* Entity→Entity Edges */}
           {filteredEdges.map((edge, i) => {
             const p = nodePos[edge.parent_entity_id]
             const c = nodePos[edge.child_entity_id]
@@ -216,7 +296,7 @@ export default function EntityOrgChart({ entities, edges }: Props) {
             const midY = (y1 + y2) / 2
             const isHov = hovered === edge.parent_entity_id || hovered === edge.child_entity_id
             return (
-              <g key={i}>
+              <g key={`ee-${i}`}>
                 <path
                   d={`M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`}
                   fill="none"
@@ -226,13 +306,48 @@ export default function EntityOrgChart({ entities, edges }: Props) {
                   markerEnd="url(#oc-arrow)"
                   opacity={isHov ? 1 : 0.6}
                 />
-                {/* Label on edge mid-point */}
                 <text
                   x={(x1 + x2) / 2}
                   y={midY - 4}
                   textAnchor="middle"
                   fontSize="8"
                   fill="rgba(255,255,255,0.35)"
+                  fontFamily="IBM Plex Mono, monospace"
+                >
+                  {Number(edge.ownership_pct)}%{edge.role ? ` · ${edge.role}` : ''}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Entity→Property Edges */}
+          {propertyEdges.map((edge, i) => {
+            const p = nodePos[edge.parent_entity_id]
+            const c = nodePos[edge.child_entity_id]
+            if (!p || !c) return null
+            const x1 = p.x + NODE_W / 2
+            const y1 = p.y + NODE_H
+            const x2 = c.x + NODE_W / 2
+            const y2 = c.y
+            const midY = (y1 + y2) / 2
+            const isHov = hovered === edge.parent_entity_id || hovered === edge.child_entity_id
+            return (
+              <g key={`pe-${i}`}>
+                <path
+                  d={`M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`}
+                  fill="none"
+                  stroke={isHov ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.4)'}
+                  strokeWidth={isHov ? 2 : 1.5}
+                  strokeDasharray={isHov ? 'none' : '4 3'}
+                  markerEnd="url(#oc-arrow)"
+                  opacity={isHov ? 1 : 0.6}
+                />
+                <text
+                  x={(x1 + x2) / 2}
+                  y={midY - 4}
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill="rgba(147,197,253,0.5)"
                   fontFamily="IBM Plex Mono, monospace"
                 >
                   {Number(edge.ownership_pct)}%{edge.role ? ` · ${edge.role}` : ''}
@@ -326,6 +441,60 @@ export default function EntityOrgChart({ entities, edges }: Props) {
                 )}
                 {/* Navigate arrow if has slug */}
                 {e.slug && isHov && (
+                  <text x={x + NODE_W - 10} y={y + 14} fontSize="9" fill="rgba(255,255,255,0.5)">→</text>
+                )}
+              </g>
+            )
+          })}
+
+          {/* Property Nodes */}
+          {(layout.propNodes ?? []).map(({ prop: p, x, y }) => {
+            const color = PROP_PURPOSE_COLOR[p.purpose ?? ''] ?? DEFAULT_PROP_COLOR
+            const isHov = hovered === p.id
+            const propSlug = p.slug ?? p.id
+            return (
+              <g
+                key={p.id}
+                style={{ cursor: 'pointer' }}
+                onMouseEnter={() => setHovered(p.id)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => { window.location.href = `/properties/${propSlug}` }}
+              >
+                {/* Property node: rounded rect with dashed border */}
+                <rect
+                  x={x} y={y}
+                  width={NODE_W} height={NODE_H}
+                  rx={10} ry={10}
+                  fill={color.fill}
+                  stroke={color.stroke}
+                  strokeWidth={isHov ? 2 : 1.5}
+                  strokeDasharray="4 2"
+                  opacity={isHov ? 1 : 0.88}
+                />
+                {isHov && (
+                  <rect x={x - 2} y={y - 2} width={NODE_W + 4} height={NODE_H + 4} rx={12} ry={12}
+                    fill="none" stroke={color.stroke} strokeWidth={1} opacity={0.3} />
+                )}
+                {/* Building icon */}
+                <text x={x + 14} y={y + 30} fontSize="14" fill={color.text} textAnchor="middle">⌂</text>
+                {/* Property address */}
+                <text
+                  x={x + NODE_W / 2 + 6} y={y + 20}
+                  textAnchor="middle" fontSize="10" fontWeight="600"
+                  fill={color.text} fontFamily="DM Sans, sans-serif"
+                >
+                  {(p.address.length > 16 ? p.address.substring(0, 15) + '…' : p.address)}
+                </text>
+                {/* City, purpose */}
+                <text
+                  x={x + NODE_W / 2 + 6} y={y + 32}
+                  textAnchor="middle" fontSize="8"
+                  fill="rgba(255,255,255,0.4)" fontFamily="DM Sans, sans-serif"
+                >
+                  {p.city ?? ''}{p.purpose ? ` · ${p.purpose}` : ''}
+                </text>
+                {/* Navigate arrow */}
+                {isHov && (
                   <text x={x + NODE_W - 10} y={y + 14} fontSize="9" fill="rgba(255,255,255,0.5)">→</text>
                 )}
               </g>

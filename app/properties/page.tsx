@@ -10,7 +10,7 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getProperties, getUserProfile } from '../lib/queries'
+import { getProperties, getUserProfile, getPropertyOwnershipMap } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,9 +35,10 @@ function slugify(name: string, id: string) {
 }
 
 export default async function PropertiesPage() {
-  const [properties, profile] = await Promise.all([
+  const [properties, profile, ownershipMap] = await Promise.all([
     getProperties().catch(() => []),
     getUserProfile().catch(() => null),
+    getPropertyOwnershipMap().catch(() => ({})),
   ])
 
   const totalValue    = properties.reduce((s: number, p: any) => s + Number(p.current_value    ?? 0), 0)
@@ -147,7 +148,24 @@ export default async function PropertiesPage() {
                     {p.property_type ?? 'Residential'} · {p.is_rental ? 'Rental' : 'Owner-occupied'}
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{p.name ?? p.address ?? 'Unnamed Property'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 12 }}>{p.city ?? ''}{p.city && p.state ? ', ' : ''}{p.state ?? ''}</div>
+                  <div style={{ fontSize: 12, color: 'var(--dim)', marginBottom: 6 }}>{p.city ?? ''}{p.city && p.state ? ', ' : ''}{p.state ?? ''}</div>
+                  {/* Compact ownership line */}
+                  {(() => {
+                    const owners = (ownershipMap as any)[p.id] ?? []
+                    if (!owners.length) return null
+                    return (
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginBottom: 10, display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+                        <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>Owned by:</span>
+                        {owners.map((o: any, i: number) => (
+                          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                            <span style={{ fontWeight: 600, color: 'var(--orange)' }}>{o.entityName}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.3)' }}> {o.pct}%</span>
+                            {i < owners.length - 1 && <span style={{ color: 'rgba(255,255,255,0.2)' }}> · </span>}
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
 
                   {/* Core 3-col KPI row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
