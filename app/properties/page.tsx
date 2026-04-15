@@ -11,6 +11,7 @@ import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
 import { getProperties, getUserProfile, getPropertyOwnershipMap } from '../lib/queries'
+import PropertyQuickActions from '../_components/PropertyQuickActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,14 +129,19 @@ export default async function PropertiesPage() {
                   {photoUrl
                     ? <img src={photoUrl} alt={p.address ?? 'Property'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : '🏠'}
-                  {/* Rental / Occupied badges */}
-                  <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5 }}>
+                  {/* Rental / Occupied badges + quick actions */}
+                  <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5, alignItems: 'center' }}>
                     {p.is_rental && (
                       <span style={{ fontSize: 9, fontFamily: 'var(--mo)', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(16,185,129,0.85)', color: '#fff', backdropFilter: 'blur(4px)' }}>RENTAL</span>
                     )}
                     {maintOpen > 0 && (
                       <span style={{ fontSize: 9, fontFamily: 'var(--mo)', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.85)', color: '#fff', backdropFilter: 'blur(4px)' }}>{maintOpen} maint</span>
                     )}
+                    <PropertyQuickActions
+                      propertyId={p.id}
+                      propertyName={p.name ?? p.address ?? ''}
+                      slug={slug}
+                    />
                   </div>
                   {stars != null && (
                     <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 10, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: 5, backdropFilter: 'blur(4px)' }}>

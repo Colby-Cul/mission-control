@@ -251,7 +251,14 @@ export default async function RentalsPage() {
 
       {/* ── Full booking analytics (ported from live Rentals.jsx) ── */}
       {bookings.length > 0 ? (
-        <RentalsWidgets bookings={bookings} />
+        <RentalsWidgets
+          bookings={bookings}
+          propertyIdMap={Object.fromEntries(
+            (rentals as any[])
+              .filter((r: any) => r.lodgify_id)
+              .map((r: any) => [String(r.lodgify_id), r.id])
+          )}
+        />
       ) : (
         <>
           {/* Stubs shown until rental_bookings table is populated */}

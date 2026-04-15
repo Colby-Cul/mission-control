@@ -11,6 +11,7 @@ import {
   Legend, ComposedChart, ReferenceLine,
 } from 'recharts'
 import { SpecCard } from '../_components/SpecCard'
+import PropertyQuickActions from '../_components/PropertyQuickActions'
 
 // ─── constants ────────────────────────────────────────────────────────────────
 const TT = {
@@ -91,7 +92,8 @@ function SortTh({
 }
 
 // ─── main export ──────────────────────────────────────────────────────────────
-export default function RentalsWidgets({ bookings }: { bookings: any[] }) {
+/** Map lodgify property_id (string) → Supabase UUID for quick-action modals */
+export default function RentalsWidgets({ bookings, propertyIdMap = {} }: { bookings: any[]; propertyIdMap?: Record<string, string> }) {
   const [propFilter, setPropFilter] = useState<string>('all')
   const [sortCol, setSortCol] = useState('arrival')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
@@ -423,22 +425,33 @@ export default function RentalsWidgets({ bookings }: { bookings: any[] }) {
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {propertyPerf.map(p => (
+          {propertyPerf.map(p => {
+            const supabaseId = propertyIdMap[String(p.id)]
+            return (
             <SpecCard key={p.id} accent dataSource="rental_bookings">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--dim)' }}>Lodgify ID: {p.id}</div>
                 </div>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, padding: '3px 8px',
-                  borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  background: p.profit > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                  color: p.profit > 0 ? '#10b981' : '#ef4444',
-                  border: `1px solid ${p.profit > 0 ? '#10b981' : '#ef4444'}`,
-                }}>
-                  {p.profit > 0 ? 'Profitable' : 'Loss'}
-                </span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  {supabaseId && (
+                    <PropertyQuickActions
+                      propertyId={supabaseId}
+                      propertyName={p.name}
+                      slug={null}
+                    />
+                  )}
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '3px 8px',
+                    borderRadius: 6, letterSpacing: '0.08em', textTransform: 'uppercase',
+                    background: p.profit > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                    color: p.profit > 0 ? '#10b981' : '#ef4444',
+                    border: `1px solid ${p.profit > 0 ? '#10b981' : '#ef4444'}`,
+                  }}>
+                    {p.profit > 0 ? 'Profitable' : 'Loss'}
+                  </span>
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 10 }}>
@@ -470,7 +483,7 @@ export default function RentalsWidgets({ bookings }: { bookings: any[] }) {
                 ))}
               </div>
             </SpecCard>
-          ))}
+          )})}
         </div>
       </section>
 

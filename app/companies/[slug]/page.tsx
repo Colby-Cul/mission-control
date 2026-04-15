@@ -21,6 +21,7 @@ import {
 } from '../../lib/queries'
 import HeroCanvas from './HeroCanvas'
 import OwnershipCard from '../../_components/OwnershipCard'
+import SlugEditButton from './_SlugEditButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -1025,10 +1026,12 @@ export default async function CompanyPage({ params }: Props) {
           paddingBottom: 40,
           fontFamily: 'DM Sans, sans-serif',
         }}>
-          <div style={{ marginBottom: 20 }}>
+          {/* ⚙ Edit button in top-right of the section */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
               Ownership Structure
             </h2>
+            <SlugEditButton entityId={entity.id} entityName={entity.entity_name ?? slug} />
           </div>
           <OwnershipCard
             entityId={entity.id}

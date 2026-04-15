@@ -9,6 +9,7 @@
 import { getEntities, getTransactions30d, getAchievements } from '../lib/queries'
 import CompaniesHeroCanvas from './_CompaniesHeroCanvas'
 import Achievements from '../_components/Achievements'
+import CompaniesQuickActions from './_CompaniesQuickActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -274,7 +275,7 @@ export default async function CompaniesPage() {
               const empCount  = e.employee_count != null ? Number(e.employee_count) : null
               const bankCount = e.bank_account_count != null ? Number(e.bank_account_count) : null
               const fmtRev    = (n: number) => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(0) + 'K' : '$' + n.toFixed(0)
-              return `<a href="/companies/${e.slug ?? e.id ?? ''}" class="entity-card" style="--accent:${accent}">
+              return `<a href="/companies/${e.slug ?? e.id ?? ''}" class="entity-card" style="--accent:${accent}" data-entity-id="${e.id}" data-entity-name="${(e.entity_name ?? '').replace(/"/g, '&quot;')}" data-entity-slug="${e.slug ?? ''}">
                 <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${accent};opacity:0.7;border-radius:20px 20px 0 0;"></div>
                 <div class="entity-card-top">
                   <div class="entity-icon" style="background:${accent}18;border:1px solid ${accent}30;">${emoji}</div>
@@ -315,7 +316,7 @@ export default async function CompaniesPage() {
         </div>
         <div class="entities-grid">
           ${legalOnly.map((e: any) => `
-            <div class="entity-card legal">
+            <div class="entity-card legal" data-entity-id="${e.id}" data-entity-name="${(e.entity_name ?? '').replace(/"/g, '&quot;')}" data-entity-slug="${e.slug ?? ''}">
               <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#64748b;opacity:0.4;border-radius:20px 20px 0 0;"></div>
               <div class="entity-card-top">
                 <div class="entity-icon" style="background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.2);">⚖️</div>
@@ -344,6 +345,8 @@ export default async function CompaniesPage() {
     <>
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <CompaniesHeroCanvas entityCount={entities.length} operationalCount={operational.length} />
+      {/* Quick-action modals — DOM-injected buttons + modal portal */}
+      <CompaniesQuickActions />
     </>
   )
 }
