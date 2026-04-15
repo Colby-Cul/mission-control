@@ -8,10 +8,13 @@ import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
+import IntegrationActionButton from '../_components/IntegrationActionButton'
 import HeroCanvas from './HeroCanvas'
 import HighlightOnMount from './HighlightOnMount'
 import { getIntegrations, getUserProfile, getGoogleToken } from '../lib/queries'
 import { isGoogleOAuthConfigured } from '../lib/google'
+import { getProvider } from '../lib/integration-providers'
+import { getEnvMaskedValues, isVercelApiConfigured } from '../lib/vercel-env'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -93,6 +96,17 @@ export default async function IntegrationsPage() {
   const googleOAuthReady = isGoogleOAuthConfigured()
   const isGoogleConnected = !!googleToken
 
+  // Ask Vercel which env vars are actually set — used to override per-card
+  // status below so the UI reflects real credential presence, not a guess.
+  const allEnvKeys = Array.from(
+    new Set(KNOWN_INTEGRATIONS.flatMap(k => getProvider(k.provider).envVars)),
+  )
+  const vercelConfigured = isVercelApiConfigured()
+  const envStatus: Record<string, { masked: string; updated_at: string | null; targets: string[] }> =
+    vercelConfigured && allEnvKeys.length > 0
+      ? await getEnvMaskedValues(allEnvKeys).catch(() => ({}))
+      : {}
+
   const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
   const intgList = (integrations as any[]) ?? []
 
@@ -105,12 +119,29 @@ export default async function IntegrationsPage() {
     return (Date.now() - new Date(i.last_sync).getTime()) < 86400000
   }).length
 
-  // Merge known catalog with DB records — DB status overrides knownStatus if present
+  // Merge known catalog with DB records — DB status overrides knownStatus if present.
+  // When Vercel env data is available, it further overrides the status for api-key /
+  // info-only providers so the pill reflects real credential presence (active / partial /
+  // not configured) rather than the hard-coded knownStatus string.
   const mergedIntegrations = KNOWN_INTEGRATIONS.map(known => {
     const dbRecord = intgList.find((i: any) =>
       (i.provider ?? i.name ?? '').toLowerCase() === known.provider.toLowerCase()
     )
-    const resolvedStatus = dbRecord?.status ?? known.knownStatus ?? 'not configured'
+    const cfg = getProvider(known.provider)
+    let resolvedStatus = dbRecord?.status ?? known.knownStatus ?? 'not configured'
+
+    if (vercelConfigured && cfg.envVars.length > 0) {
+      const present = cfg.envVars.filter((k: string) => envStatus[k])
+      if (present.length === cfg.envVars.length) resolvedStatus = 'active'
+      else if (present.length === 0) resolvedStatus = 'not configured'
+      else resolvedStatus = 'partial'
+    }
+
+    // Best masked key we can show on the card — prefer DB value, fall back to Vercel.
+    const maskedFromVercel = cfg.envVars.find((k: string) => envStatus[k])
+      ? envStatus[cfg.envVars.find((k: string) => envStatus[k]) as string]?.masked
+      : null
+
     return {
       ...known,
       ...dbRecord,
@@ -119,6 +150,7 @@ export default async function IntegrationsPage() {
       description: known.description,
       category: known.category,
       status: resolvedStatus,
+      masked_key: dbRecord?.masked_key ?? maskedFromVercel ?? null,
     }
   })
 
@@ -214,13 +246,14 @@ export default async function IntegrationsPage() {
             const isConnected = resolvedStatus === 'connected' || intg.connected || isActive
             const isPending   = resolvedStatus === 'pending'
             const isError     = resolvedStatus === 'error'
+            const isPartial   = resolvedStatus === 'partial'
             // Prefer last_sync_at (new column) then last_sync (legacy)
             const lastSyncTs = intg.last_sync_at ?? intg.last_sync ?? null
             const stale = lastSyncTs ? staleness(lastSyncTs) : null
 
-            const borderColor = isConnected ? 'rgba(16,185,129,0.2)' : isError ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
-            const statusClr   = isConnected ? 'var(--green)' : isPending ? 'var(--amber)' : isError ? 'var(--red)' : 'var(--dim)'
-            const statusText  = isConnected ? 'ACTIVE' : isPending ? 'PENDING' : isError ? 'ERROR' : (resolvedStatus ?? 'NOT CONFIGURED').toUpperCase()
+            const borderColor = isConnected ? 'rgba(16,185,129,0.2)' : isError ? 'rgba(239,68,68,0.2)' : isPartial ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.06)'
+            const statusClr   = isConnected ? 'var(--green)' : isPending ? 'var(--amber)' : isPartial ? 'var(--amber)' : isError ? 'var(--red)' : 'var(--dim)'
+            const statusText  = isConnected ? 'ACTIVE' : isPending ? 'PENDING' : isPartial ? 'PARTIAL' : isError ? 'ERROR' : (resolvedStatus ?? 'NOT CONFIGURED').toUpperCase()
             const monogram = (intg.name ?? intg.provider ?? '??').slice(0, 2).toUpperCase()
 
             // OAuth expiry warning
@@ -407,15 +440,11 @@ export default async function IntegrationsPage() {
                     </div>
                   )}
                   {intg.provider !== 'quickbooks' && intg.provider !== 'plaid' && intg.provider !== 'lodgify' && !isGoogleFamily && (
-                    <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} data-integration-action style={{
-                      fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                      background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(249,115,22,0.15)',
-                      color: isConnected ? 'var(--green)' : 'var(--orange)',
-                      border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(249,115,22,0.3)'}`,
-                      textDecoration: 'none',
-                    }}>
-                      {isConnected ? 'Manage' : 'Connect'}
-                    </Link>
+                    <IntegrationActionButton
+                      provider={intg.provider}
+                      isConnected={isConnected || isPartial}
+                      label={isPartial ? 'Complete setup' : (isConnected ? 'Manage' : 'Connect')}
+                    />
                   )}
                 </div>
               </div>
