@@ -31,13 +31,17 @@ export type WidgetKey =
   | 'xome.recent_closed_loans'
   | 'culbertson.loan_pipeline'            // legacy — not yet wired
   | 'culbertson.sales_volume_ytd'         // C&C Monday — Sales Volume YTD/MTD
-  | 'culbertson.gci_ytd'                  // Gross commission income
+  | 'culbertson.sales_volume_mtd'         // (alias — same board, MTD slice)
+  | 'culbertson.gci_ytd'                  // Estimated gross commission income
+  | 'culbertson.gci_mtd'                  // GCI MTD slice
   | 'culbertson.closed_transactions'      // Closed transaction count by period
-  | 'culbertson.avg_commission_pct'       // Average commission %
+  | 'culbertson.avg_commission_pct'       // Average commission % (proxy)
   | 'culbertson.top_producers'            // Agent leaderboard by closed volume
   | 'culbertson.pipeline_value'           // Total $ in active deals
   | 'culbertson.revenue_by_source'        // Self-gen vs team-gen vs referral
   | 'culbertson.monthly_revenue'          // 12-month trend
+  | 'culbertson.expense_categories'       // Company Expenses breakdown
+  | 'culbertson.ad_spend_by_agent'        // Agent Ad Spend board (not yet wired)
 
 export interface BoardMapping {
   tenant: Tenant
@@ -321,87 +325,177 @@ export const BOARD_MAPPINGS: BoardMapping[] = [
     },
   },
 
-  // ─── Culbertson & Culbertson (C&G) — pending MONDAY_CULBERTSON_API_KEY ───
-  // TODO: Column IDs below are placeholders. Fill after the C&C Monday
-  // discovery scan runs against the real workspace (the scan is blocked
-  // on the key landing in Vercel env).
+  // ─── Culbertson & Gray (C&G) ─────────────────────────────────────────────
+  // Closed Sales (4119151716) — 2269 items, grouped by calendar month
+  //   "April 2026", "March 2026", … "January 2023". One group per month.
+  //   Columns: name (property addr), text4 (Agent), numbers (Price),
+  //   numbers9 (Individual Agent Totals = sale price), dropdown__1 (Source),
+  //   dropdown5__1 (Lender). No raw commission $ — GCI computed as
+  //   estimate (2.5% of sale price, industry-typical company-side split).
+  //
+  // Transactions in Process (1404826328) — 610 items, pipeline groups
+  //   + real Company Revenue column.
+  //   Groups: new_group68267 (New Form Submissions), duplicate_of_active_listings__1
+  //   (Pre-Listed/Held), new_group7848 (Active Listings), topics (Current Pendings),
+  //   new_group (Closed), new_group76088 (Cancelled).
+  //   Columns: numbers3__1 (Price), numeric (Company Revenue), coe_date_ (COE Date),
+  //   agent1 (Agent), lead_source2 (Lead Source), buyer_seller, closed_escrow,
+  //   splits_added_ (text like "80/20"), status (Splits Added to Skyslope).
+  //
+  // Company Expenses (8737854919) — 32 items grouped by office location.
+  //   Columns: status (Region), color_mkp64tx7 (Frequency), numeric_mkp6z60y
+  //   (Amount), text_mkp6edy6 (Point of Contact), text_mkp6cjwz (Company Name),
+  //   text_mkp7fkd4 (Payment Type).
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.sales_volume_ytd',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      // TODO: real column ids — sale price, close date, status, agent
-      sale_price: 'TODO_numbers',
-      close_date: 'TODO_date',
-      status: 'TODO_status',
-      agent: 'TODO_people',
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
+      source: 'dropdown__1',
+      lender: 'dropdown5__1',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.sales_volume_mtd',
+    boardId: '4119151716',
+    columns: {
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.gci_ytd',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      gci: 'TODO_numbers',
-      commission_pct: 'TODO_numbers',
-      close_date: 'TODO_date',
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
+      source: 'dropdown__1',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.gci_mtd',
+    boardId: '4119151716',
+    columns: {
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.closed_transactions',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      status: 'TODO_status',
-      close_date: 'TODO_date',
+      agent: 'text4',
+      sale_price: 'numbers',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.avg_commission_pct',
-    boardId: 'TODO',
+    boardId: '1404826328',
     columns: {
-      commission_pct: 'TODO_numbers',
-      close_date: 'TODO_date',
+      sale_price: 'numbers3__1',
+      company_revenue: 'numeric',
+      splits_text: 'splits_added_',
+      coe_date: 'coe_date_',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.top_producers',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      agent: 'TODO_people',
-      sale_price: 'TODO_numbers',
-      gci: 'TODO_numbers',
-      close_date: 'TODO_date',
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
+      source: 'dropdown__1',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.pipeline_value',
-    boardId: 'TODO',
+    boardId: '1404826328',
     columns: {
-      deal_value: 'TODO_numbers',
-      stage: 'TODO_status',
+      sale_price: 'numbers3__1',
+      company_revenue: 'numeric',
+      agent: 'agent1',
+      coe_date: 'coe_date_',
+      buyer_seller: 'buyer_seller',
+      property_status: 'closed_escrow',
+      lead_source: 'lead_source2',
+    },
+    groupMap: {
+      new_group68267: 'New Form Submissions',
+      duplicate_of_active_listings__1: 'Pre-Listed/Held',
+      new_group7848: 'Active Listings',
+      topics: 'Current Pendings',
+      new_group: 'Closed',
+      new_group76088: 'Cancelled',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.revenue_by_source',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      source: 'TODO_status', // self-gen / team-gen / referral
-      gci: 'TODO_numbers',
-      close_date: 'TODO_date',
+      agent: 'text4',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
+      source: 'dropdown__1',
     },
   },
   {
     tenant: 'culbertson',
     widgetKey: 'culbertson.monthly_revenue',
-    boardId: 'TODO',
+    boardId: '4119151716',
     columns: {
-      gci: 'TODO_numbers',
-      close_date: 'TODO_date',
+      sale_price: 'numbers',
+      individual_total: 'numbers9',
+      agent: 'text4',
+      source: 'dropdown__1',
+    },
+  },
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.expense_categories',
+    boardId: '8737854919',
+    columns: {
+      region: 'status',
+      frequency: 'color_mkp64tx7',
+      amount: 'numeric_mkp6z60y',
+      payment_type: 'text_mkp7fkd4',
+      auto_payment: 'color_mkp7k3yg',
+      company: 'text_mkp6cjwz',
+    },
+    groupMap: {
+      group_title: 'General Applications',
+      topics: 'Roseville Office',
+      group_mkp8zmfr: 'Lincoln Office',
+      group_mkp8x93t: 'Reno Office',
+      group_mkpbvdy4: 'South Lake Tahoe Office',
+    },
+  },
+  // Agent Ad Spend workspace (10192135) has no populated board at discovery
+  // time — only a "Start from scratch" board with 10 generic test rows.
+  // Mapping is a placeholder that returns an empty ad-spend view; widget
+  // will degrade gracefully.
+  {
+    tenant: 'culbertson',
+    widgetKey: 'culbertson.ad_spend_by_agent',
+    boardId: '8650358630',
+    columns: {
+      agent: 'person',
+      stage: 'status',
+      date: 'date4',
     },
   },
 ]
@@ -902,6 +996,564 @@ function transformXomePower(items: MondayItem[], m: BoardMapping): XomePowerView
   }
 }
 
+// ─── Culbertson transforms ──────────────────────────────────────────────
+
+/**
+ * Closed Sales (4119151716) uses calendar-month group titles ("April 2026",
+ * "March 2026", …). Parse each group's title into a (year, month) pair so we
+ * can filter by YTD / MTD / last-N-months without relying on a date column.
+ */
+function parseClosedSalesGroup(title: string): { year: number; month: number } | null {
+  if (!title) return null
+  const m = /^\s*([A-Za-z]+)\s+(\d{4})\s*$/.exec(title)
+  if (!m) return null
+  const monthNames = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+  ]
+  const mm = monthNames.indexOf(m[1].toLowerCase())
+  if (mm < 0) return null
+  return { year: Number(m[2]), month: mm }
+}
+
+/**
+ * Industry-standard assumption: company GCI is ~2.5% of sale price. Closed
+ * Sales does not carry a raw commission column, so GCI is an ESTIMATE based
+ * on this rate. Company Revenue (post-split) on Transactions in Process is
+ * a separate number — we surface both where available.
+ */
+const GCI_ESTIMATE_RATE = 0.025
+
+interface VolumeKPI {
+  ytd: number
+  mtd: number
+  prev_month: number
+  last_12m: number
+  all_time: number
+  count_ytd: number
+  count_mtd: number
+  avg_price_ytd: number
+}
+
+function transformCulbertsonVolume(items: MondayItem[], m: BoardMapping): VolumeKPI {
+  const now = new Date()
+  const yr = now.getFullYear()
+  const mo = now.getMonth()
+  const prevYr = mo === 0 ? yr - 1 : yr
+  const prevMo = mo === 0 ? 11 : mo - 1
+
+  const priceCol = m.columns.individual_total || m.columns.sale_price
+
+  let ytd = 0, mtd = 0, prev_month = 0, last_12m = 0, all_time = 0
+  let count_ytd = 0, count_mtd = 0
+
+  for (const it of items) {
+    const price = parseNum(cvText(it, priceCol))
+    if (price <= 0) continue
+    all_time += price
+
+    const g = parseClosedSalesGroup(it.group?.title ?? '')
+    if (!g) continue
+
+    if (g.year === yr) {
+      ytd += price
+      count_ytd++
+      if (g.month === mo) {
+        mtd += price
+        count_mtd++
+      }
+    }
+    if (g.year === prevYr && g.month === prevMo) {
+      prev_month += price
+    }
+    // Last 12 months (rolling, inclusive of current month)
+    const monthsAgo = (yr - g.year) * 12 + (mo - g.month)
+    if (monthsAgo >= 0 && monthsAgo < 12) last_12m += price
+  }
+
+  return {
+    ytd,
+    mtd,
+    prev_month,
+    last_12m,
+    all_time,
+    count_ytd,
+    count_mtd,
+    avg_price_ytd: count_ytd > 0 ? Math.round(ytd / count_ytd) : 0,
+  }
+}
+
+interface GciKPI {
+  gci_ytd: number
+  gci_mtd: number
+  gci_prev_month: number
+  gci_last_12m: number
+  rate: number          // 0.025
+  volume_ytd: number    // underlying sales volume for context
+  volume_mtd: number
+}
+
+function transformCulbertsonGci(items: MondayItem[], m: BoardMapping): GciKPI {
+  const vol = transformCulbertsonVolume(items, m)
+  return {
+    gci_ytd: Math.round(vol.ytd * GCI_ESTIMATE_RATE),
+    gci_mtd: Math.round(vol.mtd * GCI_ESTIMATE_RATE),
+    gci_prev_month: Math.round(vol.prev_month * GCI_ESTIMATE_RATE),
+    gci_last_12m: Math.round(vol.last_12m * GCI_ESTIMATE_RATE),
+    rate: GCI_ESTIMATE_RATE,
+    volume_ytd: vol.ytd,
+    volume_mtd: vol.mtd,
+  }
+}
+
+interface ClosedTxKPI {
+  ytd: number
+  mtd: number
+  prev_month: number
+  last_12m: number
+  all_time: number
+  by_month: Array<{ month_key: string; label: string; count: number }>
+}
+
+function transformCulbertsonClosedCount(items: MondayItem[], m: BoardMapping): ClosedTxKPI {
+  const now = new Date()
+  const yr = now.getFullYear()
+  const mo = now.getMonth()
+  const prevYr = mo === 0 ? yr - 1 : yr
+  const prevMo = mo === 0 ? 11 : mo - 1
+
+  let ytd = 0, mtd = 0, prev_month = 0, last_12m = 0, all_time = 0
+  const counts = new Map<string, { label: string; count: number }>()
+
+  for (const it of items) {
+    const price = parseNum(cvText(it, m.columns.sale_price))
+    if (price <= 0) continue
+    all_time++
+
+    const g = parseClosedSalesGroup(it.group?.title ?? '')
+    if (!g) continue
+
+    const key = `${g.year}-${String(g.month + 1).padStart(2, '0')}`
+    const label = it.group?.title ?? key
+    const entry = counts.get(key) ?? { label, count: 0 }
+    entry.count++
+    counts.set(key, entry)
+
+    if (g.year === yr) {
+      ytd++
+      if (g.month === mo) mtd++
+    }
+    if (g.year === prevYr && g.month === prevMo) prev_month++
+    const monthsAgo = (yr - g.year) * 12 + (mo - g.month)
+    if (monthsAgo >= 0 && monthsAgo < 12) last_12m++
+  }
+
+  const by_month = Array.from(counts.entries())
+    .sort(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
+    .slice(0, 24)
+    .map(([k, v]) => ({ month_key: k, label: v.label, count: v.count }))
+
+  return { ytd, mtd, prev_month, last_12m, all_time, by_month }
+}
+
+/** Parse "80/20", "65/35 35% Zillow", etc. → company split percentage (20, 35). */
+function parseSplitText(s: string | null): number | null {
+  if (!s) return null
+  const m = /(\d+)\s*\/\s*(\d+)/.exec(s)
+  if (!m) return null
+  const a = Number(m[1]), b = Number(m[2])
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a + b === 0) return null
+  // Heuristic: the smaller of the two numbers is the company %
+  return Math.min(a, b)
+}
+
+interface AvgCommissionKPI {
+  avg_company_split_pct: number   // mean of smaller side of "80/20" style
+  median_company_split_pct: number
+  implied_company_rate_pct: number // company_revenue / sale_price × 100 (median of populated rows)
+  n: number
+  note: string
+}
+
+function transformCulbertsonAvgCommission(items: MondayItem[], m: BoardMapping): AvgCommissionKPI {
+  const splits: number[] = []
+  const rates: number[] = []
+  for (const it of items) {
+    const txt = cvText(it, m.columns.splits_text)
+    const split = parseSplitText(txt)
+    if (split !== null) splits.push(split)
+
+    const price = parseNum(cvText(it, m.columns.sale_price))
+    const rev = parseNum(cvText(it, m.columns.company_revenue))
+    if (price > 1000 && rev > 0) {
+      rates.push((rev / price) * 100)
+    }
+  }
+
+  const median = (xs: number[]): number => {
+    if (!xs.length) return 0
+    const sorted = [...xs].sort((a, b) => a - b)
+    const mid = Math.floor(sorted.length / 2)
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+  }
+  const mean = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
+
+  return {
+    avg_company_split_pct: Math.round(mean(splits) * 10) / 10,
+    median_company_split_pct: Math.round(median(splits) * 10) / 10,
+    implied_company_rate_pct: Math.round(median(rates) * 100) / 100,
+    n: splits.length,
+    note: 'Company side of the split parsed from "XX/YY" text. Implied rate from Company Revenue ÷ Price.',
+  }
+}
+
+interface TopProducerRow {
+  agent: string
+  count_ytd: number
+  volume_ytd: number
+  volume_all: number
+  est_gci_ytd: number
+}
+
+function transformCulbertsonTopProducers(items: MondayItem[], m: BoardMapping): TopProducerRow[] {
+  const now = new Date()
+  const yr = now.getFullYear()
+  const priceCol = m.columns.individual_total || m.columns.sale_price
+
+  const agents = new Map<string, TopProducerRow>()
+  for (const it of items) {
+    const agent = (cvText(it, m.columns.agent) || '').trim()
+    if (!agent || agent.toLowerCase() === 'unassigned') continue
+    const price = parseNum(cvText(it, priceCol))
+    if (price <= 0) continue
+
+    const row = agents.get(agent) ?? {
+      agent,
+      count_ytd: 0,
+      volume_ytd: 0,
+      volume_all: 0,
+      est_gci_ytd: 0,
+    }
+    row.volume_all += price
+
+    const g = parseClosedSalesGroup(it.group?.title ?? '')
+    if (g && g.year === yr) {
+      row.count_ytd++
+      row.volume_ytd += price
+    }
+    agents.set(agent, row)
+  }
+
+  for (const row of agents.values()) {
+    row.est_gci_ytd = Math.round(row.volume_ytd * GCI_ESTIMATE_RATE)
+  }
+
+  return Array.from(agents.values())
+    .sort((a, b) => b.volume_ytd - a.volume_ytd || b.volume_all - a.volume_all)
+    .slice(0, 25)
+}
+
+interface RevenueBySourceRow {
+  source: string
+  count_ytd: number
+  volume_ytd: number
+  est_gci_ytd: number
+  pct_of_ytd: number
+}
+
+interface RevenueBySourceView {
+  total_ytd: number
+  est_total_gci_ytd: number
+  sources: RevenueBySourceRow[]
+}
+
+function transformCulbertsonRevenueBySource(items: MondayItem[], m: BoardMapping): RevenueBySourceView {
+  const now = new Date()
+  const yr = now.getFullYear()
+  const priceCol = m.columns.individual_total || m.columns.sale_price
+
+  const sources = new Map<string, RevenueBySourceRow>()
+  let total_ytd = 0
+
+  for (const it of items) {
+    const g = parseClosedSalesGroup(it.group?.title ?? '')
+    if (!g || g.year !== yr) continue
+    const price = parseNum(cvText(it, priceCol))
+    if (price <= 0) continue
+    const src = (cvText(it, m.columns.source) || 'Unspecified').trim() || 'Unspecified'
+
+    const row = sources.get(src) ?? {
+      source: src,
+      count_ytd: 0,
+      volume_ytd: 0,
+      est_gci_ytd: 0,
+      pct_of_ytd: 0,
+    }
+    row.count_ytd++
+    row.volume_ytd += price
+    sources.set(src, row)
+    total_ytd += price
+  }
+
+  const out = Array.from(sources.values())
+  for (const r of out) {
+    r.est_gci_ytd = Math.round(r.volume_ytd * GCI_ESTIMATE_RATE)
+    r.pct_of_ytd = total_ytd > 0 ? Math.round((r.volume_ytd / total_ytd) * 1000) / 10 : 0
+  }
+  out.sort((a, b) => b.volume_ytd - a.volume_ytd)
+
+  return {
+    total_ytd,
+    est_total_gci_ytd: Math.round(total_ytd * GCI_ESTIMATE_RATE),
+    sources: out,
+  }
+}
+
+interface MonthlyRevenuePoint {
+  month_key: string      // "2026-04"
+  label: string          // "Apr 2026"
+  year: number
+  month: number          // 0-11
+  volume: number
+  est_gci: number
+  deal_count: number
+}
+
+interface MonthlyRevenueView {
+  points: MonthlyRevenuePoint[]   // most recent 12 months, oldest-first
+  total_volume: number
+  total_est_gci: number
+  peak_month: MonthlyRevenuePoint | null
+  current_month: MonthlyRevenuePoint | null
+}
+
+function transformCulbertsonMonthlyRevenue(items: MondayItem[], m: BoardMapping): MonthlyRevenueView {
+  const priceCol = m.columns.individual_total || m.columns.sale_price
+  const now = new Date()
+  const currYr = now.getFullYear()
+  const currMo = now.getMonth()
+
+  // Build all 12 month slots (oldest → newest)
+  const slots: MonthlyRevenuePoint[] = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(currYr, currMo - i, 1)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    slots.push({
+      month_key: key,
+      label,
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      volume: 0,
+      est_gci: 0,
+      deal_count: 0,
+    })
+  }
+  const idx = new Map<string, MonthlyRevenuePoint>()
+  for (const s of slots) idx.set(s.month_key, s)
+
+  for (const it of items) {
+    const g = parseClosedSalesGroup(it.group?.title ?? '')
+    if (!g) continue
+    const key = `${g.year}-${String(g.month + 1).padStart(2, '0')}`
+    const point = idx.get(key)
+    if (!point) continue
+
+    const price = parseNum(cvText(it, priceCol))
+    if (price <= 0) continue
+    point.volume += price
+    point.deal_count++
+  }
+
+  let peak: MonthlyRevenuePoint | null = null
+  let total_volume = 0
+  for (const s of slots) {
+    s.est_gci = Math.round(s.volume * GCI_ESTIMATE_RATE)
+    total_volume += s.volume
+    if (!peak || s.volume > peak.volume) peak = s
+  }
+
+  return {
+    points: slots,
+    total_volume,
+    total_est_gci: Math.round(total_volume * GCI_ESTIMATE_RATE),
+    peak_month: peak,
+    current_month: slots[slots.length - 1] ?? null,
+  }
+}
+
+interface PipelineStage {
+  group_id: string
+  group_name: string
+  count: number
+  volume: number
+  company_revenue: number
+}
+
+interface PipelineView {
+  board_id: string
+  total_items: number
+  active_count: number
+  active_volume: number
+  active_company_revenue: number
+  pending_count: number
+  pending_volume: number
+  stages: PipelineStage[]
+}
+
+function transformCulbertsonPipeline(items: MondayItem[], m: BoardMapping): PipelineView {
+  const groupMap = m.groupMap ?? {}
+  const stages: Record<string, PipelineStage> = {}
+  for (const [gid, gname] of Object.entries(groupMap)) {
+    stages[gid] = { group_id: gid, group_name: gname, count: 0, volume: 0, company_revenue: 0 }
+  }
+
+  for (const it of items) {
+    const gid = it.group?.id ?? 'unknown'
+    const gname = groupMap[gid] ?? it.group?.title ?? 'Other'
+    if (!stages[gid]) stages[gid] = { group_id: gid, group_name: gname, count: 0, volume: 0, company_revenue: 0 }
+    const s = stages[gid]
+    s.count++
+    s.volume += parseNum(cvText(it, m.columns.sale_price))
+    s.company_revenue += parseNum(cvText(it, m.columns.company_revenue))
+  }
+
+  const activeIds = new Set([
+    'new_group68267', 'duplicate_of_active_listings__1', 'new_group7848', 'topics',
+  ])
+  const pendingIds = new Set(['topics'])
+
+  let active_count = 0, active_volume = 0, active_company_revenue = 0
+  let pending_count = 0, pending_volume = 0
+  for (const s of Object.values(stages)) {
+    if (activeIds.has(s.group_id)) {
+      active_count += s.count
+      active_volume += s.volume
+      active_company_revenue += s.company_revenue
+    }
+    if (pendingIds.has(s.group_id)) {
+      pending_count += s.count
+      pending_volume += s.volume
+    }
+  }
+
+  // Preserve declaration order
+  const ordered: PipelineStage[] = []
+  const seen = new Set<string>()
+  for (const gid of Object.keys(groupMap)) {
+    if (stages[gid]) { ordered.push(stages[gid]); seen.add(gid) }
+  }
+  for (const [gid, s] of Object.entries(stages)) {
+    if (!seen.has(gid)) ordered.push(s)
+  }
+
+  return {
+    board_id: m.boardId,
+    total_items: items.length,
+    active_count,
+    active_volume,
+    active_company_revenue,
+    pending_count,
+    pending_volume,
+    stages: ordered,
+  }
+}
+
+interface ExpenseRow {
+  id: string
+  name: string
+  company: string
+  region: string
+  frequency: string
+  amount: number
+  monthly_equiv: number
+  payment_type: string
+  auto_payment: string
+  office: string
+}
+
+interface ExpenseView {
+  board_id: string
+  total_items: number
+  total_annual: number
+  total_monthly_equiv: number
+  by_office: Array<{ office: string; count: number; annual: number; monthly: number }>
+  by_frequency: Array<{ frequency: string; count: number; annual: number }>
+  rows: ExpenseRow[]
+}
+
+function freqToMonthlyMultiplier(freq: string): number {
+  const f = (freq || '').toLowerCase()
+  if (f.includes('year') || f.includes('annual')) return 1 / 12
+  if (f.includes('quarter')) return 1 / 3
+  if (f.includes('month')) return 1
+  if (f.includes('week')) return 52 / 12
+  if (f.includes('one') || f.includes('once')) return 0
+  return 1 // default to monthly when unknown to avoid hiding costs
+}
+
+function freqToAnnualMultiplier(freq: string): number {
+  const f = (freq || '').toLowerCase()
+  if (f.includes('year') || f.includes('annual')) return 1
+  if (f.includes('quarter')) return 4
+  if (f.includes('month')) return 12
+  if (f.includes('week')) return 52
+  if (f.includes('one') || f.includes('once')) return 1
+  return 12
+}
+
+function transformCulbertsonExpenses(items: MondayItem[], m: BoardMapping): ExpenseView {
+  const rows: ExpenseRow[] = items.map(it => {
+    const freq = cvText(it, m.columns.frequency) || 'Unknown'
+    const amount = parseNum(cvText(it, m.columns.amount))
+    const office = m.groupMap?.[it.group?.id ?? ''] ?? it.group?.title ?? 'Other'
+    return {
+      id: it.id,
+      name: it.name,
+      company: cvText(it, m.columns.company) || it.name,
+      region: cvText(it, m.columns.region),
+      frequency: freq,
+      amount,
+      monthly_equiv: amount * freqToMonthlyMultiplier(freq),
+      payment_type: cvText(it, m.columns.payment_type),
+      auto_payment: cvText(it, m.columns.auto_payment),
+      office,
+    }
+  })
+
+  const byOffice = new Map<string, { office: string; count: number; annual: number; monthly: number }>()
+  const byFreq = new Map<string, { frequency: string; count: number; annual: number }>()
+  let total_annual = 0
+  let total_monthly = 0
+
+  for (const r of rows) {
+    const annual = r.amount * freqToAnnualMultiplier(r.frequency)
+    total_annual += annual
+    total_monthly += r.monthly_equiv
+
+    const oe = byOffice.get(r.office) ?? { office: r.office, count: 0, annual: 0, monthly: 0 }
+    oe.count++
+    oe.annual += annual
+    oe.monthly += r.monthly_equiv
+    byOffice.set(r.office, oe)
+
+    const fe = byFreq.get(r.frequency) ?? { frequency: r.frequency, count: 0, annual: 0 }
+    fe.count++
+    fe.annual += annual
+    byFreq.set(r.frequency, fe)
+  }
+
+  return {
+    board_id: m.boardId,
+    total_items: rows.length,
+    total_annual: Math.round(total_annual),
+    total_monthly_equiv: Math.round(total_monthly),
+    by_office: Array.from(byOffice.values()).sort((a, b) => b.annual - a.annual),
+    by_frequency: Array.from(byFreq.values()).sort((a, b) => b.annual - a.annual),
+    rows: rows.sort((a, b) => b.amount - a.amount),
+  }
+}
+
 // ─── Public API ─────────────────────────────────────────────────────────
 
 export async function getMondayData(widgetKey: WidgetKey): Promise<MondayResult> {
@@ -952,6 +1604,36 @@ export async function getMondayData(widgetKey: WidgetKey): Promise<MondayResult>
       case 'xome.power':
         transformed = transformXomePower(result.data, mapping)
         break
+      // ─── Culbertson ──────────────────────────────────────────────────
+      case 'culbertson.sales_volume_ytd':
+      case 'culbertson.sales_volume_mtd':
+        transformed = transformCulbertsonVolume(result.data, mapping)
+        break
+      case 'culbertson.gci_ytd':
+      case 'culbertson.gci_mtd':
+        transformed = transformCulbertsonGci(result.data, mapping)
+        break
+      case 'culbertson.closed_transactions':
+        transformed = transformCulbertsonClosedCount(result.data, mapping)
+        break
+      case 'culbertson.avg_commission_pct':
+        transformed = transformCulbertsonAvgCommission(result.data, mapping)
+        break
+      case 'culbertson.top_producers':
+        transformed = transformCulbertsonTopProducers(result.data, mapping)
+        break
+      case 'culbertson.pipeline_value':
+        transformed = transformCulbertsonPipeline(result.data, mapping)
+        break
+      case 'culbertson.revenue_by_source':
+        transformed = transformCulbertsonRevenueBySource(result.data, mapping)
+        break
+      case 'culbertson.monthly_revenue':
+        transformed = transformCulbertsonMonthlyRevenue(result.data, mapping)
+        break
+      case 'culbertson.expense_categories':
+        transformed = transformCulbertsonExpenses(result.data, mapping)
+        break
       default:
         transformed = result.data
     }
@@ -974,4 +1656,17 @@ export type {
   ComplianceView,
   WarehouseView,
   XomePowerView,
+  VolumeKPI,
+  GciKPI,
+  ClosedTxKPI,
+  AvgCommissionKPI,
+  TopProducerRow,
+  RevenueBySourceRow,
+  RevenueBySourceView,
+  MonthlyRevenuePoint,
+  MonthlyRevenueView,
+  PipelineStage,
+  PipelineView as CulbertsonPipelineView,
+  ExpenseRow,
+  ExpenseView,
 }
