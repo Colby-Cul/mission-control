@@ -16,6 +16,7 @@ import {
   getEntityDocumentsByEntityId,
 } from '../../lib/queries'
 import HeroCanvas from './HeroCanvas'
+import OwnershipCard from '../../_components/OwnershipCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -588,6 +589,26 @@ export default async function CompanyPage({ params }: Props) {
     <>
       <div dangerouslySetInnerHTML={{ __html: html }} />
       <HeroCanvas />
+      {/* Ownership Card — rendered outside the dangerouslySetInnerHTML div so React state works */}
+      {entity?.id && (
+        <div style={{
+          width: '86%',
+          margin: '0 auto',
+          paddingBottom: 40,
+          fontFamily: 'DM Sans, sans-serif',
+        }}>
+          <div style={{ marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
+              Ownership Structure
+            </h2>
+          </div>
+          <OwnershipCard
+            entityId={entity.id}
+            entityName={entity.entity_name ?? slug}
+            entityType={entity.entity_type ?? null}
+          />
+        </div>
+      )}
     </>
   )
 }

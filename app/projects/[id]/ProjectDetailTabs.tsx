@@ -123,9 +123,21 @@ function TaskChip({ task }: { task: Task }) {
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: priColor, flexShrink: 0 }} />
         <span style={{ color: '#f5f5f7', fontWeight: 500, lineHeight: 1.3, flex: 1 }}>{taskLabel(task)}</span>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {task.owner && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{task.owner}</span>}
-        {task.agent && <span style={{ fontSize: 10, color: 'var(--orange)', opacity: 0.8 }}>⚡ {task.agent}</span>}
+        {task.agent && (
+          <span style={{
+            fontSize: 9,
+            fontFamily: 'var(--mo)',
+            padding: '2px 6px',
+            borderRadius: 4,
+            background: 'rgba(139,92,246,0.12)',
+            border: '1px solid rgba(139,92,246,0.25)',
+            color: 'var(--purple)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>🤖 {task.agent}</span>
+        )}
         {task.due_date && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--mo)' }}>{fmtDate(task.due_date)}</span>}
       </div>
     </div>
@@ -283,7 +295,19 @@ function KanbanTaskCard({ task }: { task: Task }) {
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {task.owner && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{task.owner}</span>}
-        {task.agent && <span style={{ fontSize: 11, color: 'var(--orange)' }}>⚡ {task.agent}</span>}
+        {task.agent && (
+          <span style={{
+            fontSize: 9,
+            fontFamily: 'var(--mo)',
+            padding: '2px 6px',
+            borderRadius: 4,
+            background: 'rgba(139,92,246,0.12)',
+            border: '1px solid rgba(139,92,246,0.25)',
+            color: 'var(--purple)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>🤖 {task.agent}</span>
+        )}
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {task.due_date && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--mo)' }}>{fmtDate(task.due_date)}</span>}
@@ -382,13 +406,35 @@ function GanttView({ tasks, project }: { tasks: Task[]; project: any }) {
 
               return (
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 700 }}>
-                  {/* Task label */}
+                  {/* Task label + agent badge */}
                   <div style={{
-                    width: 210, flexShrink: 0, fontSize: 12, color: isDone ? 'rgba(255,255,255,0.3)' : '#f5f5f7',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    textDecoration: isDone ? 'line-through' : 'none',
+                    width: 210, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 3,
                   }}>
-                    {taskLabel(t)}
+                    <div style={{
+                      fontSize: 12, color: isDone ? 'rgba(255,255,255,0.3)' : '#f5f5f7',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      textDecoration: isDone ? 'line-through' : 'none',
+                    }}>
+                      {taskLabel(t)}
+                    </div>
+                    {t.agent && (
+                      <span style={{
+                        fontSize: 9,
+                        fontFamily: 'var(--mo)',
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        background: 'rgba(139,92,246,0.12)',
+                        border: '1px solid rgba(139,92,246,0.25)',
+                        color: 'var(--purple)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        display: 'inline-block',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>🤖 {t.agent}</span>
+                    )}
                   </div>
 
                   {/* Bar track */}
@@ -479,7 +525,22 @@ const TABLE_COLUMNS: Column<Task>[] = [
       return <span style={{ color, fontWeight: 600, fontSize: 12 }}>{p || '—'}</span>
     },
   },
-  { key: 'agent', label: 'Agent', sortable: true, render: (v) => v ? <span style={{ color: 'var(--orange)', fontSize: 12 }}>{String(v)}</span> : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span> },
+  {
+    key: 'agent', label: 'Agent', sortable: true,
+    render: (v) => v
+      ? <span style={{
+          fontSize: 9,
+          fontFamily: 'var(--mo)',
+          padding: '2px 6px',
+          borderRadius: 4,
+          background: 'rgba(139,92,246,0.12)',
+          border: '1px solid rgba(139,92,246,0.25)',
+          color: 'var(--purple)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}>🤖 {String(v)}</span>
+      : <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+  },
   {
     key: 'tags', label: 'Tags',
     render: (v) => {
