@@ -9,21 +9,20 @@
  *   GOOGLE_OAUTH_CLIENT_SECRET  (not used here, but required for callback)
  *   GOOGLE_OAUTH_REDIRECT_URI
  */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { buildGoogleAuthUrl, isGoogleOAuthConfigured } from '../../../lib/google'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   if (!isGoogleOAuthConfigured()) {
-    return NextResponse.redirect(
-      new URL(
-        '/integrations?highlight=google&error=oauth-not-configured',
-        process.env.GOOGLE_OAUTH_REDIRECT_URI
-          ? new URL(process.env.GOOGLE_OAUTH_REDIRECT_URI).origin
-          : 'http://localhost:3001',
-      ),
-    )
+    // Prefer configured redirect origin; fall back to the incoming request origin
+    // so on Vercel we bounce back to the same deployment (never localhost:3001).
+    let origin = new URL(req.url).origin
+    if (process.env.GOOGLE_OAUTH_REDIRECT_URI) {
+      try { origin = new URL(process.env.GOOGLE_OAUTH_REDIRECT_URI).origin } catch {}
+    }
+    return NextResponse.redirect(`${origin}/integrations?highlight=google&error=oauth-not-configured`)
   }
 
   const state = crypto.randomUUID()
