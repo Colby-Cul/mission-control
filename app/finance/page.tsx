@@ -14,11 +14,12 @@ import Hero from '../_components/Hero'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import {
-  currentCompanyKey,
   getQbBalanceSheet,
+  listQbConnections,
   parseBalanceSheet,
   type ParsedBS,
 } from '../lib/quickbooks'
+import { getEntities } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,14 +142,41 @@ export default async function FinancePage() {
   let nwGraph: Awaited<ReturnType<typeof getNetWorthFromGraph>> | null = null
   try { nwGraph = await getNetWorthFromGraph() } catch {}
 
-  // QuickBooks Balance Sheet — null when not connected or QB not configured.
-  let qbBS: ParsedBS | null = null
+  // QuickBooks Balance Sheet — one card per connected entity. We fetch the
+  // full list of quickbooks_connections and the list of known entities (for
+  // display names), then pull a BS for each connected entity in parallel.
+  let qbEntityBSs: Array<{ slug: string; name: string; bs: ParsedBS | null }> = []
   try {
-    const raw = await getQbBalanceSheet(currentCompanyKey())
-    qbBS = parseBalanceSheet(raw)
+    const [conns, entities] = await Promise.all([
+      listQbConnections(),
+      getEntities().catch(() => []),
+    ])
+    const byslug: Record<string, string> = {}
+    for (const e of entities as any[]) {
+      if (e?.slug) byslug[String(e.slug)] = String(e.entity_name ?? e.slug)
+    }
+    qbEntityBSs = await Promise.all(
+      conns.map(async c => {
+        try {
+          const raw = await getQbBalanceSheet(c.company_key)
+          return {
+            slug: c.company_key,
+            name: byslug[c.company_key] ?? c.company_key,
+            bs: parseBalanceSheet(raw),
+          }
+        } catch {
+          return {
+            slug: c.company_key,
+            name: byslug[c.company_key] ?? c.company_key,
+            bs: null,
+          }
+        }
+      }),
+    )
   } catch {
-    qbBS = null
+    qbEntityBSs = []
   }
+  const connectedBSs = qbEntityBSs.filter(x => x.bs)
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -4107,44 +4135,133 @@ ___ACCOUNTS_GRID___
         animationSlot={<HeroCanvas />}
       />
 
-      {/* QuickBooks Balance Sheet — live when connected */}
+      {/* QuickBooks Balance Sheet — one card per connected entity */}
       <section style={{ marginBottom: 28 }}>
         <div className="section-header">
           <div className="section-header-left">
             <h2 className="section-title">QuickBooks Balance Sheet</h2>
-            {qbBS && <span className="achieve-count">live · as of {qbBS.asOf}</span>}
+            {connectedBSs.length > 0 && (
+              <span className="achieve-count">
+                live · {connectedBSs.length} {connectedBSs.length === 1 ? 'entity' : 'entities'}
+              </span>
+            )}
           </div>
         </div>
-        {qbBS ? (
-          <SpecCard accent dataSource="quickbooks:BalanceSheet">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {([
-                ['Total Assets',      USD(qbBS.totalAssets),      'var(--green)'],
-                ['Total Liabilities', USD(qbBS.totalLiabilities), 'var(--red)'],
-                ['Total Equity',      USD(qbBS.totalEquity),      'var(--orange)'],
-              ] as [string, string, string][]).map(([label, val, color]) => (
-                <div
-                  key={label}
-                  style={{
-                    padding: '14px 16px',
-                    background: 'rgba(255,255,255,0.02)',
-                    borderRadius: 12,
-                    border: '1px solid var(--border)',
-                  }}
+        {connectedBSs.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {connectedBSs.map(entry => {
+              const bs = entry.bs!
+              return (
+                <SpecCard
+                  key={entry.slug}
+                  accent
+                  dataSource={`quickbooks:BalanceSheet:${entry.slug}`}
                 >
-                  <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color }}>{val}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 12, lineHeight: 1.5 }}>
-              Pulled live from QuickBooks Online · {qbBS.currency} · cached 60s
-            </div>
-          </SpecCard>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'baseline',
+                      marginBottom: 12,
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontFamily: 'IBM Plex Mono, monospace',
+                          color: 'var(--dim)',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          marginBottom: 2,
+                        }}
+                      >
+                        QuickBooks Balance Sheet · {entry.name}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>
+                        as of {bs.asOf}
+                      </div>
+                    </div>
+                    <a
+                      href={`/companies/${encodeURIComponent(entry.slug)}`}
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'IBM Plex Mono, monospace',
+                        color: 'var(--orange)',
+                        textDecoration: 'none',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      Open {entry.name} →
+                    </a>
+                  </div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: 12,
+                    }}
+                  >
+                    {([
+                      ['Total Assets', USD(bs.totalAssets), 'var(--green)'],
+                      ['Total Liabilities', USD(bs.totalLiabilities), 'var(--red)'],
+                      ['Total Equity', USD(bs.totalEquity), 'var(--orange)'],
+                    ] as [string, string, string][]).map(
+                      ([label, val, color]) => (
+                        <div
+                          key={label}
+                          style={{
+                            padding: '14px 16px',
+                            background: 'rgba(255,255,255,0.02)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: 'var(--dim)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                              marginBottom: 6,
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 22,
+                              fontWeight: 700,
+                              fontFamily: 'IBM Plex Mono, monospace',
+                              color,
+                            }}
+                          >
+                            {val}
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: 'var(--dim)',
+                      marginTop: 12,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Pulled live from QuickBooks Online · {bs.currency} · cached 60s
+                  </div>
+                </SpecCard>
+              )
+            })}
+          </div>
         ) : (
           <ComingSoon
             title="QuickBooks Balance Sheet"
-            reason="Connect QuickBooks on the Integrations page to pull live Assets, Liabilities, and Equity directly from QBO."
+            reason="Connect a QuickBooks company per entity on the Integrations page to pull live Assets, Liabilities, and Equity directly from QBO. Each connected entity gets its own Balance Sheet card here."
             icon="📒"
             connect="qb"
             dataSource="coming-soon:quickbooks_balance_sheet"

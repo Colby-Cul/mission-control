@@ -22,6 +22,17 @@ import {
   getEntityDocumentsByEntityId,
 } from '../../lib/queries'
 import {
+  getQbConnection,
+  getQbProfitLoss,
+  getQbBalanceSheet,
+  parseProfitLoss,
+  parseBalanceSheet,
+  type ParsedPL,
+  type ParsedBS,
+} from '../../lib/quickbooks'
+import ComingSoon from '../../_components/ComingSoon'
+import { SpecCard } from '../../_components/SpecCard'
+import {
   getMondayData,
   type LoanPipelineView,
   type LoanOfficerRow,
@@ -145,6 +156,27 @@ export default async function CompanyPage({ params }: Props) {
   try { accounts = await getAccountsByEntityId(entityKey) } catch {}
   if (accounts.length === 0 && entity?.id) {
     try { accounts = await getAccountsByEntityId(entity.id) } catch {}
+  }
+
+  // ── QuickBooks (per-entity) ───────────────────────────────
+  // The connection is keyed by entity slug; a missing row means this entity
+  // hasn't been connected yet. We show a ComingSoon + Connect CTA for that case.
+  let qbPL: ParsedPL | null = null
+  let qbBS: ParsedBS | null = null
+  let qbConnected = false
+  try {
+    const conn = await getQbConnection(slug)
+    if (conn?.realm_id) {
+      qbConnected = true
+      const [rawPL, rawBS] = await Promise.all([
+        getQbProfitLoss(slug),
+        getQbBalanceSheet(slug),
+      ])
+      qbPL = parseProfitLoss(rawPL)
+      qbBS = parseBalanceSheet(rawBS)
+    }
+  } catch {
+    // swallow — show ComingSoon fallback below
   }
 
   // ── Monday.com Xome data (multi-tenant adapter) ─────────────
@@ -1455,6 +1487,270 @@ export default async function CompanyPage({ params }: Props) {
           </div>
         </div>
       )}
+
+      {/* ── Financials tab (QuickBooks — per entity) ─────────── */}
+      <div
+        data-tab="financials"
+        style={{
+          width: '86%',
+          margin: '0 auto 40px',
+          fontFamily: 'DM Sans, sans-serif',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            margin: '20px 0',
+          }}
+        >
+          <span style={{ fontSize: 20 }}>📊</span>
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.9)',
+              margin: 0,
+            }}
+          >
+            QuickBooks — {E.name}
+          </h2>
+          {qbConnected && (
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: 'IBM Plex Mono, monospace',
+                letterSpacing: '0.08em',
+                color: 'var(--green)',
+                background: 'rgba(16,185,129,0.1)',
+                border: '1px solid rgba(16,185,129,0.25)',
+                borderRadius: 6,
+                padding: '3px 8px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Connected
+            </span>
+          )}
+        </div>
+        {qbConnected ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {qbPL ? (
+              <SpecCard
+                accent
+                dataSource={`quickbooks:ProfitAndLoss:${slug}`}
+              >
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    color: 'var(--dim)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  P&amp;L · {qbPL.periodLabel}
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 12,
+                    marginTop: 8,
+                  }}
+                >
+                  {([
+                    ['Income', qbPL.totalIncome, 'var(--green)'],
+                    ['Expenses', qbPL.totalExpenses, 'var(--red)'],
+                    [
+                      'Net',
+                      qbPL.netIncome,
+                      qbPL.netIncome >= 0 ? 'var(--green)' : 'var(--red)',
+                    ],
+                  ] as [string, number, string][]).map(([label, val, color]) => (
+                    <div
+                      key={label}
+                      style={{
+                        padding: '12px 14px',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRadius: 12,
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: 'var(--dim)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          marginBottom: 6,
+                        }}
+                      >
+                        {label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          fontFamily: 'IBM Plex Mono, monospace',
+                          color,
+                        }}
+                      >
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                          maximumFractionDigits: 0,
+                        }).format(val)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--dim)',
+                    marginTop: 10,
+                  }}
+                >
+                  Pulled live from QuickBooks Online · {qbPL.currency} · cached 60s
+                </div>
+              </SpecCard>
+            ) : (
+              <SpecCard
+                accent
+                dataSource={`quickbooks:ProfitAndLoss:${slug}:empty`}
+              >
+                <div style={{ fontSize: 12, color: 'var(--dim)' }}>
+                  Profit &amp; Loss data not yet available for this entity's
+                  QuickBooks realm.
+                </div>
+              </SpecCard>
+            )}
+            {qbBS ? (
+              <SpecCard
+                accent
+                dataSource={`quickbooks:BalanceSheet:${slug}`}
+              >
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    color: 'var(--dim)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    marginBottom: 4,
+                  }}
+                >
+                  Balance Sheet · as of {qbBS.asOf}
+                </div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 12,
+                    marginTop: 8,
+                  }}
+                >
+                  {([
+                    ['Total Assets', qbBS.totalAssets, 'var(--green)'],
+                    ['Total Liabilities', qbBS.totalLiabilities, 'var(--red)'],
+                    ['Total Equity', qbBS.totalEquity, 'var(--orange)'],
+                  ] as [string, number, string][]).map(([label, val, color]) => (
+                    <div
+                      key={label}
+                      style={{
+                        padding: '14px 16px',
+                        background: 'rgba(255,255,255,0.02)',
+                        borderRadius: 12,
+                        border: '1px solid var(--border)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: 'var(--dim)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                          marginBottom: 6,
+                        }}
+                      >
+                        {label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 700,
+                          fontFamily: 'IBM Plex Mono, monospace',
+                          color,
+                        }}
+                      >
+                        {new Intl.NumberFormat('en-US', {
+                          style: 'currency',
+                          currency: 'USD',
+                          maximumFractionDigits: 0,
+                        }).format(val)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--dim)',
+                    marginTop: 10,
+                  }}
+                >
+                  Pulled live from QuickBooks Online · {qbBS.currency} · cached 60s
+                </div>
+              </SpecCard>
+            ) : (
+              <SpecCard
+                accent
+                dataSource={`quickbooks:BalanceSheet:${slug}:empty`}
+              >
+                <div style={{ fontSize: 12, color: 'var(--dim)' }}>
+                  Balance Sheet data not yet available for this entity's
+                  QuickBooks realm.
+                </div>
+              </SpecCard>
+            )}
+          </div>
+        ) : (
+          <ComingSoon
+            title={`QuickBooks · ${E.name}`}
+            reason={`Connect this entity's QuickBooks company to pull live P&L and Balance Sheet data into Mission Control. Each entity keeps its own token row in quickbooks_connections.`}
+            icon="📊"
+            skeleton="kpi"
+            dataSource={`coming-soon:quickbooks:${slug}`}
+          />
+        )}
+        {!qbConnected && (
+          <div style={{ marginTop: 12 }}>
+            <a
+              href={`/api/qb/connect?entity=${encodeURIComponent(
+                slug,
+              )}&returnTo=${encodeURIComponent(`/companies/${slug}`)}`}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 700,
+                padding: '8px 14px',
+                borderRadius: 8,
+                background: '#2ca01c',
+                color: '#fff',
+                textDecoration: 'none',
+                border: '1px solid rgba(44,160,28,0.5)',
+              }}
+            >
+              Connect QuickBooks for {E.name}
+            </a>
+          </div>
+        )}
+      </div>
 
       {/* ── Ownership tab ───────────────────────────────────── */}
       {entity?.id && (

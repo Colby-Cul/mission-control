@@ -9,6 +9,7 @@ import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
 import {
+  getEntities,
   getTaxEntities,
   getTaxMoves,
   getUpcomingTaxDeadlines,
@@ -21,8 +22,8 @@ import {
   getProperties,
 } from '../lib/queries'
 import {
-  currentCompanyKey,
   getQbProfitLoss,
+  listQbConnections,
   parseProfitLoss,
   type ParsedPL,
 } from '../lib/quickbooks'
@@ -56,14 +57,41 @@ export default async function TaxPage() {
     getProperties().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
-  // QuickBooks P&L (YTD) — null when not connected or QB not configured.
-  let qbPL: ParsedPL | null = null
+  // QuickBooks P&L (YTD) — one card per connected entity. We fetch the full
+  // list of quickbooks_connections and the list of known entities (for
+  // display names), then pull a P&L for each connected entity in parallel.
+  let qbEntityPLs: Array<{ slug: string; name: string; pl: ParsedPL | null }> = []
   try {
-    const raw = await getQbProfitLoss(currentCompanyKey())
-    qbPL = parseProfitLoss(raw)
+    const [conns, entities] = await Promise.all([
+      listQbConnections(),
+      getEntities().catch(() => []),
+    ])
+    const byslug: Record<string, string> = {}
+    for (const e of entities as any[]) {
+      if (e?.slug) byslug[String(e.slug)] = String(e.entity_name ?? e.slug)
+    }
+    qbEntityPLs = await Promise.all(
+      conns.map(async c => {
+        try {
+          const raw = await getQbProfitLoss(c.company_key)
+          return {
+            slug: c.company_key,
+            name: byslug[c.company_key] ?? c.company_key,
+            pl: parseProfitLoss(raw),
+          }
+        } catch {
+          return {
+            slug: c.company_key,
+            name: byslug[c.company_key] ?? c.company_key,
+            pl: null,
+          }
+        }
+      }),
+    )
   } catch {
-    qbPL = null
+    qbEntityPLs = []
   }
+  const connectedPLs = qbEntityPLs.filter(x => x.pl)
 
   // Prefer derivedMoves (falls back to static suggestions when tax_moves empty)
   const taxMoves = (taxMovesBase as any[]).length > 0 ? taxMovesBase : derivedMoves
@@ -300,39 +328,147 @@ export default async function TaxPage() {
         )}
       </div>
 
-      {/* QuickBooks P&L (YTD) */}
+      {/* QuickBooks P&L (YTD) — one card per connected entity */}
       <section style={{ marginBottom: 28 }}>
         <div className="section-header">
           <div className="section-header-left">
             <h2 className="section-title">QuickBooks P&amp;L (YTD)</h2>
-            {qbPL && (
-              <span className="achieve-count">live · {qbPL.periodLabel}</span>
+            {connectedPLs.length > 0 && (
+              <span className="achieve-count">
+                live · {connectedPLs.length} {connectedPLs.length === 1 ? 'entity' : 'entities'}
+              </span>
             )}
           </div>
         </div>
-        {qbPL ? (
-          <SpecCard accent dataSource="quickbooks:ProfitAndLoss">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {([
-                ['Total Income',    USD(qbPL.totalIncome),   'var(--green)',  'YTD'],
-                ['Total Expenses',  USD(qbPL.totalExpenses), 'var(--red)',    'YTD'],
-                ['Net Income',      USD(qbPL.netIncome),     qbPL.netIncome >= 0 ? 'var(--green)' : 'var(--red)', 'bottom line'],
-              ] as [string, string, string, string][]).map(([label, val, color, sub]) => (
-                <div key={label} style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{label}</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color }}>{val}</div>
-                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4 }}>{sub}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 12, lineHeight: 1.5 }}>
-              Pulled live from QuickBooks Online · {qbPL.currency} · cached 60s
-            </div>
-          </SpecCard>
+        {connectedPLs.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {connectedPLs.map(entry => {
+              const pl = entry.pl!
+              return (
+                <SpecCard
+                  key={entry.slug}
+                  accent
+                  dataSource={`quickbooks:ProfitAndLoss:${entry.slug}`}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'baseline',
+                      marginBottom: 12,
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontFamily: 'var(--mo)',
+                          color: 'var(--dim)',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          marginBottom: 2,
+                        }}
+                      >
+                        QuickBooks P&amp;L · {entry.name}
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>
+                        {pl.periodLabel}
+                      </div>
+                    </div>
+                    <a
+                      href={`/companies/${encodeURIComponent(entry.slug)}`}
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'var(--mo)',
+                        color: 'var(--orange)',
+                        textDecoration: 'none',
+                        letterSpacing: '0.04em',
+                      }}
+                    >
+                      Open {entry.name} →
+                    </a>
+                  </div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: 12,
+                    }}
+                  >
+                    {([
+                      ['Income', USD(pl.totalIncome), 'var(--green)', 'YTD'],
+                      ['Expenses', USD(pl.totalExpenses), 'var(--red)', 'YTD'],
+                      [
+                        'Net',
+                        USD(pl.netIncome),
+                        pl.netIncome >= 0 ? 'var(--green)' : 'var(--red)',
+                        'bottom line',
+                      ],
+                    ] as [string, string, string, string][]).map(
+                      ([label, val, color, sub]) => (
+                        <div
+                          key={label}
+                          style={{
+                            padding: '12px 14px',
+                            background: 'rgba(255,255,255,0.02)',
+                            borderRadius: 12,
+                            border: '1px solid var(--border)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: 'var(--dim)',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
+                              marginBottom: 6,
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 22,
+                              fontWeight: 700,
+                              fontFamily: 'var(--mo)',
+                              color,
+                            }}
+                          >
+                            {val}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: 'var(--dim)',
+                              marginTop: 4,
+                            }}
+                          >
+                            {sub}
+                          </div>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: 'var(--dim)',
+                      marginTop: 12,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Pulled live from QuickBooks Online · {pl.currency} · cached 60s
+                  </div>
+                </SpecCard>
+              )
+            })}
+          </div>
         ) : (
           <ComingSoon
             title="QuickBooks P&L (YTD)"
-            reason="Connect QuickBooks on the Integrations page to pull live Income, Expenses, and Net Income straight from QBO."
+            reason="Connect a QuickBooks company per entity on the Integrations page to pull live Income, Expenses, and Net Income straight from QBO. Each connected entity gets its own P&L card here."
             icon="📊"
             connect="qb"
             dataSource="coming-soon:quickbooks_profit_loss"
