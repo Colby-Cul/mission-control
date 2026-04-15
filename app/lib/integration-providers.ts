@@ -170,9 +170,20 @@ export const PROVIDERS: Record<string, IntegrationProvider> = {
   'quickbooks': {
     provider: 'quickbooks',
     kind: 'oauth',
-    envVars: ['QUICKBOOKS_CLIENT_ID', 'QUICKBOOKS_CLIENT_SECRET'],
-    connectHref: '/api/qb/connect',
+    envVars: [
+      'QUICKBOOKS_CLIENT_ID',
+      'QUICKBOOKS_CLIENT_SECRET',
+      'QUICKBOOKS_REDIRECT_URI',
+      'QUICKBOOKS_ENV',
+    ],
+    connectHref: '/api/qb/connect?returnTo=/integrations',
     docsUrl: 'https://developer.intuit.com/app/developer/dashboard',
+    rotateInstructions:
+      '1. Log into developer.intuit.com\n' +
+      '2. Create a new app (or use existing)\n' +
+      '3. Under Keys & OAuth, copy Client ID and Client Secret\n' +
+      '4. Add https://mc-merge-v7-latest.vercel.app/api/qb/callback to redirect URIs\n' +
+      '5. Paste below',
   },
   'plaid': {
     provider: 'plaid',
