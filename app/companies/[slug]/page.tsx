@@ -3,7 +3,9 @@
  *
  * Template: Xome Home (pixel-for-pixel port of xome-home-dashboard.html).
  * Generic entities render the same template with ComingSoon on missing data.
- * Xome-only: additional loan widgets sourced from Monday.com via /api/monday/loans.
+ * Xome-only: loan pipeline / officers / KPIs / compliance / warehouse / power
+ * sourced from Monday.com via the multi-tenant adapter at
+ * `app/lib/monday-adapter.ts` (tenant `xome`, `MONDAY_XOME_API_KEY`).
  *
  * Legal-only entities (Alabama Shores, Black Lab Capital LLC) render a
  * minimal "Legal Entity Only — No Operations" card instead.
@@ -19,6 +21,16 @@ import {
   getEntityExpenses30d,
   getEntityDocumentsByEntityId,
 } from '../../lib/queries'
+import {
+  getMondayData,
+  type LoanPipelineView,
+  type LoanOfficerRow,
+  type LoanVolumeKPIs,
+  type ClosedLoanRow,
+  type ComplianceView,
+  type WarehouseView,
+  type XomePowerView,
+} from '../../lib/monday-adapter'
 import HeroCanvas from './HeroCanvas'
 import OwnershipCard from '../../_components/OwnershipCard'
 import SlugEditButton from './_SlugEditButton'
@@ -33,22 +45,6 @@ const XOME_SLUG = 'xome-home'
 
 interface Props {
   params: { slug: string }
-}
-
-// ── Fetch Monday loan data (server-side, guarded) ────────────────
-async function fetchMondayLoans(type: 'kpis' | 'pipeline' | 'officers') {
-  try {
-    const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-    const res = await fetch(`${base}/api/monday/loans?type=${type}`, {
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    const json = await res.json()
-    if (json.error || !json.data) return null
-    return json.data
-  } catch {
-    return null
-  }
 }
 
 export default async function CompanyPage({ params }: Props) {
@@ -149,17 +145,42 @@ export default async function CompanyPage({ params }: Props) {
     try { accounts = await getAccountsByEntityId(entity.id) } catch {}
   }
 
-  // ── Monday.com loan data (Xome only) ─────────────────────────
-  let mondayKpis: any = null
-  let mondayPipeline: any[] = []
-  let mondayOfficers: any[] = []
+  // ── Monday.com Xome data (multi-tenant adapter) ─────────────
+  let mondayKpis: LoanVolumeKPIs | null = null
+  let mondayPipeline: LoanPipelineView | null = null
+  let mondayOfficers: LoanOfficerRow[] | null = null
+  let mondayClosedLoans: ClosedLoanRow[] | null = null
+  let mondayCompliance: ComplianceView | null = null
+  let mondayWarehouse: WarehouseView | null = null
+  let mondayPower: XomePowerView | null = null
+  let mondayError: string | null = null
 
   if (isXome) {
-    ;[mondayKpis, mondayPipeline, mondayOfficers] = await Promise.all([
-      fetchMondayLoans('kpis'),
-      fetchMondayLoans('pipeline'),
-      fetchMondayLoans('officers'),
+    const [rKpis, rPipe, rOff, rClosed, rComp, rWare, rPow] = await Promise.all([
+      getMondayData('xome.loan_volume_kpis'),
+      getMondayData('xome.loan_pipeline'),
+      getMondayData('xome.loan_officer_roster'),
+      getMondayData('xome.recent_closed_loans'),
+      getMondayData('xome.compliance'),
+      getMondayData('xome.warehouse_reconciliation'),
+      getMondayData('xome.power'),
     ])
+    mondayKpis = rKpis.data as LoanVolumeKPIs | null
+    mondayPipeline = rPipe.data as LoanPipelineView | null
+    mondayOfficers = rOff.data as LoanOfficerRow[] | null
+    mondayClosedLoans = rClosed.data as ClosedLoanRow[] | null
+    mondayCompliance = rComp.data as ComplianceView | null
+    mondayWarehouse = rWare.data as WarehouseView | null
+    mondayPower = rPow.data as XomePowerView | null
+    mondayError =
+      rKpis.error ||
+      rPipe.error ||
+      rOff.error ||
+      rClosed.error ||
+      rComp.error ||
+      rWare.error ||
+      rPow.error ||
+      null
   }
 
   // ── Entity metadata with graceful fallbacks ───────────────────
@@ -228,8 +249,8 @@ export default async function CompanyPage({ params }: Props) {
     ? { val: fmtCurrency(mondayKpis.avg_loan_size), label: 'Avg Loan Size' }
     : { val: String(E.teamCount), label: 'Team Members' }
 
-  const heroMini3 = isXome && mondayKpis?.loans_closed_mtd != null
-    ? { val: String(mondayKpis.loans_closed_mtd), label: 'Funded This Month' }
+  const heroMini3 = isXome && mondayKpis?.loans_funded_mtd != null
+    ? { val: String(mondayKpis.loans_funded_mtd), label: 'Funded This Month' }
     : { val: String(milestones.length), label: 'Milestones' }
 
   const heroTickerLabel = isXome ? 'PULL-THROUGH' : 'STATUS'
@@ -258,8 +279,8 @@ export default async function CompanyPage({ params }: Props) {
   // ── Health card stats ─────────────────────────────────────────
   const healthStats = isXome && mondayKpis
     ? [
-        { val: String(mondayOfficers?.length || '—'), label: 'Officers' },
-        { val: '3', label: 'Branches' },
+        { val: String((mondayOfficers?.length) ?? '—'), label: 'Officers' },
+        { val: String(mondayPipeline?.total_items ?? '—'), label: 'Total Items' },
         { val: mondayKpis.avg_days_to_close ? String(mondayKpis.avg_days_to_close) : '—', label: 'Days Close' },
         {
           val: mondayKpis.pull_through_rate != null
@@ -276,25 +297,23 @@ export default async function CompanyPage({ params }: Props) {
       ]
 
   // ── Analytics grid: conversion donut + funding timeline ───────
-  // Build pipeline stage counts for Xome
-  const pipelineStages: Record<string, number> = {}
-  if (isXome && mondayPipeline?.length) {
-    for (const d of mondayPipeline) {
-      const g = d.group || d.stage || 'Unknown'
-      pipelineStages[g] = (pipelineStages[g] || 0) + 1
-    }
+  // Pipeline stages come directly from the adapter (group-aware, amount-aware)
+  type PipelineStage = LoanPipelineView['stages'][number]
+  const pipelineStagesArr: PipelineStage[] = mondayPipeline?.stages ?? []
+  const pipelineStageOrder = ['Leads', 'Pre-Approved', 'In Process', 'Funded', 'Nurture', 'Dead/DNC']
+  const stageColorByName: Record<string, string> = {
+    'Leads': 'var(--purple)',
+    'Pre-Approved': 'var(--orange)',
+    'In Process': 'var(--amber)',
+    'Funded': 'var(--green)',
+    'Nurture': 'var(--lime)',
+    'Dead/DNC': 'var(--red)',
+    'New Group': 'var(--pink)',
   }
+  const totalStaged = pipelineStagesArr.reduce((a, s) => a + s.count, 0) || 1
 
-  const stageOrder = ['Leads', 'Pre - Approved', 'In-Contract', 'Closing', 'Funded']
-  const stageColors = ['var(--purple)', 'var(--orange)', 'var(--amber)', 'var(--pink)', 'var(--green)']
-  const totalStaged = Object.values(pipelineStages).reduce((a, b) => a + b, 0) || 1
-
-  // Recent closed loans (last 10 from Funded group)
-  const recentClosed = isXome && mondayPipeline?.length
-    ? mondayPipeline
-        .filter((d: any) => d.group === 'Funded' || d.group === 'new_group5903')
-        .slice(0, 10)
-    : []
+  // Recent closed loans come pre-sorted from the adapter, already redacted
+  const recentClosed: ClosedLoanRow[] = mondayClosedLoans ?? []
 
   // ── Full operational dashboard ─────────────────────────────
   const html = `<!DOCTYPE html>
@@ -713,19 +732,19 @@ export default async function CompanyPage({ params }: Props) {
             <div class="kpi-header"><div class="kpi-num">${fmtCurrency(mondayKpis.volume_ytd || 0)}</div><div class="kpi-indicator"></div></div>
             <div class="kpi-label">Loan Volume YTD</div>
             <div class="kpi-bars" id="bars-lo1"></div>
-            <div class="kpi-meta"><span class="kpi-meta-item">board 1931297970</span><div class="kpi-meta-value">Monday</div></div>
+            <div class="kpi-meta"><span class="kpi-meta-item">${mondayKpis.loans_funded_ytd || 0} funded YTD</span><div class="kpi-meta-value">Monday</div></div>
           </div>
           <div class="kpi-card kpi-orange">
             <div class="kpi-header"><div class="kpi-num">${fmtCurrency(mondayKpis.pipeline_value || 0)}</div><div class="kpi-indicator"></div></div>
             <div class="kpi-label">Pipeline Value</div>
             <div class="kpi-bars" id="bars-lo2"></div>
-            <div class="kpi-meta"><span class="kpi-meta-item">${mondayKpis.pipeline_count || 0} loans</span></div>
+            <div class="kpi-meta"><span class="kpi-meta-item">${mondayKpis.pipeline_count || 0} active loans</span></div>
           </div>
           <div class="kpi-card kpi-purple">
             <div class="kpi-header"><div class="kpi-num">${mondayKpis.avg_loan_size ? fmtCurrency(mondayKpis.avg_loan_size) : '—'}</div><div class="kpi-indicator"></div></div>
             <div class="kpi-label">Avg Loan Size</div>
             <div class="kpi-bars" id="bars-lo3"></div>
-            <div class="kpi-meta"><span class="kpi-meta-item">Closed loans</span></div>
+            <div class="kpi-meta"><span class="kpi-meta-item">Funded loans</span></div>
           </div>
           <div class="kpi-card kpi-amber">
             <div class="kpi-header"><div class="kpi-num">${mondayKpis.avg_days_to_close ? mondayKpis.avg_days_to_close + 'd' : '—'}</div><div class="kpi-indicator"></div></div>
@@ -734,8 +753,8 @@ export default async function CompanyPage({ params }: Props) {
             <div class="kpi-meta"><span class="kpi-meta-item">Goal: 30d</span><div class="kpi-meta-value" style="color:${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'var(--green)' : 'var(--orange)'};">${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'On Track' : 'Needs Attn'}</div></div>
           </div>
           <div class="kpi-card kpi-lime">
-            <div class="kpi-header"><div class="kpi-num">${mondayKpis.loans_closed_mtd ?? '—'}</div><div class="kpi-indicator"></div></div>
-            <div class="kpi-label">Loans Closed MTD</div>
+            <div class="kpi-header"><div class="kpi-num">${mondayKpis.loans_funded_mtd ?? '—'}</div><div class="kpi-indicator"></div></div>
+            <div class="kpi-label">Loans Funded MTD</div>
             <div class="kpi-bars" id="bars-lo5"></div>
             <div class="kpi-meta"><span class="kpi-meta-item">${fmtCurrency(mondayKpis.volume_mtd || 0)} MTD vol.</span></div>
           </div>
@@ -744,19 +763,19 @@ export default async function CompanyPage({ params }: Props) {
         <!-- Analytics Grid: Conversion Donut + Pipeline Stages -->
         <div class="analytics-grid">
           <div class="chart-card">
-            <div class="chart-label">Conversion Rate</div>
+            <div class="chart-label">Pull-Through Rate</div>
             <svg class="chart-svg" viewBox="0 0 280 180">
-              ${mondayKpis.conversion_rate != null ? `
+              ${mondayKpis.pull_through_rate != null ? `
               <circle cx="80" cy="90" r="60" fill="none" stroke="rgba(16,185,129,0.3)" stroke-width="20"/>
               <circle cx="80" cy="90" r="60" fill="none" stroke="var(--green)" stroke-width="20"
-                stroke-dasharray="${(mondayKpis.conversion_rate * 314).toFixed(1)}" stroke-dashoffset="0" stroke-linecap="round"/>
-              <text x="80" y="95" font-size="32" font-weight="700" font-family="IBM Plex Mono" text-anchor="middle" fill="var(--green)">${(mondayKpis.conversion_rate*100).toFixed(0)}%</text>
+                stroke-dasharray="${(mondayKpis.pull_through_rate * 314).toFixed(1)}" stroke-dashoffset="0" stroke-linecap="round"/>
+              <text x="80" y="95" font-size="32" font-weight="700" font-family="IBM Plex Mono" text-anchor="middle" fill="var(--green)">${(mondayKpis.pull_through_rate*100).toFixed(0)}%</text>
               <text x="80" y="115" font-size="11" font-weight="600" text-anchor="middle" fill="rgba(255,255,255,0.4)">Funded</text>
               ` : `
               <text x="80" y="95" font-size="14" text-anchor="middle" fill="rgba(255,255,255,0.4)">No data</text>
               `}
               <circle cx="160" cy="50" r="5" fill="var(--green)"/>
-              <text x="175" y="55" font-size="11" fill="rgba(255,255,255,0.8)">Funded ${mondayKpis.conversion_rate != null ? (mondayKpis.conversion_rate*100).toFixed(0)+'%' : '—'}</text>
+              <text x="175" y="55" font-size="11" fill="rgba(255,255,255,0.8)">Funded ${mondayKpis.pull_through_rate != null ? (mondayKpis.pull_through_rate*100).toFixed(0)+'%' : '—'}</text>
               <circle cx="160" cy="75" r="5" fill="var(--amber)"/>
               <text x="175" y="80" font-size="11" fill="rgba(255,255,255,0.8)">In Process</text>
               <circle cx="160" cy="100" r="5" fill="var(--red)"/>
@@ -782,23 +801,27 @@ export default async function CompanyPage({ params }: Props) {
             <div class="stat-card-content">
               <div class="stat-value">${mondayKpis.pipeline_count || '—'}</div>
               <div class="stat-label">Active Pipeline Loans</div>
-              <div class="stat-sub">Excluding dead/lost files</div>
+              <div class="stat-sub">Excluding dead / nurture / funded</div>
             </div>
           </div>
           <div class="stat-card pink">
             <div class="stat-card-content">
               <div class="stat-value">${fmtCurrency(mondayKpis.volume_mtd || 0)}</div>
               <div class="stat-label">Volume MTD</div>
-              <div class="stat-sub">${mondayKpis.loans_closed_mtd || 0} loans closed this month</div>
+              <div class="stat-sub">${mondayKpis.loans_funded_mtd || 0} loans funded this month</div>
             </div>
           </div>
         </div>
         ` : `
-        <div class="coming-soon-inline" data-source="monday:1931297970/loan-kpis">
+        <div class="coming-soon-inline" data-source="monday:5842083369/loan-kpis">
           <span class="cs-icon">🏠</span>
-          <div class="cs-label">Monday.com · Board 1931297970</div>
-          Set <code>MONDAY_API_KEY</code> in Vercel env vars to load live loan analytics from
-          "XOME Daddy Home Loans - Active Deal Pipeline".
+          <div class="cs-label">Monday.com · Xome Loan Pipeline</div>
+          Configure the Xome Monday integration to load live loan analytics from
+          "New Pipeline Xome" (board 5842083369).
+          <a href="/integrations" style="color:var(--purple);display:inline-block;margin-top:8px;">
+            Configure Xome Monday integration →
+          </a>
+          ${mondayError ? `<div style="margin-top:8px;font-size:10px;color:var(--red);">${mondayError}</div>` : ''}
         </div>`}
       </section>
 
@@ -810,9 +833,9 @@ export default async function CompanyPage({ params }: Props) {
             <h2 class="section-title">Loan Officer Roster</h2>
           </div>
         </div>
-        ${mondayOfficers?.length > 0 ? `
+        ${mondayOfficers && mondayOfficers.length > 0 ? `
         <div class="officer-grid">
-          ${mondayOfficers.map((o: any) => `
+          ${mondayOfficers.map((o: LoanOfficerRow) => `
             <div class="officer-card">
               <div class="officer-avatar">${o.name?.[0]?.toUpperCase() || '?'}</div>
               <div class="officer-name">${o.name}</div>
@@ -826,20 +849,21 @@ export default async function CompanyPage({ params }: Props) {
                   <div class="officer-stat-val">${fmtCurrency(o.volume_mtd || 0)}</div>
                 </div>
                 <div>
-                  <div class="officer-stat-label">Total Loans</div>
-                  <div class="officer-stat-val">${o.loan_count || 0}</div>
+                  <div class="officer-stat-label">Funded</div>
+                  <div class="officer-stat-val">${o.funded_count || 0}</div>
                 </div>
                 <div>
-                  <div class="officer-stat-label">Status</div>
-                  <div class="officer-stat-val" style="color:var(--green);font-size:10px;font-family:'DM Sans',sans-serif;font-weight:700;text-transform:uppercase">${o.status || 'Active'}</div>
+                  <div class="officer-stat-label">Active</div>
+                  <div class="officer-stat-val">${o.active_count || 0}</div>
                 </div>
               </div>
             </div>`).join('')}
         </div>` : `
-        <div class="coming-soon-inline" data-source="monday:1931297970/loan-officers">
+        <div class="coming-soon-inline" data-source="monday:5842083369/loan-officers">
           <span class="cs-icon">👤</span>
           <div class="cs-label">Monday.com · Loan Officer Data</div>
-          Loan officer roster aggregated from deal pipeline board. Set <code>MONDAY_API_KEY</code> to activate.
+          Loan officer roster aggregated from Xome pipeline. Configure the Xome Monday
+          integration in <a href="/integrations" style="color:var(--purple);">/integrations</a>.
         </div>`}
       </section>
 
@@ -851,40 +875,35 @@ export default async function CompanyPage({ params }: Props) {
             <h2 class="section-title">Loan Pipeline Stages</h2>
           </div>
         </div>
-        ${Object.keys(pipelineStages).length > 0 ? `
+        ${pipelineStagesArr.length > 0 ? `
         <div class="pipeline-bar-wrap">
-          ${stageOrder.map((stage, i) => {
-            const count = pipelineStages[stage] || 0
-            const pct = Math.max(4, (count / totalStaged) * 100)
-            const color = stageColors[i % stageColors.length]
-            return count > 0 ? `
-            <div class="pipeline-bar-row">
-              <div class="pipeline-bar-label">${stage}</div>
-              <div class="pipeline-bar-track">
-                <div class="pipeline-bar-fill" style="width:${pct}%;background:${color}20;border-left:3px solid ${color}">
-                  <span class="pipeline-bar-count">${count}</span>
-                </div>
-              </div>
-            </div>` : ''
-          }).join('')}
-          ${Object.entries(pipelineStages)
-            .filter(([g]) => !stageOrder.includes(g))
-            .map(([g, count]) => {
-              const pct = Math.max(4, ((count as number) / totalStaged) * 100)
-              return `<div class="pipeline-bar-row">
-                <div class="pipeline-bar-label">${g}</div>
+          ${pipelineStagesArr
+            .slice()
+            .sort((a, b) => {
+              const ai = pipelineStageOrder.indexOf(a.group_name)
+              const bi = pipelineStageOrder.indexOf(b.group_name)
+              return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+            })
+            .map((s) => {
+              const pct = Math.max(4, (s.count / totalStaged) * 100)
+              const color = stageColorByName[s.group_name] || 'rgba(255,255,255,0.2)'
+              return s.count === 0 ? '' : `
+              <div class="pipeline-bar-row">
+                <div class="pipeline-bar-label">${s.group_name}</div>
                 <div class="pipeline-bar-track">
-                  <div class="pipeline-bar-fill" style="width:${pct}%;background:rgba(255,255,255,0.06);border-left:3px solid rgba(255,255,255,0.2)">
-                    <span class="pipeline-bar-count">${count}</span>
+                  <div class="pipeline-bar-fill" style="width:${pct}%;background:${color.startsWith('var') ? color.replace('var(--','rgba(').replace(')', ',0.13)') : 'rgba(255,255,255,0.06)'};border-left:3px solid ${color}">
+                    <span class="pipeline-bar-count">${s.count}${s.total_amount > 0 ? ` · ${fmtCurrency(s.total_amount)}` : ''}</span>
                   </div>
                 </div>
               </div>`
             }).join('')}
         </div>` : `
-        <div class="coming-soon-inline" data-source="monday:1931297970/pipeline">
+        <div class="coming-soon-inline" data-source="monday:5842083369/pipeline">
           <span class="cs-icon">🏗️</span>
           <div class="cs-label">Monday.com · Pipeline Stages</div>
-          Stage distribution from "XOME Daddy Home Loans" board. Set <code>MONDAY_API_KEY</code> to activate.
+          Stage distribution from the Xome "New Pipeline Xome" board. Configure the
+          Xome Monday integration in
+          <a href="/integrations" style="color:var(--purple);">/integrations</a>.
         </div>`}
       </section>
 
@@ -904,26 +923,192 @@ export default async function CompanyPage({ params }: Props) {
               <th>Amount</th>
               <th>Officer</th>
               <th>Type</th>
+              <th>Purpose</th>
+              <th>State</th>
               <th>Close Date</th>
-              <th>Days</th>
             </tr>
           </thead>
           <tbody>
-            ${recentClosed.map((d: any) => `
+            ${recentClosed.map((d: ClosedLoanRow) => `
             <tr>
               <td>${d.borrower || '—'}</td>
               <td class="mono green">${d.amount ? fmtCurrency(d.amount) : '—'}</td>
-              <td class="dim">${d.officer || '—'}</td>
+              <td class="dim">${d.lo || '—'}</td>
               <td class="dim">${d.loan_type || '—'}</td>
-              <td class="mono dim">${d.actual_close_date || d.expected_close_date || '—'}</td>
-              <td class="mono dim">${d.days_in_pipeline ? d.days_in_pipeline + 'd' : '—'}</td>
+              <td class="dim">${d.loan_purpose || '—'}</td>
+              <td class="dim">${d.state || '—'}</td>
+              <td class="mono dim">${d.close_date || '—'}</td>
             </tr>`).join('')}
           </tbody>
         </table>` : `
-        <div class="coming-soon-inline" data-source="monday:1931297970/funded">
+        <div class="coming-soon-inline" data-source="monday:5842083369/funded">
           <span class="cs-icon">✅</span>
           <div class="cs-label">Monday.com · Funded Group</div>
-          Last 10 closed loans from the Funded group. Set <code>MONDAY_API_KEY</code> to activate.
+          Last 10 closed loans from the Xome "Funded 💵" group.
+          Configure the Xome Monday integration in
+          <a href="/integrations" style="color:var(--purple);">/integrations</a>.
+        </div>`}
+      </section>
+
+      <!-- COMPLIANCE TRACKER (Xome only) -->
+      <section class="section">
+        <div class="section-header">
+          <div class="section-header-left">
+            <span style="font-size:20px">🛡️</span>
+            <h2 class="section-title">Compliance Tracker</h2>
+            ${mondayCompliance && mondayCompliance.overdue_count > 0
+              ? `<span class="achieve-count" style="color:var(--red);border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.08)">${mondayCompliance.overdue_count} overdue</span>`
+              : mondayCompliance
+              ? `<span class="achieve-count" style="color:var(--green);border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08)">Live · Monday.com</span>`
+              : ''}
+          </div>
+        </div>
+        ${mondayCompliance ? `
+          <div class="stats-row" style="margin-bottom:20px">
+            <div class="stat-card amber">
+              <div class="stat-card-content">
+                <div class="stat-value">${mondayCompliance.pending_count}</div>
+                <div class="stat-label">Pending Compliance</div>
+                <div class="stat-sub">Items awaiting review</div>
+              </div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-card-content">
+                <div class="stat-value">${mondayCompliance.completed_count}</div>
+                <div class="stat-label">Completed</div>
+                <div class="stat-sub">Cleared & closed</div>
+              </div>
+            </div>
+            <div class="stat-card pink" style="${mondayCompliance.overdue_count > 0 ? 'border-color:rgba(239,68,68,0.25);' : ''}">
+              <div class="stat-card-content">
+                <div class="stat-value" style="${mondayCompliance.overdue_count > 0 ? 'color:var(--red);' : ''}">${mondayCompliance.overdue_count}</div>
+                <div class="stat-label">Overdue (>14d)</div>
+                <div class="stat-sub">${mondayCompliance.overdue_count > 0 ? 'Needs immediate attention' : 'All within SLA'}</div>
+              </div>
+            </div>
+          </div>
+          ${mondayCompliance.items && mondayCompliance.items.length > 0 ? `
+          <table class="closed-loans-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Group</th>
+                <th>Date Received</th>
+                <th>Processor</th>
+                <th>Cleared</th>
+                <th>Flag</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mondayCompliance.items.map((i: any) => `
+              <tr${i.overdue ? ' style="background:rgba(239,68,68,0.04);"' : ''}>
+                <td>${i.name}</td>
+                <td class="dim">${i.group}</td>
+                <td class="mono dim">${i.date_received || '—'}</td>
+                <td class="dim">${i.processor_compliance || '—'}</td>
+                <td class="dim">${i.cleared || '—'}</td>
+                <td>${i.overdue ? '<span style="color:var(--red);font-weight:700;">Overdue</span>' : '<span style="color:var(--green);">OK</span>'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>` : `
+          <div class="coming-soon-inline" data-source="monday:18140546461/empty" style="border-color:rgba(139,92,246,0.1)">
+            <span class="cs-icon">🛡️</span>
+            <div class="cs-label">No compliance items yet</div>
+            The "Compliance Tracker" board (18140546461) is empty. As items are added,
+            they will appear here with overdue flags (>14 days since Date Received).
+          </div>`}
+        ` : `
+        <div class="coming-soon-inline" data-source="monday:18140546461">
+          <span class="cs-icon">🛡️</span>
+          <div class="cs-label">Monday.com · Compliance Tracker</div>
+          Configure the Xome Monday integration in
+          <a href="/integrations" style="color:var(--purple);">/integrations</a>.
+        </div>`}
+      </section>
+
+      <!-- WAREHOUSE RECONCILIATION (Xome only) -->
+      <section class="section">
+        <div class="section-header">
+          <div class="section-header-left">
+            <span style="font-size:20px">🏦</span>
+            <h2 class="section-title">Warehouse Reconciliation</h2>
+            ${mondayWarehouse
+              ? `<span class="achieve-count" style="color:var(--green);border:1px solid rgba(16,185,129,0.2);background:rgba(16,185,129,0.08)">Live · Monday.com</span>`
+              : ''}
+          </div>
+        </div>
+        ${mondayWarehouse ? `
+          <div class="stats-row">
+            <div class="stat-card amber">
+              <div class="stat-card-content">
+                <div class="stat-value">${mondayWarehouse.open_count}</div>
+                <div class="stat-label">Open Items</div>
+                <div class="stat-sub">Pending reconciliation</div>
+              </div>
+            </div>
+            <div class="stat-card pink">
+              <div class="stat-card-content">
+                <div class="stat-value">${fmtCurrency(mondayWarehouse.total_pending_value || 0)}</div>
+                <div class="stat-label">Total Value Pending</div>
+                <div class="stat-sub">Sum of wire amounts open</div>
+              </div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-card-content">
+                <div class="stat-value">${mondayWarehouse.oldest_open_days != null ? mondayWarehouse.oldest_open_days + 'd' : '—'}</div>
+                <div class="stat-label">Oldest Open</div>
+                <div class="stat-sub">${mondayWarehouse.reconciled_count} reconciled total</div>
+              </div>
+            </div>
+          </div>
+        ` : `
+        <div class="coming-soon-inline" data-source="monday:18140546824">
+          <span class="cs-icon">🏦</span>
+          <div class="cs-label">Monday.com · Warehouse Reconciliation</div>
+          Configure the Xome Monday integration in
+          <a href="/integrations" style="color:var(--purple);">/integrations</a>.
+        </div>`}
+      </section>
+
+      <!-- XOME POWER (Xome only) -->
+      <section class="section">
+        <div class="section-header">
+          <div class="section-header-left">
+            <span style="font-size:20px">⚡</span>
+            <h2 class="section-title">Xome Power</h2>
+            ${mondayPower
+              ? `<span class="achieve-count" style="color:var(--amber);border:1px solid rgba(245,158,11,0.2);background:rgba(245,158,11,0.08)">${mondayPower.total_items} leads</span>`
+              : ''}
+          </div>
+        </div>
+        ${mondayPower ? `
+          <div class="pipeline-bar-wrap">
+            ${mondayPower.stages.map((s) => {
+              const totalP = mondayPower.total_items || 1
+              const pct = Math.max(4, (s.count / totalP) * 100)
+              const color = s.group_name === 'Completed' ? 'var(--green)'
+                : s.group_name === 'Project' ? 'var(--amber)'
+                : s.group_name === 'Proposal' ? 'var(--orange)'
+                : s.group_name === 'Nurture' ? 'var(--lime)'
+                : s.group_name === 'Dead' ? 'var(--red)'
+                : 'var(--purple)'
+              return s.count === 0 ? '' : `
+              <div class="pipeline-bar-row">
+                <div class="pipeline-bar-label">${s.group_name}</div>
+                <div class="pipeline-bar-track">
+                  <div class="pipeline-bar-fill" style="width:${pct}%;background:${color.replace('var(--','rgba(').replace(')',',0.13)')};border-left:3px solid ${color}">
+                    <span class="pipeline-bar-count">${s.count}</span>
+                  </div>
+                </div>
+              </div>`
+            }).join('')}
+          </div>
+        ` : `
+        <div class="coming-soon-inline" data-source="monday:6386432034">
+          <span class="cs-icon">⚡</span>
+          <div class="cs-label">Monday.com · Xome Power</div>
+          Solar / renewables lead pipeline. Configure the Xome Monday integration in
+          <a href="/integrations" style="color:var(--purple);">/integrations</a>.
         </div>`}
       </section>
       ` : ''}
@@ -1060,7 +1245,7 @@ export default async function CompanyPage({ params }: Props) {
       <!-- NOTE SECTION -->
       <div class="note-section">
         ${isXome
-          ? `Monday.com integration active — board "XOME Daddy Home Loans - Active Deal Pipeline" (ID: 1931297970) feeds loan data. Native Mission Control loan management coming soon.`
+          ? `Xome Monday integration active — primary board is "New Pipeline Xome" (5842083369, Main workspace, 928 items). Compliance Tracker (18140546461) and Warehouse Reconciliation (18140546824) also wired. Env var: <code>MONDAY_XOME_API_KEY</code>. 60s in-memory cache. ${mondayError ? '<br><span style="color:var(--amber);">' + mondayError + '</span>' : ''}`
           : E.purpose
           ? E.purpose
           : `${E.fullName} · ${E.type} · ${E.state} · Data updates automatically as KPIs, transactions, and team members are added.`
