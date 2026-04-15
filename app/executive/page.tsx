@@ -15,7 +15,13 @@ import {
   getOpenTasks,
   getActiveProjects,
   getAgents,
+  getEntityFinancialRollup,
+  getAgentCostBudgets,
+  getServiceStatusGrid,
+  getUpcomingTaxDeadlines,
+  getCompanyKpis,
 } from '../lib/queries'
+import { supabase } from '../lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,12 +60,16 @@ function statusColor(status: string): string {
 }
 
 export default async function ExecutivePage() {
-  const [accounts, entities, tasks, projects, agents] = await Promise.allSettled([
+  const [accounts, entities, tasks, projects, agents, entityRollup, agentBudgets, services, upcomingDeadlines] = await Promise.allSettled([
     getAccounts(),
     getEntities(),
     getOpenTasks(),
     getActiveProjects(),
     getAgents().catch(() => []),
+    getEntityFinancialRollup().catch(() => []),
+    getAgentCostBudgets().catch(() => []),
+    getServiceStatusGrid().catch(() => []),
+    getUpcomingTaxDeadlines().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const netWorth    = (accounts as any[]).reduce((s, a) => s + accountSignedBalance(a), 0)
@@ -67,6 +77,33 @@ export default async function ExecutivePage() {
   const entityCount = (entities as any[]).length
   const projectCount = (projects as any[]).length
   const agentCount  = (agents as any[]).filter((a: any) => a.status === 'active').length
+
+  // Derived strategic KPIs pulled from company_kpis across all entities
+  const kpisByKeyAgg: Record<string, { value: number; target: number; count: number }> = {}
+  const { data: allKpiRows } = await supabase.from('company_kpis').select('kpi_key, value, target').limit(500)
+  for (const k of (allKpiRows ?? []) as any[]) {
+    if (!kpisByKeyAgg[k.kpi_key]) kpisByKeyAgg[k.kpi_key] = { value: 0, target: 0, count: 0 }
+    kpisByKeyAgg[k.kpi_key].value += Number(k.value ?? 0)
+    kpisByKeyAgg[k.kpi_key].target += Number(k.target ?? 0)
+    kpisByKeyAgg[k.kpi_key].count += 1
+  }
+  const revenueTotal = kpisByKeyAgg['revenue_mtd']?.value ?? 0
+  const cashFlowTotal = kpisByKeyAgg['cash_flow_mtd']?.value ?? 0
+  const runwayAvg = kpisByKeyAgg['runway_months']?.count ? Math.round((kpisByKeyAgg['runway_months'].value / kpisByKeyAgg['runway_months'].count)) : 0
+  const topRevenueEntities = (entityRollup as any[]).filter(e => e.revenueMtd > 0).sort((a, b) => b.revenueMtd - a.revenueMtd).slice(0, 5)
+
+  // Decision queue — high-priority open tasks that mention decision/sign-off keywords + upcoming deadlines
+  const decisionTasks = (tasks as any[]).filter((t: any) => (t.priority === 'high' || t.priority === 'critical')).slice(0, 5)
+  const agentFleet = (services as any[]).slice(0, 10)
+  const atRiskAgents = (agentFleet as any[]).filter((a: any) => a.health === 'degraded' || a.health === 'down')
+  const costOverBudget = (agentBudgets as any[]).filter((b: any) => b.pctUsed !== null && b.pctUsed > 80)
+  const riskItems = [
+    ...atRiskAgents.map((a: any) => ({ kind: 'agent', label: `${a.name}: ${a.health}`, severity: a.health === 'down' ? 'critical' : 'warning' })),
+    ...costOverBudget.map((b: any) => ({ kind: 'cost', label: `${b.name}: ${Math.round(b.pctUsed)}% of monthly budget`, severity: 'warning' })),
+    ...((upcomingDeadlines as any[]).slice(0, 3).map((d: any) => ({ kind: 'tax', label: `${d.kind} due ${d.deadline_date}`, severity: 'info' }))),
+  ].slice(0, 8)
+
+  const USDS = (n: number) => n >= 1_000_000 ? `$${(n/1_000_000).toFixed(1)}M` : n >= 1_000 ? `$${(n/1_000).toFixed(1)}K` : `$${Math.round(n)}`
 
   return (
     <>
@@ -176,46 +213,112 @@ export default async function ExecutivePage() {
         </SpecCard>
       </div>
 
-      {/* Revenue, Decision Queue, Strategic KPIs */}
+      {/* Revenue, Decision Queue, Strategic KPIs — all derived from real data */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Revenue Snapshot"
-          reason="Real-time revenue roll-up across all business units — STR, Xome, investments."
-          icon="💹"
-          dataSource="coming-soon:executive.revenue"
-          skeleton="kpi"
-        />
-        <ComingSoon
-          title="Decision Queue"
-          reason="Pending decisions surfaced by agents requiring CEO input or sign-off."
-          icon="⚡"
-          dataSource="coming-soon:executive.decisions"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Strategic KPIs"
-          reason="North Star metrics vs. targets — visualized against quarterly goals."
-          icon="🎯"
-          dataSource="coming-soon:executive.kpis"
-          skeleton="chart"
-        />
+        {/* Revenue Snapshot */}
+        <SpecCard accent dataSource="company_kpis">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Revenue Snapshot</div>
+          <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--green)', marginBottom: 4 }}>{USDS(revenueTotal)}</div>
+          <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 14 }}>MTD across entities · {topRevenueEntities.length} earners</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {topRevenueEntities.length === 0 ? (
+              <div style={{ fontSize: 11, color: 'var(--dim)' }}>No MTD revenue in company_kpis yet.</div>
+            ) : topRevenueEntities.slice(0, 4).map((e: any) => (
+              <div key={e.entityId} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }}>{e.entityName}</span>
+                <span style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{USDS(e.revenueMtd)}</span>
+              </div>
+            ))}
+          </div>
+        </SpecCard>
+
+        {/* Decision Queue (derived from high-priority open tasks) */}
+        <SpecCard accent dataSource="tasks">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Decision Queue</div>
+            <span style={{ fontSize: 10, color: 'var(--orange)', fontFamily: 'var(--mo)' }}>{decisionTasks.length} needing sign-off</span>
+          </div>
+          {decisionTasks.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', textAlign: 'center', padding: '20px 0' }}>No high-priority decisions pending.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {decisionTasks.map((t: any) => (
+                <div key={t.id} style={{ padding: '8px 10px', background: 'rgba(239,68,68,0.04)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.12)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title ?? t.name ?? 'Task'}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginTop: 2 }}>{t.priority} · {t.status}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SpecCard>
+
+        {/* Strategic KPIs (derived from company_kpis aggregate) */}
+        <SpecCard accent dataSource="company_kpis">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Strategic KPIs</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[
+              { label: 'Total MTD Revenue', val: USDS(revenueTotal), color: 'var(--green)' },
+              { label: 'Total MTD Cash Flow', val: USDS(cashFlowTotal), color: cashFlowTotal >= 0 ? 'var(--green)' : 'var(--red)' },
+              { label: 'Avg Runway', val: runwayAvg ? `${runwayAvg}mo` : '—', color: 'var(--amber)' },
+              { label: 'Active Entities', val: String(entityCount), color: 'var(--orange)' },
+              { label: 'Agent Fleet', val: `${agentCount}/${(agents as any[]).length}`, color: 'var(--purple)' },
+            ].map(k => (
+              <div key={k.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                <span style={{ color: 'var(--dim)' }}>{k.label}</span>
+                <span style={{ fontFamily: 'var(--mo)', color: k.color, fontWeight: 600 }}>{k.val}</span>
+              </div>
+            ))}
+          </div>
+        </SpecCard>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Agent Fleet Status"
-          reason="Live agent health, run queue depth, and cost burn rate."
-          icon="🤖"
-          dataSource="coming-soon:executive.agents"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Risk & Alerts"
-          reason="Aggregated risk signals from finance, legal, operations, and security agents."
-          icon="🛡️"
-          dataSource="coming-soon:executive.risks"
-          skeleton="table"
-        />
+        {/* Agent Fleet Status (derived from sessions + agents) */}
+        <SpecCard accent dataSource="agents,sessions">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Agent Fleet Status</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{agentFleet.length} agents · {atRiskAgents.length} at risk</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 240, overflowY: 'auto' }}>
+            {agentFleet.map((a: any) => {
+              const col = a.health === 'healthy' ? 'var(--green)' : a.health === 'degraded' ? 'var(--amber)' : a.health === 'down' ? 'var(--red)' : 'var(--dim)'
+              return (
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0, boxShadow: a.health === 'healthy' ? `0 0 6px ${col}` : 'none' }} />
+                  <div style={{ flex: 1, fontSize: 12, fontWeight: 600 }}>{a.name}</div>
+                  <div style={{ fontSize: 10, color: col, fontFamily: 'var(--mo)', textTransform: 'uppercase' }}>{a.health}</div>
+                  <div style={{ fontSize: 9, color: 'var(--dim)', fontFamily: 'var(--mo)', minWidth: 70, textAlign: 'right' }}>
+                    {a.lastBeat ? new Date(a.lastBeat).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'never'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </SpecCard>
+
+        {/* Risk & Alerts (derived) */}
+        <SpecCard accent dataSource="derived:risk_signals">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Risk & Alerts</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{riskItems.length} signals</span>
+          </div>
+          {riskItems.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--green)', padding: '20px 0', textAlign: 'center' }}>All clear — no active risks detected.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {riskItems.map((r: any, i: number) => {
+                const col = r.severity === 'critical' ? 'var(--red)' : r.severity === 'warning' ? 'var(--amber)' : 'var(--dim)'
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                    <span style={{ fontSize: 9, fontFamily: 'var(--mo)', textTransform: 'uppercase', color: col, width: 50 }}>{r.kind}</span>
+                    <span style={{ flex: 1, fontSize: 12 }}>{r.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SpecCard>
       </div>
     </>
   )

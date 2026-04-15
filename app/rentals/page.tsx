@@ -265,22 +265,24 @@ export default async function RentalsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
             <ComingSoon
               title="Booking Analytics (KPIs + Charts)"
-              reason="Populate the rental_bookings table (Lodgify export or direct entry) to unlock: Revenue, Occupancy, ADR, RevPAR, P&L, Source breakdown."
+              reason="Requires Lodgify integration — connect in /integrations to unlock Revenue, Occupancy, ADR, RevPAR."
               icon="📊"
+              connect="lodgify"
               dataSource="coming-soon:rental_bookings"
               skeleton="chart"
             />
             <ComingSoon
               title="Maintenance Requests"
-              reason="Open maintenance tickets from maintenance_requests table. Not yet populated."
+              reason="maintenance_requests table not yet created. Plan: tickets raised by guests or periodic inspections."
               icon="🔧"
               dataSource="coming-soon:maintenance_requests"
               skeleton="table"
             />
             <ComingSoon
               title="Recent Reviews"
-              reason="Guest reviews from property_reviews table. Connect Lodgify to activate."
+              reason="Requires Lodgify or AirDNA integration — connect in /integrations."
               icon="⭐"
+              connect="lodgify"
               dataSource="coming-soon:property_reviews"
               skeleton="table"
             />
@@ -288,8 +290,9 @@ export default async function RentalsPage() {
 
           <ComingSoon
             title="Bookings Table"
-            reason="Connect Lodgify or populate rental_bookings to see sortable check-ins, guest names, and nightly revenue."
+            reason="Requires Lodgify integration — connect to pull sortable check-ins, guest names, and nightly revenue."
             icon="🏨"
+            connect="lodgify"
             dataSource="coming-soon:rental_bookings"
             skeleton="table"
             minHeight={120}

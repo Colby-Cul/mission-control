@@ -9,7 +9,7 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getEntityDocuments, getEntities, getUpcomingTaxDeadlines, getUserProfile } from '../lib/queries'
+import { getEntityDocuments, getEntities, getUpcomingTaxDeadlines, getUserProfile, getComplianceChecklist } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,11 +27,12 @@ const ACHIEVEMENTS = [
 ]
 
 export default async function LegalPage() {
-  const [docs, entities, deadlines, profile] = await Promise.all([
+  const [docs, entities, deadlines, profile, compliance] = await Promise.all([
     getEntityDocuments(LEGAL_TYPES).catch(() => []),
     getEntities().catch(() => []),
     getUpcomingTaxDeadlines().catch(() => []),
     getUserProfile().catch(() => null),
+    getComplianceChecklist().catch(() => []),
   ])
 
   const allDocs = docs as any[]
@@ -156,17 +157,47 @@ export default async function LegalPage() {
         </SpecCard>
       ))}
 
-      {/* Compliance checklist */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Compliance Checklist"
-          reason="Auto-generated per-entity compliance score and action items."
-          icon="✅"
-          dataSource="coming-soon:compliance_score"
-          skeleton="table"
-          minHeight={160}
-        />
-      </div>
+      {/* Compliance checklist — derived per entity */}
+      <SpecCard accent dataSource="entity_ownership,entity_documents,financial_accounts" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Compliance Checklist</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+            Avg {((compliance as any[]) ?? []).length > 0 ? Math.round(((compliance as any[]) ?? []).reduce((s, r: any) => s + r.score, 0) / ((compliance as any[]) ?? []).length) : 0}/100
+          </span>
+        </div>
+        {((compliance as any[]) ?? []).length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--dim)' }}>No entities to score.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {((compliance as any[]) ?? []).map((c: any) => {
+              const col = c.score >= 80 ? 'var(--green)' : c.score >= 60 ? 'var(--amber)' : 'var(--red)'
+              return (
+                <div key={c.entityId} style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.025)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>{c.entityName}</div>
+                    <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: col, fontWeight: 700 }}>{c.score}/100</div>
+                  </div>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
+                    <div style={{ height: '100%', width: `${c.score}%`, background: col, borderRadius: 2 }} />
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {c.checks.map((chk: any) => (
+                      <span key={chk.key} style={{
+                        fontSize: 9, padding: '2px 6px', borderRadius: 3, fontFamily: 'var(--mo)',
+                        background: chk.pass ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.08)',
+                        color: chk.pass ? 'var(--green)' : 'var(--red)',
+                        textTransform: 'uppercase', letterSpacing: '0.04em',
+                      }}>
+                        {chk.pass ? '✓' : '✗'} {chk.key}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
     </>
   )
 }

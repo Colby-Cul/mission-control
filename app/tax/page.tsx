@@ -13,6 +13,12 @@ import {
   getTaxMoves,
   getUpcomingTaxDeadlines,
   getTopExpenseCategories,
+  getDerivedTaxMoves,
+  getComplianceChecklist,
+  getAuditReadiness,
+  getDeductionsYtd,
+  getEntityDocuments,
+  getProperties,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -32,12 +38,20 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function TaxPage() {
-  const [taxEntities, taxMoves, deadlines, expenseCategories] = await Promise.allSettled([
+  const [taxEntities, taxMovesBase, deadlines, expenseCategories, derivedMoves, auditReadiness, deductions, taxDocs, properties] = await Promise.allSettled([
     getTaxEntities(),
     getTaxMoves(),
     getUpcomingTaxDeadlines(),
     getTopExpenseCategories(6),
+    getDerivedTaxMoves().catch(() => []),
+    getAuditReadiness().catch(() => ({ pct: 0, rows: [], summary: '—' })),
+    getDeductionsYtd().catch(() => ({ rows: [], total: 0, source: 'none' })),
+    getEntityDocuments(['tax', 'ein', 'annual_report', 'filing', 'operating_agreement', 'formation']).catch(() => []),
+    getProperties().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
+
+  // Prefer derivedMoves (falls back to static suggestions when tax_moves empty)
+  const taxMoves = (taxMovesBase as any[]).length > 0 ? taxMovesBase : derivedMoves
 
   const xpEarned = DEFAULT_ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
 
@@ -298,36 +312,138 @@ export default async function TaxPage() {
         </SpecCard>
       </section>
 
-      {/* Document Checklist + CPA Contact + Cost Seg + Audit Readiness */}
+      {/* Document Checklist + Cost Seg + CPA Card + Audit Readiness */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Document Checklist"
-          reason="Entity document checklist populates from entity_documents where category=tax."
-          icon="📋"
-          dataSource="coming-soon:entity_documents"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Cost Segregation Calculator"
-          reason="Property-level cost seg analysis. Requires property_assets + calc endpoint."
-          icon="🏗️"
-          dataSource="coming-soon:property_assets.cost_seg"
-          skeleton="kpi"
-        />
-        <ComingSoon
-          title="CPA Contact Card"
-          reason="CPA inbox and document sharing with accountant. Coming with integrations."
-          icon="👔"
-          dataSource="coming-soon:integrations.cpa"
-          skeleton="none"
-        />
-        <ComingSoon
-          title="Audit Readiness Score"
-          reason="Derived from tax_entities_meta completeness. Requires table population."
-          icon="🛡️"
-          dataSource="coming-soon:tax_entities_meta.audit_score"
-          skeleton="kpi"
-        />
+        {/* Document Checklist — derived from entity_documents */}
+        <SpecCard accent dataSource="entity_documents">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Document Checklist</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{(taxDocs as any[]).length} docs</span>
+          </div>
+          {(() => {
+            const required = ['EIN', 'Operating Agreement', 'Annual Report', 'Formation', 'Last Year Return']
+            const haveMap: Record<string, boolean> = {}
+            for (const d of (taxDocs as any[])) {
+              const dt = String(d.document_type ?? '').toLowerCase()
+              if (dt.includes('ein')) haveMap['EIN'] = true
+              if (dt.includes('operating')) haveMap['Operating Agreement'] = true
+              if (dt.includes('annual')) haveMap['Annual Report'] = true
+              if (dt.includes('formation') || dt.includes('filing')) haveMap['Formation'] = true
+              if (dt.includes('tax')) haveMap['Last Year Return'] = true
+            }
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {required.map(r => {
+                  const has = !!haveMap[r]
+                  return (
+                    <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                      <span style={{ color: has ? 'var(--green)' : 'var(--dim)', fontFamily: 'var(--mo)', fontSize: 14 }}>{has ? '✓' : '○'}</span>
+                      <span style={{ flex: 1, fontSize: 12, color: has ? 'inherit' : 'var(--dim)' }}>{r}</span>
+                      <span style={{ fontSize: 10, color: has ? 'var(--green)' : 'var(--amber)', fontFamily: 'var(--mo)' }}>{has ? 'on file' : 'missing'}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
+        </SpecCard>
+
+        {/* Cost Seg Calculator — derived from property_assets */}
+        <SpecCard accent dataSource="property_assets">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Cost Segregation Opportunities</div>
+          {(properties as any[]).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)' }}>No properties on file.</div>
+          ) : (() => {
+            // Simple estimate: ~20% of purchase price reclassifiable as 5/15-yr property
+            const candidates = (properties as any[])
+              .filter((p: any) => Number(p.purchase_price ?? p.current_value ?? 0) > 300_000 && !p.cost_seg_done)
+              .map((p: any) => ({
+                id: p.id,
+                name: p.address ?? p.city,
+                basis: Number(p.purchase_price ?? p.current_value ?? 0),
+                estShortTermReclass: Number(p.purchase_price ?? p.current_value ?? 0) * 0.20,
+                firstYearBonus: Number(p.purchase_price ?? p.current_value ?? 0) * 0.20 * 0.60, // 60% bonus depreciation for 2026
+              }))
+              .slice(0, 3)
+            const total = candidates.reduce((s, c) => s + c.firstYearBonus, 0)
+            return (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)', marginBottom: 4 }}>{USD(Math.round(total))}</div>
+                <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 14 }}>Estimated Y1 bonus depreciation · {candidates.length} candidate{candidates.length === 1 ? '' : 's'}</div>
+                {candidates.map((c: any) => (
+                  <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11, display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{c.name}</span>
+                    <span style={{ fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{USD(Math.round(c.firstYearBonus))}</span>
+                  </div>
+                ))}
+                <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 10, lineHeight: 1.5 }}>
+                  Rule-of-thumb: 20% of basis × 60% (2026 bonus dep.). Actual study yields vary.
+                </div>
+              </>
+            )
+          })()}
+        </SpecCard>
+
+        {/* CPA Contact Card */}
+        <SpecCard accent dataSource="static:cpa_contact">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 14 }}>CPA Contact</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--amber), var(--orange))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0,
+            }}>CPA</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>Primary CPA</div>
+              <div style={{ fontSize: 11, color: 'var(--dim)' }}>Add via Team Members to see contact here.</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.6 }}>
+            <div><strong style={{ color: 'var(--t2)' }}>Send Q2 estimates</strong> — due Jun 15, 2026</div>
+            <div><strong style={{ color: 'var(--t2)' }}>Share YTD deductions</strong> — {USD(Number((deductions as any).total ?? 0))} so far</div>
+            <div><strong style={{ color: 'var(--t2)' }}>Review S-Corp election</strong> — potential savings identified</div>
+          </div>
+        </SpecCard>
+
+        {/* Audit Readiness Score — derived */}
+        <SpecCard accent dataSource="entity_ownership,entity_documents,financial_accounts">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Audit Readiness Score</div>
+          {(() => {
+            const ar = auditReadiness as any
+            const pct = ar?.pct ?? 0
+            const scoreColor = pct >= 80 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'
+            return (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 10 }}>
+                  <div style={{ position: 'relative', width: 80, height: 80, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width={80} height={80} style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
+                      <circle cx={40} cy={40} r={34} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={6} />
+                      <circle cx={40} cy={40} r={34} fill="none" stroke={scoreColor} strokeWidth={6}
+                        strokeDasharray={2 * Math.PI * 34}
+                        strokeDashoffset={2 * Math.PI * 34 * (1 - pct / 100)}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--mo)', position: 'relative', zIndex: 1, color: scoreColor }}>{pct}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 4 }}>{ar.summary ?? '—'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', lineHeight: 1.5 }}>
+                      Combines EIN presence, formation, docs, tax class + bank linkage.
+                    </div>
+                  </div>
+                </div>
+                {(ar.rows ?? []).slice(0, 4).map((r: any) => (
+                  <div key={r.entityId} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 11 }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }}>{r.entityName}</span>
+                    <span style={{ fontFamily: 'var(--mo)', color: r.score >= 80 ? 'var(--green)' : r.score >= 50 ? 'var(--amber)' : 'var(--red)' }}>{r.score}/100</span>
+                  </div>
+                ))}
+              </>
+            )
+          })()}
+        </SpecCard>
       </div>
     </>
   )

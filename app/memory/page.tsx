@@ -11,6 +11,7 @@ import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
 import { getMemoryEntries, getUserProfile } from '../lib/queries'
 import { supabase } from '../lib/supabase'
+import MemorySearch from './MemorySearch'
 
 export const dynamic = 'force-dynamic'
 
@@ -183,23 +184,36 @@ export default async function MemoryPage() {
         </div>
       )}
 
-      {/* Search + Category filter — ComingSoon */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
-        <ComingSoon
-          title="Memory Search"
-          reason="Semantic search across all stored memories — find what your agents know about any topic instantly."
-          icon="🔍"
-          dataSource="coming-soon:agent_memory.search"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Recall Analytics"
-          reason="Which memories get recalled most? Track usage patterns and strengthen high-value knowledge."
-          icon="📊"
-          dataSource="coming-soon:agent_memory.analytics"
-          skeleton="chart"
-        />
+      {/* Client-side search */}
+      <div style={{ marginBottom: 24 }}>
+        <MemorySearch entries={primaryMemories} />
       </div>
+
+      {/* Category Breakdown (real) */}
+      <SpecCard accent dataSource={primarySource} style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Category Breakdown</div>
+        {categoryCount === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--dim)' }}>No categories — add memories to see distribution.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {Object.entries(byCategory).sort(([, a], [, b]) => b.length - a.length).map(([cat, items]) => {
+              const pct = (items.length / Math.max(1, totalMemories)) * 100
+              const col = CATEGORY_COLORS[cat.toLowerCase()] ?? 'var(--dim)'
+              return (
+                <div key={cat}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                    <span style={{ textTransform: 'capitalize' }}>{cat}</span>
+                    <span style={{ fontFamily: 'var(--mo)', color: col }}>{items.length} ({pct.toFixed(0)}%)</span>
+                  </div>
+                  <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: col, borderRadius: 2 }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
     </>
   )
 }

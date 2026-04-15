@@ -11,7 +11,7 @@ import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
 import AgentsClient from './AgentsClient'
-import { getAgents, getAgentRunFeed, getAchievements } from '../lib/queries'
+import { getAgents, getAgentRunFeed, getAchievements, getAgentCapabilityMatrix, getAgentCostBudgets } from '../lib/queries'
 import { BUILTIN_AGENTS } from '../lib/agents'
 
 export const dynamic = 'force-dynamic'
@@ -37,10 +37,12 @@ function agentTypeColor(agent: any): string {
 }
 
 export default async function AgentsPage() {
-  const [agentsRaw, runs, dbAchievements] = await Promise.allSettled([
+  const [agentsRaw, runs, dbAchievements, capMatrix, costBudgets] = await Promise.allSettled([
     getAgents(),
     getAgentRunFeed(50),
     getAchievements('agents'),
+    getAgentCapabilityMatrix().catch(() => ({ caps: [], matrix: [] })),
+    getAgentCostBudgets().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   // Merge DB agents with BUILTIN_AGENTS — DB rows override builtins by id/slug
@@ -347,30 +349,106 @@ export default async function AgentsPage() {
         </SpecCard>
       </section>
 
-      {/* Coming Soon widgets */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Permission Matrix"
-          reason="Fine-grained per-agent capability gates — configure which tools each agent can access."
-          icon="🔐"
-          dataSource="coming-soon:agent_permissions"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Cost Budget"
-          reason="Set monthly token & compute budgets per agent; alerts when thresholds are approaching."
-          icon="💰"
-          dataSource="coming-soon:agent_cost_budgets"
-          skeleton="kpi"
-        />
-        <ComingSoon
-          title="Agent Skills"
-          reason="Attach custom tools and skills to specific agents from the Skill Lab."
-          icon="⚡"
-          dataSource="coming-soon:agent_skills"
-          skeleton="table"
-        />
+      {/* Permission Matrix + Cost Budget + Agent Skills — all derived */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
+        {/* Permission / Capability Matrix — derived from agents.capabilities */}
+        <SpecCard accent dataSource="agents.capabilities">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Capability Matrix</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+              {(capMatrix as any).matrix?.length ?? 0} agents × {(capMatrix as any).caps?.length ?? 0} caps
+            </span>
+          </div>
+          {(capMatrix as any).caps?.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
+              No capabilities declared on any agent yet.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: 9 }}>Agent</th>
+                    {((capMatrix as any).caps ?? []).slice(0, 5).map((cap: string) => (
+                      <th key={cap} style={{ padding: '6px 4px', textAlign: 'center', color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: 9, fontWeight: 600 }}>{cap.slice(0, 8)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {((capMatrix as any).matrix ?? []).slice(0, 8).map((row: any) => (
+                    <tr key={row.id}>
+                      <td style={{ padding: '6px 8px', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.name}</td>
+                      {row.capabilities.slice(0, 5).map((c: any) => (
+                        <td key={c.cap} style={{ padding: '6px 4px', textAlign: 'center' }}>
+                          <span style={{ color: c.has ? 'var(--green)' : 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                            {c.has ? '●' : '○'}
+                          </span>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SpecCard>
+
+        {/* Cost Budget — aggregated from sessions per agent this month */}
+        <SpecCard accent dataSource="sessions,agents.monthly_budget">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Monthly Cost Budget</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>this month</span>
+          </div>
+          {((costBudgets as any[]) ?? []).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>No spend recorded this month.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {((costBudgets as any[]) ?? []).slice(0, 6).map((b: any) => {
+                const pct = b.pctUsed ?? 0
+                const col = pct > 80 ? 'var(--red)' : pct > 50 ? 'var(--amber)' : 'var(--green)'
+                return (
+                  <div key={b.id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                      <span style={{ fontWeight: 600 }}>{b.name}</span>
+                      <span style={{ fontFamily: 'var(--mo)', color: col }}>
+                        ${b.spend.toFixed(2)}{b.budget > 0 ? ` / $${b.budget}` : ''}
+                      </span>
+                    </div>
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${Math.min(100, pct)}%`, background: col, borderRadius: 2 }} />
+                    </div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>
+                      {b.runs} runs {b.budget === 0 ? '· no budget set' : `· ${Math.round(pct)}% used`}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SpecCard>
       </div>
+
+      {/* Agent Skills Overview (from agents.capabilities) */}
+      <SpecCard accent dataSource="agents.capabilities" style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Agent Skills Overview</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+          {agents.map((a: any) => {
+            const caps: string[] = Array.isArray(a.capabilities) ? a.capabilities : []
+            return (
+              <div key={a.id} style={{ padding: 10, background: 'rgba(255,255,255,0.025)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{a.name}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                  {caps.length === 0 ? (
+                    <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>no skills declared</span>
+                  ) : caps.slice(0, 6).map((c: string) => (
+                    <span key={c} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)', background: 'rgba(249,115,22,0.08)', color: 'var(--orange)', textTransform: 'uppercase' }}>{c}</span>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </SpecCard>
     </>
   )
 }

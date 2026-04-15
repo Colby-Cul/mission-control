@@ -168,7 +168,7 @@ export default async function SkillsPage() {
         )}
       </SpecCard>
 
-      {/* Recent Practice Sessions — ComingSoon */}
+      {/* Recent Practice Sessions */}
       {skillProgress !== null ? (
         <SpecCard accent dataSource="skill_progress" style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
@@ -194,7 +194,7 @@ export default async function SkillsPage() {
         <div style={{ marginBottom: 24 }}>
           <ComingSoon
             title="Practice Sessions"
-            reason="Track every skill practice session with XP earned, duration, and progress over time."
+            reason="skill_progress table not yet created. Tracks every practice session with XP earned."
             icon="🏋️"
             dataSource="coming-soon:skill_progress"
             skeleton="table"
@@ -202,15 +202,26 @@ export default async function SkillsPage() {
         </div>
       )}
 
-      {/* Recommended Next Skills */}
-      <ComingSoon
-        title="Recommended Next Skills"
-        reason="AI-curated suggestions for your next skill unlock based on your current portfolio and goals."
-        icon="🎯"
-        dataSource="coming-soon:skill_progress.recommendations"
-        skeleton="kpi"
-        minHeight={140}
-      />
+      {/* Recommended Next Skills — derived from locked skills, not duplicative of unlocked */}
+      <SpecCard accent dataSource="skills" style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Recommended Next</div>
+        {lockedSkills.length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--green)', padding: '12px 0' }}>All skills in the registry are unlocked.</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+            {lockedSkills.slice(0, 6).map((s: any) => {
+              const catColor = CATEGORY_COLORS[String(s.category ?? '').toLowerCase()] ?? 'var(--orange)'
+              return (
+                <div key={s.id} style={{ padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: `1px solid ${catColor}33` }}>
+                  <div style={{ fontWeight: 600, fontSize: 12 }}>{s.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4, lineHeight: 1.4 }}>{s.description ?? '—'}</div>
+                  <div style={{ fontSize: 10, fontFamily: 'var(--mo)', marginTop: 6, color: catColor }}>⟳ UNLOCK THIS SKILL</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
     </>
   )
 }

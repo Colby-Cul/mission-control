@@ -970,3 +970,550 @@ export async function getProjectMilestones(projectId: string) {
   if (error) return []
   return (data ?? []) as any[]
 }
+
+// ═══ Derived: Agent Activity Feed (union of agent_runs + sessions) ═
+/**
+ * Unified agent activity feed. Since agent_runs is empty in most environments,
+ * we also surface cron sessions (agent_name + cron_id) as a first-class signal.
+ * Used by Dashboard / Executive / Activity pages.
+ */
+export async function getAgentActivityFeed(limit = 20) {
+  // Try agent_runs first
+  const [runsRes, sessionsRes] = await Promise.allSettled([
+    supabase.from('agent_runs').select('*, agent:agents(name, color)').order('started_at', { ascending: false }).limit(limit),
+    supabase.from('sessions').select('id, title, agent_name, status, trigger_source, cron_id, started_at, ended_at, cost_usd, cost').order('started_at', { ascending: false }).limit(limit),
+  ])
+  const runs = runsRes.status === 'fulfilled' ? (runsRes.value.data ?? []) : []
+  const sessions = sessionsRes.status === 'fulfilled' ? (sessionsRes.value.data ?? []) : []
+
+  const norm: Array<{
+    id: string
+    when: string | null
+    agent: string
+    kind: string
+    status: string
+    title: string
+    cost: number
+    source: 'agent_runs' | 'sessions'
+  }> = []
+  for (const r of runs as any[]) {
+    norm.push({
+      id: r.id,
+      when: r.started_at ?? r.created_at,
+      agent: r.agent?.name ?? r.agent_id ?? 'Agent',
+      kind: 'run',
+      status: r.status ?? '—',
+      title: (r.input?.title ?? r.input?.prompt ?? r.task_id ?? 'Agent run').toString().slice(0, 120),
+      cost: Number(r.cost ?? 0),
+      source: 'agent_runs',
+    })
+  }
+  for (const s of sessions as any[]) {
+    norm.push({
+      id: s.id,
+      when: s.started_at,
+      agent: s.agent_name ?? 'System',
+      kind: s.trigger_source === 'cron' ? 'cron' : 'session',
+      status: s.status ?? 'completed',
+      title: (s.title ?? s.cron_id ?? 'Session').toString().slice(0, 120),
+      cost: Number(s.cost_usd ?? s.cost ?? 0),
+      source: 'sessions',
+    })
+  }
+  return norm.sort((a, b) => (b.when ?? '').localeCompare(a.when ?? '')).slice(0, limit)
+}
+
+// ═══ Derived: Daily Brief data bundle ══════════════════════════════
+/**
+ * Morning briefing bundle — pulls counts/highlights from across the empire.
+ * Used by /home and /executive daily brief cards.
+ */
+export async function getDailyBrief() {
+  const [agentFeed, openTasks, upcomingDeadlines, entities, milestones] = await Promise.allSettled([
+    getAgentActivityFeed(5),
+    getOpenTasks(),
+    getUpcomingTaxDeadlines(),
+    getEntities(),
+    getCompanyMilestones(),
+  ])
+  const feed = agentFeed.status === 'fulfilled' ? agentFeed.value : []
+  const tasks = openTasks.status === 'fulfilled' ? openTasks.value : []
+  const dls = upcomingDeadlines.status === 'fulfilled' ? upcomingDeadlines.value : []
+  const ents = entities.status === 'fulfilled' ? entities.value : []
+  const ms = milestones.status === 'fulfilled' ? milestones.value : []
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const runsToday = feed.filter((f: any) => (f.when ?? '').startsWith(todayStr)).length
+  const highPriTasks = (tasks as any[]).filter((t: any) => t.priority === 'high' || t.priority === 'critical').slice(0, 5)
+  const nextDeadline = (dls as any[])[0] ?? null
+  const nextMilestone = (ms as any[]).filter((m: any) => m.status === 'upcoming')[0] ?? null
+
+  return {
+    runsToday,
+    agentFeed: feed,
+    openTaskCount: (tasks as any[]).length,
+    highPriTasks,
+    nextDeadline,
+    nextMilestone,
+    entityCount: (ents as any[]).length,
+  }
+}
+
+// ═══ Derived: Agent cost budget rollup ═════════════════════════════
+/**
+ * Aggregate spend per agent from sessions (the cron run history).
+ * Returns rows like { agent, spend, runs, budget, pctUsed }.
+ */
+export async function getAgentCostBudgets() {
+  const [agentsRes, sessionsRes] = await Promise.allSettled([
+    supabase.from('agents').select('id, name, monthly_budget, cost_ytd'),
+    supabase.from('sessions').select('agent_name, cost_usd, cost, started_at'),
+  ])
+  const agents = agentsRes.status === 'fulfilled' ? (agentsRes.value.data ?? []) : []
+  const sessions = sessionsRes.status === 'fulfilled' ? (sessionsRes.value.data ?? []) : []
+
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0)
+  const since = monthStart.toISOString()
+
+  const spendMap: Record<string, { spend: number; runs: number }> = {}
+  for (const s of sessions as any[]) {
+    if ((s.started_at ?? '') < since) continue
+    const key = String(s.agent_name ?? 'system').toLowerCase()
+    if (!spendMap[key]) spendMap[key] = { spend: 0, runs: 0 }
+    spendMap[key].spend += Number(s.cost_usd ?? s.cost ?? 0)
+    spendMap[key].runs += 1
+  }
+
+  return (agents as any[]).map((a: any) => {
+    const key = String(a.name ?? a.id).toLowerCase()
+    const agg = spendMap[key] ?? { spend: 0, runs: 0 }
+    const budget = Number(a.monthly_budget ?? 0)
+    const pctUsed = budget > 0 ? Math.min(100, (agg.spend / budget) * 100) : null
+    return {
+      id: a.id,
+      name: a.name,
+      spend: agg.spend,
+      runs: agg.runs,
+      budget,
+      pctUsed,
+      costYtd: Number(a.cost_ytd ?? 0),
+    }
+  })
+}
+
+// ═══ Derived: Permission / capability matrix ══════════════════════
+export async function getAgentCapabilityMatrix() {
+  const { data } = await supabase.from('agents').select('id, name, capabilities, tier, status')
+  const rows = (data ?? []) as any[]
+  const allCapSet = new Set<string>()
+  for (const a of rows) {
+    const caps = Array.isArray(a.capabilities) ? a.capabilities : []
+    caps.forEach((c: string) => allCapSet.add(c))
+  }
+  const allCaps = [...allCapSet].sort()
+  const matrix = rows.map((a: any) => ({
+    id: a.id,
+    name: a.name,
+    tier: a.tier,
+    status: a.status,
+    capabilities: allCaps.map(cap => ({
+      cap,
+      has: Array.isArray(a.capabilities) && a.capabilities.includes(cap),
+    })),
+  }))
+  return { caps: allCaps, matrix }
+}
+
+// ═══ Derived: Service Health from sessions + agents ════════════════
+/**
+ * Ping-style service status grid — last successful heartbeat per agent.
+ * Source: last session.started_at per agent_name.
+ */
+export async function getServiceStatusGrid() {
+  const [agentsRes, sessionsRes] = await Promise.allSettled([
+    supabase.from('agents').select('id, name, status, health_status, last_run_ts'),
+    supabase.from('sessions').select('agent_name, status, started_at, ended_at')
+      .order('started_at', { ascending: false }).limit(200),
+  ])
+  const agents = agentsRes.status === 'fulfilled' ? (agentsRes.value.data ?? []) : []
+  const sessions = sessionsRes.status === 'fulfilled' ? (sessionsRes.value.data ?? []) : []
+
+  const lastByAgent: Record<string, { when: string; status: string }> = {}
+  for (const s of sessions as any[]) {
+    const key = String(s.agent_name ?? '').toLowerCase()
+    if (!key) continue
+    if (!lastByAgent[key] || (s.started_at ?? '') > lastByAgent[key].when) {
+      lastByAgent[key] = { when: s.started_at ?? '', status: s.status ?? 'completed' }
+    }
+  }
+
+  return (agents as any[]).map((a: any) => {
+    const key = String(a.name ?? a.id).toLowerCase()
+    const beat = lastByAgent[key] ?? null
+    let health: 'healthy' | 'degraded' | 'down' | 'unknown' = a.health_status ?? 'unknown'
+    if (beat?.when) {
+      const ageH = (Date.now() - new Date(beat.when).getTime()) / 3600_000
+      if (beat.status && beat.status !== 'completed' && beat.status !== 'success') health = 'degraded'
+      else if (ageH < 24) health = 'healthy'
+      else if (ageH < 72) health = 'degraded'
+      else health = 'down'
+    }
+    return {
+      id: a.id,
+      name: a.name,
+      status: a.status ?? 'idle',
+      health,
+      lastBeat: beat?.when ?? a.last_run_ts ?? null,
+    }
+  })
+}
+
+// ═══ Derived: Performance timeseries (sessions cost per hour) ════
+export async function getPerformanceTimeseries(days = 7) {
+  const since = new Date(Date.now() - days * 86400000).toISOString()
+  const { data } = await supabase
+    .from('sessions')
+    .select('started_at, ended_at, cost_usd, cost, status')
+    .gte('started_at', since)
+    .order('started_at', { ascending: true })
+  const rows = (data ?? []) as any[]
+  // Bucket by day
+  const dayMap: Record<string, { runs: number; cost: number; durationMin: number }> = {}
+  for (const r of rows) {
+    const day = (r.started_at ?? '').slice(0, 10)
+    if (!day) continue
+    if (!dayMap[day]) dayMap[day] = { runs: 0, cost: 0, durationMin: 0 }
+    dayMap[day].runs += 1
+    dayMap[day].cost += Number(r.cost_usd ?? r.cost ?? 0)
+    if (r.started_at && r.ended_at) {
+      dayMap[day].durationMin += (new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()) / 60000
+    }
+  }
+  return Object.entries(dayMap).sort(([a], [b]) => a.localeCompare(b)).map(([day, v]) => ({ day, ...v }))
+}
+
+// ═══ Derived: Cash-flow projection & runway ════════════════════════
+/**
+ * 12-month projection derived from kpi_snapshots net_worth deltas (monthly).
+ * If <2 snapshots, falls back to showing flat projection.
+ */
+export async function getNetWorthProjection() {
+  const { data } = await supabase
+    .from('kpi_snapshots')
+    .select('value, as_of')
+    .eq('metric_key', 'net_worth')
+    .order('as_of', { ascending: true })
+  const snaps = (data ?? []) as any[]
+  if (snaps.length < 2) return { past: snaps, forecast: [] as any[] }
+  // Simple average monthly delta over last 6 snapshots
+  const recent = snaps.slice(-6)
+  const deltas: number[] = []
+  for (let i = 1; i < recent.length; i++) {
+    deltas.push(Number(recent[i].value) - Number(recent[i - 1].value))
+  }
+  const avgDelta = deltas.reduce((a, b) => a + b, 0) / (deltas.length || 1)
+  const last = snaps[snaps.length - 1]
+  const forecast: any[] = []
+  let v = Number(last.value)
+  for (let i = 1; i <= 12; i++) {
+    v = v + avgDelta
+    const d = new Date(last.as_of)
+    d.setMonth(d.getMonth() + i)
+    forecast.push({ as_of: d.toISOString(), value: v })
+  }
+  return { past: snaps, forecast }
+}
+
+// ═══ Derived: Per-entity revenue via account join ════════════════
+/**
+ * Attribute transactions to entities through the account → entity linkage.
+ * financial_transactions.entity_id may be NULL but financial_accounts.entity_id
+ * is often set — so we derive by joining on account_id.
+ * Also aggregates KPI values (revenue_mtd, cash_flow_mtd, ...) from company_kpis
+ * as a fallback when transactions aren't tagged yet.
+ */
+export async function getEntityFinancialRollup() {
+  const [txnRes, accountsRes, kpiRes, entityRes] = await Promise.allSettled([
+    supabase.from('financial_transactions').select('amount, entity_id, account_id, date, personal_finance_category'),
+    supabase.from('financial_accounts').select('id, entity_id, account_scope, balance_current, type'),
+    supabase.from('company_kpis').select('entity_id, kpi_key, value'),
+    supabase.from('entity_ownership').select('id, entity_name, entity_type, slug'),
+  ])
+  const txns = txnRes.status === 'fulfilled' ? (txnRes.value.data ?? []) : []
+  const accounts = accountsRes.status === 'fulfilled' ? (accountsRes.value.data ?? []) : []
+  const kpis = kpiRes.status === 'fulfilled' ? (kpiRes.value.data ?? []) : []
+  const entities = entityRes.status === 'fulfilled' ? (entityRes.value.data ?? []) : []
+
+  const accountEntityMap: Record<string, string> = {}
+  for (const a of accounts as any[]) {
+    if (a.entity_id) accountEntityMap[a.id] = a.entity_id
+  }
+
+  // Per entity stats
+  const stats: Record<string, {
+    txnCount: number
+    inflow: number
+    outflow: number
+    balanceSum: number
+    revenueMtd: number
+    cashFlowMtd: number
+  }> = {}
+
+  for (const t of txns as any[]) {
+    const eid = t.entity_id ?? accountEntityMap[t.account_id]
+    if (!eid) continue
+    if (!stats[eid]) stats[eid] = { txnCount: 0, inflow: 0, outflow: 0, balanceSum: 0, revenueMtd: 0, cashFlowMtd: 0 }
+    stats[eid].txnCount += 1
+    const amt = Number(t.amount ?? 0)
+    if (amt < 0) stats[eid].inflow += Math.abs(amt)
+    else stats[eid].outflow += amt
+  }
+  for (const a of accounts as any[]) {
+    const eid = a.entity_id
+    if (!eid) continue
+    if (!stats[eid]) stats[eid] = { txnCount: 0, inflow: 0, outflow: 0, balanceSum: 0, revenueMtd: 0, cashFlowMtd: 0 }
+    const bal = Number(a.balance_current ?? 0)
+    const t = String(a.type ?? '').toLowerCase()
+    stats[eid].balanceSum += (t === 'credit' || t === 'loan') ? -bal : bal
+  }
+  for (const k of kpis as any[]) {
+    const eid = k.entity_id
+    if (!eid) continue
+    if (!stats[eid]) stats[eid] = { txnCount: 0, inflow: 0, outflow: 0, balanceSum: 0, revenueMtd: 0, cashFlowMtd: 0 }
+    if (k.kpi_key === 'revenue_mtd') stats[eid].revenueMtd = Number(k.value ?? 0)
+    if (k.kpi_key === 'cash_flow_mtd') stats[eid].cashFlowMtd = Number(k.value ?? 0)
+  }
+
+  return (entities as any[]).map((e: any) => ({
+    entityId: e.id,
+    entityName: e.entity_name,
+    entityType: e.entity_type,
+    slug: e.slug,
+    ...(stats[e.id] ?? { txnCount: 0, inflow: 0, outflow: 0, balanceSum: 0, revenueMtd: 0, cashFlowMtd: 0 }),
+  }))
+}
+
+// ═══ Derived: Compliance / Audit score per entity ═════════════════
+/**
+ * Per-entity compliance score derived from completeness of required data:
+ *   - Has EIN (+25)
+ *   - Formation state / date set (+15)
+ *   - Has tax classification (+15)
+ *   - is_active status set (+10)
+ *   - At least one document (+20)
+ *   - At least one bank account linked (+15)
+ */
+export async function getComplianceChecklist() {
+  const [entRes, docsRes, accountsRes] = await Promise.allSettled([
+    supabase.from('entity_ownership').select('id, entity_name, entity_type, ein, formation_state, tax_classification, is_active, slug'),
+    supabase.from('entity_documents').select('id, entity_id'),
+    supabase.from('financial_accounts').select('entity_id').eq('account_scope', 'entity'),
+  ])
+  const entities = entRes.status === 'fulfilled' ? (entRes.value.data ?? []) : []
+  const docs = docsRes.status === 'fulfilled' ? (docsRes.value.data ?? []) : []
+  const accounts = accountsRes.status === 'fulfilled' ? (accountsRes.value.data ?? []) : []
+
+  const docCountMap: Record<string, number> = {}
+  for (const d of docs as any[]) if (d.entity_id) docCountMap[d.entity_id] = (docCountMap[d.entity_id] ?? 0) + 1
+  const bankCountMap: Record<string, number> = {}
+  for (const a of accounts as any[]) if (a.entity_id) bankCountMap[a.entity_id] = (bankCountMap[a.entity_id] ?? 0) + 1
+
+  return (entities as any[]).map((e: any) => {
+    const checks = [
+      { key: 'EIN',          pass: !!e.ein,                 weight: 25 },
+      { key: 'Formation',    pass: !!e.formation_state,     weight: 15 },
+      { key: 'Tax Class',    pass: !!e.tax_classification,  weight: 15 },
+      { key: 'Active Status',pass: e.is_active === true,    weight: 10 },
+      { key: 'Documents',    pass: (docCountMap[e.id] ?? 0) > 0, weight: 20 },
+      { key: 'Bank Account', pass: (bankCountMap[e.id] ?? 0) > 0, weight: 15 },
+    ]
+    const score = checks.reduce((s, c) => s + (c.pass ? c.weight : 0), 0)
+    return {
+      entityId: e.id,
+      entityName: e.entity_name,
+      entityType: e.entity_type,
+      slug: e.slug,
+      score,
+      checks,
+      docCount: docCountMap[e.id] ?? 0,
+      bankCount: bankCountMap[e.id] ?? 0,
+    }
+  })
+}
+
+/**
+ * Overall audit readiness — rolled up across all entities.
+ */
+export async function getAuditReadiness() {
+  const rows = await getComplianceChecklist()
+  if (rows.length === 0) return { pct: 0, rows, summary: '—' }
+  const avg = rows.reduce((s, r) => s + r.score, 0) / rows.length
+  return { pct: Math.round(avg), rows, summary: `${rows.length} entities reviewed` }
+}
+
+// ═══ Derived: Tax deductions YTD by category ═══════════════════════
+/**
+ * YTD deductions = expenses in deductible-looking categories from
+ * financial_transactions, grouped. When txns are empty, falls back to
+ * tax_entities_meta.deductions (per-entity pre-filled value).
+ */
+export async function getDeductionsYtd() {
+  const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10)
+  const [txnRes, metaRes] = await Promise.allSettled([
+    supabase.from('financial_transactions').select('amount, personal_finance_category, date').gte('date', yearStart),
+    supabase.from('tax_entities_meta').select('entity_id, deductions'),
+  ])
+  const txns = txnRes.status === 'fulfilled' ? (txnRes.value.data ?? []) : []
+  const meta = metaRes.status === 'fulfilled' ? (metaRes.value.data ?? []) : []
+
+  const DEDUCTIBLE_CATEGORIES = new Set([
+    'TRANSPORTATION', 'TRAVEL', 'RENT_AND_UTILITIES', 'HOME_IMPROVEMENT',
+    'OFFICE_SUPPLIES', 'PROFESSIONAL_SERVICES', 'BANK_FEES', 'INSURANCE',
+    'GENERAL_SERVICES', 'FOOD_AND_DRINK',
+  ])
+  const catMap: Record<string, number> = {}
+  for (const t of txns as any[]) {
+    const amt = Number(t.amount ?? 0)
+    if (amt <= 0) continue
+    const cat = String(t.personal_finance_category ?? 'OTHER').toUpperCase()
+    if (!DEDUCTIBLE_CATEGORIES.has(cat)) continue
+    catMap[cat] = (catMap[cat] ?? 0) + amt
+  }
+  const fromTxn = Object.entries(catMap).map(([cat, total]) => ({ category: cat, total, source: 'transactions' as const }))
+  const totalFromTxn = fromTxn.reduce((s, r) => s + r.total, 0)
+  const totalFromMeta = (meta as any[]).reduce((s: number, m: any) => s + Number(m.deductions ?? 0), 0)
+
+  if (totalFromTxn > 0) return { rows: fromTxn.sort((a, b) => b.total - a.total), total: totalFromTxn, source: 'transactions' as const }
+  return {
+    rows: (meta as any[]).map((m: any) => ({ category: m.entity_id ?? 'unknown', total: Number(m.deductions ?? 0), source: 'tax_entities_meta' as const })),
+    total: totalFromMeta,
+    source: 'tax_entities_meta' as const,
+  }
+}
+
+// ═══ Derived: Recurring subscription detection ═══════════════════
+/**
+ * Detect recurring subscriptions — same merchant_name + approx amount recurring
+ * within ~27-34 day intervals. Needs at least 2 occurrences.
+ */
+export async function getRecurringCharges() {
+  const since = new Date(Date.now() - 180 * 86400000).toISOString().slice(0, 10)
+  const { data } = await supabase
+    .from('financial_transactions')
+    .select('merchant_name, name, amount, date')
+    .gte('date', since)
+    .gt('amount', 0)
+  const rows = (data ?? []) as any[]
+  if (rows.length === 0) return []
+
+  const groups: Record<string, { merchant: string; amounts: number[]; dates: string[] }> = {}
+  for (const t of rows) {
+    const merchant = String(t.merchant_name ?? t.name ?? '').trim()
+    if (!merchant) continue
+    const bucketKey = `${merchant}|${Math.round(Number(t.amount))}`
+    if (!groups[bucketKey]) groups[bucketKey] = { merchant, amounts: [], dates: [] }
+    groups[bucketKey].amounts.push(Number(t.amount))
+    groups[bucketKey].dates.push(t.date)
+  }
+
+  const recurring: Array<{ merchant: string; amount: number; cadenceDays: number; occurrences: number; lastDate: string }> = []
+  for (const g of Object.values(groups)) {
+    if (g.dates.length < 2) continue
+    const sorted = [...g.dates].sort()
+    const diffs: number[] = []
+    for (let i = 1; i < sorted.length; i++) {
+      diffs.push((new Date(sorted[i]).getTime() - new Date(sorted[i - 1]).getTime()) / 86400000)
+    }
+    const avgDiff = diffs.reduce((a, b) => a + b, 0) / diffs.length
+    if (avgDiff >= 25 && avgDiff <= 35) {
+      recurring.push({
+        merchant: g.merchant,
+        amount: g.amounts.reduce((a, b) => a + b, 0) / g.amounts.length,
+        cadenceDays: Math.round(avgDiff),
+        occurrences: g.amounts.length,
+        lastDate: sorted[sorted.length - 1],
+      })
+    }
+  }
+  return recurring.sort((a, b) => b.amount - a.amount)
+}
+
+// ═══ Derived: Portfolio geo summary ════════════════════════════════
+/**
+ * Group properties by city/state for simple geographic rollup.
+ */
+export async function getPortfolioGeo() {
+  const { data } = await supabase.from('property_assets').select('id, address, city, state, current_value, is_rental')
+  const rows = (data ?? []) as any[]
+  const groups: Record<string, { count: number; value: number; rentals: number; properties: any[] }> = {}
+  for (const p of rows) {
+    const key = `${p.city ?? '—'}, ${p.state ?? '—'}`
+    if (!groups[key]) groups[key] = { count: 0, value: 0, rentals: 0, properties: [] }
+    groups[key].count += 1
+    groups[key].value += Number(p.current_value ?? 0)
+    if (p.is_rental) groups[key].rentals += 1
+    groups[key].properties.push(p)
+  }
+  return Object.entries(groups)
+    .map(([region, d]) => ({ region, ...d }))
+    .sort((a, b) => b.value - a.value)
+}
+
+// ═══ Derived: Tax moves (seeded static suggestions if empty) ═══════
+/**
+ * Returns tax_moves from DB; if empty, generate heuristic suggestions
+ * from financial state (e.g. "Consider Q4 estimated payment if YTD income > X").
+ */
+export async function getDerivedTaxMoves() {
+  const existing = await getTaxMoves()
+  if ((existing as any[]).length > 0) return existing
+
+  const [entRes, metaRes] = await Promise.allSettled([
+    supabase.from('entity_ownership').select('id, entity_name, tax_classification, entity_type'),
+    supabase.from('tax_entities_meta').select('entity_id, ytd_income, ytd_paid'),
+  ])
+  const entities = entRes.status === 'fulfilled' ? (entRes.value.data ?? []) : []
+  const meta = metaRes.status === 'fulfilled' ? (metaRes.value.data ?? []) : []
+  const moves: any[] = []
+  for (const m of meta as any[]) {
+    const inc = Number(m.ytd_income ?? 0)
+    const paid = Number(m.ytd_paid ?? 0)
+    if (inc > 50_000 && paid < inc * 0.15) {
+      moves.push({
+        id: `derived-${m.entity_id}-quarterly`,
+        action: `Review Q-estimated payments for ${m.entity_id}`,
+        status: 'open',
+        priority: 'high',
+        detail: `YTD income ${inc.toLocaleString()} vs paid ${paid.toLocaleString()} — likely under-withheld.`,
+        savings_label: 'Avoid penalties',
+        deadline: 'Before quarter end',
+      })
+    }
+  }
+  for (const e of entities as any[]) {
+    if (e.entity_type === 'LLC' && !e.tax_classification) {
+      moves.push({
+        id: `derived-${e.id}-tax-election`,
+        action: `Choose tax classification for ${e.entity_name}`,
+        status: 'evaluate',
+        priority: 'medium',
+        detail: 'Default tax status may not be optimal. Consider S-Corp or disregarded election.',
+        savings_label: 'Potential savings',
+        deadline: 'Before year end',
+      })
+    }
+  }
+  return moves
+}
+
+// ═══ Derived: Expiring Documents ═══════════════════════════════════
+export async function getExpiringDocuments(daysAhead = 90) {
+  const cutoff = new Date(Date.now() + daysAhead * 86400000).toISOString()
+  const { data } = await supabase
+    .from('entity_documents')
+    .select('id, filename, entity_name, entity_id, document_type, expires_at')
+    .not('expires_at', 'is', null)
+    .lte('expires_at', cutoff)
+    .order('expires_at', { ascending: true })
+  return (data ?? []) as any[]
+}

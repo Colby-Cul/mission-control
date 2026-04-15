@@ -14,6 +14,9 @@ import {
   getOpenTasks,
   getActiveProjects,
   getIncidents,
+  getServiceStatusGrid,
+  getAgentCostBudgets,
+  getPerformanceTimeseries,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -34,11 +37,14 @@ const ACHIEVEMENTS = [
 ]
 
 export default async function CommandPage() {
-  const [sessions, tasks, projects, incidents] = await Promise.allSettled([
+  const [sessions, tasks, projects, incidents, services, costBudgets, perfSeries] = await Promise.allSettled([
     getSessionsForWindow('24h'),
     getOpenTasks(),
     getActiveProjects(),
     getIncidents().catch(() => []),
+    getServiceStatusGrid().catch(() => []),
+    getAgentCostBudgets().catch(() => []),
+    getPerformanceTimeseries(7).catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const todayCount   = (sessions as any[]).length
@@ -169,11 +175,69 @@ export default async function CommandPage() {
         </section>
       )}
 
-      {/* Coming Soon widgets */}
+      {/* Service Map + Cost Burn — all derived from sessions + agents */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon title="Live System Map"       reason="Real-time topology of all connected services, agents, and infrastructure nodes." icon="🗺️" dataSource="coming-soon:command.system_map" skeleton="chart" />
-        <ComingSoon title="Deployment Pipeline"   reason="Live CI/CD status across all Vercel projects and GitHub Actions workflows."     icon="🚀" dataSource="coming-soon:command.deployments" skeleton="table" />
-        <ComingSoon title="Cost Burn Rate"         reason="Real-time compute + API spend across all agents, models, and infrastructure."   icon="💸" dataSource="coming-soon:command.cost_burn" skeleton="chart" />
+        {/* Live System Map (service status grid) */}
+        <SpecCard accent dataSource="agents,sessions">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Live System Map</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{(services as any[]).length} services</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {((services as any[]) ?? []).slice(0, 10).map((s: any) => {
+              const col = s.health === 'healthy' ? 'var(--green)' : s.health === 'degraded' ? 'var(--amber)' : s.health === 'down' ? 'var(--red)' : 'var(--dim)'
+              return (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0, boxShadow: s.health === 'healthy' ? `0 0 6px ${col}` : 'none' }} />
+                  <div style={{ flex: 1, fontSize: 11, fontWeight: 600 }}>{s.name}</div>
+                  <div style={{ fontSize: 9, color: col, fontFamily: 'var(--mo)', textTransform: 'uppercase' }}>{s.health}</div>
+                </div>
+              )
+            })}
+          </div>
+        </SpecCard>
+
+        {/* Deployment Pipeline — kept as ComingSoon (requires Vercel/GitHub API) */}
+        <ComingSoon
+          title="Deployment Pipeline"
+          reason="Requires GitHub Actions + Vercel integration — not yet configured. Connect in Settings → Integrations."
+          icon="🚀"
+          dataSource="coming-soon:command.deployments"
+          skeleton="table"
+        />
+
+        {/* Cost Burn Rate — aggregated from sessions */}
+        <SpecCard accent dataSource="sessions">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Cost Burn Rate</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>7d</span>
+          </div>
+          {(() => {
+            const series = (perfSeries as any[]) ?? []
+            if (series.length === 0) return <div style={{ fontSize: 12, color: 'var(--dim)' }}>No cost data in the last 7 days.</div>
+            const totalCost = series.reduce((s, d: any) => s + Number(d.cost ?? 0), 0)
+            const totalRuns = series.reduce((s, d: any) => s + Number(d.runs ?? 0), 0)
+            const maxCost = Math.max(...series.map((d: any) => Number(d.cost ?? 0)), 0.001)
+            return (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--amber)', marginBottom: 4 }}>
+                  ${totalCost.toFixed(3)}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--dim)', marginBottom: 14 }}>{totalRuns} runs · 7-day total</div>
+                <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 60 }}>
+                  {series.slice(-14).map((d: any, i: number) => {
+                    const barH = Math.max(2, Math.round((Number(d.cost ?? 0) / maxCost) * 58))
+                    return (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                        <div style={{ height: barH, background: 'var(--amber)', borderRadius: '2px 2px 0 0', opacity: 0.7 }} />
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )
+          })()}
+        </SpecCard>
       </div>
     </>
   )

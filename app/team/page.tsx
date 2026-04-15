@@ -237,21 +237,35 @@ export default async function TeamPage() {
 
       {/* Role breakdown by entity */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
-        {/* Open Roles */}
+        {/* Org Chart — AI fleet + Human team members from available data */}
+        <SpecCard accent dataSource="agents,team_members">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Org Hierarchy</div>
+          <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 14 }}>AI fleet + human team</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {tableExists && members.length > 0 && (
+              <div style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>Humans ({members.length})</div>
+            )}
+            {members.slice(0, 6).map((m: any) => (
+              <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 11 }}>
+                <span style={{ fontWeight: 600 }}>{m.full_name ?? m.name}</span>
+                <span style={{ color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{m.role ?? m.title ?? '—'}</span>
+              </div>
+            ))}
+            {(!tableExists || members.length === 0) && (
+              <div style={{ fontSize: 11, color: 'var(--dim)', padding: '8px 0' }}>
+                team_members table empty. Add rows to start tracking.
+              </div>
+            )}
+          </div>
+        </SpecCard>
+
+        {/* Open Roles — honest, no hiring table yet */}
         <ComingSoon
           title="Open Roles"
-          reason="Active job listings and hiring pipeline across all entities."
+          reason="Requires job_listings table (not yet created). Alternative: add hiring tasks to the tasks page."
           icon="📋"
           dataSource="coming-soon:open_roles"
           skeleton="table"
-        />
-        {/* Org Chart */}
-        <ComingSoon
-          title="Org Chart"
-          reason="Visual hierarchy of your full team — human and AI."
-          icon="🗂️"
-          dataSource="coming-soon:org_chart"
-          skeleton="chart"
         />
       </div>
 

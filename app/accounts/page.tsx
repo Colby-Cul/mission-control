@@ -20,6 +20,8 @@ import {
   accountSignedBalance,
   getProperties,
   getEntities,
+  getNetWorthTimeline,
+  getRecentTransactions,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'

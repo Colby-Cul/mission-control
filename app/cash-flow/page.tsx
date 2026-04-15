@@ -13,6 +13,8 @@ import {
   accountSignedBalance,
   getTransactions30d,
   getTopExpenseCategories,
+  getNetWorthProjection,
+  getRecurringCharges,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -32,10 +34,12 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function CashFlowPage() {
-  const [accounts, txns30d, topExpenses] = await Promise.allSettled([
+  const [accounts, txns30d, topExpenses, projection, recurring] = await Promise.allSettled([
     getAccounts(),
     getTransactions30d(),
     getTopExpenseCategories(5),
+    getNetWorthProjection().catch(() => ({ past: [], forecast: [] })),
+    getRecurringCharges().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   // Plaid sign convention: negative amount = money coming IN (income/deposits)
@@ -202,30 +206,122 @@ export default async function CashFlowPage() {
         </SpecCard>
       </div>
 
-      {/* Coming Soon widgets */}
+      {/* 12-Month Projection + Recurring Subscriptions + Upcoming Bills */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="12-Month Projection"
-          reason="Forecast engine ships with the cash-flow model in Phase 3."
-          icon="📊"
-          dataSource="coming-soon:cash_flow_forecasts"
-          skeleton="chart"
-        />
-        <ComingSoon
-          title="Recurring Subscriptions"
-          reason="Subscription detection job will auto-identify recurring charges from Plaid."
-          icon="🔄"
-          dataSource="coming-soon:financial_transactions.recurring"
-          connect="plaid"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Upcoming Bills"
-          reason="Recurring bills calendar feeds from recurring_bills table once populated."
-          icon="📅"
-          dataSource="coming-soon:recurring_bills"
-          skeleton="table"
-        />
+        {/* 12-Month Projection — derived from kpi_snapshots trend */}
+        <SpecCard accent dataSource="kpi_snapshots.net_worth">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>12-Month Projection</div>
+          {(() => {
+            const p = projection as any
+            const past = p?.past ?? []
+            const forecast = p?.forecast ?? []
+            if (past.length < 2) {
+              return <div style={{ fontSize: 12, color: 'var(--dim)' }}>Need at least 2 kpi_snapshots to project. Current: {past.length}.</div>
+            }
+            const all = [...past, ...forecast]
+            const maxV = Math.max(...all.map((r: any) => Number(r.value)))
+            const minV = Math.min(...all.map((r: any) => Number(r.value)))
+            const range = maxV - minV || 1
+            const finalVal = Number(forecast[forecast.length - 1]?.value ?? 0)
+            const currentVal = Number(past[past.length - 1]?.value ?? 0)
+            const growth = finalVal - currentVal
+            return (
+              <>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--green)', marginBottom: 4 }}>
+                  {USD(finalVal)}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--dim)', marginBottom: 14 }}>
+                  Projected in 12 months · {growth >= 0 ? '+' : ''}{USD(growth)}
+                </div>
+                <svg width="100%" height="60" viewBox="0 0 200 60" preserveAspectRatio="none">
+                  {all.map((r: any, i: number) => {
+                    if (i === 0) return null
+                    const x1 = ((i - 1) / (all.length - 1)) * 200
+                    const x2 = (i / (all.length - 1)) * 200
+                    const y1 = 55 - ((Number(all[i - 1].value) - minV) / range) * 50
+                    const y2 = 55 - ((Number(r.value) - minV) / range) * 50
+                    const isForecast = i >= past.length
+                    return (
+                      <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                        stroke={isForecast ? 'var(--amber)' : 'var(--green)'}
+                        strokeWidth={1.5}
+                        strokeDasharray={isForecast ? '3 2' : ''}
+                      />
+                    )
+                  })}
+                </svg>
+                <div style={{ fontSize: 9, color: 'var(--dim)', marginTop: 6, display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mo)' }}>
+                  <span>solid=actual</span>
+                  <span>dashed=projected</span>
+                </div>
+              </>
+            )
+          })()}
+        </SpecCard>
+
+        {/* Recurring Subscriptions — detected from transactions */}
+        <SpecCard accent dataSource="financial_transactions.recurring">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Recurring Subscriptions</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((recurring as any[]) ?? []).length} detected</span>
+          </div>
+          {((recurring as any[]) ?? []).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
+              No recurring charges detected. Plaid transactions needed to identify.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {((recurring as any[]) ?? []).slice(0, 6).map((r: any) => (
+                <div key={r.merchant} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 11, minWidth: 0, overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.merchant}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                      every ~{r.cadenceDays}d · {r.occurrences}× seen
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--orange)', alignSelf: 'center' }}>{USD(r.amount)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SpecCard>
+
+        {/* Upcoming Bills — same recurring detection, sorted by predicted next date */}
+        <SpecCard accent dataSource="derived:upcoming_bills">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Upcoming Bills</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>next 30d</span>
+          </div>
+          {((recurring as any[]) ?? []).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
+              No recurring bills detected yet.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {((recurring as any[]) ?? [])
+                .map((r: any) => {
+                  const nextDate = new Date(new Date(r.lastDate).getTime() + r.cadenceDays * 86400000)
+                  return { ...r, nextDate }
+                })
+                .sort((a: any, b: any) => a.nextDate.getTime() - b.nextDate.getTime())
+                .slice(0, 6)
+                .map((r: any) => {
+                  const days = Math.ceil((r.nextDate.getTime() - Date.now()) / 86400000)
+                  return (
+                    <div key={r.merchant} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ fontSize: 11, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.merchant}</div>
+                        <div style={{ fontSize: 9, color: days < 7 ? 'var(--red)' : 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                          {days > 0 ? `in ${days}d` : `${Math.abs(days)}d overdue`}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--amber)' }}>{USD(r.amount)}</div>
+                    </div>
+                  )
+                })}
+            </div>
+          )}
+        </SpecCard>
       </div>
 
       {/* Cash Flow by Category — waterfall bar chart (SVG) */}

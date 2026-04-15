@@ -198,15 +198,37 @@ export default async function SessionsPage() {
           )}
         </SpecCard>
       ) : (
-        <div style={{ marginBottom: 24, marginTop: 24 }}>
-          <ComingSoon
-            title="Active User Sessions"
-            reason="Live list of all active user sessions — device, IP, location, and last activity."
-            icon="🔑"
-            dataSource="coming-soon:user_sessions"
-            skeleton="table"
-          />
-        </div>
+        <SpecCard accent dataSource="sessions" style={{ marginBottom: 24, marginTop: 24 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Running / Open Sessions
+          </div>
+          {(() => {
+            const openList = (historyList as any[]).filter((s: any) => !s.ended_at || s.status === 'running')
+            if (openList.length === 0) return <p style={{ fontSize: 13, color: 'var(--green)' }}>No sessions currently running.</p>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {openList.slice(0, 10).map((s: any) => (
+                  <div key={s.id} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '10px 12px', background: 'rgba(255,255,255,0.025)',
+                    borderRadius: 10, border: '1px solid rgba(16,185,129,0.2)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--green)', flexShrink: 0, boxShadow: '0 0 6px var(--green)' }} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{s.title ?? s.agent_name ?? 'Session'}</div>
+                        <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>
+                          {s.agent_name ?? '—'} · started {s.started_at ? new Date(s.started_at).toLocaleString() : '—'}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase' }}>active</div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </SpecCard>
       )}
 
       {/* ── Auth Events ── */}

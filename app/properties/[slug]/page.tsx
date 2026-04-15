@@ -150,7 +150,7 @@ export default async function PropertyPage({ params }: { params: { slug: string 
       <div style={{ marginBottom: 24 }}>
         <ComingSoon
           title="Photo Gallery"
-          reason="Property photos indexed and displayed here once property_photos table is populated."
+          reason="property_photos table exists but has 0 rows. Upload photos to activate."
           icon="📷"
           dataSource="coming-soon:property_photos"
           skeleton="chart"
@@ -162,8 +162,9 @@ export default async function PropertyPage({ params }: { params: { slug: string 
       <div style={{ marginBottom: 24 }}>
         <ComingSoon
           title="Bookings & Occupancy"
-          reason="Rental bookings, calendar, and occupancy rate for this property."
+          reason="Requires Lodgify integration — connect in Settings → Integrations to pull booking calendar."
           icon="📅"
+          connect="lodgify"
           dataSource="coming-soon:bookings"
           skeleton="table"
           minHeight={160}
@@ -204,7 +205,7 @@ export default async function PropertyPage({ params }: { params: { slug: string 
       <div style={{ marginBottom: 24 }}>
         <ComingSoon
           title="Maintenance Log"
-          reason="Track repairs, inspections, and scheduled maintenance for this property."
+          reason="maintenance_log table not yet created. Tracks repairs, inspections, and schedules."
           icon="🔧"
           dataSource="coming-soon:maintenance_log"
           skeleton="table"

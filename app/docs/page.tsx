@@ -9,7 +9,9 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getDocs, getEntityDocuments, getUserProfile } from '../lib/queries'
+import Link from 'next/link'
+import { getDocs, getEntityDocuments, getUserProfile, getExpiringDocuments } from '../lib/queries'
+import DocsSearch from './DocsSearch'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,9 +45,10 @@ function fmtSize(bytes?: number | null): string {
 }
 
 export default async function DocsPage() {
-  const [entityDocs, profile] = await Promise.all([
+  const [entityDocs, profile, expiring] = await Promise.all([
     getEntityDocuments().catch(() => []),
     getUserProfile().catch(() => null),
+    getExpiringDocuments(90).catch(() => []),
   ])
 
   const allDocs = entityDocs as any[]
@@ -225,29 +228,40 @@ export default async function DocsPage() {
         )}
       </SpecCard>
 
-      {/* Expiring soon */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Expiring Soon"
-          reason="Documents approaching expiration — insurance, contracts, licenses."
-          icon="⏰"
-          dataSource="coming-soon:entity_documents.expiry_date"
-          skeleton="table"
-          minHeight={160}
-        />
-      </div>
+      {/* Expiring soon — live from entity_documents.expires_at */}
+      <SpecCard accent dataSource="entity_documents.expires_at" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Expiring Soon</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>within 90 days · {((expiring as any[]) ?? []).length} docs</span>
+        </div>
+        {((expiring as any[]) ?? []).length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--green)', padding: '12px 0' }}>No documents expire in the next 90 days.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {((expiring as any[]) ?? []).slice(0, 10).map((d: any) => {
+              const days = Math.ceil((new Date(d.expires_at).getTime() - Date.now()) / 86400000)
+              const col = days < 14 ? 'var(--red)' : days < 45 ? 'var(--amber)' : 'var(--dim)'
+              return (
+                <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 12, minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.filename ?? d.title ?? 'Doc'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginTop: 2 }}>
+                      {d.entity_name ?? d.entity_id ?? 'Unfiled'} · {d.document_type ?? '—'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+                    <div style={{ fontFamily: 'var(--mo)', fontSize: 11, color: col, fontWeight: 600 }}>{days > 0 ? `in ${days}d` : `${Math.abs(days)}d overdue`}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{new Date(d.expires_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
 
-      {/* Search */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Document Search"
-          reason="Full-text search across all indexed documents."
-          icon="🔍"
-          dataSource="coming-soon:entity_documents.full_text"
-          skeleton="table"
-          minHeight={140}
-        />
-      </div>
+      {/* Search — client-side filter on allDocs */}
+      <DocsSearch docs={allDocs} />
     </>
   )
 }

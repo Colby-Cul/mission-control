@@ -10,7 +10,7 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getProperties, getUserProfile, getPropertyOwnershipMap } from '../lib/queries'
+import { getProperties, getUserProfile, getPropertyOwnershipMap, getPortfolioGeo, getNetWorthTimeline } from '../lib/queries'
 import PropertyQuickActions from '../_components/PropertyQuickActions'
 
 export const dynamic = 'force-dynamic'
@@ -36,10 +36,12 @@ function slugify(name: string, id: string) {
 }
 
 export default async function PropertiesPage() {
-  const [properties, profile, ownershipMap] = await Promise.all([
+  const [properties, profile, ownershipMap, geo, nwTimeline] = await Promise.all([
     getProperties().catch(() => []),
     getUserProfile().catch(() => null),
     getPropertyOwnershipMap().catch(() => ({})),
+    getPortfolioGeo().catch(() => []),
+    getNetWorthTimeline().catch(() => []),
   ])
 
   const totalValue    = properties.reduce((s: number, p: any) => s + Number(p.current_value    ?? 0), 0)
@@ -267,29 +269,66 @@ export default async function PropertiesPage() {
         })}
       </div>
 
-      {/* Portfolio Map - Coming Soon */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Portfolio Map"
-          reason="Geographic pins for all properties with value overlays."
-          icon="🗺️"
-          dataSource="coming-soon:property_assets.geocoded"
-          skeleton="chart"
-          minHeight={220}
-        />
-      </div>
+      {/* Portfolio Geo Grid — derived from property_assets.city/state */}
+      <SpecCard accent dataSource="property_assets.city,state" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Portfolio by Region</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((geo as any[]) ?? []).length} region{((geo as any[]) ?? []).length === 1 ? '' : 's'}</span>
+        </div>
+        {((geo as any[]) ?? []).length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--dim)' }}>No geographic data available.</div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+            {((geo as any[]) ?? []).map((g: any) => (
+              <div key={g.region} style={{ padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 18 }}>📍</span>
+                  <div style={{ fontWeight: 600, fontSize: 12 }}>{g.region}</div>
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--green)' }}>{USD(g.value)}</div>
+                <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>
+                  {g.count} propert{g.count === 1 ? 'y' : 'ies'} · {g.rentals} rental{g.rentals === 1 ? '' : 's'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </SpecCard>
 
-      {/* Equity Growth */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Equity Growth Timeline"
-          reason="Line chart of equity accumulation across all properties over time."
-          icon="📈"
-          dataSource="coming-soon:kpi_snapshots.equity"
-          skeleton="chart"
-          minHeight={200}
-        />
-      </div>
+      {/* Equity Growth Timeline — derived from kpi_snapshots.net_worth as proxy */}
+      <SpecCard accent dataSource="kpi_snapshots.net_worth" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Net Worth Timeline (proxy for equity growth)</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((nwTimeline as any[]) ?? []).length} snapshots</span>
+        </div>
+        {((nwTimeline as any[]) ?? []).length < 2 ? (
+          <div style={{ fontSize: 12, color: 'var(--dim)' }}>Need at least 2 snapshots in kpi_snapshots for trend.</div>
+        ) : (() => {
+          const tl = (nwTimeline as any[]) ?? []
+          const maxV = Math.max(...tl.map((r: any) => Number(r.value)))
+          const minV = Math.min(...tl.map((r: any) => Number(r.value)))
+          const range = maxV - minV || 1
+          return (
+            <>
+              <svg width="100%" height="100" viewBox={`0 0 ${tl.length * 20} 100`} preserveAspectRatio="none" style={{ marginBottom: 8 }}>
+                <polyline
+                  fill="none"
+                  stroke="var(--green)"
+                  strokeWidth={2}
+                  points={tl.map((r: any, i: number) => `${i * 20},${90 - ((Number(r.value) - minV) / range) * 80}`).join(' ')}
+                />
+                {tl.map((r: any, i: number) => (
+                  <circle key={i} cx={i * 20} cy={90 - ((Number(r.value) - minV) / range) * 80} r={2} fill="var(--green)" />
+                ))}
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                <span>{new Date(tl[0].as_of).toLocaleDateString([], { month: 'short', year: '2-digit' })} · {USD(Number(tl[0].value))}</span>
+                <span>{new Date(tl[tl.length - 1].as_of).toLocaleDateString([], { month: 'short', year: '2-digit' })} · {USD(Number(tl[tl.length - 1].value))}</span>
+              </div>
+            </>
+          )
+        })()}
+      </SpecCard>
     </>
   )
 }

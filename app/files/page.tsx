@@ -186,28 +186,48 @@ export default async function FilesPage() {
         </SpecCard>
       )}
 
-      {/* Shared With Me */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Shared With Me"
-          reason="Files shared by teammates once the sharing permissions table is wired."
-          icon="🤝"
-          dataSource="coming-soon:file_shares"
-          skeleton="table"
-          minHeight={160}
-        />
-      </div>
+      {/* Largest Files (real) + Pending Analysis (real) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <SpecCard accent dataSource="entity_documents.file_size">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Largest Files</div>
+          {(() => {
+            const largest = [...allDocs].sort((a, b) => Number(b.file_size ?? 0) - Number(a.file_size ?? 0)).slice(0, 5)
+            if (largest.length === 0) return <div style={{ fontSize: 12, color: 'var(--dim)' }}>No files yet.</div>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {largest.map((d: any) => (
+                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 11, minWidth: 0, overflow: 'hidden' }}>
+                      <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.filename ?? d.title}</div>
+                      <div style={{ fontSize: 10, color: 'var(--dim)' }}>{d.entity_name ?? d.entity_id ?? 'Unfiled'}</div>
+                    </div>
+                    <div style={{ fontSize: 11, fontFamily: 'var(--mo)', color: 'var(--amber)', alignSelf: 'center' }}>{fmtSize(d.file_size)}</div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </SpecCard>
 
-      {/* Starred Files */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Starred Files"
-          reason="Quick-access starred files — add a starred column to entity_documents to activate."
-          icon="⭐"
-          dataSource="coming-soon:entity_documents.starred"
-          skeleton="table"
-          minHeight={140}
-        />
+        <SpecCard accent dataSource="entity_documents.analysis_status">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Files Pending AI Analysis</div>
+          {(() => {
+            const pending = allDocs.filter((d: any) => d.analysis_status !== 'completed')
+            if (pending.length === 0) return <div style={{ fontSize: 12, color: 'var(--green)' }}>All files analyzed.</div>
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--amber)', marginBottom: 4 }}>{pending.length}</div>
+                <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 10 }}>awaiting indexing</div>
+                {pending.slice(0, 5).map((d: any) => (
+                  <div key={d.id} style={{ padding: '4px 0', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {d.filename ?? d.title ?? d.id}
+                    <span style={{ color: 'var(--dim)', marginLeft: 8, fontFamily: 'var(--mo)', fontSize: 9 }}>{d.analysis_status ?? 'pending'}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </SpecCard>
       </div>
     </>
   )

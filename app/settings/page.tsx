@@ -272,34 +272,47 @@ export default async function SettingsPage() {
         </div>
       </SpecCard>
 
-      {/* Billing & Security — ComingSoon */}
+      {/* Billing & Security */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
         <ComingSoon
           title="Billing & Plan"
-          reason="Manage your Mission Control subscription, seats, and payment method via Stripe."
+          reason="Connect Stripe to manage subscription, seats, and payment methods."
           icon="💳"
           connect="stripe"
           dataSource="coming-soon:settings_billing"
           skeleton="kpi"
         />
-        <ComingSoon
-          title="Security"
-          reason="Two-factor authentication, active sessions, trusted devices, and API key management."
-          icon="🔒"
-          dataSource="coming-soon:security"
-          skeleton="table"
-        />
+        {/* Security — show real Google OAuth + connection status */}
+        <SpecCard accent dataSource="integrations,user_tokens">
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Security</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { label: 'Google OAuth', val: isGoogleConnected ? 'Connected' : 'Not connected', color: isGoogleConnected ? 'var(--green)' : 'var(--dim)' },
+              { label: 'Supabase Auth', val: 'Server-side', color: 'var(--green)' },
+              { label: '2FA', val: 'Pending setup', color: 'var(--amber)' },
+              { label: 'Connected Integrations', val: `${connected.length}/${intgList.length}`, color: 'var(--orange)' },
+            ].map(row => (
+              <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ color: 'var(--dim)' }}>{row.label}</span>
+                <span style={{ fontFamily: 'var(--mo)', color: row.color }}>{row.val}</span>
+              </div>
+            ))}
+          </div>
+        </SpecCard>
       </div>
 
-      {/* Team Members — ComingSoon */}
-      <ComingSoon
-        title="Team Members"
-        reason="Invite and manage team members with role-based access control."
-        icon="👥"
-        dataSource="coming-soon:team_members"
-        skeleton="table"
-        minHeight={140}
-      />
+      {/* Team Members summary — link to /team */}
+      <SpecCard accent dataSource="team_members" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Team Members</div>
+          <Link href="/team" style={{ fontSize: 11, color: 'var(--orange)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(249,115,22,0.3)', padding: '4px 12px', borderRadius: 6 }}>
+            Manage →
+          </Link>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--dim)' }}>
+          team_members table ready. Add human teammates and track AI agents in one view from the Team page.
+        </div>
+      </SpecCard>
     </>
   )
 }

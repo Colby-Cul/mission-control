@@ -9,7 +9,7 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getIncidents, getUserProfile } from '../lib/queries'
+import { getIncidents, getUserProfile, getServiceStatusGrid, getPerformanceTimeseries } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 
 export const dynamic = 'force-dynamic'
@@ -42,11 +42,13 @@ async function getSystemAlerts() {
 }
 
 export default async function MonitorPage() {
-  const [systemHealth, systemAlerts, incidents, profile] = await Promise.all([
+  const [systemHealth, systemAlerts, incidents, profile, derivedHealth, perfSeries] = await Promise.all([
     getSystemHealth(),
     getSystemAlerts(),
     getIncidents().catch(() => null),
     getUserProfile().catch(() => null),
+    getServiceStatusGrid().catch(() => []),
+    getPerformanceTimeseries(14).catch(() => []),
   ])
 
   const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
@@ -106,50 +108,37 @@ export default async function MonitorPage() {
         ))}
       </div>
 
-      {/* Service Status Grid */}
-      {systemHealth !== null ? (
-        <SpecCard accent dataSource="system_health" style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-            Service Status
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-            {(systemHealth as any[]).length === 0 ? (
-              <p style={{ fontSize: 13, color: 'var(--dim)' }}>No health data yet — add rows to <code>system_health</code>.</p>
-            ) : (
-              (systemHealth as any[]).map((svc: any) => {
-                const status = svc.status ?? 'unknown'
-                const col = statusColors[status] ?? 'var(--dim)'
-                return (
-                  <div key={svc.id} style={{
-                    padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10,
-                    border: `1px solid ${col}33`, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 12 }}>{svc.service_name ?? svc.name ?? 'Service'}</div>
-                      <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>
-                        {svc.checked_at?.slice(0, 16)?.replace('T', ' ') ?? '—'}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: col, textTransform: 'uppercase', background: col + '18', padding: '3px 8px', borderRadius: 6 }}>
-                      {status}
+      {/* Service Status Grid — derived from agents + sessions heartbeat */}
+      <SpecCard accent dataSource="agents,sessions" style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+          Service Status (from last heartbeat)
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+          {((derivedHealth as any[]) ?? []).length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--dim)' }}>No agents with heartbeats yet.</p>
+          ) : (
+            ((derivedHealth as any[]) ?? []).map((svc: any) => {
+              const col = statusColors[svc.health] ?? 'var(--dim)'
+              return (
+                <div key={svc.id} style={{
+                  padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10,
+                  border: `1px solid ${col}33`, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>{svc.name}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>
+                      last: {svc.lastBeat ? new Date(svc.lastBeat).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'never'}
                     </div>
                   </div>
-                )
-              })
-            )}
-          </div>
-        </SpecCard>
-      ) : (
-        <div style={{ marginBottom: 24 }}>
-          <ComingSoon
-            title="Service Status Grid"
-            reason="Per-service health status with uptime history, response time, and alerting thresholds."
-            icon="🟢"
-            dataSource="coming-soon:system_health"
-            skeleton="table"
-          />
+                  <div style={{ fontSize: 10, fontWeight: 700, color: col, textTransform: 'uppercase', background: col + '18', padding: '3px 8px', borderRadius: 6 }}>
+                    {svc.health}
+                  </div>
+                </div>
+              )
+            })
+          )}
         </div>
-      )}
+      </SpecCard>
 
       {/* Incidents + Alerts */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
@@ -182,44 +171,76 @@ export default async function MonitorPage() {
           )}
         </SpecCard>
 
-        {systemAlerts !== null ? (
-          <SpecCard accent dataSource="system_alerts" style={{ minHeight: 200 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-              Active Alerts ({alertList.length})
-            </div>
-            {alertList.length === 0 ? (
-              <p style={{ fontSize: 13, color: 'var(--green)', fontWeight: 600 }}>All clear — no active alerts.</p>
-            ) : (
+        {/* Active Alerts — derived from incidents + agent health */}
+        <SpecCard accent dataSource="incidents,agents.health_status" style={{ minHeight: 200 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Active Alerts
+          </div>
+          {(() => {
+            const openIncidents = (incidentList as any[]).filter((i: any) => i.status !== 'resolved')
+            const degradedAgents = ((derivedHealth as any[]) ?? []).filter((a: any) => a.health === 'degraded' || a.health === 'down')
+            const combined = [
+              ...openIncidents.map((i: any) => ({ source: 'incident', title: i.title, severity: i.severity, when: i.started_at })),
+              ...degradedAgents.map((a: any) => ({ source: 'agent', title: `${a.name} is ${a.health}`, severity: a.health === 'down' ? 'critical' : 'warning', when: a.lastBeat })),
+              ...alertList,
+            ].slice(0, 10)
+            if (combined.length === 0) return <p style={{ fontSize: 13, color: 'var(--green)', fontWeight: 600 }}>All clear — no active alerts.</p>
+            return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {alertList.map((alert: any) => (
-                  <div key={alert.id} style={{ padding: '8px 10px', background: 'rgba(239,68,68,0.05)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.15)', fontSize: 12 }}>
-                    <div style={{ fontWeight: 600 }}>{alert.name ?? alert.title ?? 'Alert'}</div>
-                    <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>{alert.message ?? '—'}</div>
-                  </div>
-                ))}
+                {combined.map((a: any, i: number) => {
+                  const sevColor = a.severity === 'critical' ? 'var(--red)' : a.severity === 'warning' ? 'var(--amber)' : 'var(--dim)'
+                  return (
+                    <div key={i} style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.025)', borderRadius: 8, border: `1px solid ${sevColor}33`, fontSize: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 600 }}>{a.title ?? a.name ?? 'Alert'}</span>
+                        <span style={{ fontSize: 9, color: sevColor, fontFamily: 'var(--mo)', textTransform: 'uppercase' }}>{a.severity ?? 'info'}</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2, fontFamily: 'var(--mo)' }}>{a.source ?? 'alert'} · {a.when ? new Date(a.when).toLocaleDateString() : '—'}</div>
+                    </div>
+                  )
+                })}
               </div>
-            )}
-          </SpecCard>
-        ) : (
-          <ComingSoon
-            title="Active Alerts"
-            reason="Real-time alert feed — CPU spikes, error surges, latency breaches from system_alerts."
-            icon="🚨"
-            dataSource="coming-soon:system_alerts"
-            skeleton="table"
-          />
-        )}
+            )
+          })()}
+        </SpecCard>
       </div>
 
-      {/* Performance Graphs */}
-      <ComingSoon
-        title="Performance Graphs"
-        reason="Time-series charts: CPU, memory, request volume, error rate — sourced from system_health KPI snapshots."
-        icon="📈"
-        dataSource="coming-soon:system_health.performance_graphs"
-        skeleton="chart"
-        minHeight={180}
-      />
+      {/* Performance Graphs — derived from sessions timeseries */}
+      <SpecCard accent dataSource="sessions" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Performance (14-day trend)</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((perfSeries as any[]) ?? []).length} days</span>
+        </div>
+        {(() => {
+          const series = (perfSeries as any[]) ?? []
+          if (series.length === 0) return <div style={{ fontSize: 12, color: 'var(--dim)' }}>Not enough session data for a trend yet.</div>
+          const maxRuns = Math.max(...series.map((d: any) => d.runs), 1)
+          const maxDur = Math.max(...series.map((d: any) => d.durationMin), 1)
+          return (
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginBottom: 6 }}>RUNS / DAY</div>
+                <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 60 }}>
+                  {series.slice(-14).map((d: any, i: number) => {
+                    const h = Math.max(2, Math.round((d.runs / maxRuns) * 58))
+                    return <div key={i} style={{ flex: 1, height: h, background: 'var(--green)', borderRadius: '2px 2px 0 0', opacity: 0.7 }} />
+                  })}
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginBottom: 6 }}>AVG DURATION (MIN)</div>
+                <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 60 }}>
+                  {series.slice(-14).map((d: any, i: number) => {
+                    const avgDur = d.runs > 0 ? d.durationMin / d.runs : 0
+                    const h = Math.max(2, Math.round((avgDur / (maxDur / Math.max(1, series[0]?.runs ?? 1))) * 58))
+                    return <div key={i} style={{ flex: 1, height: Math.min(58, h), background: 'var(--amber)', borderRadius: '2px 2px 0 0', opacity: 0.7 }} />
+                  })}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+      </SpecCard>
     </>
   )
 }

@@ -45,9 +45,11 @@ const KNOWN_INTEGRATIONS = [
   { provider: 'lodgify',        name: 'Lodgify',             category: 'STR',           knownStatus: 'active',          description: 'PMS — property management + bookings' },
   { provider: 'pricelabs',      name: 'Price Labs',          category: 'STR',           knownStatus: 'active',          description: 'Dynamic pricing + revenue management' },
   // Business / Finance
-  { provider: 'monday.com',     name: 'Monday.com',          category: 'Business',      knownStatus: 'active',          description: 'Connected — not used for task mgmt (Mission Control only)' },
+  { provider: 'monday-xome',    name: 'Monday.com · Xome Home',        category: 'Business', knownStatus: 'active',          description: 'Xome Mortgage Team — loan pipeline, officers, compliance, warehouse (11 boards, 928 loans)' },
+  { provider: 'monday-culbertson', name: 'Monday.com · Culbertson & Culbertson', category: 'Business', knownStatus: 'not configured', description: 'Awaiting API key — paste to Vercel env as MONDAY_CULBERTSON_API_KEY' },
+  { provider: 'followupboss',   name: 'Follow Up Boss',      category: 'Business',      knownStatus: 'active',          description: 'Culbertson & Gray Group CRM — 162 agents, 85k contacts, 5.1k deals across 6 pipelines' },
   { provider: 'quickbooks',     name: 'QuickBooks',          category: 'Business',      knownStatus: 'not configured',  description: 'Accounting + financial management via OAuth' },
-  { provider: 'plaid',          name: 'Plaid',               category: 'Business',      knownStatus: 'not configured',  description: 'Bank + brokerage account aggregation (read-only)' },
+  { provider: 'plaid',          name: 'Plaid',               category: 'Business',      knownStatus: 'active',          description: 'Bank + brokerage account aggregation (read-only)' },
   { provider: 'coinbase',       name: 'Coinbase',            category: 'Business',      knownStatus: 'not configured',  description: 'Crypto portfolio + trading via OAuth API' },
   { provider: 'canva',          name: 'Canva',               category: 'Business',      knownStatus: 'active',          description: 'Design + marketing assets via MCP' },
   { provider: 'notion',         name: 'Notion',              category: 'Business',      knownStatus: 'active',          description: 'Knowledge base + docs via MCP' },
@@ -466,15 +468,40 @@ export default async function IntegrationsPage() {
         </SpecCard>
       )}
 
-      {/* Webhook / Event Log ComingSoon */}
-      <ComingSoon
-        title="Webhook & Event Log"
-        reason="Real-time log of all integration events, webhook deliveries, and sync failures."
-        icon="📬"
-        dataSource="coming-soon:integrations.webhook_log"
-        skeleton="table"
-        minHeight={160}
-      />
+      {/* Sync History Log — derived from integrations.last_sync_at + last_error */}
+      <SpecCard accent dataSource="integrations.last_sync_at" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Recent Sync Events</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>last_sync_at per provider</span>
+        </div>
+        {(() => {
+          const recent = [...(integrations as any[])]
+            .filter((i: any) => i.last_sync_at)
+            .sort((a: any, b: any) => (b.last_sync_at ?? '').localeCompare(a.last_sync_at ?? ''))
+            .slice(0, 10)
+          if (recent.length === 0) return <div style={{ fontSize: 12, color: 'var(--dim)' }}>No sync events yet. Integrations will log here after first successful sync.</div>
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {recent.map((i: any) => {
+                const hasError = !!i.last_error
+                const col = hasError ? 'var(--red)' : 'var(--green)'
+                return (
+                  <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                    <div style={{ fontSize: 12, fontWeight: 600, width: 120, textTransform: 'capitalize' }}>{i.provider}</div>
+                    <div style={{ flex: 1, fontSize: 11, color: hasError ? 'var(--red)' : 'var(--dim)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {hasError ? i.last_error : i.status ?? 'synced'}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', flexShrink: 0 }}>
+                      {new Date(i.last_sync_at).toLocaleString()}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
+      </SpecCard>
     </>
   )
 }

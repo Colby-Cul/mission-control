@@ -21,6 +21,8 @@ import {
   getProperties,
   getNetWorthFromGraph,
   getOwnershipEdges,
+  getAgentActivityFeed,
+  getDailyBrief,
 } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -40,7 +42,7 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph, ownershipEdges] = await Promise.allSettled([
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph, ownershipEdges, agentFeed, brief] = await Promise.allSettled([
     getAccounts(),
     getVisions(),
     getOpenTasks(),
@@ -51,6 +53,8 @@ export default async function DashboardPage() {
     getProperties().catch(() => []),
     getNetWorthFromGraph().catch(() => null),
     getOwnershipEdges().catch(() => []),
+    getAgentActivityFeed(8).catch(() => []),
+    getDailyBrief().catch(() => null),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : (r.status === 'rejected' ? null : null))))
   const dashEdgeCount = Array.isArray(ownershipEdges) ? (ownershipEdges as any[]).length : 0
 
@@ -331,22 +335,70 @@ export default async function DashboardPage() {
         </SpecCard>
       </div>
 
-      {/* Agent Activity + Daily Brief */}
+      {/* Agent Activity + Daily Brief — derived from sessions + agent_runs */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
-        <ComingSoon
-          title="Recent Agent Activity"
-          reason="Agent runtime ships in Phase 5. Last 5 runs will appear here."
-          icon="🤖"
-          dataSource="coming-soon:agent_runs"
-          skeleton="table"
-        />
-        <ComingSoon
-          title="Daily AI Brief"
-          reason="AI-generated empire summary auto-generated each morning from agent outputs."
-          icon="📰"
-          dataSource="coming-soon:agent_outputs"
-          skeleton="table"
-        />
+        <SpecCard accent dataSource="agent_runs,sessions">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Recent Agent Activity</div>
+            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--dim)' }}>
+              {(agentFeed as any[])?.length ?? 0} events
+            </span>
+          </div>
+          {((agentFeed as any[]) ?? []).length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
+              No agent runs yet. <a href="/agents" style={{ color: 'var(--orange)' }}>Invoke an agent →</a>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {((agentFeed as any[]) ?? []).slice(0, 6).map((r: any) => {
+                const sColor = r.status === 'running' ? 'var(--amber)' : r.status === 'failed' || r.status === 'error' ? 'var(--red)' : 'var(--green)'
+                const when = r.when ? new Date(r.when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+                return (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: sColor, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</div>
+                      <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginTop: 2 }}>
+                        {r.agent} · {r.kind}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{when}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </SpecCard>
+
+        <SpecCard accent dataSource="derived:daily_brief">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Daily Brief</div>
+            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)', textTransform: 'uppercase' }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          {(() => {
+            const b = brief as any
+            if (!b) return <div style={{ fontSize: 12, color: 'var(--dim)' }}>Gathering data…</div>
+            const lines = [
+              `${b.runsToday} agent runs today`,
+              `${b.openTaskCount} open tasks · ${(b.highPriTasks?.length ?? 0)} high priority`,
+              b.nextDeadline ? `Next deadline: ${b.nextDeadline.kind} on ${b.nextDeadline.deadline_date}` : 'No tax deadlines in the next window',
+              b.nextMilestone ? `Upcoming milestone: ${b.nextMilestone.title}` : null,
+              `Empire health: ${b.entityCount} active entities`,
+            ].filter(Boolean)
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {lines.map((line: string, i: number) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, lineHeight: 1.5 }}>
+                    <span style={{ color: 'var(--orange)', fontFamily: 'var(--mo)', marginTop: 1 }}>▸</span>
+                    <span>{line}</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </SpecCard>
       </div>
 
       {/* Entity List */}
