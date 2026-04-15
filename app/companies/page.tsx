@@ -269,19 +269,33 @@ export default async function CompaniesPage() {
                             e.entity_name.includes('Luxury') ? '🏡' :
                             e.entity_name.includes('OpenClaw') || e.entity_name.includes('openclaw') ? '🤖' :
                             e.entity_name.includes('Capital') ? '📈' : '🏢'
-              return `<a href="/companies/${e.slug ?? ''}" class="entity-card" style="--accent:${accent}">
+              const annualRev = e.annual_revenue != null ? Number(e.annual_revenue) : null
+              const pnlYtd    = e.pnl_ytd != null ? Number(e.pnl_ytd) : null
+              const empCount  = e.employee_count != null ? Number(e.employee_count) : null
+              const bankCount = e.bank_account_count != null ? Number(e.bank_account_count) : null
+              const fmtRev    = (n: number) => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(0) + 'K' : '$' + n.toFixed(0)
+              return `<a href="/companies/${e.slug ?? e.id ?? ''}" class="entity-card" style="--accent:${accent}">
                 <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${accent};opacity:0.7;border-radius:20px 20px 0 0;"></div>
                 <div class="entity-card-top">
                   <div class="entity-icon" style="background:${accent}18;border:1px solid ${accent}30;">${emoji}</div>
                   <div class="entity-badges">
                     <span class="badge badge-type">${e.entity_type ?? '—'}</span>
                     <span class="badge badge-operational">Operational</span>
+                    ${e.ein ? `<span class="badge badge-type" style="font-size:9px;">EIN ${e.ein}</span>` : ''}
                     <span class="entity-pulse" style="background:${accent};margin-top:4px;"></span>
                   </div>
                 </div>
                 <div class="entity-name">${e.entity_name}</div>
-                <div class="entity-type-state">${e.entity_type ?? '—'} · ${e.state ?? '—'}</div>
+                <div class="entity-type-state">${e.entity_type ?? '—'} · ${e.state ?? '—'}${e.fiscal_year_end ? ' · FY ' + e.fiscal_year_end : ''}</div>
                 ${e.notes ? `<div class="entity-notes">${e.notes}</div>` : ''}
+                ${(annualRev != null || pnlYtd != null || empCount != null || bankCount != null) ? `
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+                  ${annualRev != null ? `<div><div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Annual Rev</div><div style="font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:#f97316;">${fmtRev(annualRev)}</div></div>` : ''}
+                  ${pnlYtd != null ? `<div><div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">P&amp;L YTD</div><div style="font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:${pnlYtd >= 0 ? '#10b981' : '#ef4444'};">${pnlYtd >= 0 ? '+' : ''}${fmtRev(pnlYtd)}</div></div>` : ''}
+                  ${empCount != null ? `<div><div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Employees</div><div style="font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.9);">${empCount}</div></div>` : ''}
+                  ${bankCount != null && bankCount > 0 ? `<div><div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">Accounts</div><div style="font-size:12px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:rgba(255,255,255,0.9);">${bankCount}</div></div>` : ''}
+                </div>` : ''}
+                ${e.filing_deadlines_next ? `<div style="font-size:10px;color:#f59e0b;margin-bottom:8px;">📅 Next filing: ${e.filing_deadlines_next}</div>` : ''}
                 <div class="entity-footer">
                   <span class="entity-ownership">${e.ownership_pct != null ? e.ownership_pct + '% owned' : '100% owned'}</span>
                   <span class="entity-arrow">→</span>

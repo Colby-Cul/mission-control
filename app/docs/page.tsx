@@ -158,28 +158,69 @@ export default async function DocsPage() {
           <p style={{ fontSize: 12, color: 'var(--dim)' }}>No documents yet. Add rows to <code>entity_documents</code>.</p>
         ) : (
           <div style={{ display: 'grid', gap: 0 }}>
-            {recentDocs.map((d: any) => (
+            {recentDocs.map((d: any) => {
+              // Derived doc fields
+              const catTags = Array.isArray(d.category_tags) ? d.category_tags as string[] : []
+              const sigStatus = d.signature_status ?? null
+              const sigColor = sigStatus === 'signed' ? 'var(--green)' : sigStatus === 'pending' ? 'var(--amber)' : sigStatus === 'rejected' ? 'var(--red)' : null
+              const isExpiringSoon = d.expires_at
+                ? (new Date(d.expires_at).getTime() - Date.now()) < 30 * 24 * 3600 * 1000
+                : false
+              return (
               <div key={d.id} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: 12,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                padding: '12px 0', borderBottom: '1px solid var(--border)', fontSize: 12,
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ fontSize: 18 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>
                     {CAT_ICONS[d.document_type?.charAt(0).toUpperCase() + d.document_type?.slice(1)] ?? '📄'}
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 500 }}>{d.filename ?? d.title ?? d.id}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {d.filename ?? d.title ?? d.id}
+                    </div>
                     <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1 }}>
                       {d.document_type ?? '—'} · {d.entity_name ?? d.entity_id ?? 'Unfiled'}
+                      {d.version && <span style={{ marginLeft: 8 }}>v{d.version}</span>}
+                    </div>
+                    {/* Tags + sig + expiry sub-row */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                      {catTags.slice(0, 3).map((tag: string) => (
+                        <span key={tag} style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)',
+                          background: 'rgba(255,255,255,0.04)', color: 'var(--dim)',
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                        }}>{tag}</span>
+                      ))}
+                      {sigColor && sigStatus && (
+                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 3, color: sigColor, background: sigColor + '14', fontWeight: 600 }}>
+                          {sigStatus}
+                        </span>
+                      )}
+                      {isExpiringSoon && d.expires_at && (
+                        <span style={{ fontSize: 9, color: 'var(--amber)', fontFamily: 'var(--mo)' }}>
+                          expires {new Date(d.expires_at).toLocaleDateString()}
+                        </span>
+                      )}
+                      {d.linked_workflow && (
+                        <span style={{ fontSize: 9, color: 'var(--purple)', fontFamily: 'var(--mo)' }}>
+                          workflow: {String(d.linked_workflow)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
                   <div style={{ fontFamily: 'var(--mo)', fontSize: 11 }}>{fmtSize(d.file_size)}</div>
-                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>{d.created_at?.slice(0,10) ?? '—'}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>
+                    {d.last_modified_by
+                      ? <>{d.last_modified_by} · {d.updated_at?.slice(0,10) ?? '—'}</>
+                      : d.created_at?.slice(0,10) ?? '—'}
+                  </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </SpecCard>
