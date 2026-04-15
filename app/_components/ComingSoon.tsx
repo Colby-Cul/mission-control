@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import ComingSoonConnectCTA from './ComingSoonConnectCTA'
 
 type SkeletonShape = 'chart' | 'table' | 'kpi' | 'none'
 
@@ -52,12 +53,6 @@ export default function ComingSoon({
   minHeight,
   dataSource,
 }: ComingSoonProps) {
-  // Route through integrations hub so the provider card highlights + scrolls into view.
-  const connectHref = connect ? `/integrations?highlight=${connect}` : '/settings'
-  const connectLabel = connect
-    ? `Connect ${connect.charAt(0).toUpperCase() + connect.slice(1)} to activate`
-    : 'Configure in Settings'
-
   return (
     <div
       className={`coming-soon-card${className ? ' ' + className : ''}`}
@@ -77,13 +72,18 @@ export default function ComingSoon({
 
       <SkeletonRows shape={skeleton} />
 
-      {connect && (
-        <Link href={connectHref} className="coming-soon-cta">
+      {connect ? (
+        /* Delegate to a client component that opens the key modal for api-key
+           providers, follows the OAuth consent URL for oauth providers, and
+           links to docs for info-only providers. */
+        <ComingSoonConnectCTA connect={connect} />
+      ) : (
+        <Link href="/settings" className="coming-soon-cta">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
-          {connectLabel}
+          Configure in Settings
         </Link>
       )}
     </div>
