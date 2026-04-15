@@ -4,8 +4,12 @@
  * Layout: layers by BFS depth from root nodes (nodes with no incoming edges).
  * Color-coded by entity_type. Click → navigate to /companies/[slug].
  * Filters: all / operating / trusts / holding. Toggle: Show Properties.
+ * Hover: 3-dot menu (Edit Entity / Edit Ownership / Open).
  */
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useRef } from 'react'
+import EditEntityModal from '../_components/EditEntityModal'
+import EditOwnershipModal from '../_components/EditOwnershipModal'
+import EditPropertyModal from '../_components/EditPropertyModal'
 
 interface Entity {
   id: string
@@ -79,10 +83,19 @@ const V_GAP = 80
 
 type Filter = 'all' | 'operating' | 'trusts' | 'holding'
 
+type OrgModal =
+  | { type: 'editEntity';    entityId: string; entityName: string }
+  | { type: 'editOwnership'; entityId: string; entityName: string }
+  | { type: 'editProperty';  propertyId: string }
+  | { type: 'editPropOwn';   propertyId: string; propertyName: string }
+
 export default function EntityOrgChart({ entities, edges, properties = [] }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [showProperties, setShowProperties] = useState(true)
   const [hovered, setHovered] = useState<string | null>(null)
+  const [nodeMenu, setNodeMenu] = useState<{ id: string; x: number; y: number } | null>(null)
+  const [modal, setModal] = useState<OrgModal | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   const entityMap = useMemo(() => {
     const m: Record<string, Entity> = {}
@@ -269,10 +282,12 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
       {/* SVG org-chart */}
       <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${layout.svgW + 20} ${layout.svgH + 20}`}
           width={layout.svgW + 20}
           height={layout.svgH + 20}
           style={{ display: 'block', minWidth: '100%' }}
+          onClick={() => setNodeMenu(null)}
         >
           <defs>
             <linearGradient id="oc-map-grad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -443,6 +458,30 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
                 {e.slug && isHov && (
                   <text x={x + NODE_W - 10} y={y + 14} fontSize="9" fill="rgba(255,255,255,0.5)">→</text>
                 )}
+                {/* 3-dot quick-action menu trigger on hover */}
+                {isHov && (
+                  <g
+                    onClick={ev => {
+                      ev.stopPropagation()
+                      // position in SVG coords, converted to viewport
+                      const svgEl = svgRef.current
+                      if (!svgEl) return
+                      const rect = svgEl.getBoundingClientRect()
+                      const viewBox = svgEl.viewBox.baseVal
+                      const scaleX = rect.width / (viewBox.width || 1)
+                      const scaleY = rect.height / (viewBox.height || 1)
+                      const vpX = rect.left + (x + 4) * scaleX
+                      const vpY = rect.top + (y + NODE_H) * scaleY
+                      setNodeMenu({ id: e.id, x: vpX, y: vpY })
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <rect x={x + 2} y={y + NODE_H - 14} width={20} height={14} rx={4} fill="rgba(0,0,0,0.5)" />
+                    <circle cx={x + 7} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                    <circle cx={x + 12} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                    <circle cx={x + 17} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                  </g>
+                )}
               </g>
             )
           })}
@@ -497,6 +536,29 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
                 {isHov && (
                   <text x={x + NODE_W - 10} y={y + 14} fontSize="9" fill="rgba(255,255,255,0.5)">→</text>
                 )}
+                {/* 3-dot quick-action menu trigger on hover */}
+                {isHov && (
+                  <g
+                    onClick={ev => {
+                      ev.stopPropagation()
+                      const svgEl = svgRef.current
+                      if (!svgEl) return
+                      const rect = svgEl.getBoundingClientRect()
+                      const viewBox = svgEl.viewBox.baseVal
+                      const scaleX = rect.width / (viewBox.width || 1)
+                      const scaleY = rect.height / (viewBox.height || 1)
+                      const vpX = rect.left + (x + 4) * scaleX
+                      const vpY = rect.top + (y + NODE_H) * scaleY
+                      setNodeMenu({ id: 'prop:' + p.id, x: vpX, y: vpY })
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <rect x={x + 2} y={y + NODE_H - 14} width={20} height={14} rx={4} fill="rgba(0,0,0,0.5)" />
+                    <circle cx={x + 7} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                    <circle cx={x + 12} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                    <circle cx={x + 17} cy={y + NODE_H - 7} r={1.4} fill="rgba(255,255,255,0.7)" />
+                  </g>
+                )}
               </g>
             )
           })}
@@ -508,6 +570,94 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>
           No entities match the current filter
         </div>
+      )}
+
+      {/* Node context menu (floating) */}
+      {nodeMenu && (() => {
+        const isProperty = nodeMenu.id.startsWith('prop:')
+        const rawId = isProperty ? nodeMenu.id.slice(5) : nodeMenu.id
+        const entityObj = entities.find(e => e.id === rawId)
+        const propObj = properties.find(p => p.id === rawId)
+        const menuItems = isProperty
+          ? [
+              { label: 'Edit Property',  action: () => { setModal({ type: 'editProperty', propertyId: rawId }); setNodeMenu(null) } },
+              { label: 'Edit Ownership', action: () => { setModal({ type: 'editPropOwn', propertyId: rawId, propertyName: propObj?.address ?? '' }); setNodeMenu(null) } },
+              { label: 'Open →',         action: () => { window.location.href = `/properties/${propObj?.slug ?? rawId}` } },
+            ]
+          : [
+              { label: 'Edit Entity',    action: () => { setModal({ type: 'editEntity', entityId: rawId, entityName: entityObj?.entity_name ?? '' }); setNodeMenu(null) } },
+              { label: 'Edit Ownership', action: () => { setModal({ type: 'editOwnership', entityId: rawId, entityName: entityObj?.entity_name ?? '' }); setNodeMenu(null) } },
+              ...(entityObj?.slug ? [{ label: 'Open →', action: () => { window.location.href = `/companies/${entityObj.slug}` } }] : []),
+            ]
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: nodeMenu.x,
+              top: nodeMenu.y + 4,
+              zIndex: 2000,
+              background: '#111126',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 10,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+              minWidth: 148,
+              overflow: 'hidden',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {menuItems.map(item => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                style={{
+                  display: 'block', width: '100%', padding: '9px 14px',
+                  textAlign: 'left', background: 'none', border: 'none',
+                  fontSize: 12, color: 'rgba(255,255,255,0.8)', cursor: 'pointer',
+                  fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                }}
+                onMouseEnter={e => { (e.target as HTMLButtonElement).style.background = 'rgba(249,115,22,0.08)' }}
+                onMouseLeave={e => { (e.target as HTMLButtonElement).style.background = 'none' }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )
+      })()}
+
+      {/* Modals */}
+      {modal?.type === 'editEntity' && (
+        <EditEntityModal
+          entityId={modal.entityId}
+          onClose={() => setModal(null)}
+          onSaved={() => { setModal(null); window.location.reload() }}
+        />
+      )}
+      {modal?.type === 'editOwnership' && (
+        <EditOwnershipModal
+          entityId={modal.entityId}
+          entityName={modal.entityName}
+          childType="entity"
+          onClose={() => setModal(null)}
+          onSaved={() => setModal(null)}
+        />
+      )}
+      {modal?.type === 'editProperty' && (
+        <EditPropertyModal
+          propertyId={modal.propertyId}
+          onClose={() => setModal(null)}
+          onSaved={() => { setModal(null); window.location.reload() }}
+        />
+      )}
+      {modal?.type === 'editPropOwn' && (
+        <EditOwnershipModal
+          entityId={modal.propertyId}
+          entityName={modal.propertyName}
+          childType="property"
+          onClose={() => setModal(null)}
+          onSaved={() => setModal(null)}
+        />
       )}
     </div>
   )
