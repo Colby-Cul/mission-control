@@ -15,6 +15,7 @@ import {
   computeConfidence, computeRevenueEstimate, computeBuildCost,
   computeTimeToMVP, isQuickWin, fmtRevenue, fmtBuildCost, computeROI,
 } from './computeMetrics'
+import IdeaDetailDrawer, { type ForgeIdeaFull } from './IdeaDetailDrawer'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -298,11 +299,13 @@ function TableView({
   onDeploy,
   onKill,
   onAskAgent,
+  onClick,
 }: {
   ideas: EnrichedIdea[]
   onDeploy: (id: string) => void
   onKill: (id: string) => void
   onAskAgent: (idea: EnrichedIdea) => void
+  onClick?: (idea: EnrichedIdea) => void
 }) {
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -316,7 +319,7 @@ function TableView({
         </thead>
         <tbody>
           {ideas.map((idea) => (
-            <tr key={idea.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+            <tr key={idea.id} onClick={() => onClick?.(idea)} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: onClick ? 'pointer' : undefined }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'rgba(255,255,255,0.02)' }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '' }}>
               <td style={{ padding: '12px 14px' }}>
@@ -396,11 +399,13 @@ function ReviewQueue({
   onDeploy,
   onKill,
   onAskAgent,
+  onClick,
 }: {
   ideas: EnrichedIdea[]
   onDeploy: (id: string) => void
   onKill: (id: string) => void
   onAskAgent: (idea: EnrichedIdea) => void
+  onClick?: (idea: EnrichedIdea) => void
 }) {
   const queue = ideas.filter((i) => i.forgeStage === 'sourced' || i.forgeStage === 'evaluating')
   if (!queue.length) {
@@ -409,7 +414,7 @@ function ReviewQueue({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {queue.map((idea) => (
-        <div key={idea.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div key={idea.id} onClick={() => onClick?.(idea)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', cursor: onClick ? 'pointer' : undefined }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--t1)' }}>{getIdeaName(idea)}</div>
             <div style={{ fontSize: 11, color: 'var(--t4)', marginTop: 2 }}>
@@ -654,7 +659,7 @@ export default function ForgeClient({
   const [showPanel, setShowPanel] = useState<'analytics' | 'review' | null>('review')
   const [agentModal, setAgentModal] = useState<{ open: boolean; idea: EnrichedIdea | null }>({ open: false, idea: null })
   const [deployModal, setDeployModal] = useState<{ open: boolean; idea: EnrichedIdea | null }>({ open: false, idea: null })
-  const [detailModal, setDetailModal] = useState<EnrichedIdea | null>(null)
+  const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -830,7 +835,7 @@ export default function ForgeClient({
             <PackageCheck size={15} style={{ color: 'var(--orange)' }} /> Review Queue
             <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>({stats.review} ideas need review)</span>
           </div>
-          <ReviewQueue ideas={enriched} onDeploy={handleDeploy} onKill={handleKill} onAskAgent={(idea) => setAgentModal({ open: true, idea })} />
+          <ReviewQueue ideas={enriched} onDeploy={handleDeploy} onKill={handleKill} onAskAgent={(idea) => setAgentModal({ open: true, idea })} onClick={(idea) => setSelectedIdeaId(idea.id)} />
         </div>
       )}
 
@@ -838,13 +843,14 @@ export default function ForgeClient({
       {viewMode === 'kanban' && (
         <KanbanView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill} onShelve={handleShelve}
           onAskAgent={(idea) => setAgentModal({ open: true, idea })}
-          onClick={setDetailModal} />
+          onClick={(idea) => setSelectedIdeaId(idea.id)} />
       )}
 
       {viewMode === 'table' && (
         <div className="mc-card accent" style={{ padding: 0, overflow: 'hidden' }}>
           <TableView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill}
-            onAskAgent={(idea) => setAgentModal({ open: true, idea })} />
+            onAskAgent={(idea) => setAgentModal({ open: true, idea })}
+            onClick={(idea) => setSelectedIdeaId(idea.id)} />
         </div>
       )}
 
@@ -874,54 +880,18 @@ export default function ForgeClient({
       <AddIdeaModal open={addOpen} onClose={() => setAddOpen(false)} onAdded={handleAdded} />
 
       {/* ── Idea Detail Drawer ── */}
-      {detailModal && (
-        <>
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 800 }} onClick={() => setDetailModal(null)} />
-          <div style={{
-            position: 'fixed', right: 0, top: 0, bottom: 0, width: 380,
-            background: '#0d0a20', borderLeft: `1px solid rgba(255,255,255,0.1)`,
-            zIndex: 801, padding: 24, overflowY: 'auto',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-              <StageBadge stageKey={detailModal.forgeStage} />
-              <button onClick={() => setDetailModal(null)} style={{ background: 'none', border: 'none', color: 'var(--t4)', cursor: 'pointer' }}>
-                <X size={18} />
-              </button>
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--t1)', marginBottom: 12, lineHeight: 1.3 }}>
-              {getIdeaName(detailModal)}
-            </h2>
-            {detailModal.description && (
-              <p style={{ fontSize: 13, color: 'var(--t3)', lineHeight: 1.6, marginBottom: 20 }}>{String(detailModal.description)}</p>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-              {[
-                { label: 'Confidence',  value: `${detailModal.confidenceScore}%`, color: detailModal.confidenceScore >= 75 ? '#4ade80' : detailModal.confidenceScore >= 50 ? '#facc15' : '#f87171' },
-                { label: 'Revenue Est.', value: fmtRevenue(detailModal.revenueEstimate), color: '#4ade80' },
-                { label: 'Build Cost',  value: fmtBuildCost(detailModal.buildCostEstimate), color: 'var(--t2)' },
-                { label: 'Time to MVP', value: detailModal.timeToMVP, color: 'var(--t2)' },
-                { label: 'ROI',         value: detailModal.roi ? `${detailModal.roi}x` : '—', color: detailModal.roi && detailModal.roi > 5 ? '#4ade80' : 'var(--t3)' },
-                { label: 'Date Added',  value: String(detailModal.date_added ?? '—'), color: 'var(--t3)' },
-              ].map(({ label, value, color }) => (
-                <div key={label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 12 }}>
-                  <div style={{ fontSize: 10, color: 'var(--t4)', textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color }}>{value}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <button onClick={() => { setDeployModal({ open: true, idea: detailModal }); setDetailModal(null) }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', fontSize: 13, fontWeight: 600, background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.3)', borderRadius: 10, color: '#4ade80', cursor: 'pointer' }}>
-                <Rocket size={14} /> Advance Stage
-              </button>
-              <button onClick={() => { setAgentModal({ open: true, idea: detailModal }); setDetailModal(null) }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', fontSize: 13, fontWeight: 600, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: 10, color: '#a78bfa', cursor: 'pointer' }}>
-                <Bot size={14} /> Ask Agent
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+      <IdeaDetailDrawer
+        ideaId={selectedIdeaId}
+        allIdeas={enriched as unknown as ForgeIdeaFull[]}
+        onClose={() => setSelectedIdeaId(null)}
+        onIdeaUpdated={(updated) => {
+          setIdeas((prev) => prev.map((i) => i.id === updated.id ? { ...i, ...updated } : i))
+        }}
+        onAskAgent={(idea) => {
+          setSelectedIdeaId(null)
+          setAgentModal({ open: true, idea: idea as unknown as EnrichedIdea })
+        }}
+      />
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>

@@ -181,6 +181,16 @@ export async function getForgeIdeas(status: 'new' | 'approved' | 'rejected' = 'n
   return data ?? []
 }
 
+export async function getForgeIdeaById(id: string) {
+  const { data, error } = await supabase
+    .from('forge_ideas')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
 // ═══ Work — Projects & Tasks ═══════════════════════════════════════
 export async function getActiveProjects() {
   const { data, error } = await supabase
