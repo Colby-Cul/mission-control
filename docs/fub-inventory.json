@@ -1,0 +1,2171 @@
+{
+  "base_url": "https://api.followupboss.com/v1",
+  "endpoints": {
+    "appointments": {
+      "collection_key": "appointments",
+      "fields": {
+        "allDay": "boolean",
+        "created": "string",
+        "createdById": "integer",
+        "description": "string",
+        "detailsVisible": "boolean",
+        "end": "string",
+        "id": "integer",
+        "invitees": "array",
+        "isDeletable": "boolean",
+        "isEditable": "boolean",
+        "location": "string",
+        "originFub": "boolean",
+        "outcome": "null",
+        "outcomeId": "null",
+        "start": "string",
+        "timezone": "string",
+        "title": "string",
+        "type": "null",
+        "typeId": "null",
+        "updated": "string",
+        "updatedById": "integer"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "appointments",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjoyOTY5MTl9",
+        "nextLink": "https://api.followupboss.com/v1/appointments?limit=25&sort=-created&next=eyJzaW5jZUlkIjoyOTY5MTl9",
+        "offset": 0,
+        "total": 15771
+      },
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/appointments",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "allDay": false,
+          "created": "<redacted-phone>",
+          "createdById": 350,
+          "description": "",
+          "detailsVisible": true,
+          "end": "<redacted-phone>",
+          "id": 296990,
+          "invitees": [
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": null,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/444377d7-b549-4104-abe2-ee2e0cf30c2d.jpg",
+                "26x26": "https://s.followupboss.com/pictures/5513940d-2a91-407e-9b04-b642f76ddf30.jpg",
+                "30x30": "https://s.followupboss.com/pictures/120b52da-d47f-4c9b-bb6d-77037e0cf87b.jpg",
+                "40x40": "https://s.followupboss.com/pictures/e8909766-00f2-4e8d-839c-d6e704fab05f.jpg",
+                "60x60": "https://s.followupboss.com/pictures/57559d58-bc42-4987-8ef7-f1db77eb1fec.jpg",
+                "original": "https://s.followupboss.com/public_attachments/c0735b81-72e9-44ce-9590-8823aa96d35c.jpg"
+              },
+              "relationshipId": null,
+              "userId": 350
+            },
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": 136443,
+              "relationshipId": null,
+              "userId": null
+            }
+          ],
+          "isDeletable": true,
+          "isEditable": true,
+          "location": "",
+          "originFub": true,
+          "outcome": null,
+          "outcomeId": null,
+          "start": "<redacted-phone>",
+          "timezone": "America/Los_Angeles",
+          "title": "95 Ridge Rd",
+          "type": null,
+          "typeId": null,
+          "updated": "<redacted-phone>",
+          "updatedById": 350
+        },
+        {
+          "allDay": false,
+          "created": "<redacted-phone>",
+          "createdById": 371,
+          "description": "",
+          "detailsVisible": true,
+          "end": "<redacted-phone>",
+          "id": 296989,
+          "invitees": [
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": null,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/7a9b6b4e-72cc-4134-a99f-a225525bdd14.jpg",
+                "26x26": "https://s.followupboss.com/pictures/bba3bbd9-07cb-4d3d-bcee-99bb3d50f45d.jpg",
+                "30x30": "https://s.followupboss.com/pictures/9018ddc5-5917-4506-a422-687712afae3e.jpg",
+                "40x40": "https://s.followupboss.com/pictures/e134eab0-ab89-4075-932b-4abe645a4297.jpg",
+                "60x60": "https://s.followupboss.com/pictures/724ef425-a45a-4797-8a7c-389d802e3a48.jpg",
+                "original": "https://s.followupboss.com/public_attachments/ffbfc41f-26bc-44c3-a90d-55e637d8045c.jpg"
+              },
+              "relationshipId": null,
+              "userId": 371
+            },
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": 127135,
+              "relationshipId": null,
+              "userId": null
+            }
+          ],
+          "isDeletable": true,
+          "isEditable": true,
+          "location": "1259 lodi",
+          "originFub": true,
+          "outcome": null,
+          "outcomeId": null,
+          "start": "<redacted-phone>",
+          "timezone": "America/Los_Angeles",
+          "title": "Video Showing 1259 Lodi ave.",
+          "type": "Buyer- Showing Appt",
+          "typeId": 8,
+          "updated": "<redacted-phone>",
+          "updatedById": 371
+        },
+        {
+          "allDay": false,
+          "created": "<redacted-phone>",
+          "createdById": 32,
+          "description": "Real time tour with Paige Davis<br/>ShowingTime status: Confirmed<br/><br/>To change or cancel this appointment: <a href='https://showingti.me/account/route?l=deep:appt-details:Zillow8VH0oxXdctHi2oa:47F5D84719EE49EFAD3C946C7FFA199F:1776273622:49BE4BC4A7E02EEC9BBF7FF3B5A6B9B56CB7DBBBF4BFC363DB847FBEE44FFA24'>Manage in ShowingTime</a><br/><br/><a href='https://www.zillow.com/homedetails/500-N-St-UNIT-1607-Sacramento-CA-95814/448742497_zpid/'>View this property on Zillow</a>",
+          "detailsVisible": true,
+          "end": "<redacted-phone>",
+          "id": 296986,
+          "invitees": [
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": null,
+              "relationshipId": null,
+              "userId": 32
+            },
+            {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>",
+              "personId": 138341,
+              "relationshipId": null,
+              "userId": null
+            }
+          ],
+          "isDeletable": true,
+          "isEditable": true,
+          "location": "500 N St Unit 1607, Sacramento CA 95814",
+          "originFub": true,
+          "outcome": null,
+          "outcomeId": null,
+          "start": "<redacted-phone>",
+          "timezone": null,
+          "title": "[Confirmed] Tour with Paige Davis",
+          "type": null,
+          "typeId": null,
+          "updated": "<redacted-phone>",
+          "updatedById": 1
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "appointments"
+      ],
+      "total_reported": 15771
+    },
+    "calls": {
+      "collection_key": "calls",
+      "fields": {
+        "conferenceCallId": "null",
+        "created": "string",
+        "createdById": "integer",
+        "duration": "integer",
+        "firstName": "string",
+        "forwardNumber": "null",
+        "fromNumber": "string",
+        "id": "integer",
+        "isIncoming": "boolean",
+        "lastName": "string",
+        "name": "string",
+        "note": "null",
+        "outcome": "string",
+        "personId": "integer",
+        "phone": "string",
+        "recordingUrl": "string",
+        "relationshipId": "integer",
+        "ringDuration": "null",
+        "sharedInboxId": "integer",
+        "startedAt": "null",
+        "systemId": "null",
+        "toNumber": "string",
+        "updated": "string",
+        "updatedById": "integer",
+        "userId": "integer",
+        "userName": "string"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "calls",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjozNTY3MDB9",
+        "nextLink": "https://api.followupboss.com/v1/calls?limit=25&sort=-created&next=eyJzaW5jZUlkIjozNTY3MDB9",
+        "offset": 0,
+        "total": 352073
+      },
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/calls",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "conferenceCallId": null,
+          "created": "<redacted-phone>",
+          "createdById": -1,
+          "duration": 0,
+          "firstName": "<redacted-first>",
+          "forwardNumber": null,
+          "fromNumber": "6505098996",
+          "id": 356724,
+          "isIncoming": true,
+          "lastName": "<redacted-last>",
+          "name": "<redacted-name>",
+          "note": null,
+          "outcome": "No Answer",
+          "personId": 138325,
+          "phone": "<redacted-phone>",
+          "recordingUrl": "* Recording URL is hidden for privacy reasons *",
+          "relationshipId": 0,
+          "ringDuration": null,
+          "sharedInboxId": 0,
+          "startedAt": null,
+          "systemId": null,
+          "toNumber": "9168902121",
+          "updated": "<redacted-phone>",
+          "updatedById": -1,
+          "userId": 213,
+          "userName": "Jasmine Sunkara"
+        },
+        {
+          "conferenceCallId": null,
+          "created": "<redacted-phone>",
+          "createdById": -1,
+          "duration": 152,
+          "firstName": "<redacted-first>",
+          "forwardNumber": null,
+          "fromNumber": "9168902121",
+          "id": 356723,
+          "isIncoming": false,
+          "lastName": "<redacted-last>",
+          "name": "<redacted-name>",
+          "note": null,
+          "outcome": null,
+          "personId": 109693,
+          "phone": "<redacted-phone>",
+          "recordingUrl": "* Recording URL is hidden for privacy reasons *",
+          "relationshipId": 0,
+          "ringDuration": null,
+          "sharedInboxId": 0,
+          "startedAt": "<redacted-phone>",
+          "systemId": 6,
+          "systemName": "Follow Up Boss",
+          "toNumber": "4088132715",
+          "updated": "<redacted-phone>",
+          "updatedById": -1,
+          "userId": 213,
+          "userName": "Jasmine Sunkara"
+        },
+        {
+          "conferenceCallId": null,
+          "created": "<redacted-phone>",
+          "createdById": -1,
+          "duration": 0,
+          "firstName": "<redacted-first>",
+          "forwardNumber": null,
+          "fromNumber": "9168902121",
+          "id": 356722,
+          "isIncoming": false,
+          "lastName": "<redacted-last>",
+          "name": "<redacted-name>",
+          "note": null,
+          "outcome": "No Answer",
+          "personId": 138325,
+          "phone": "<redacted-phone>",
+          "recordingUrl": "* Recording URL is hidden for privacy reasons *",
+          "relationshipId": 0,
+          "ringDuration": null,
+          "sharedInboxId": 0,
+          "startedAt": "<redacted-phone>",
+          "systemId": 6,
+          "systemName": "Follow Up Boss",
+          "toNumber": "6505098996",
+          "updated": "<redacted-phone>",
+          "updatedById": -1,
+          "userId": 213,
+          "userName": "Jasmine Sunkara"
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "calls"
+      ],
+      "total_reported": 352073
+    },
+    "customFields": {
+      "collection_key": "customfields",
+      "fields": {
+        "hideIfEmpty": "boolean",
+        "id": "integer",
+        "label": "string",
+        "name": "string",
+        "orderWeight": "integer",
+        "readOnly": "boolean",
+        "type": "string"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "customfields",
+        "limit": 10,
+        "next": "eyJzaW5jZUlkIjoyNDJ9",
+        "nextLink": "https://api.followupboss.com/v1/customFields?next=eyJzaW5jZUlkIjoyNDJ9",
+        "offset": 0,
+        "total": 94
+      },
+      "params": {},
+      "path": "/customFields",
+      "records_in_sample": 10,
+      "sample_records": [
+        {
+          "hideIfEmpty": false,
+          "id": 251,
+          "label": "RealScout Contact State",
+          "name": "<redacted-name>",
+          "orderWeight": 1000,
+          "readOnly": false,
+          "type": "text"
+        },
+        {
+          "hideIfEmpty": false,
+          "id": 250,
+          "label": "RealScout Scout Score",
+          "name": "<redacted-name>",
+          "orderWeight": 2000,
+          "readOnly": false,
+          "type": "number"
+        },
+        {
+          "hideIfEmpty": false,
+          "id": 249,
+          "label": "Apt. Suite #",
+          "name": "<redacted-name>",
+          "orderWeight": 3000,
+          "readOnly": false,
+          "type": "number"
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "customfields"
+      ],
+      "total_reported": 94
+    },
+    "deals": {
+      "collection_key": "deals",
+      "fields": {
+        "agentCommission": "integer",
+        "commissionValue": "integer",
+        "createdAt": "string",
+        "customAcceptanceDateMaverick": "string",
+        "customAddress": "null",
+        "customAddressMaverick": "string",
+        "customAppointmentMetDate": "null",
+        "customAppointmentSetDate": "null",
+        "customCity": "null",
+        "customCurrentBrokerage": "null",
+        "customDealTypeMaverick": "string",
+        "customFUBLeadIdMaverick": "string",
+        "customFirstOfferDate": "null",
+        "customFirstShowingDate": "null",
+        "customForecastedClosedDate": "null",
+        "customISANameMaverick": "null",
+        "customJoiningAsIndependentOrTeamAgent": "null",
+        "customLOAppraisalStatus": "null",
+        "customLOClosedFundedDate": "null",
+        "customLOContractExecutedDate": "null",
+        "customLOContractLink": "null",
+        "customLOCounty": "null",
+        "customLOCreditPulledDate": "null",
+        "customLODisclosuresStatus": "null",
+        "customLODownPaymentEstimate": "null",
+        "customLOLoanTypeProgram": "null",
+        "customLOProcessorEmail": "null",
+        "customLOPropertyApprovalLetterPOF": "null",
+        "customLOVerifiedIncome": "null",
+        "customLeadSourceMaverick": "string",
+        "customLostDate": "null",
+        "customMLSPropertyLink": "null",
+        "customMlsLiveDate": "null",
+        "customPostalCode": "null",
+        "customReferralCommissionMaverick": "string",
+        "customSignedDate": "null",
+        "customSisuTransactionId": "null",
+        "customState": "null",
+        "customTitleEscrowCompany": "null",
+        "customTitleEscrowEmail": "null",
+        "customUnderContractDate": "null",
+        "customWhoSTheirSponsor": "null",
+        "description": "string",
+        "dueDiligenceDate": "null",
+        "earnestMoneyDueDate": "null",
+        "enteredStageAt": "string",
+        "finalWalkThroughDate": "null",
+        "id": "integer",
+        "mutualAcceptanceDate": "null",
+        "name": "string",
+        "orderWeight": "integer",
+        "people": "array",
+        "pipelineId": "integer",
+        "pipelineName": "string",
+        "possessionDate": "null",
+        "price": "integer",
+        "projectedCloseDate": "string",
+        "stageId": "integer",
+        "stageName": "string",
+        "status": "string",
+        "teamCommission": "integer",
+        "timeToClose": "integer",
+        "type": "integer",
+        "users": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "deals",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjo1ODk1fQ",
+        "nextLink": "https://api.followupboss.com/v1/deals?limit=25&next=eyJzaW5jZUlkIjo1ODk1fQ",
+        "offset": 0,
+        "total": 5130
+      },
+      "params": {
+        "limit": 25
+      },
+      "path": "/deals",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "agentCommission": 4085,
+          "commissionValue": 15750,
+          "createdAt": "<redacted-phone>",
+          "customAcceptanceDateMaverick": "<redacted-phone>",
+          "customAddress": null,
+          "customAddressMaverick": "5316 Heritage Ct., Rocklin CA 95765",
+          "customAppointmentMetDate": null,
+          "customAppointmentSetDate": null,
+          "customCity": null,
+          "customCurrentBrokerage": null,
+          "customDealTypeMaverick": "Seller",
+          "customFUBLeadIdMaverick": "135853",
+          "customFirstOfferDate": null,
+          "customFirstShowingDate": null,
+          "customForecastedClosedDate": null,
+          "customISANameMaverick": null,
+          "customJoiningAsIndependentOrTeamAgent": null,
+          "customLOAppraisalStatus": null,
+          "customLOClosedFundedDate": null,
+          "customLOContractExecutedDate": null,
+          "customLOContractLink": null,
+          "customLOCounty": null,
+          "customLOCreditPulledDate": null,
+          "customLODisclosuresStatus": null,
+          "customLODownPaymentEstimate": null,
+          "customLOLoanTypeProgram": null,
+          "customLOProcessorEmail": null,
+          "customLOPropertyApprovalLetterPOF": null,
+          "customLOVerifiedIncome": null,
+          "customLeadSourceMaverick": "Zillow Flex",
+          "customLostDate": null,
+          "customMLSPropertyLink": null,
+          "customMlsLiveDate": null,
+          "customPostalCode": null,
+          "customReferralCommissionMaverick": "6300",
+          "customSignedDate": null,
+          "customSisuTransactionId": null,
+          "customState": null,
+          "customTitleEscrowCompany": null,
+          "customTitleEscrowEmail": null,
+          "customUnderContractDate": null,
+          "customWhoSTheirSponsor": null,
+          "description": "",
+          "dueDiligenceDate": null,
+          "earnestMoneyDueDate": null,
+          "enteredStageAt": "<redacted-phone>",
+          "finalWalkThroughDate": null,
+          "id": 5920,
+          "mutualAcceptanceDate": null,
+          "name": "<redacted-name>",
+          "orderWeight": 1000,
+          "people": [
+            {
+              "avatar": "",
+              "id": 135853,
+              "name": "<redacted-name>"
+            }
+          ],
+          "pipelineId": 2,
+          "pipelineName": "Sellers",
+          "possessionDate": null,
+          "price": 630000,
+          "projectedCloseDate": "<redacted-phone>",
+          "stageId": 21,
+          "stageName": "Closed",
+          "status": "Active",
+          "teamCommission": 3553,
+          "timeToClose": 48,
+          "type": 0,
+          "users": [
+            {
+              "id": 346,
+              "name": "<redacted-name>",
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/7ca2b054-5194-4952-b005-334b80e208be.jpeg",
+                "26x26": "https://s.followupboss.com/pictures/7333dd7f-a8b3-475e-8921-b3978539ee80.jpeg",
+                "30x30": "https://s.followupboss.com/pictures/59946228-26cd-4251-a2e8-5bf43a98131c.jpeg",
+                "40x40": "https://s.followupboss.com/pictures/a377ab36-78e3-4ce8-ba5c-ae91f4feda18.jpeg",
+                "60x60": "https://s.followupboss.com/pictures/2015cbd4-db34-4dca-a7c6-616f744802ee.jpeg",
+                "original": "https://s.followupboss.com/public_attachments/36ab94c5-92fc-4925-be4f-dac172085136.jpeg"
+              }
+            }
+          ]
+        },
+        {
+          "agentCommission": 0,
+          "commissionValue": 0,
+          "createdAt": "<redacted-phone>",
+          "customAcceptanceDateMaverick": "<redacted-phone>",
+          "customAddress": null,
+          "customAddressMaverick": "1672 Plateau Cir, South Lake Tahoe, CA 96150",
+          "customAppointmentMetDate": null,
+          "customAppointmentSetDate": null,
+          "customCity": null,
+          "customCurrentBrokerage": null,
+          "customDealTypeMaverick": "Buyer",
+          "customFUBLeadIdMaverick": "138185",
+          "customFirstOfferDate": null,
+          "customFirstShowingDate": null,
+          "customForecastedClosedDate": null,
+          "customISANameMaverick": null,
+          "customJoiningAsIndependentOrTeamAgent": null,
+          "customLOAppraisalStatus": null,
+          "customLOClosedFundedDate": null,
+          "customLOContractExecutedDate": null,
+          "customLOContractLink": null,
+          "customLOCounty": null,
+          "customLOCreditPulledDate": null,
+          "customLODisclosuresStatus": null,
+          "customLODownPaymentEstimate": null,
+          "customLOLoanTypeProgram": null,
+          "customLOProcessorEmail": null,
+          "customLOPropertyApprovalLetterPOF": null,
+          "customLOVerifiedIncome": null,
+          "customLeadSourceMaverick": "Zillow Flex",
+          "customLostDate": null,
+          "customMLSPropertyLink": null,
+          "customMlsLiveDate": null,
+          "customPostalCode": null,
+          "customReferralCommissionMaverick": null,
+          "customSignedDate": null,
+          "customSisuTransactionId": null,
+          "customState": null,
+          "customTitleEscrowCompany": null,
+          "customTitleEscrowEmail": null,
+          "customUnderContractDate": null,
+          "customWhoSTheirSponsor": null,
+          "description": "",
+          "dueDiligenceDate": null,
+          "earnestMoneyDueDate": null,
+          "enteredStageAt": "<redacted-phone>",
+          "finalWalkThroughDate": null,
+          "id": 5919,
+          "mutualAcceptanceDate": null,
+          "name": "<redacted-name>",
+          "orderWeight": 1000,
+          "people": [
+            {
+              "avatar": "https://s.followupboss.com/pictures/f31703a0f4f6ca2b35b12efab7a07967.jpg",
+              "id": 138185,
+              "name": "<redacted-name>"
+            }
+          ],
+          "pipelineId": 1,
+          "pipelineName": "Buyers",
+          "possessionDate": null,
+          "price": 825000,
+          "projectedCloseDate": "<redacted-phone>",
+          "stageId": 18,
+          "stageName": "Pending",
+          "status": "Active",
+          "teamCommission": 0,
+          "timeToClose": 33,
+          "type": 0,
+          "users": [
+            {
+              "id": 104,
+              "name": "<redacted-name>",
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/8f36fbec-4cd3-4e43-a04f-6508edced5e0.jpeg",
+                "26x26": "https://s.followupboss.com/pictures/e3cad6f2-202c-4ae9-ad8b-cce2dd8e4d5a.jpeg",
+                "30x30": "https://s.followupboss.com/pictures/757e95c2-8b14-4b7a-80b4-ba0b2f4f0911.jpeg",
+                "40x40": "https://s.followupboss.com/pictures/33000aae-363d-4556-8616-22d051d016f1.jpeg",
+                "60x60": "https://s.followupboss.com/pictures/14d9e98b-a9eb-4c3d-992c-935a223a083a.jpeg",
+                "original": "https://s.followupboss.com/public_attachments/fde0279a-e8a9-4437-ad03-14c200b82134.jpeg"
+              }
+            }
+          ]
+        },
+        {
+          "agentCommission": 0,
+          "commissionValue": 0,
+          "createdAt": "<redacted-phone>",
+          "customAcceptanceDateMaverick": "<redacted-phone>",
+          "customAddress": null,
+          "customAddressMaverick": "5101 North Lake Boulevard #60, Carnelian Bay, CA 96140",
+          "customAppointmentMetDate": null,
+          "customAppointmentSetDate": null,
+          "customCity": null,
+          "customCurrentBrokerage": null,
+          "customDealTypeMaverick": "Buyer",
+          "customFUBLeadIdMaverick": "137755",
+          "customFirstOfferDate": null,
+          "customFirstShowingDate": null,
+          "customForecastedClosedDate": null,
+          "customISANameMaverick": null,
+          "customJoiningAsIndependentOrTeamAgent": null,
+          "customLOAppraisalStatus": null,
+          "customLOClosedFundedDate": null,
+          "customLOContractExecutedDate": null,
+          "customLOContractLink": null,
+          "customLOCounty": null,
+          "customLOCreditPulledDate": null,
+          "customLODisclosuresStatus": null,
+          "customLODownPaymentEstimate": null,
+          "customLOLoanTypeProgram": null,
+          "customLOProcessorEmail": null,
+          "customLOPropertyApprovalLetterPOF": null,
+          "customLOVerifiedIncome": null,
+          "customLeadSourceMaverick": "Zillow Flex",
+          "customLostDate": null,
+          "customMLSPropertyLink": null,
+          "customMlsLiveDate": null,
+          "customPostalCode": null,
+          "customReferralCommissionMaverick": null,
+          "customSignedDate": null,
+          "customSisuTransactionId": null,
+          "customState": null,
+          "customTitleEscrowCompany": null,
+          "customTitleEscrowEmail": null,
+          "customUnderContractDate": null,
+          "customWhoSTheirSponsor": null,
+          "description": "",
+          "dueDiligenceDate": null,
+          "earnestMoneyDueDate": null,
+          "enteredStageAt": "<redacted-phone>",
+          "finalWalkThroughDate": null,
+          "id": 5918,
+          "mutualAcceptanceDate": null,
+          "name": "<redacted-name>",
+          "orderWeight": 2000,
+          "people": [
+            {
+              "avatar": "",
+              "id": 137755,
+              "name": "<redacted-name>"
+            }
+          ],
+          "pipelineId": 1,
+          "pipelineName": "Buyers",
+          "possessionDate": null,
+          "price": 555000,
+          "projectedCloseDate": "<redacted-phone>",
+          "stageId": 18,
+          "stageName": "Pending",
+          "status": "Active",
+          "teamCommission": 0,
+          "timeToClose": 25,
+          "type": 0,
+          "users": [
+            {
+              "id": 345,
+              "name": "<redacted-name>",
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/e3bfb851-3985-403d-bce7-504f3f4c4085.png",
+                "26x26": "https://s.followupboss.com/pictures/9870c4b3-5c1a-4ff3-8afb-b1a0903444e5.png",
+                "30x30": "https://s.followupboss.com/pictures/a824aa19-b0ba-4cc9-9460-c673cdaad95c.png",
+                "40x40": "https://s.followupboss.com/pictures/0c68f197-dfd3-407c-9a12-6e5d5c7993c8.png",
+                "60x60": "https://s.followupboss.com/pictures/d05670cf-618f-498c-a55c-ee7b1c9b6ae3.png",
+                "original": "https://s.followupboss.com/public_attachments/bdbddeec-44dc-4a27-ab16-e7acea00e72b.png"
+              }
+            }
+          ]
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "deals"
+      ],
+      "total_reported": 5130
+    },
+    "emails": {
+      "error": {
+        "errorMessage": "Collection name 'Em' in the URL is not valid. Please use a correct collection name, for example 'people'."
+      },
+      "http_status": 404,
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/em"
+    },
+    "emails_real": {
+      "error": {
+        "errorMessage": "id list, inboxThreadId, personId or personId and threadId arguments must be specified for GET /v1/emails."
+      },
+      "http_status": 400,
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/emails"
+    },
+    "events": {
+      "collection_key": "events",
+      "fields": {
+        "additional": "array",
+        "created": "string",
+        "description": "string",
+        "id": "integer",
+        "message": "string",
+        "noteId": "null",
+        "occurred": "string",
+        "pageDuration": "integer",
+        "pageTitle": "null",
+        "pageUrl": "string",
+        "personId": "integer",
+        "property": "object",
+        "propertySearch": "null",
+        "source": "string",
+        "type": "string",
+        "updated": "string"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "events",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjo0Nzc2MDM4fQ",
+        "nextLink": "https://api.followupboss.com/v1/events?limit=25&sort=-created&next=eyJzaW5jZUlkIjo0Nzc2MDM4fQ",
+        "offset": 0,
+        "total": 1135314
+      },
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/events",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "additional": [],
+          "created": "<redacted-phone>",
+          "description": "",
+          "id": 4776192,
+          "message": "",
+          "noteId": null,
+          "occurred": "<redacted-phone>",
+          "pageDuration": 0,
+          "pageTitle": null,
+          "pageUrl": "https://www.zillow.com/homedetails/500-N-St-Unit-1607-Sacramento-CA-95814/448742497_zpid",
+          "personId": 138341,
+          "property": {
+            "area": null,
+            "bathrooms": "2.0",
+            "bedrooms": "2",
+            "city": "Sacramento",
+            "code": "95814",
+            "forRent": 0,
+            "id": 602004,
+            "lat": 38.57711,
+            "lng": -121.501045,
+            "lot": null,
+            "mlsNumber": "225154228",
+            "price": "499950",
+            "state": "CA",
+            "street": "<redacted-street>",
+            "type": "",
+            "url": "https://www.zillow.com/homedetails/448742497_zpid/"
+          },
+          "propertySearch": null,
+          "source": "Zillow",
+          "type": "Virtually Toured Property",
+          "updated": "<redacted-phone>"
+        },
+        {
+          "additional": [],
+          "created": "<redacted-phone>",
+          "description": "",
+          "id": 4776187,
+          "message": "",
+          "noteId": null,
+          "occurred": "<redacted-phone>",
+          "pageDuration": 0,
+          "pageTitle": null,
+          "pageUrl": "https://kyliefindrick.realscout.com/homesearch/listings/p-grass-valley-95949-metrolisttoni-476-e6fed134-bfbc-4363-8a5f-8ae13d701d39?manage_user=VXNlci0zODg4NzQyMg%3D%3D",
+          "personId": 135823,
+          "property": {
+            "area": null,
+            "bathrooms": "2.0",
+            "bedrooms": "3",
+            "city": "Grass Valley",
+            "code": "95949",
+            "forRent": 0,
+            "id": 468223,
+            "lat": 39.10638,
+            "lng": -121.096718,
+            "lot": null,
+            "mlsNumber": "225109213",
+            "price": "330000",
+            "state": "CA",
+            "street": "<redacted-street>",
+            "type": "",
+            "url": "https://kyliefindrick.realscout.com/homesearch/listings/p-grass-valley-95949-metrolisttoni-476-e6fed134-bfbc-4363-8a5f-8ae13d701d39?manage_user=VXNlci0zODg4NzQyMg%3D%3D"
+          },
+          "propertySearch": null,
+          "source": "RealScout",
+          "type": "Viewed Property",
+          "updated": "<redacted-phone>"
+        },
+        {
+          "additional": [],
+          "created": "<redacted-phone>",
+          "description": "",
+          "id": 4776179,
+          "message": "",
+          "noteId": null,
+          "occurred": "<redacted-phone>",
+          "pageDuration": 0,
+          "pageTitle": null,
+          "pageUrl": "https://kyliefindrick.realscout.com/homesearch/listings/p-2-eden-forest-drive-colfax-95713-metrolisttoni-359?manage_user=VXNlci0zODg4NzQyMg%3D%3D",
+          "personId": 135823,
+          "property": {
+            "area": null,
+            "bathrooms": "0.0",
+            "bedrooms": "0",
+            "city": "Colfax",
+            "code": "95713",
+            "forRent": 0,
+            "id": 28976,
+            "lat": 39.060501,
+            "lng": -120.990204,
+            "lot": null,
+            "mlsNumber": "222054562",
+            "price": "205000",
+            "state": "CA",
+            "street": "<redacted-street>",
+            "type": "",
+            "url": "https://kyliefindrick.realscout.com/homesearch/listings/p-2-eden-forest-drive-colfax-95713-metrolisttoni-359?manage_user=VXNlci0zODg4NzQyMg%3D%3D"
+          },
+          "propertySearch": null,
+          "source": "RealScout",
+          "type": "Viewed Property",
+          "updated": "<redacted-phone>"
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "events"
+      ],
+      "total_reported": 1135314
+    },
+    "groups": {
+      "collection_key": "groups",
+      "fields": {
+        "claimWindow": "integer",
+        "defaultGroupId": "null",
+        "defaultPondId": "null",
+        "defaultUserId": "integer",
+        "distribution": "string",
+        "hideName": "integer",
+        "hideSource": "integer",
+        "id": "integer",
+        "isPrimary": "boolean",
+        "name": "string",
+        "nextRoundRobinUser": "null",
+        "type": "string",
+        "users": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "groups",
+        "limit": 10,
+        "next": "eyJzaW5jZUlkIjoyOX0",
+        "nextLink": "https://api.followupboss.com/v1/groups?next=eyJzaW5jZUlkIjoyOX0",
+        "offset": 0,
+        "total": 25
+      },
+      "params": {},
+      "path": "/groups",
+      "records_in_sample": 10,
+      "sample_records": [
+        {
+          "claimWindow": 300,
+          "defaultGroupId": null,
+          "defaultPondId": null,
+          "defaultUserId": 3,
+          "distribution": "round-robin",
+          "hideName": 0,
+          "hideSource": 0,
+          "id": 40,
+          "isPrimary": false,
+          "name": "<redacted-name>",
+          "nextRoundRobinUser": null,
+          "type": "Agent",
+          "users": [
+            {
+              "firstName": "<redacted-first>",
+              "id": 71,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/de56e569-c039-415b-b2d6-f33560ff1fff.JPG",
+                "26x26": "https://s.followupboss.com/pictures/3ae8da18-47bc-4f73-9999-78190c924594.JPG",
+                "30x30": "https://s.followupboss.com/pictures/60bc3c2f-a2dc-4b50-bd41-7edfa6e1a312.JPG",
+                "40x40": "https://s.followupboss.com/pictures/ca1c5e22-87a9-4b43-ba80-76d2f5f1b093.JPG",
+                "60x60": "https://s.followupboss.com/pictures/0a02e39f-d60a-48c4-b57e-23f8c7eaaf08.JPG",
+                "original": "https://s.followupboss.com/public_attachments/06fd6ac8-a122-433f-a6de-5106b505c5ce.JPG"
+              },
+              "role": "Broker"
+            },
+            {
+              "firstName": "<redacted-first>",
+              "id": 81,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/cada6b6d-925e-4515-8734-82b4ca1ad407.png",
+                "26x26": "https://s.followupboss.com/pictures/134a37cd-2269-41cd-a8f6-4d1be1eb86f7.png",
+                "30x30": "https://s.followupboss.com/pictures/cf33a88a-bf90-4c02-a178-011d21142dc5.png",
+                "40x40": "https://s.followupboss.com/pictures/5819c6ab-583a-4087-80e6-c52dc164df0e.png",
+                "60x60": "https://s.followupboss.com/pictures/6ea6d94b-8fb9-4ba6-a1bb-1e9dd96a040a.png",
+                "original": "https://s.followupboss.com/public_attachments/df155385-f2a8-4a8e-bf35-e2ae91a881cd.png"
+              },
+              "role": "Agent"
+            },
+            {
+              "firstName": "<redacted-first>",
+              "id": 83,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/815d4882-554a-4e76-bd3c-7ea05a3ead3f.jpg",
+                "26x26": "https://s.followupboss.com/pictures/a0d00d1e-ebb3-4253-bdd1-b5e8699e6257.jpg",
+                "30x30": "https://s.followupboss.com/pictures/5ace1eff-2172-44f9-8cca-4ed21c55d825.jpg",
+                "40x40": "https://s.followupboss.com/pictures/fe0de13f-5867-4e1c-bf58-dbfcce0a2eac.jpg",
+                "60x60": "https://s.followupboss.com/pictures/b5ae8772-9b6f-4d8a-8ab1-e881b8427177.jpg",
+                "original": "https://s.followupboss.com/public_attachments/b4eeebc0-3a2a-48e3-8ee0-1f1784cf9ad7.jpg"
+              },
+              "role": "Agent"
+            }
+          ]
+        },
+        {
+          "claimWindow": 900,
+          "defaultGroupId": null,
+          "defaultPondId": null,
+          "defaultUserId": null,
+          "distribution": "round-robin",
+          "hideName": 0,
+          "hideSource": 0,
+          "id": 39,
+          "isPrimary": false,
+          "name": "<redacted-name>",
+          "nextRoundRobinUser": null,
+          "type": "Agent",
+          "users": [
+            {
+              "firstName": "<redacted-first>",
+              "id": 8,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/b4adca17-6ae6-44bc-b8c3-3fbc4948cede.jpg",
+                "26x26": "https://s.followupboss.com/pictures/f3c5af27-44fe-41c6-bd9b-3c2865075c6e.jpg",
+                "30x30": "https://s.followupboss.com/pictures/cf81958e-7677-441d-ba26-56ff83ab19e7.jpg",
+                "40x40": "https://s.followupboss.com/pictures/ce64ca7d-fd39-422a-83db-1b518a860b81.jpg",
+                "60x60": "https://s.followupboss.com/pictures/0fae9cf7-5172-4723-a988-72f699ea8672.jpg",
+                "original": "https://s.followupboss.com/public_attachments/8898270c-be2b-4f39-b208-32a5b8c5e1c3.jpg"
+              },
+              "role": "Agent"
+            },
+            {
+              "firstName": "<redacted-first>",
+              "id": 9,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/98bd8fae-305d-4881-a37f-79e32c8ea0ca.jpg",
+                "26x26": "https://s.followupboss.com/pictures/50970ece-31fe-4b7f-bb3b-e1fadf8c359c.jpg",
+                "30x30": "https://s.followupboss.com/pictures/a73b9cbd-6b1e-4fb1-a959-2df68f84eb88.jpg",
+                "40x40": "https://s.followupboss.com/pictures/4d7ac74e-1eb0-4201-9945-0697905432bc.jpg",
+                "60x60": "https://s.followupboss.com/pictures/b4fcd046-64e3-4b20-8127-e75604e37c2c.jpg",
+                "original": "https://s.followupboss.com/public_attachments/5ac819bb-8ec4-42a9-99fb-7f8ab59c79aa.jpg"
+              },
+              "role": "Agent"
+            },
+            {
+              "firstName": "<redacted-first>",
+              "id": 11,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/a8f14c95-7e7c-4b99-8c0b-eaee78bfbf72.JPG",
+                "26x26": "https://s.followupboss.com/pictures/e827e7b0-b0a9-4013-91e9-1432ff64c96e.JPG",
+                "30x30": "https://s.followupboss.com/pictures/6abd8d53-48f6-4649-9d35-0fb040a3f720.JPG",
+                "40x40": "https://s.followupboss.com/pictures/a2aed608-7bf1-47c7-9cbe-33007d480e44.JPG",
+                "60x60": "https://s.followupboss.com/pictures/b954bd41-d8af-48f3-9a31-79a8d42f3053.JPG",
+                "original": "https://s.followupboss.com/public_attachments/59f99527-24f2-478b-abb0-572c5ab66f24.JPG"
+              },
+              "role": "Agent"
+            }
+          ]
+        },
+        {
+          "claimWindow": 1800,
+          "defaultGroupId": null,
+          "defaultPondId": null,
+          "defaultUserId": 89,
+          "distribution": "first-to-claim",
+          "hideName": 0,
+          "hideSource": 0,
+          "id": 37,
+          "isPrimary": false,
+          "name": "<redacted-name>",
+          "nextRoundRobinUser": null,
+          "type": "Agent",
+          "users": [
+            {
+              "firstName": "<redacted-first>",
+              "id": 89,
+              "lastName": "<redacted-last>",
+              "name": "<redacted-name>",
+              "pauseLeadDistribution": false,
+              "picture": {
+                "162x162": "https://s.followupboss.com/pictures/43e8ab3e-1719-4392-a86e-ace1d980974e.jpeg",
+                "26x26": "https://s.followupboss.com/pictures/225fafaf-2028-4944-a574-a76b6a7dda00.jpeg",
+                "30x30": "https://s.followupboss.com/pictures/1ea08978-f001-4b8f-bdae-d1504f94053c.jpeg",
+                "40x40": "https://s.followupboss.com/pictures/e552f95c-49c9-4e25-9b57-da59eb4171ee.jpeg",
+                "60x60": "https://s.followupboss.com/pictures/29591f57-cf3f-4751-b445-6b9a838b30dd.jpeg",
+                "original": "https://s.followupboss.com/public_attachments/ea964c79-ea03-4957-8cde-3dfd28869e1d.jpeg"
+              },
+              "role": "Agent"
+            }
+          ]
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "groups"
+      ],
+      "total_reported": 25
+    },
+    "identity": {
+      "fields": {
+        "account": "object",
+        "user": "object"
+      },
+      "http_status": 200,
+      "params": {},
+      "path": "/identity",
+      "sample_records": [
+        {
+          "account": {
+            "domain": "culbertsonandgray",
+            "id": 1644863160,
+            "name": "<redacted-name>",
+            "owner": {
+              "email": "<redacted-email>",
+              "name": "<redacted-name>"
+            }
+          },
+          "user": {
+            "email": "<redacted-email>",
+            "fuid": "fau_Fjj2R0KABME",
+            "id": 1,
+            "isAdmin": true,
+            "isLender": false,
+            "isOwner": true,
+            "name": "<redacted-name>",
+            "role": "Broker"
+          }
+        }
+      ],
+      "top_level_keys": [
+        "account",
+        "user"
+      ],
+      "total_reported": null
+    },
+    "notes": {
+      "collection_key": "notes",
+      "fields": {
+        "actionPlanId": "null",
+        "automationId": "null",
+        "body": "string",
+        "created": "string",
+        "createdBy": "string",
+        "createdById": "integer",
+        "id": "integer",
+        "isExternal": "boolean",
+        "isHtml": "boolean",
+        "personId": "integer",
+        "showContent": "boolean",
+        "subject": "string",
+        "systemId": "integer",
+        "systemName": "string",
+        "type": "string",
+        "updated": "string",
+        "updatedBy": "string",
+        "updatedById": "integer"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "notes",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjoxNDgzMjY4fQ",
+        "nextLink": "https://api.followupboss.com/v1/notes?limit=25&sort=-created&next=eyJzaW5jZUlkIjoxNDgzMjY4fQ",
+        "offset": 0,
+        "total": 1139625
+      },
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/notes",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "actionPlanId": null,
+          "automationId": null,
+          "body": "The lead expressed that while property values typically rise in the summer, their property's value is still lower than last year and not sufficient to cover their financial needs.\nThe lead mentioned having capital gains taxes that would significantly impact their sale, estimating they would owe over $80,000 to the government.\nThe lead indicated that selling would only be beneficial to pay off existing debt, but currently, it is not advantageous for them.",
+          "created": "<redacted-phone>",
+          "createdBy": "Jasmine Sunkara",
+          "createdById": 213,
+          "id": 1483292,
+          "isExternal": false,
+          "isHtml": false,
+          "personId": 109693,
+          "showContent": true,
+          "subject": "",
+          "systemId": 6,
+          "systemName": "Follow Up Boss",
+          "type": "",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Jasmine Sunkara",
+          "updatedById": 213
+        },
+        {
+          "actionPlanId": null,
+          "automationId": null,
+          "body": "**Estella** is now looking in CA 95662.\n- By Zillow Insights",
+          "created": "<redacted-phone>",
+          "createdBy": "Colby Culbertson",
+          "createdById": 1,
+          "id": 1483291,
+          "isExternal": true,
+          "isHtml": false,
+          "personId": 136557,
+          "showContent": true,
+          "subject": "Colby Culbertson",
+          "systemId": 4,
+          "systemName": "Zillow Sync",
+          "type": "",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Colby Culbertson",
+          "updatedById": 1
+        },
+        {
+          "actionPlanId": null,
+          "automationId": 110,
+          "body": "This buyer has started searching again after 14+ days of inactivity. View the Zillow Embedded app to view their buyer activity and recommended homes before reaching out.",
+          "created": "<redacted-phone>",
+          "createdBy": "Follow Up Boss",
+          "createdById": -1,
+          "id": 1483290,
+          "isExternal": false,
+          "isHtml": false,
+          "personId": 114455,
+          "showContent": true,
+          "subject": "",
+          "systemId": null,
+          "type": "",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Follow Up Boss",
+          "updatedById": -1
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "notes"
+      ],
+      "total_reported": 1139625
+    },
+    "people": {
+      "collection_key": "people",
+      "fields": {
+        "addresses": "array",
+        "assignedLenderId": "null",
+        "assignedLenderName": "null",
+        "assignedPondId": "null",
+        "assignedTo": "string",
+        "assignedUserId": "integer",
+        "claimed": "boolean",
+        "collaborators": "array",
+        "contacted": "integer",
+        "created": "string",
+        "createdVia": "string",
+        "dealCloseDate": "null",
+        "dealName": "null",
+        "dealPrice": "null",
+        "dealStage": "null",
+        "dealStatus": "null",
+        "delayed": "boolean",
+        "emails": "array",
+        "firstName": "string",
+        "firstToClaimOffer": "boolean",
+        "id": "integer",
+        "lastActivity": "string",
+        "lastName": "string",
+        "leadFlowId": "integer",
+        "name": "string",
+        "phones": "array",
+        "picture": "null",
+        "pondMembers": "array",
+        "price": "integer",
+        "socialData": "object",
+        "source": "string",
+        "sourceId": "integer",
+        "sourceUrl": "string",
+        "stage": "string",
+        "stageId": "integer",
+        "tags": "array",
+        "teamLeaders": "array",
+        "timeframeDateRange": "null",
+        "timeframeId": "null",
+        "timeframeStatus": "null",
+        "timeframeUpdated": "null",
+        "type": "string",
+        "updated": "string",
+        "websiteVisits": "integer"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "people",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjoxMzgzMjB9",
+        "nextLink": "https://api.followupboss.com/v1/people?limit=25&next=eyJzaW5jZUlkIjoxMzgzMjB9",
+        "offset": 0,
+        "total": 85266
+      },
+      "params": {
+        "limit": 25
+      },
+      "path": "/people",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "addresses": "<redacted-addresses>",
+          "assignedLenderId": null,
+          "assignedLenderName": null,
+          "assignedPondId": null,
+          "assignedTo": "Ethan Pontz",
+          "assignedUserId": 340,
+          "claimed": true,
+          "collaborators": [
+            {
+              "assigned": true,
+              "id": 340,
+              "name": "<redacted-name>",
+              "role": "Agent"
+            }
+          ],
+          "contacted": 0,
+          "created": "<redacted-phone>",
+          "createdVia": "Email Parsing",
+          "dealCloseDate": null,
+          "dealName": null,
+          "dealPrice": null,
+          "dealStage": null,
+          "dealStatus": null,
+          "delayed": false,
+          "emails": "<redacted-emails>",
+          "firstName": "<redacted-first>",
+          "firstToClaimOffer": false,
+          "id": 138344,
+          "lastActivity": "<redacted-phone>",
+          "lastName": "<redacted-last>",
+          "leadFlowId": 11,
+          "name": "<redacted-name>",
+          "phones": "<redacted-phones>",
+          "picture": null,
+          "pondMembers": [],
+          "price": 825000,
+          "socialData": {
+            "age": "46",
+            "bio": "Currently working at Adventist Health in St. Helena as the behavioral health Medical Director. We have a medical and psychiatric unit as well as a primary psychiatric unit.",
+            "company": "Salus Medical Collective",
+            "facebook": "",
+            "firstName": "<redacted-first>",
+            "gender": "Female",
+            "googlePlus": "",
+            "googleProfile": "",
+            "lastName": "<redacted-last>",
+            "linkedIn": "https://www.linkedin.com/in/amizetta-clark-md-mba-41392478",
+            "location": "Prescott, AZ, United States",
+            "name": "<redacted-name>",
+            "title": "Chief Executive Officer",
+            "topics": "",
+            "twitter": "https://twitter.com/drz_clark"
+          },
+          "source": "Zillow Preferred",
+          "sourceId": 39,
+          "sourceUrl": "https://premieragent.zillow.com/crm/contacts/contactdetails/236369853",
+          "stage": "Lead",
+          "stageId": 2,
+          "tags": [
+            "Kings Beach",
+            "Zillow Connected",
+            "RealScout"
+          ],
+          "teamLeaders": [],
+          "timeframeDateRange": null,
+          "timeframeId": null,
+          "timeframeStatus": null,
+          "timeframeUpdated": null,
+          "type": "Buyer",
+          "updated": "<redacted-phone>",
+          "websiteVisits": 0
+        },
+        {
+          "addresses": "<redacted-addresses>",
+          "assignedLenderId": null,
+          "assignedLenderName": null,
+          "assignedPondId": null,
+          "assignedTo": "Tyler Mora",
+          "assignedUserId": 237,
+          "claimed": true,
+          "collaborators": [
+            {
+              "assigned": true,
+              "id": 237,
+              "name": "<redacted-name>",
+              "role": "Agent"
+            }
+          ],
+          "contacted": 0,
+          "created": "<redacted-phone>",
+          "createdVia": "Email Parsing",
+          "dealCloseDate": null,
+          "dealName": null,
+          "dealPrice": null,
+          "dealStage": null,
+          "dealStatus": null,
+          "delayed": false,
+          "emails": "<redacted-emails>",
+          "firstName": "<redacted-first>",
+          "firstToClaimOffer": false,
+          "id": 138343,
+          "lastActivity": "<redacted-phone>",
+          "lastName": "<redacted-last>",
+          "leadFlowId": 18,
+          "name": "<redacted-name>",
+          "phones": "<redacted-phones>",
+          "picture": null,
+          "pondMembers": [],
+          "price": 524900,
+          "socialData": [],
+          "source": "Zillow Preferred",
+          "sourceId": 39,
+          "sourceUrl": "https://premieragent.zillow.com/crm/contacts/contactdetails/236368661",
+          "stage": "Spoke with customer",
+          "stageId": 67,
+          "tags": [
+            "Zillow Property Tour",
+            "Zillow Connected",
+            "RealScout"
+          ],
+          "teamLeaders": [
+            {
+              "assigned": false,
+              "id": 3,
+              "name": "<redacted-name>",
+              "role": "Broker"
+            },
+            {
+              "assigned": false,
+              "id": 1,
+              "name": "<redacted-name>",
+              "role": "Broker"
+            }
+          ],
+          "timeframeDateRange": null,
+          "timeframeId": null,
+          "timeframeStatus": null,
+          "timeframeUpdated": null,
+          "type": "Buyer",
+          "updated": "<redacted-phone>",
+          "websiteVisits": 1
+        },
+        {
+          "addresses": "<redacted-addresses>",
+          "assignedLenderId": null,
+          "assignedLenderName": null,
+          "assignedPondId": null,
+          "assignedTo": "Ashley Petticrew",
+          "assignedUserId": 104,
+          "claimed": true,
+          "collaborators": [
+            {
+              "assigned": true,
+              "id": 104,
+              "name": "<redacted-name>",
+              "role": "Agent"
+            }
+          ],
+          "contacted": 0,
+          "created": "<redacted-phone>",
+          "createdVia": "Manually",
+          "dealCloseDate": null,
+          "dealName": null,
+          "dealPrice": null,
+          "dealStage": null,
+          "dealStatus": null,
+          "delayed": false,
+          "emails": "<redacted-emails>",
+          "firstName": "<redacted-first>",
+          "firstToClaimOffer": false,
+          "id": 138342,
+          "lastActivity": "<redacted-phone>",
+          "lastName": "<redacted-last>",
+          "leadFlowId": null,
+          "name": "<redacted-name>",
+          "phones": "<redacted-phones>",
+          "picture": null,
+          "pondMembers": [],
+          "price": null,
+          "socialData": [],
+          "source": "Referral from Past Client",
+          "sourceId": 100,
+          "sourceUrl": "",
+          "stage": "Lead",
+          "stageId": 2,
+          "tags": [],
+          "teamLeaders": [],
+          "timeframeDateRange": null,
+          "timeframeId": null,
+          "timeframeStatus": null,
+          "timeframeUpdated": null,
+          "type": "Buyer",
+          "updated": "<redacted-phone>",
+          "websiteVisits": 0
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "people"
+      ],
+      "total_reported": 85266
+    },
+    "pipelines": {
+      "collection_key": "pipelines",
+      "fields": {
+        "description": "string",
+        "id": "integer",
+        "name": "string",
+        "orderWeight": "integer",
+        "stages": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "pipelines",
+        "limit": 10,
+        "next": null,
+        "nextLink": null,
+        "offset": 0,
+        "total": 6
+      },
+      "params": {},
+      "path": "/pipelines",
+      "records_in_sample": 6,
+      "sample_records": [
+        {
+          "description": "A pipeline for buyers",
+          "id": 1,
+          "name": "<redacted-name>",
+          "orderWeight": 3000,
+          "stages": [
+            {
+              "closedStage": false,
+              "color": "#ffad81",
+              "description": "",
+              "id": 98,
+              "name": "<redacted-name>",
+              "orderWeight": 1000
+            },
+            {
+              "closedStage": false,
+              "color": "#ffad81",
+              "description": "",
+              "id": 14,
+              "name": "<redacted-name>",
+              "orderWeight": 2000
+            },
+            {
+              "closedStage": false,
+              "color": "#819cff",
+              "description": "",
+              "id": 16,
+              "name": "<redacted-name>",
+              "orderWeight": 3000
+            }
+          ]
+        },
+        {
+          "description": "A pipeline for sellers",
+          "id": 2,
+          "name": "<redacted-name>",
+          "orderWeight": 4000,
+          "stages": [
+            {
+              "closedStage": false,
+              "color": "#ffd460",
+              "description": "",
+              "id": 97,
+              "name": "<redacted-name>",
+              "orderWeight": 1000
+            },
+            {
+              "closedStage": false,
+              "color": "#40a2d9",
+              "description": "",
+              "id": 96,
+              "name": "<redacted-name>",
+              "orderWeight": 2000
+            },
+            {
+              "closedStage": false,
+              "color": "#ffad81",
+              "description": "",
+              "id": 15,
+              "name": "<redacted-name>",
+              "orderWeight": 3000
+            }
+          ]
+        },
+        {
+          "description": "",
+          "id": 3,
+          "name": "<redacted-name>",
+          "orderWeight": 5000,
+          "stages": [
+            {
+              "closedStage": false,
+              "color": "#ffd460",
+              "description": "",
+              "id": 79,
+              "name": "<redacted-name>",
+              "orderWeight": 1000
+            },
+            {
+              "closedStage": false,
+              "color": "#ffd460",
+              "description": "",
+              "id": 80,
+              "name": "<redacted-name>",
+              "orderWeight": 2000
+            },
+            {
+              "closedStage": false,
+              "color": "#ffd460",
+              "description": "",
+              "id": 82,
+              "name": "<redacted-name>",
+              "orderWeight": 3000
+            }
+          ]
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "pipelines"
+      ],
+      "total_reported": 6
+    },
+    "smartLists": {
+      "collection_key": "smartlists",
+      "fields": {
+        "created": "string",
+        "defaultSmartListId": "null",
+        "description": "null",
+        "id": "integer",
+        "isFub2": "boolean",
+        "name": "string"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "smartlists",
+        "limit": 25,
+        "next": null,
+        "nextLink": null,
+        "offset": 0,
+        "total": 12
+      },
+      "params": {
+        "limit": 25
+      },
+      "path": "/smartLists",
+      "records_in_sample": 12,
+      "sample_records": [
+        {
+          "created": "<redacted-phone>",
+          "defaultSmartListId": null,
+          "description": null,
+          "id": 12,
+          "isFub2": false,
+          "name": "<redacted-name>"
+        },
+        {
+          "created": "<redacted-phone>",
+          "defaultSmartListId": null,
+          "description": null,
+          "id": 11,
+          "isFub2": false,
+          "name": "<redacted-name>"
+        },
+        {
+          "created": "<redacted-phone>",
+          "defaultSmartListId": null,
+          "description": null,
+          "id": 10,
+          "isFub2": false,
+          "name": "<redacted-name>"
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "smartlists"
+      ],
+      "total_reported": 12
+    },
+    "stages": {
+      "collection_key": "stages",
+      "fields": {
+        "description": "string",
+        "id": "integer",
+        "isProtected": "boolean",
+        "name": "string",
+        "orderWeight": "integer",
+        "peopleCount": "integer",
+        "pipelineId": "null",
+        "systems": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "stages",
+        "limit": 10,
+        "next": "eyJvZmZzZXQiOjEwfQ",
+        "nextLink": "https://api.followupboss.com/v1/stages?next=eyJvZmZzZXQiOjEwfQ",
+        "offset": 0,
+        "total": 33
+      },
+      "params": {},
+      "path": "/stages",
+      "records_in_sample": 10,
+      "sample_records": [
+        {
+          "description": "",
+          "id": 2,
+          "isProtected": true,
+          "name": "<redacted-name>",
+          "orderWeight": 1000,
+          "peopleCount": 6987,
+          "pipelineId": null,
+          "systems": [
+            {
+              "externalIcon": "zillow",
+              "externalLabel": "New",
+              "id": 4,
+              "name": "<redacted-name>"
+            }
+          ]
+        },
+        {
+          "description": "",
+          "id": 66,
+          "isProtected": true,
+          "name": "<redacted-name>",
+          "orderWeight": 3000,
+          "peopleCount": 15508,
+          "pipelineId": null,
+          "systems": [
+            {
+              "externalIcon": "zillow",
+              "externalLabel": "Attempted contact",
+              "id": 4,
+              "name": "<redacted-name>"
+            }
+          ]
+        },
+        {
+          "description": "",
+          "id": 67,
+          "isProtected": true,
+          "name": "<redacted-name>",
+          "orderWeight": 4000,
+          "peopleCount": 1944,
+          "pipelineId": null,
+          "systems": [
+            {
+              "externalIcon": "zillow",
+              "externalLabel": "Spoke with customer",
+              "id": 4,
+              "name": "<redacted-name>"
+            }
+          ]
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "stages"
+      ],
+      "total_reported": 33
+    },
+    "tasks": {
+      "collection_key": "tasks",
+      "fields": {
+        "AssignedTo": "string",
+        "assignedUserId": "integer",
+        "completed": "null",
+        "created": "string",
+        "createdBy": "string",
+        "createdById": "integer",
+        "dueDate": "string",
+        "dueDateTime": "string",
+        "externalCalendarId": "string",
+        "externalTaskLink": "string",
+        "id": "integer",
+        "isCompleted": "integer",
+        "name": "string",
+        "personId": "integer",
+        "remindSecondsBefore": "null",
+        "type": "string",
+        "updated": "string",
+        "updatedBy": "string",
+        "updatedById": "integer"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "tasks",
+        "limit": 25,
+        "next": "eyJzaW5jZUlkIjo0NDcwMH0",
+        "nextLink": "https://api.followupboss.com/v1/tasks?limit=25&sort=-created&next=eyJzaW5jZUlkIjo0NDcwMH0",
+        "offset": 0,
+        "total": 38442
+      },
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/tasks",
+      "records_in_sample": 25,
+      "sample_records": [
+        {
+          "AssignedTo": "Christina Gray",
+          "assignedUserId": 76,
+          "completed": null,
+          "created": "<redacted-phone>",
+          "createdBy": "Christina Gray",
+          "createdById": 76,
+          "dueDate": "<redacted-phone>",
+          "dueDateTime": "<redacted-phone>",
+          "externalCalendarId": "AAMkAGVkYWE1NDllLTE3MjQtNGUzOC1iMmNmLTY5MjQxNjAwMjI0ZQBGAAAAAACcxxXUCVRxQ7SDM1higktzBwD20dnxsU5TQYFI59ei7iwpAAAAAAEGAAD20dnxsU5TQYFI59ei7iwpAAC830VuAAA=",
+          "externalTaskLink": "https://outlook.office365.com/owa/?itemid=AAMkAGVkYWE1NDllLTE3MjQtNGUzOC1iMmNmLTY5MjQxNjAwMjI0ZQBGAAAAAACcxxXUCVRxQ7SDM1higktzBwD20dnxsU5TQYFI59ei7iwpAAC83yJuAAD20dnxsU5TQYFI59ei7iwpAALE2Sk6AAA%3D&exvsurl=1&path=/calendar/item",
+          "id": 44724,
+          "isCompleted": 0,
+          "name": "<redacted-name>",
+          "personId": 136330,
+          "remindSecondsBefore": null,
+          "type": "Call",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Christina Gray",
+          "updatedById": 76
+        },
+        {
+          "AssignedTo": "Jasmine Sunkara",
+          "assignedUserId": 213,
+          "completed": null,
+          "created": "<redacted-phone>",
+          "createdBy": "Jasmine Sunkara",
+          "createdById": 213,
+          "dueDate": "<redacted-phone>",
+          "dueDateTime": null,
+          "externalCalendarId": null,
+          "externalTaskLink": null,
+          "id": 44723,
+          "isCompleted": 0,
+          "name": "<redacted-name>",
+          "personId": 130316,
+          "remindSecondsBefore": null,
+          "type": "Follow Up",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Jasmine Sunkara",
+          "updatedById": 213
+        },
+        {
+          "AssignedTo": "Colby A Culbertson",
+          "assignedUserId": 276,
+          "completed": null,
+          "created": "<redacted-phone>",
+          "createdBy": "Colby Culbertson",
+          "createdById": 1,
+          "dueDate": "<redacted-phone>",
+          "dueDateTime": null,
+          "externalCalendarId": null,
+          "externalTaskLink": null,
+          "id": 44722,
+          "isCompleted": 0,
+          "name": "<redacted-name>",
+          "personId": 114111,
+          "remindSecondsBefore": null,
+          "type": "Follow Up",
+          "updated": "<redacted-phone>",
+          "updatedBy": "Colby Culbertson",
+          "updatedById": 1
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "tasks"
+      ],
+      "total_reported": 38442
+    },
+    "teams": {
+      "collection_key": "teams",
+      "fields": {
+        "id": "integer",
+        "leaderIds": "array",
+        "name": "string",
+        "userIds": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "teams",
+        "limit": 10,
+        "next": "eyJzaW5jZUlkIjoxMH0",
+        "nextLink": "https://api.followupboss.com/v1/teams?next=eyJzaW5jZUlkIjoxMH0",
+        "offset": 0,
+        "total": 17
+      },
+      "params": {},
+      "path": "/teams",
+      "records_in_sample": 10,
+      "sample_records": [
+        {
+          "id": 23,
+          "leaderIds": [],
+          "name": "<redacted-name>",
+          "userIds": [
+            89,
+            359,
+            360
+          ]
+        },
+        {
+          "id": 22,
+          "leaderIds": [],
+          "name": "<redacted-name>",
+          "userIds": [
+            8,
+            9,
+            11
+          ]
+        },
+        {
+          "id": 21,
+          "leaderIds": [
+            213,
+            214
+          ],
+          "name": "<redacted-name>",
+          "userIds": [
+            213,
+            214,
+            241
+          ]
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "teams"
+      ],
+      "total_reported": 17
+    },
+    "textMessages": {
+      "error": {
+        "errorMessage": "personId, threadId, phone, toNumber, fromNumber, sharedInboxId, groupTextId, participants, or id list must be specified for GET /v1/textMessages."
+      },
+      "http_status": 400,
+      "params": {
+        "limit": 25,
+        "sort": "-created"
+      },
+      "path": "/textMessages"
+    },
+    "transactions": {
+      "error": {
+        "errorMessage": "Collection name 'Transactions' in the URL is not valid. Please use a correct collection name, for example 'people'."
+      },
+      "http_status": 404,
+      "params": {
+        "limit": 25
+      },
+      "path": "/transactions"
+    },
+    "users": {
+      "collection_key": "users",
+      "fields": {
+        "acceptedShowingtimeConsent": "boolean",
+        "acceptedShowingtimeConsentV2": "boolean",
+        "beta": "boolean",
+        "canCreateApiKeys": "boolean",
+        "canExport": "boolean",
+        "created": "string",
+        "email": "string",
+        "firstName": "string",
+        "fuid": "string",
+        "groups": "array",
+        "id": "integer",
+        "isOwner": "boolean",
+        "lastName": "string",
+        "lastSeenAndroid": "null",
+        "lastSeenFub2": "string",
+        "lastSeenIos": "string",
+        "leadEmailAddress": "string",
+        "mlsMemberships": "array",
+        "name": "string",
+        "pauseLeadDistribution": "boolean",
+        "phone": "string",
+        "picture": "object",
+        "role": "string",
+        "status": "string",
+        "teamIds": "array",
+        "teamLeaderOf": "array",
+        "timezone": "string",
+        "updated": "string"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "users",
+        "limit": 100,
+        "next": "eyJzaW5jZUlkIjoyMTR9",
+        "nextLink": "https://api.followupboss.com/v1/users?limit=100&includeDeleted=false&next=eyJzaW5jZUlkIjoyMTR9",
+        "offset": 0,
+        "total": 162
+      },
+      "params": {
+        "includeDeleted": "false",
+        "limit": 100
+      },
+      "path": "/users",
+      "records_in_sample": 100,
+      "sample_records": [
+        {
+          "acceptedShowingtimeConsent": false,
+          "acceptedShowingtimeConsentV2": false,
+          "beta": true,
+          "canCreateApiKeys": true,
+          "canExport": false,
+          "created": "<redacted-phone>",
+          "email": "<redacted-email>",
+          "firstName": "<redacted-first>",
+          "fuid": "fau_ozzwSjZibI1",
+          "groups": [],
+          "id": 381,
+          "isOwner": false,
+          "lastName": "<redacted-last>",
+          "lastSeenAndroid": null,
+          "lastSeenFub2": "<redacted-phone>",
+          "lastSeenIos": "<redacted-phone>",
+          "leadEmailAddress": "<redacted-email>",
+          "mlsMemberships": [],
+          "name": "<redacted-name>",
+          "pauseLeadDistribution": false,
+          "phone": "<redacted-phone>",
+          "picture": {
+            "162x162": "https://s.followupboss.com/pictures/f6ad8bdf-a18e-4b7d-8781-bc8edff0f166.jpg",
+            "26x26": "https://s.followupboss.com/pictures/548e5136-323e-4246-8c47-8f610794ef64.jpg",
+            "30x30": "https://s.followupboss.com/pictures/3a7bc40a-f4cf-442a-9528-c477bef2192f.jpg",
+            "40x40": "https://s.followupboss.com/pictures/b49229a9-2e98-4e7f-88bb-63e1009006cc.jpg",
+            "60x60": "https://s.followupboss.com/pictures/7fff9db1-ee0d-496b-9095-74439c680294.jpg",
+            "original": "https://s.followupboss.com/public_attachments/51854324-1bab-4e89-8847-d793916f9057.jpg"
+          },
+          "role": "Agent",
+          "status": "Active",
+          "teamIds": [
+            1,
+            2,
+            13
+          ],
+          "teamLeaderOf": [],
+          "timezone": "America/Los_Angeles",
+          "updated": "<redacted-phone>"
+        },
+        {
+          "acceptedShowingtimeConsent": false,
+          "acceptedShowingtimeConsentV2": false,
+          "beta": true,
+          "canCreateApiKeys": true,
+          "canExport": false,
+          "created": "<redacted-phone>",
+          "email": "<redacted-email>",
+          "firstName": "<redacted-first>",
+          "fuid": "fau_AEELJIHkeTd",
+          "groups": [],
+          "id": 380,
+          "isOwner": false,
+          "lastName": "<redacted-last>",
+          "lastSeenAndroid": "<redacted-phone>",
+          "lastSeenFub2": "<redacted-phone>",
+          "lastSeenIos": null,
+          "leadEmailAddress": "<redacted-email>",
+          "mlsMemberships": [],
+          "name": "<redacted-name>",
+          "pauseLeadDistribution": false,
+          "phone": "<redacted-phone>",
+          "picture": {
+            "162x162": "https://s.followupboss.com/pictures/5323d03d-6606-435d-98f0-d28e72c72faf.jpg",
+            "26x26": "https://s.followupboss.com/pictures/5f73adee-6e0f-46e9-8177-490874d4ff11.jpg",
+            "30x30": "https://s.followupboss.com/pictures/94e9dc84-5ce6-49a1-a88a-9d098b4656c4.jpg",
+            "40x40": "https://s.followupboss.com/pictures/efa995db-8c33-4b4a-afe0-2b720a0f8b9d.jpg",
+            "60x60": "https://s.followupboss.com/pictures/5a7c1e99-23a8-462e-ac62-4efa050c1083.jpg",
+            "original": "https://s.followupboss.com/public_attachments/0c63de52-30ae-491b-9316-87311fb7a629.jpg"
+          },
+          "role": "Agent",
+          "status": "Active",
+          "teamIds": [
+            1,
+            2,
+            13
+          ],
+          "teamLeaderOf": [],
+          "timezone": "America/Los_Angeles",
+          "updated": "<redacted-phone>"
+        },
+        {
+          "acceptedShowingtimeConsent": false,
+          "acceptedShowingtimeConsentV2": false,
+          "beta": true,
+          "canCreateApiKeys": true,
+          "canExport": false,
+          "created": "<redacted-phone>",
+          "email": "<redacted-email>",
+          "firstName": "<redacted-first>",
+          "fuid": "fau_J88fclZGFEK",
+          "groups": [],
+          "id": 379,
+          "isOwner": false,
+          "lastName": "<redacted-last>",
+          "lastSeenAndroid": null,
+          "lastSeenFub2": "<redacted-phone>",
+          "lastSeenIos": "<redacted-phone>",
+          "leadEmailAddress": "<redacted-email>",
+          "mlsMemberships": [],
+          "name": "<redacted-name>",
+          "pauseLeadDistribution": false,
+          "phone": "<redacted-phone>",
+          "picture": {
+            "162x162": "https://s.followupboss.com/pictures/425bf5e8-9fb9-4d02-89bd-fdc399d6dbe6.jpeg",
+            "26x26": "https://s.followupboss.com/pictures/7c29a2a9-7d77-4d51-ac2b-4ecc48b3070c.jpeg",
+            "30x30": "https://s.followupboss.com/pictures/e34486a7-50bc-4a7f-9634-138f9da53b81.jpeg",
+            "40x40": "https://s.followupboss.com/pictures/89777322-fc38-44a3-931b-58519d7d67cf.jpeg",
+            "60x60": "https://s.followupboss.com/pictures/b2be6854-fc67-4249-a20c-f40c4605bce8.jpeg",
+            "original": "https://s.followupboss.com/public_attachments/137f62b4-63ee-4505-a354-ab83129045d0.jpeg"
+          },
+          "role": "Agent",
+          "status": "Active",
+          "teamIds": [
+            1,
+            2,
+            13
+          ],
+          "teamLeaderOf": [],
+          "timezone": "America/Los_Angeles",
+          "updated": "<redacted-phone>"
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "users"
+      ],
+      "total_reported": 162
+    },
+    "webhooks": {
+      "collection_key": "webhooks",
+      "fields": {
+        "_metadata": "object",
+        "webhooks": "array"
+      },
+      "http_status": 200,
+      "metadata": {
+        "collection": "webhooks",
+        "limit": 10,
+        "next": null,
+        "nextLink": null,
+        "offset": 0,
+        "total": 0
+      },
+      "params": {},
+      "path": "/webhooks",
+      "records_in_sample": 0,
+      "sample_records": [
+        {
+          "_metadata": {
+            "collection": "webhooks",
+            "limit": 10,
+            "next": null,
+            "nextLink": null,
+            "offset": 0,
+            "total": 0
+          },
+          "webhooks": []
+        }
+      ],
+      "top_level_keys": [
+        "_metadata",
+        "webhooks"
+      ],
+      "total_reported": "webhooks"
+    }
+  },
+  "scanned_at": "2026-04-15T18:58:55.180788Z",
+  "system": "MissionControl-v7"
+}
