@@ -314,6 +314,56 @@ export async function getAchievementsByEntityId(entityId: string) {
   return data ?? []
 }
 
+// ═══ Cash Flow helpers ════════════════════════════════════════════
+export async function getTransactions30d() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('financial_transactions')
+    .select('*')
+    .gte('date', since)
+    .order('date', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getTopExpenseCategories(limit = 5) {
+  // Returns aggregated expense categories from last 30 days
+  // We aggregate client-side from raw transactions since Supabase RPC isn't defined yet
+  const txns = await getTransactions30d()
+  const catMap: Record<string, number> = {}
+  txns.forEach((t: any) => {
+    const cat = (t.personal_finance_category ?? 'OTHER') as string
+    const amt = Number(t.amount ?? 0)
+    if (amt > 0) catMap[cat] = (catMap[cat] ?? 0) + amt
+  })
+  return Object.entries(catMap)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, limit)
+    .map(([category, total]) => ({ category, total }))
+}
+
+// ═══ Rental helpers ════════════════════════════════════════════════
+export async function getRentalProperties() {
+  const { data, error } = await supabase
+    .from('property_assets')
+    .select('*')
+    .eq('is_rental', true)
+    .order('current_value', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getRentalPhotos(propertyId: string) {
+  const { data, error } = await supabase
+    .from('property_photos')
+    .select('*')
+    .eq('property_id', propertyId)
+    .order('sort_order', { ascending: true })
+    .limit(1)
+  if (error) return []
+  return data ?? []
+}
+
 // ═══ Tasks (scoped helpers) ════════════════════════════════════════
 export async function getOpenTasks() {
   const { data, error } = await supabase
