@@ -778,13 +778,13 @@ export default function EntityOrgChart({ entities, edges, properties = [] }: Pro
         <EditEntityModal entityId={modal.entityId} onClose={() => setModal(null)} onSaved={() => { setModal(null); window.location.reload() }} />
       )}
       {modal?.type === 'editOwnership' && (
-        <EditOwnershipModal entityId={modal.entityId} entityName={modal.entityName} childType="entity" onClose={() => setModal(null)} onSaved={() => setModal(null)} />
+        <EditOwnershipModal entityId={modal.entityId} entityName={modal.entityName} childType="entity" onClose={() => setModal(null)} onSaved={() => { setModal(null); window.location.reload() }} />
       )}
       {modal?.type === 'editProperty' && (
         <EditPropertyModal propertyId={modal.propertyId} onClose={() => setModal(null)} onSaved={() => { setModal(null); window.location.reload() }} />
       )}
       {modal?.type === 'editPropOwn' && (
-        <EditOwnershipModal entityId={modal.propertyId} entityName={modal.propertyName} childType="property" onClose={() => setModal(null)} onSaved={() => setModal(null)} />
+        <EditOwnershipModal entityId={modal.propertyId} entityName={modal.propertyName} childType="property" onClose={() => setModal(null)} onSaved={() => { setModal(null); window.location.reload() }} />
       )}
     </>
   )
