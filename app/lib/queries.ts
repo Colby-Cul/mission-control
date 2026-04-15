@@ -374,3 +374,38 @@ export async function getOpenTasks() {
   if (error) throw error
   return data ?? []
 }
+
+// ═══ Per-entity revenue / expense (last 30 days) ════════════════
+export async function getEntityRevenue30d(entityId: string): Promise<number> {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('financial_transactions')
+    .select('amount')
+    .eq('entity_id', entityId)
+    .lt('amount', 0)                // negative = money in (Plaid convention)
+    .gte('date', since)
+  if (error) return 0
+  return (data ?? []).reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount ?? 0)), 0)
+}
+
+export async function getEntityExpenses30d(entityId: string): Promise<number> {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('financial_transactions')
+    .select('amount')
+    .eq('entity_id', entityId)
+    .gt('amount', 0)                // positive = money out (Plaid convention)
+    .gte('date', since)
+  if (error) return 0
+  return (data ?? []).reduce((sum: number, t: any) => sum + Number(t.amount ?? 0), 0)
+}
+
+export async function getEntityDocumentsByEntityId(entityId: string) {
+  const { data, error } = await supabase
+    .from('entity_documents')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('created_at', { ascending: false, nullsFirst: false })
+  if (error) return []
+  return data ?? []
+}
