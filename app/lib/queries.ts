@@ -72,6 +72,16 @@ export async function getAccounts() {
   return data ?? []
 }
 
+export async function getAccountsByEntityId(entityId: string) {
+  const { data, error } = await supabase
+    .from('financial_accounts')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('balance_current', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
 export async function getRecentTransactions(limit = 50) {
   const { data, error } = await supabase
     .from('financial_transactions')

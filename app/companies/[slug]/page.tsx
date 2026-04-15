@@ -14,7 +14,7 @@ import {
   getCompanyTeam,
   getCompanyMilestonesByEntityId,
   getAchievementsByEntityId,
-  getAccounts,
+  getAccountsByEntityId,
   getEntityRevenue30d,
   getEntityExpenses30d,
   getEntityDocumentsByEntityId,
@@ -110,42 +110,44 @@ export default async function CompanyPage({ params }: Props) {
   }
 
   // ── Operational entity: fetch all data ───────────────────────
+  // NOTE: all per-entity tables use slug as entity_id (e.g. 'xome-home'),
+  // NOT the UUID-style entity_ownership.id ('ent-xome-home').
   const isXome = slug === XOME_SLUG
+  const entityKey = slug  // use slug consistently as the entity_id key
 
   let kpis: any[] = []
-  if (entity?.id) {
-    try { kpis = await getCompanyKpisByEntityId(entity.id) } catch {}
-  }
+  try { kpis = await getCompanyKpisByEntityId(entityKey) } catch {}
 
   let team: any[] = []
-  if (entity?.id) {
-    try { team = await getCompanyTeam(entity.id) } catch {}
-  }
+  try { team = await getCompanyTeam(entityKey) } catch {}
 
   let milestones: any[] = []
-  if (entity?.id) {
-    try { milestones = await getCompanyMilestonesByEntityId(entity.id) } catch {}
-  }
+  try { milestones = await getCompanyMilestonesByEntityId(entityKey) } catch {}
 
   let achievements: any[] = []
-  if (entity?.id) {
+  // Try slug-based first, fall back to entity.id if entity exists
+  try { achievements = await getAchievementsByEntityId(entityKey) } catch {}
+  if (achievements.length === 0 && entity?.id) {
     try { achievements = await getAchievementsByEntityId(entity.id) } catch {}
   }
 
   let revenue30d = 0
   let expenses30d = 0
-  if (entity?.id) {
-    try { revenue30d = await getEntityRevenue30d(entity.id) } catch {}
-    try { expenses30d = await getEntityExpenses30d(entity.id) } catch {}
-  }
+  try { revenue30d = await getEntityRevenue30d(entityKey) } catch {}
+  try { expenses30d = await getEntityExpenses30d(entityKey) } catch {}
 
   let documents: any[] = []
-  if (entity?.id) {
+  try { documents = await getEntityDocumentsByEntityId(entityKey) } catch {}
+  if (documents.length === 0 && entity?.id) {
     try { documents = await getEntityDocumentsByEntityId(entity.id) } catch {}
   }
 
+  // Entity-scoped accounts only (not all accounts globally)
   let accounts: any[] = []
-  try { accounts = await getAccounts() } catch {}
+  try { accounts = await getAccountsByEntityId(entityKey) } catch {}
+  if (accounts.length === 0 && entity?.id) {
+    try { accounts = await getAccountsByEntityId(entity.id) } catch {}
+  }
 
   // ── Monday.com loan data (Xome only) ─────────────────────────
   let mondayKpis: any = null
@@ -161,21 +163,21 @@ export default async function CompanyPage({ params }: Props) {
   }
 
   // ── Entity metadata with graceful fallbacks ───────────────────
+  // display_name is an optional override (e.g. 'Xome Home Loans'); falls back to entity_name
+  const displayName = (entity as any)?.display_name ?? entity?.entity_name ?? slug
   const E = {
-    name:      entity?.entity_name ?? slug,
-    fullName:  entity?.entity_name ?? slug,
+    name:      displayName,
+    fullName:  displayName,
     type:      entity?.entity_type ?? 'LLC',
     state:     entity?.state ?? 'CA',
     purpose:   entity?.notes ?? '',
     teamCount: team.length || 0,
-    accounts: accounts.length > 0
-      ? accounts.map((a: any) => ({
-          name: a.name ?? a.official_name ?? a.account_name ?? 'Account',
-          mask: a.mask ?? '????',
-          type: a.type ?? 'depository',
-          bal:  Number(a.balance_current ?? 0),
-        }))
-      : [],
+    accounts: accounts.map((a: any) => ({
+        name: a.name ?? a.official_name ?? a.account_name ?? 'Account',
+        mask: a.mask ?? '????',
+        type: a.type ?? 'depository',
+        bal:  Number(a.balance_current ?? 0),
+      })),
   }
 
   const fmtCurrency = (n: number) =>
@@ -192,39 +194,66 @@ export default async function CompanyPage({ params }: Props) {
   const hasDocs       = documents.length > 0
 
   // ── Hero primary metric ───────────────────────────────────────
-  // Xome: prefer Monday YTD volume; fallback to Supabase revenue
+  // Priority: Monday YTD volume > revenue KPI > financial_transactions revenue > entity name
+  const kpiRevenue = kpis.find((k: any) => k.metric_key === 'revenue_mtd')
+  const kpiCashFlow = kpis.find((k: any) => k.metric_key === 'cash_flow_mtd')
+  const kpiMortgage = kpis.find((k: any) => k.metric_key === 'mortgage_volume')
+
   const heroPrimary = isXome && mondayKpis?.volume_ytd
     ? fmtCurrency(mondayKpis.volume_ytd)
+    : kpiRevenue
+    ? fmtCurrency(Number(kpiRevenue.value))
     : hasRevenue
     ? fmtCurrency(revenue30d)
-    : 'Dashboard Active'
+    : E.fullName
 
   const heroSub = isXome && mondayKpis?.volume_ytd
-    ? `Loan Volume YTD`
+    ? 'Loan Volume YTD'
+    : kpiRevenue
+    ? `Revenue MTD${kpiRevenue.target ? ' · target ' + fmtCurrency(Number(kpiRevenue.target)) : ''}`
     : hasRevenue
     ? 'Revenue — last 30 days'
-    : 'Revenue data connecting — KPIs update automatically'
+    : 'Entity dashboard — connect data sources to populate metrics'
 
   // ── Xome hero mini-cards ──────────────────────────────────────
   const heroMini1 = isXome && mondayKpis?.pipeline_value
     ? { val: fmtCurrency(mondayKpis.pipeline_value), label: 'Pipeline Value' }
+    : kpiCashFlow
+    ? { val: fmtCurrency(Number(kpiCashFlow.value)), label: 'Cash Flow MTD' }
     : hasRevenue
     ? { val: fmtCurrency(expenses30d), label: 'Expenses 30d' }
-    : { val: '—', label: 'Expenses 30d' }
+    : { val: '0', label: 'Expenses 30d' }
 
   const heroMini2 = isXome && mondayKpis?.avg_loan_size
     ? { val: fmtCurrency(mondayKpis.avg_loan_size), label: 'Avg Loan Size' }
-    : { val: E.teamCount > 0 ? String(E.teamCount) : '—', label: 'Team Members' }
+    : { val: String(E.teamCount), label: 'Team Members' }
 
   const heroMini3 = isXome && mondayKpis?.loans_closed_mtd != null
     ? { val: String(mondayKpis.loans_closed_mtd), label: 'Funded This Month' }
-    : { val: milestones.length > 0 ? String(milestones.length) : '—', label: 'Milestones' }
+    : { val: String(milestones.length), label: 'Milestones' }
 
   const heroTickerLabel = isXome ? 'PULL-THROUGH' : 'STATUS'
   const heroTickerValue = isXome && mondayKpis?.pull_through_rate != null
     ? (mondayKpis.pull_through_rate * 100).toFixed(0) + '%'
     : E.purpose || 'Operational'
   const heroShowProgress = isXome && mondayKpis?.pull_through_rate != null
+
+  // ── Health gauge: avg pct of target across KPIs with both value+target ──
+  const kpisWithTarget = kpis.filter((k: any) => k.target != null && Number(k.target) > 0)
+  const healthPct = kpisWithTarget.length > 0
+    ? Math.min(100, Math.round(
+        kpisWithTarget.reduce((sum: number, k: any) => {
+          const pct = Number(k.value) / Number(k.target)
+          return sum + Math.min(1, Math.max(0, pct))
+        }, 0) / kpisWithTarget.length * 100
+      ))
+    : (isXome && mondayKpis ? 85 : null)
+  const healthGaugeVal = healthPct != null ? String(healthPct) + '%' : '—'
+  // stroke-dasharray for full circle (r=45) = 2π*45 ≈ 282.7
+  // stroke-dashoffset = 282.7 * (1 - pct/100)
+  const healthDashOffset = healthPct != null
+    ? (282.7 * (1 - healthPct / 100)).toFixed(1)
+    : '282.7'
 
   // ── Health card stats ─────────────────────────────────────────
   const healthStats = isXome && mondayKpis
@@ -240,10 +269,10 @@ export default async function CompanyPage({ params }: Props) {
         },
       ]
     : [
-        { val: String(E.teamCount || '—'), label: 'Team' },
-        { val: String(milestones.length || '—'), label: 'Milestones' },
-        { val: String(kpis.length || '—'), label: 'KPIs' },
-        { val: String(documents.length || '—'), label: 'Docs' },
+        { val: String(E.teamCount), label: 'Team' },
+        { val: String(milestones.length), label: 'Milestones' },
+        { val: String(kpis.length), label: 'KPIs' },
+        { val: String(documents.length), label: 'Docs' },
       ]
 
   // ── Analytics grid: conversion donut + funding timeline ───────
@@ -482,7 +511,17 @@ export default async function CompanyPage({ params }: Props) {
   <div class="page-wrapper">
     <nav class="navbar">
       <div class="navbar-container">
-        <div class="navbar-title">${E.fullName}</div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">
+            Mission Control / Companies / ${E.fullName}
+          </div>
+          <div class="navbar-title" style="font-size:28px;font-weight:700;">${E.fullName}</div>
+          <div style="display:flex;gap:8px;margin-top:4px;">
+            <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,0.2);">${E.type}</span>
+            <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.2);">${E.state}</span>
+            ${entity?.notes ? `<span style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">${entity.notes}</span>` : ''}
+          </div>
+        </div>
         <a href="/companies" class="navbar-back">← All Companies</a>
       </div>
     </nav>
@@ -546,9 +585,9 @@ export default async function CompanyPage({ params }: Props) {
               <div class="health-gauge-wrap">
                 <svg class="health-gauge-svg" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
-                  <circle cx="50" cy="50" r="45" fill="none" stroke="url(#healthGrad)" stroke-width="6" stroke-dasharray="141.4" stroke-dashoffset="0" stroke-linecap="round"/>
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="url(#healthGrad)" stroke-width="6" stroke-dasharray="282.7" stroke-dashoffset="${healthDashOffset}" stroke-linecap="round"/>
                 </svg>
-                <div class="health-gauge-value">${isXome && mondayKpis ? '85' : '—'}</div>
+                <div class="health-gauge-value">${healthGaugeVal}</div>
               </div>
               <div class="health-stats">
                 ${healthStats.map(s => `
@@ -619,16 +658,32 @@ export default async function CompanyPage({ params }: Props) {
               ${kpis.map((k: any, i: number) => {
                 const colors = ['kpi-orange','kpi-green','kpi-purple','kpi-amber','kpi-lime']
                 const color = k.color ? `kpi-${k.color}` : colors[i % colors.length]
+                const numVal = Number(k.value ?? 0)
+                const numTarget = k.target != null ? Number(k.target) : null
                 const val = k.unit === 'currency'
-                  ? fmtCurrency(Number(k.value))
+                  ? fmtCurrency(numVal)
                   : k.unit === 'pct'
-                  ? Number(k.value).toFixed(1) + '%'
+                  ? (numVal * (numVal <= 1 ? 100 : 1)).toFixed(0) + '%'
                   : String(k.value ?? '—')
+                const targetStr = numTarget != null && numTarget > 0
+                  ? k.unit === 'currency'
+                    ? 'target ' + fmtCurrency(numTarget)
+                    : k.unit === 'pct'
+                    ? 'target ' + (numTarget * (numTarget <= 1 ? 100 : 1)).toFixed(0) + '%'
+                    : 'target ' + numTarget
+                  : ''
+                const pctOfTarget = numTarget != null && numTarget > 0
+                  ? Math.min(100, Math.round((numVal / numTarget) * 100))
+                  : null
+                const pctColor = pctOfTarget == null ? '' : pctOfTarget >= 80 ? 'var(--green)' : pctOfTarget >= 50 ? 'var(--amber)' : 'var(--red)'
                 return `<div class="kpi-card ${color}">
                   <div class="kpi-header"><div class="kpi-num">${val}</div><div class="kpi-indicator"></div></div>
                   <div class="kpi-label">${k.label ?? k.metric_key}</div>
                   <div class="kpi-bars" id="bars${i+1}"></div>
-                  <div class="kpi-meta"><span class="kpi-meta-item">${k.unit ?? ''}</span></div>
+                  <div class="kpi-meta">
+                    <span class="kpi-meta-item">${targetStr}</span>
+                    ${pctOfTarget != null ? `<div class="kpi-meta-value" style="color:${pctColor}">${pctOfTarget}%</div>` : ''}
+                  </div>
                 </div>`
               }).join('')}
             </div>`
@@ -895,9 +950,9 @@ export default async function CompanyPage({ params }: Props) {
               </div>
             </div>`
           : `<div class="coming-soon-inline" data-source="financial_transactions:entity_id:${slug}">
-              <span class="cs-icon">🔮</span>
-              <div class="cs-label">Coming Soon</div>
-              Revenue and expenses from <code>financial_transactions</code> tagged to this entity will appear here.
+              <span class="cs-icon">💳</span>
+              <div class="cs-label">No transactions yet</div>
+              No transactions tagged to this entity yet. Tag via <a href="/accounts" style="color:var(--purple);">/accounts</a>.
             </div>`
         }
       </section>
@@ -922,9 +977,9 @@ export default async function CompanyPage({ params }: Props) {
                 </div>`).join('')}
             </div>`
           : `<div class="coming-soon-inline" data-source="company_team:${slug}">
-              <span class="cs-icon">🔮</span>
-              <div class="cs-label">Coming Soon</div>
-              Team members from <code>company_team</code> will display here.
+              <span class="cs-icon">👥</span>
+              <div class="cs-label">No team members yet</div>
+              Add team members on the <a href="/team" style="color:var(--purple);">Team page</a>.
             </div>`
         }
       </section>
@@ -1006,7 +1061,9 @@ export default async function CompanyPage({ params }: Props) {
       <div class="note-section">
         ${isXome
           ? `Monday.com integration active — board "XOME Daddy Home Loans - Active Deal Pipeline" (ID: 1931297970) feeds loan data. Native Mission Control loan management coming soon.`
-          : (E.purpose || `Dashboard active for ${E.fullName}. Connect data sources to populate KPIs, revenue, and team widgets.`)
+          : E.purpose
+          ? E.purpose
+          : `${E.fullName} · ${E.type} · ${E.state} · Data updates automatically as KPIs, transactions, and team members are added.`
         }
       </div>
 
