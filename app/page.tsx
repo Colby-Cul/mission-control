@@ -18,6 +18,7 @@ import {
   getUpcomingTaxDeadlines,
   getAchievements,
   getProperties,
+  getNetWorthFromGraph,
 } from './lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,7 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties] = await Promise.allSettled([
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph] = await Promise.allSettled([
     getAccounts(),
     getVisions(),
     getOpenTasks(),
@@ -46,9 +47,13 @@ export default async function DashboardPage() {
     getAchievements('dashboard'),
     getDoneTasksCount(),
     getProperties().catch(() => []),
-  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
+    getNetWorthFromGraph().catch(() => null),
+  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : (r.status === 'rejected' ? null : null))))
 
-  const netWorth = (accounts as any[]).reduce((s, a) => s + accountSignedBalance(a), 0)
+  const netWorthGraph = nwGraph as Awaited<ReturnType<typeof getNetWorthFromGraph>> | null
+  // Use graph-cascaded total if available, otherwise fall back to raw account sum
+  const rawNetWorth = (accounts as any[]).reduce((s, a) => s + accountSignedBalance(a), 0)
+  const netWorth = netWorthGraph?.total ?? rawNetWorth
   const activeVisions = (visions as any[]).filter((v: any) => v.status === 'active').length
   const openTaskCount = (tasks as any[]).length
   const entityCount = (entities as any[]).length
@@ -129,7 +134,21 @@ export default async function DashboardPage() {
           <SpecCard accent dataSource="financial_accounts.balance_current">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Net Worth</div>
             <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', background: 'var(--grad-metric)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{USD(netWorth)}</div>
-            <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>All accounts · {(accounts as any[]).length} linked</div>
+            <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>Cascaded ownership · {(accounts as any[]).length} accounts</div>
+            {netWorthGraph && netWorthGraph.byEntity.length > 0 && (
+              <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {netWorthGraph.direct !== 0 && (
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.04)', padding: '2px 7px', borderRadius: 5 }}>
+                    direct: {USD(netWorthGraph.direct)}
+                  </span>
+                )}
+                {netWorthGraph.byEntity.slice(0, 3).map(b => (
+                  <span key={b.entityId} style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.04)', padding: '2px 7px', borderRadius: 5 }}>
+                    {b.entityName.split(' ').slice(0, 2).join(' ')}: {USD(b.amount)}
+                  </span>
+                ))}
+              </div>
+            )}
           </SpecCard>
           <SpecCard accent dataSource="financial_transactions.amount">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Monthly Cash Flow</div>

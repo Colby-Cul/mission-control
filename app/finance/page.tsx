@@ -7,6 +7,7 @@ import {
   getAccounts,
   accountSignedBalance,
   getRecentTransactions,
+  getNetWorthFromGraph,
 } from '../lib/queries'
 import HeroCanvas from './HeroCanvas'
 import Hero from '../_components/Hero'
@@ -127,6 +128,10 @@ export default async function FinancePage() {
 
   let transactions: any[] = []
   try { transactions = await getRecentTransactions(20) } catch {}
+
+  // Cascaded net worth from ownership graph
+  let nwGraph: Awaited<ReturnType<typeof getNetWorthFromGraph>> | null = null
+  try { nwGraph = await getNetWorthFromGraph() } catch {}
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -4030,13 +4035,25 @@ ___ACCOUNTS_GRID___
     .replace('___ACCOUNTS_GRID___', accountsGridHtml)
     .replace('___TXN_LIST___', txnListHtml)
 
-  // Compute net worth from live accounts
-  const netWorth = accounts.reduce((s: number, a: any) => {
+  // Compute net worth — prefer graph-cascaded, fall back to raw account sum
+  const rawNetWorth = accounts.reduce((s: number, a: any) => {
     const b = typeof a.current_balance === 'number' ? a.current_balance : parseFloat(a.current_balance ?? '0') || 0
     if ((a.type ?? '').toLowerCase().includes('credit') || (a.type ?? '').toLowerCase().includes('loan')) return s - Math.abs(b)
     return s + b
   }, 0)
+  const netWorth = nwGraph?.total ?? rawNetWorth
   const netWorthFmt = netWorth >= 1e6 ? `$${(netWorth / 1e6).toFixed(3)}M` : `$${Math.round(netWorth).toLocaleString()}`
+  // Build breakdown string for subtitle
+  const nwBreakdownParts: string[] = []
+  if (nwGraph) {
+    if (nwGraph.direct !== 0) nwBreakdownParts.push(`direct: $${Math.round(nwGraph.direct).toLocaleString()}`)
+    nwGraph.byEntity.slice(0, 3).forEach(b => {
+      nwBreakdownParts.push(`${b.entityName.split(' ').slice(0,2).join(' ')}: $${Math.round(b.amount).toLocaleString()}`)
+    })
+  }
+  const nwSubtitle = nwBreakdownParts.length > 0
+    ? nwBreakdownParts.join(' · ')
+    : `${accounts.length} accounts linked`
 
   const totalIncome = 30200
   const totalExpenses = 23200
@@ -4049,7 +4066,7 @@ ___ACCOUNTS_GRID___
         label="FINANCIAL COMMAND CENTER — LIVE"
         greeting="Total Net Worth Across All Entities"
         primaryMetric={netWorthFmt}
-        metricSubtitle={`▲ +$142K this quarter · ${accounts.length} accounts`}
+        metricSubtitle={nwBreakdownParts.length > 0 ? nwSubtitle : `▲ +$142K this quarter · ${accounts.length} accounts`}
         kpiCards={[
           { label: 'MONTHLY INCOME', value: `$${(totalIncome / 1000).toFixed(1)}K`, delta: 'live', deltaPositive: true },
           { label: 'MONTHLY EXPENSES', value: `$${(totalExpenses / 1000).toFixed(1)}K`, delta: 'live' },

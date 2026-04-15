@@ -1,0 +1,345 @@
+'use client'
+/**
+ * EntityOrgChart — SVG-based org-chart of the full entity ownership graph.
+ * Layout: layers by BFS depth from root nodes (nodes with no incoming edges).
+ * Color-coded by entity_type. Click → navigate to /companies/[slug].
+ * Filters: all / operating / trusts / holding.
+ */
+import React, { useMemo, useState } from 'react'
+
+interface Entity {
+  id: string
+  entity_name: string
+  entity_type: string | null
+  slug: string | null
+  purpose: string | null
+  is_active: boolean | null
+}
+
+interface Edge {
+  parent_entity_id: string
+  child_entity_id: string
+  ownership_pct: number | string
+  role: string | null
+}
+
+interface Props {
+  entities: Entity[]
+  edges: Edge[]
+}
+
+// Color palette per entity_type
+const TYPE_COLOR: Record<string, { stroke: string; fill: string; text: string }> = {
+  Person:       { stroke: '#8b5cf6', fill: 'rgba(139,92,246,0.15)',  text: '#c4b5fd' },
+  Trust:        { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.15)',  text: '#fcd34d' },
+  LLC:          { stroke: '#f97316', fill: 'rgba(249,115,22,0.15)',  text: '#fdba74' },
+  'C-Corp':     { stroke: '#10b981', fill: 'rgba(16,185,129,0.15)',  text: '#6ee7b7' },
+  'S-Corp':     { stroke: '#10b981', fill: 'rgba(16,185,129,0.15)',  text: '#6ee7b7' },
+  LP:           { stroke: '#84cc16', fill: 'rgba(132,204,22,0.15)',  text: '#bef264' },
+  Partnership:  { stroke: '#84cc16', fill: 'rgba(132,204,22,0.15)',  text: '#bef264' },
+  'Sole Prop':  { stroke: '#ec4899', fill: 'rgba(236,72,153,0.15)',  text: '#f9a8d4' },
+}
+const DEFAULT_COLOR = { stroke: '#6b7280', fill: 'rgba(107,114,128,0.15)', text: '#9ca3af' }
+
+// Purpose overlay
+const PURPOSE_BADGE: Record<string, { label: string; color: string }> = {
+  holding:     { label: 'HOLDING',    color: '#ec4899' },
+  trust:       { label: 'TRUST',      color: '#f59e0b' },
+  management:  { label: 'MGMT',       color: '#8b5cf6' },
+  individual:  { label: 'PERSON',     color: '#8b5cf6' },
+  'legal-separation': { label: 'LEGAL', color: '#6b7280' },
+  operating:   { label: 'OPERATING',  color: '#10b981' },
+}
+
+const NODE_W = 160
+const NODE_H = 54
+const H_GAP = 40
+const V_GAP = 80
+
+type Filter = 'all' | 'operating' | 'trusts' | 'holding'
+
+export default function EntityOrgChart({ entities, edges }: Props) {
+  const [filter, setFilter] = useState<Filter>('all')
+  const [hovered, setHovered] = useState<string | null>(null)
+
+  const entityMap = useMemo(() => {
+    const m: Record<string, Entity> = {}
+    entities.forEach(e => { m[e.id] = e })
+    return m
+  }, [entities])
+
+  // Apply filter
+  const filteredIds = useMemo(() => {
+    const all = new Set(entities.map(e => e.id))
+    if (filter === 'all') return all
+    if (filter === 'trusts') return new Set(entities.filter(e => e.entity_type === 'Trust' || e.purpose === 'trust').map(e => e.id))
+    if (filter === 'holding') return new Set(entities.filter(e => e.purpose === 'holding').map(e => e.id))
+    if (filter === 'operating') return new Set(entities.filter(e => !e.purpose || e.purpose === 'operating').map(e => e.id))
+    return all
+  }, [entities, filter])
+
+  const filteredEntities = useMemo(() => entities.filter(e => filteredIds.has(e.id)), [entities, filteredIds])
+  const filteredEdges = useMemo(() => edges.filter(e => filteredIds.has(e.parent_entity_id) && filteredIds.has(e.child_entity_id)), [edges, filteredIds])
+
+  // BFS layout
+  const layout = useMemo(() => {
+    if (!filteredEntities.length) return { nodes: [], svgW: 400, svgH: 200 }
+
+    const childSet = new Set(filteredEdges.map(e => e.child_entity_id))
+    // Root nodes: no incoming edges among filtered
+    let roots = filteredEntities.filter(e => !childSet.has(e.id)).map(e => e.id)
+    if (!roots.length) roots = [filteredEntities[0].id]
+
+    // BFS to assign layers
+    const layers: string[][] = []
+    const visited = new Set<string>()
+    let queue = roots
+    while (queue.length) {
+      const next: string[] = []
+      const layerIds: string[] = []
+      for (const id of queue) {
+        if (visited.has(id)) continue
+        visited.add(id)
+        layerIds.push(id)
+      }
+      if (layerIds.length) layers.push(layerIds)
+      for (const id of layerIds) {
+        const children = filteredEdges.filter(e => e.parent_entity_id === id).map(e => e.child_entity_id)
+        next.push(...children)
+      }
+      queue = next.filter(id => !visited.has(id))
+    }
+    // Append any disconnected nodes
+    filteredEntities.forEach(e => {
+      if (!visited.has(e.id)) layers.push([e.id])
+    })
+
+    // Assign x/y per layer
+    const nodePos: Record<string, { x: number; y: number }> = {}
+    let svgW = 0
+    layers.forEach((layer, li) => {
+      const totalW = layer.length * NODE_W + (layer.length - 1) * H_GAP
+      svgW = Math.max(svgW, totalW)
+      const y = li * (NODE_H + V_GAP) + 20
+      layer.forEach((id, xi) => {
+        const x = xi * (NODE_W + H_GAP)
+        nodePos[id] = { x, y }
+      })
+    })
+    // Center each layer
+    layers.forEach(layer => {
+      const rowW = layer.length * NODE_W + (layer.length - 1) * H_GAP
+      const offset = (svgW - rowW) / 2
+      layer.forEach(id => { nodePos[id].x += offset })
+    })
+
+    const svgH = layers.length * (NODE_H + V_GAP) + 20
+
+    const nodes = filteredEntities
+      .filter(e => nodePos[e.id])
+      .map(e => ({ entity: e, ...nodePos[e.id] }))
+
+    return { nodes, svgW: Math.max(svgW, 400), svgH }
+  }, [filteredEntities, filteredEdges])
+
+  const filterBtnStyle = (active: boolean): React.CSSProperties => ({
+    padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+    fontSize: 11, fontWeight: 600, fontFamily: 'DM Sans, sans-serif',
+    textTransform: 'uppercase' as const, letterSpacing: '0.06em',
+    background: active ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+    color: active ? '#f97316' : 'rgba(255,255,255,0.5)',
+    border: active ? '1px solid rgba(249,115,22,0.3)' : '1px solid rgba(255,255,255,0.06)',
+    transition: 'all 0.15s',
+  })
+
+  const nodePos: Record<string, { x: number; y: number }> = {}
+  layout.nodes.forEach(n => { nodePos[n.entity.id] = { x: n.x, y: n.y } })
+
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.015)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: 20,
+      padding: '24px',
+      overflow: 'hidden',
+    }}>
+      {/* Filter bar */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        {(['all', 'operating', 'trusts', 'holding'] as Filter[]).map(f => (
+          <button key={f} style={filterBtnStyle(filter === f)} onClick={() => setFilter(f)}>
+            {f === 'all' ? 'All Entities' : f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {[
+            { label: 'Person', color: '#8b5cf6' },
+            { label: 'Trust',  color: '#f59e0b' },
+            { label: 'LLC',    color: '#f97316' },
+            { label: 'Corp',   color: '#10b981' },
+            { label: 'Holding', color: '#ec4899' },
+          ].map(({ label, color }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10, color: 'rgba(255,255,255,0.45)' }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: color }} />
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SVG org-chart */}
+      <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
+        <svg
+          viewBox={`0 0 ${layout.svgW + 20} ${layout.svgH + 20}`}
+          width={layout.svgW + 20}
+          height={layout.svgH + 20}
+          style={{ display: 'block', minWidth: '100%' }}
+        >
+          <defs>
+            <linearGradient id="oc-map-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(249,115,22,0.5)" />
+              <stop offset="100%" stopColor="rgba(139,92,246,0.3)" />
+            </linearGradient>
+            <marker id="oc-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L6,3 z" fill="rgba(249,115,22,0.4)" />
+            </marker>
+          </defs>
+
+          {/* Edges */}
+          {filteredEdges.map((edge, i) => {
+            const p = nodePos[edge.parent_entity_id]
+            const c = nodePos[edge.child_entity_id]
+            if (!p || !c) return null
+            const x1 = p.x + NODE_W / 2
+            const y1 = p.y + NODE_H
+            const x2 = c.x + NODE_W / 2
+            const y2 = c.y
+            const midY = (y1 + y2) / 2
+            const isHov = hovered === edge.parent_entity_id || hovered === edge.child_entity_id
+            return (
+              <g key={i}>
+                <path
+                  d={`M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`}
+                  fill="none"
+                  stroke={isHov ? 'rgba(249,115,22,0.7)' : 'url(#oc-map-grad)'}
+                  strokeWidth={isHov ? 2 : 1.5}
+                  strokeDasharray={isHov ? 'none' : '5 3'}
+                  markerEnd="url(#oc-arrow)"
+                  opacity={isHov ? 1 : 0.6}
+                />
+                {/* Label on edge mid-point */}
+                <text
+                  x={(x1 + x2) / 2}
+                  y={midY - 4}
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill="rgba(255,255,255,0.35)"
+                  fontFamily="IBM Plex Mono, monospace"
+                >
+                  {Number(edge.ownership_pct)}%{edge.role ? ` · ${edge.role}` : ''}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* Nodes */}
+          {layout.nodes.map(({ entity: e, x, y }) => {
+            const color = e.purpose === 'holding'
+              ? { stroke: '#ec4899', fill: 'rgba(236,72,153,0.15)', text: '#f9a8d4' }
+              : TYPE_COLOR[e.entity_type ?? ''] ?? DEFAULT_COLOR
+            const isHov = hovered === e.id
+            const purposeBadge = PURPOSE_BADGE[e.purpose ?? '']
+
+            return (
+              <g
+                key={e.id}
+                style={{ cursor: e.slug ? 'pointer' : 'default' }}
+                onMouseEnter={() => setHovered(e.id)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => { if (e.slug) window.location.href = `/companies/${e.slug}` }}
+              >
+                {/* Node rect */}
+                <rect
+                  x={x}
+                  y={y}
+                  width={NODE_W}
+                  height={NODE_H}
+                  rx={10}
+                  ry={10}
+                  fill={color.fill}
+                  stroke={isHov ? color.stroke : color.stroke}
+                  strokeWidth={isHov ? 2 : 1.5}
+                  opacity={isHov ? 1 : 0.9}
+                  style={{ transition: 'all 0.15s' }}
+                />
+                {/* Glow on hover */}
+                {isHov && (
+                  <rect
+                    x={x - 2}
+                    y={y - 2}
+                    width={NODE_W + 4}
+                    height={NODE_H + 4}
+                    rx={12}
+                    ry={12}
+                    fill="none"
+                    stroke={color.stroke}
+                    strokeWidth={1}
+                    opacity={0.3}
+                  />
+                )}
+                {/* Entity name */}
+                <text
+                  x={x + NODE_W / 2}
+                  y={y + (purposeBadge ? 18 : 22)}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fontWeight="600"
+                  fill={color.text}
+                  fontFamily="DM Sans, sans-serif"
+                >
+                  {e.entity_name.length > 18 ? e.entity_name.substring(0, 17) + '…' : e.entity_name}
+                </text>
+                {/* Entity type sub-label */}
+                <text
+                  x={x + NODE_W / 2}
+                  y={y + (purposeBadge ? 30 : 36)}
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill="rgba(255,255,255,0.35)"
+                  fontFamily="DM Sans, sans-serif"
+                >
+                  {e.entity_type ?? '—'}
+                </text>
+                {/* Purpose badge */}
+                {purposeBadge && (
+                  <text
+                    x={x + NODE_W / 2}
+                    y={y + 44}
+                    textAnchor="middle"
+                    fontSize="7"
+                    fontWeight="700"
+                    fill={purposeBadge.color}
+                    fontFamily="IBM Plex Mono, monospace"
+                    letterSpacing="0.06em"
+                  >
+                    {purposeBadge.label}
+                  </text>
+                )}
+                {/* Navigate arrow if has slug */}
+                {e.slug && isHov && (
+                  <text x={x + NODE_W - 10} y={y + 14} fontSize="9" fill="rgba(255,255,255,0.5)">→</text>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+
+      {/* Empty state */}
+      {layout.nodes.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>
+          No entities match the current filter
+        </div>
+      )}
+    </div>
+  )
+}
