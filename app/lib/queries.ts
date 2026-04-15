@@ -265,6 +265,55 @@ export async function getCompanyMilestones() {
   return data ?? []
 }
 
+export async function getCompanyMilestonesByEntityId(entityId: string) {
+  const { data, error } = await supabase
+    .from('company_milestones')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('target_date', { ascending: true, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getEntityBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from('entity_ownership')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+  if (error) return null
+  return data
+}
+
+export async function getCompanyTeam(entityId: string) {
+  const { data, error } = await supabase
+    .from('company_team')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('sort_order', { ascending: true, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getCompanyKpisByEntityId(entityId: string) {
+  const { data, error } = await supabase
+    .from('company_kpis')
+    .select('*')
+    .eq('entity_id', entityId)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function getAchievementsByEntityId(entityId: string) {
+  const { data, error } = await supabase
+    .from('achievements')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('earned_at', { ascending: false, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
 // ═══ Tasks (scoped helpers) ════════════════════════════════════════
 export async function getOpenTasks() {
   const { data, error } = await supabase
