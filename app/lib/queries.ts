@@ -496,3 +496,59 @@ export async function getEntityDocumentsByEntityId(entityId: string) {
   if (error) return []
   return data ?? []
 }
+
+// ═══ Project Detail ════════════════════════════════════════════════
+
+/** Single project with all fields */
+export async function getProjectById(id: string) {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) return null
+  return data as any
+}
+
+/** All tasks for a given project */
+export async function getProjectTasks(projectId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: true })
+  if (error) return []
+  return (data ?? []) as any[]
+}
+
+/** Linked agents derived from tasks.agent + project.linked_agent + project.agents array */
+export async function getProjectAgents(projectId: string) {
+  const project = await getProjectById(projectId)
+  const tasks = await getProjectTasks(projectId)
+  const set = new Set<string>()
+  if (project?.linked_agent) set.add(project.linked_agent)
+  if (Array.isArray(project?.agents)) project.agents.forEach((a: string) => a && set.add(a))
+  tasks.forEach((t: any) => { if (t.agent) set.add(t.agent) })
+  return [...set]
+}
+
+/** Aggregated costs from tasks */
+export async function getProjectCosts(projectId: string) {
+  const tasks = await getProjectTasks(projectId)
+  const totalCost = tasks.reduce((sum: number, t: any) => sum + Number(t.total_cost ?? 0), 0)
+  const totalTokens = tasks.reduce((sum: number, t: any) => sum + Number(t.tokens ?? 0), 0)
+  const totalTimeLogged = tasks.reduce((sum: number, t: any) => sum + Number(t.time_logged ?? 0), 0)
+  return { totalCost, totalTokens, totalTimeLogged, taskCount: tasks.length }
+}
+
+/** Milestones derived from tasks with is_milestone = true */
+export async function getProjectMilestones(projectId: string) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('is_milestone', true)
+    .order('due_date', { ascending: true, nullsFirst: false })
+  if (error) return []
+  return (data ?? []) as any[]
+}
