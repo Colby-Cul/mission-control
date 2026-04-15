@@ -183,6 +183,55 @@ a { color: inherit; text-decoration: none; }
   margin: 4px auto;
 }
 
+/* ─── Sidebar group flyout ────────────────────────────────────────────────── */
+.sb-group-wrap {
+  position: relative;
+}
+.sb-flyout {
+  display: none;
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  min-width: 180px;
+  background: rgba(12,12,26,0.97);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 0;
+  z-index: 300;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.sb-group-wrap:hover .sb-flyout {
+  display: block;
+}
+.sb-flyout-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 14px 8px;
+}
+.sb-flyout-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--t2);
+  text-decoration: none;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+}
+.sb-flyout-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--t1);
+}
+.sb-flyout-item.on {
+  color: var(--orange);
+  background: rgba(249,115,22,0.06);
+}
+
 /* ─── Main area ─────────────────────────────────────────────────────────────── */
 .main { display: grid; grid-template-rows: var(--topbar-h) 1fr; overflow: hidden; }
 

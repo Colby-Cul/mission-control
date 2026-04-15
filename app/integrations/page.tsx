@@ -25,20 +25,49 @@ const ACHIEVEMENTS = [
   { name: 'Fully Wired',     description: 'All recommended integrations connected.',         xp: 1000, progress: 5,  icon: '🌐', earned: false },
 ]
 
-// Static catalog of known integrations to show even if not in DB
+// Full 31-entry integration catalog — ported verbatim from IntegrationsHub.jsx INTEGRATION_META
+// Excludes aliasOf entries (monday alias) — 31 canonical entries total
 const KNOWN_INTEGRATIONS = [
-  { provider: 'Plaid',      category: 'Banking',      icon: '🏦', description: 'Bank accounts & transactions' },
-  { provider: 'Stripe',     category: 'Payments',     icon: '💳', description: 'Payments & subscriptions' },
-  { provider: 'QuickBooks', category: 'Accounting',   icon: '📊', description: 'Accounting & tax filing' },
-  { provider: 'Gmail',      category: 'Email',        icon: '📧', description: 'Email & calendar sync' },
-  { provider: 'Lodgify',    category: 'Rentals',      icon: '🏡', description: 'STR property management' },
-  { provider: 'Supabase',   category: 'Database',     icon: '🗄️', description: 'Live data & MCP server' },
-  { provider: 'Notion',     category: 'Docs',         icon: '📝', description: 'Knowledge base & docs' },
-  { provider: 'Slack',      category: 'Comms',        icon: '💬', description: 'Team communications' },
-  { provider: 'AgentMail',  category: 'Email Agents', icon: '🤖', description: 'AI inbox handling' },
-  { provider: 'n8n',        category: 'Automation',   icon: '⚙️', description: 'Workflow automation' },
-  { provider: 'Vercel',     category: 'Deploy',       icon: '▲',  description: 'Deployments & previews' },
-  { provider: 'GitHub',     category: 'Code',         icon: '🐙', description: 'Version control & PRs' },
+  // AI Models
+  { provider: 'anthropic',      name: 'Anthropic Claude',    category: 'AI Models',     knownStatus: 'active',          description: 'Primary AI — Sonnet 4.6, Haiku 4.5, Opus 4.6' },
+  { provider: 'openai',         name: 'OpenAI',              category: 'AI Models',     knownStatus: 'active',          description: 'GPT-4o, GPT-5.4, Whisper, DALL-E' },
+  { provider: 'ollama',         name: 'Ollama',              category: 'AI Models',     knownStatus: 'active',          description: 'Local inference — qwen2.5-coder:32b' },
+  { provider: 'openai-codex',   name: 'OpenAI Codex',        category: 'AI Models',     knownStatus: 'active',          description: 'ACP coding delegation runtime' },
+  { provider: 'exa',            name: 'Exa Search',          category: 'AI Models',     knownStatus: 'active',          description: 'Neural web search MCP server' },
+  // Messaging
+  { provider: 'telegram',       name: 'Telegram',            category: 'Messaging',     knownStatus: 'active',          description: 'Bot messaging — agent delivery channel' },
+  { provider: 'slack',          name: 'Slack',               category: 'Messaging',     knownStatus: 'active',          description: 'Workspace messaging via MCP + Socket Mode' },
+  { provider: 'discord',        name: 'Discord',             category: 'Messaging',     knownStatus: 'active',          description: 'Guild messaging — all channels' },
+  // STR / Rentals
+  { provider: 'lodgify',        name: 'Lodgify',             category: 'STR',           knownStatus: 'active',          description: 'PMS — property management + bookings' },
+  { provider: 'pricelabs',      name: 'Price Labs',          category: 'STR',           knownStatus: 'active',          description: 'Dynamic pricing + revenue management' },
+  // Business / Finance
+  { provider: 'monday.com',     name: 'Monday.com',          category: 'Business',      knownStatus: 'active',          description: 'Connected — not used for task mgmt (Mission Control only)' },
+  { provider: 'quickbooks',     name: 'QuickBooks',          category: 'Business',      knownStatus: 'not configured',  description: 'Accounting + financial management via OAuth' },
+  { provider: 'plaid',          name: 'Plaid',               category: 'Business',      knownStatus: 'not configured',  description: 'Bank + brokerage account aggregation (read-only)' },
+  { provider: 'coinbase',       name: 'Coinbase',            category: 'Business',      knownStatus: 'not configured',  description: 'Crypto portfolio + trading via OAuth API' },
+  { provider: 'canva',          name: 'Canva',               category: 'Business',      knownStatus: 'active',          description: 'Design + marketing assets via MCP' },
+  { provider: 'notion',         name: 'Notion',              category: 'Business',      knownStatus: 'active',          description: 'Knowledge base + docs via MCP' },
+  // Google Workspace
+  { provider: 'google',         name: 'Google Workspace',    category: 'Google',        knownStatus: 'active',          description: 'OAuth — Calendar, Gmail, Tasks, Drive' },
+  { provider: 'gmail',          name: 'Gmail',               category: 'Google',        knownStatus: 'active',          description: 'Email management via MCP' },
+  { provider: 'google-calendar',name: 'Google Calendar',     category: 'Google',        knownStatus: 'active',          description: 'Calendar management via MCP' },
+  // Infrastructure
+  { provider: 'supabase',       name: 'Supabase',            category: 'Infrastructure',knownStatus: 'active',          description: 'PostgreSQL database + auth via MCP' },
+  { provider: 'vercel',         name: 'Vercel',              category: 'Infrastructure',knownStatus: 'active',          description: 'Production deployment platform via MCP' },
+  { provider: 'grafana',        name: 'Grafana Cloud',       category: 'Infrastructure',knownStatus: 'active',          description: 'Monitoring + observability dashboards' },
+  { provider: 'tailscale',      name: 'Tailscale',           category: 'Infrastructure',knownStatus: 'active',          description: 'Mesh VPN — Mac Mini cluster' },
+  { provider: 'cloudflare',     name: 'Cloudflare',          category: 'Infrastructure',knownStatus: 'active',          description: 'DNS + CDN + security' },
+  // Dev Tools
+  { provider: 'github',         name: 'GitHub',              category: 'Dev Tools',     knownStatus: 'active',          description: 'Code repos, CI/CD, GitHub Pages' },
+  { provider: 'brave',          name: 'Brave Search',        category: 'Dev Tools',     knownStatus: 'active',          description: 'Web search API for agents' },
+  { provider: 'dropbox',        name: 'Dropbox',             category: 'Dev Tools',     knownStatus: 'active',          description: 'Cloud file storage (dbxcli)' },
+  { provider: 'fast.io',        name: 'Fast.io',             category: 'Dev Tools',     knownStatus: 'active',          description: 'CDN file hosting from Google Drive' },
+  // Automation / Monitoring
+  { provider: 'n8n',            name: 'n8n',                 category: 'Automation',    knownStatus: 'active',          description: 'Workflow automation platform via MCP' },
+  { provider: 'spike.sh',       name: 'Spike.sh',            category: 'Monitoring',    knownStatus: 'active',          description: 'Incident alerting + webhooks' },
+  // System
+  { provider: 'macos',          name: 'macOS',               category: 'System',        knownStatus: 'active',          description: 'System screen unlock credential' },
 ]
 
 function staleness(lastSync?: string | null): { label: string; color: string } {
@@ -68,12 +97,21 @@ export default async function IntegrationsPage() {
     return (Date.now() - new Date(i.last_sync).getTime()) < 86400000
   }).length
 
-  // Merge known catalog with DB records
+  // Merge known catalog with DB records — DB status overrides knownStatus if present
   const mergedIntegrations = KNOWN_INTEGRATIONS.map(known => {
     const dbRecord = intgList.find((i: any) =>
       (i.provider ?? i.name ?? '').toLowerCase() === known.provider.toLowerCase()
     )
-    return { ...known, ...dbRecord, provider: known.provider, icon: known.icon, description: known.description }
+    const resolvedStatus = dbRecord?.status ?? known.knownStatus ?? 'not configured'
+    return {
+      ...known,
+      ...dbRecord,
+      provider: known.provider,
+      name: known.name,
+      description: known.description,
+      category: known.category,
+      status: resolvedStatus,
+    }
   })
 
   // Also include any DB integrations not in known catalog
@@ -130,21 +168,48 @@ export default async function IntegrationsPage() {
         ))}
       </div>
 
-      {/* Integration Cards Grid */}
+      {/* Category tabs — rendered server-side, all categories visible */}
+      {(() => {
+        const CATEGORY_ORDER = ['AI Models','Messaging','Google','System','Dev Tools','STR','Business','Infrastructure','Automation','Monitoring']
+        const allCategories = CATEGORY_ORDER.filter(c => mergedIntegrations.some((i: any) => i.category === c))
+        return (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+            {allCategories.map(cat => {
+              const count = mergedIntegrations.filter((i: any) => i.category === cat).length
+              return (
+                <div key={cat} style={{
+                  padding: '5px 12px', borderRadius: 8,
+                  background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)',
+                  fontSize: 11, fontWeight: 600, color: 'var(--orange)',
+                  letterSpacing: '0.04em',
+                }}>
+                  {cat} <span style={{ opacity: 0.6 }}>({count})</span>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
+      {/* Integration Cards Grid — all 31 entries */}
       <SpecCard accent dataSource="integrations" style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
-          All Integrations
+          All Integrations ({mergedIntegrations.length})
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
           {mergedIntegrations.map((intg: any) => {
-            const isConnected = intg.status === 'connected' || intg.connected
-            const isPending   = intg.status === 'pending'
-            const isError     = intg.status === 'error'
-            const stale = intg.last_sync ? staleness(intg.last_sync) : { label: 'never synced', color: 'var(--dim)' }
+            const resolvedStatus = intg.status ?? intg.knownStatus ?? 'not configured'
+            const isActive    = resolvedStatus === 'active'
+            const isConnected = resolvedStatus === 'connected' || intg.connected || isActive
+            const isPending   = resolvedStatus === 'pending'
+            const isError     = resolvedStatus === 'error'
+            const stale = intg.last_sync ? staleness(intg.last_sync) : null
 
             const borderColor = isConnected ? 'rgba(16,185,129,0.2)' : isError ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'
-            const statusColor = isConnected ? 'var(--green)' : isPending ? 'var(--amber)' : isError ? 'var(--red)' : 'var(--dim)'
-            const statusText  = isConnected ? 'CONNECTED' : isPending ? 'PENDING' : isError ? 'ERROR' : 'DISCONNECTED'
+            const statusClr   = isConnected ? 'var(--green)' : isPending ? 'var(--amber)' : isError ? 'var(--red)' : 'var(--dim)'
+            const statusText  = isConnected ? 'ACTIVE' : isPending ? 'PENDING' : isError ? 'ERROR' : (resolvedStatus ?? 'NOT CONFIGURED').toUpperCase()
+            // Monogram icon from name (first 2 chars), matching original v6 IntegrationsHub style
+            const monogram = (intg.name ?? intg.provider ?? '??').slice(0, 2).toUpperCase()
 
             return (
               <div key={intg.provider} style={{
@@ -154,13 +219,20 @@ export default async function IntegrationsPage() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ fontSize: 22 }}>{intg.icon}</div>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: 'rgba(249,115,22,0.13)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, fontWeight: 700, color: 'var(--orange)', flexShrink: 0,
+                    }}>
+                      {monogram}
+                    </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13 }}>{intg.provider}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{intg.name ?? intg.provider}</div>
                       <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1 }}>{intg.category}</div>
                     </div>
                   </div>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: statusColor, background: statusColor + '18', padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: statusClr, background: statusClr + '18', padding: '3px 8px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', flexShrink: 0 }}>
                     {statusText}
                   </div>
                 </div>
@@ -168,8 +240,8 @@ export default async function IntegrationsPage() {
                 <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.4 }}>{intg.description}</div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: 10, color: stale.color, fontFamily: 'var(--mo)' }}>
-                    {isConnected ? stale.label : '—'}
+                  <div style={{ fontSize: 10, color: stale ? stale.color : 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                    {stale && isConnected ? stale.label : '—'}
                   </div>
                   <Link href={`/settings?tab=integrations&connect=${intg.provider.toLowerCase()}`} style={{
                     fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
@@ -185,21 +257,28 @@ export default async function IntegrationsPage() {
             )
           })}
 
-          {/* Unknown integrations from DB */}
+          {/* Any extra DB integrations not in the known catalog */}
           {unknownIntgs.map((i: any) => {
             const isConnected = i.status === 'connected' || i.connected
             const stale = staleness(i.last_sync)
+            const monogram = (i.provider ?? i.name ?? '??').slice(0, 2).toUpperCase()
             return (
               <div key={i.id ?? i.provider} style={{
                 padding: 16, background: 'rgba(255,255,255,0.025)', borderRadius: 14,
                 border: `1px solid ${isConnected ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'}`,
+                display: 'flex', flexDirection: 'column', gap: 8,
               }}>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{i.provider ?? i.name}</div>
-                <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4 }}>{i.category ?? 'Integration'}</div>
-                {isConnected && (
-                  <div style={{ fontSize: 10, color: stale.color, fontFamily: 'var(--mo)', marginTop: 8 }}>
-                    {stale.label}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(249,115,22,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--orange)' }}>
+                    {monogram}
                   </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{i.provider ?? i.name}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4 }}>{i.category ?? 'Integration'}</div>
+                  </div>
+                </div>
+                {isConnected && (
+                  <div style={{ fontSize: 10, color: stale.color, fontFamily: 'var(--mo)' }}>{stale.label}</div>
                 )}
               </div>
             )
