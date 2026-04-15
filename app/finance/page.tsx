@@ -9,6 +9,7 @@ import {
   getRecentTransactions,
   getAchievements,
 } from '../lib/queries'
+import HeroCanvas from './HeroCanvas'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,5 +142,10 @@ export default async function FinancePage() {
     .replace('___ACCOUNTS_GRID___', accountsGridHtml)
     .replace('___TXN_LIST___', txnListHtml)
 
-  return <div dangerouslySetInnerHTML={{ __html: finalHtml }} />
+  return (
+    <>
+      <div dangerouslySetInnerHTML={{ __html: finalHtml }} />
+      <HeroCanvas />
+    </>
+  )
 }

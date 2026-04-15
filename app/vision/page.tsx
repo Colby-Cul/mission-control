@@ -8,6 +8,7 @@ import {
   getUserProfile,
   getAccounts,
 } from '../lib/queries'
+import HeroCanvas from './HeroCanvas'
 
 export const dynamic = 'force-dynamic'
 
@@ -155,5 +156,10 @@ export default async function VisionPage() {
     .replace('→ Level 8', `→ Level ${level + 1}`)
     .replace('>Colby Culbertson<', `>${userName}<`)
 
-  return <div dangerouslySetInnerHTML={{ __html: finalHtml }} />
+  return (
+    <>
+      <div dangerouslySetInnerHTML={{ __html: finalHtml }} />
+      <HeroCanvas />
+    </>
+  )
 }
