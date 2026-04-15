@@ -9,27 +9,36 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getUserProfile, getIntegrations } from '../lib/queries'
+import { getUserProfile, getIntegrations, getAchievements } from '../lib/queries'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-const ACHIEVEMENTS = [
-  { name: 'Profile Set',   description: 'Completed your user profile.',                  xp: 100, progress: 100, icon: '👤', earned: true  },
-  { name: 'Bank Linked',   description: 'Connected Plaid to at least one bank.',          xp: 250, progress: 100, icon: '🏦', earned: true  },
-  { name: '2FA Enabled',   description: 'Two-factor authentication is active.',           xp: 300, progress: 40,  icon: '🛡️', earned: false },
-  { name: 'Team Invited',  description: 'Invited a team member to Mission Control.',      xp: 200, progress: 20,  icon: '🤝', earned: false },
-  { name: 'API Key Made',  description: 'Generated your first API key.',                  xp: 150, progress: 10,  icon: '🔑', earned: false },
-  { name: 'Fully Integrated', description: 'Connected all recommended integrations.',    xp: 750, progress: 15,  icon: '🌐', earned: false },
+const FALLBACK_ACHIEVEMENTS = [
+  { name: 'Profile Set',   description: 'Completed your user profile.',               xp: 100, progress: 100, icon: '👤', earned: true  },
+  { name: 'Bank Linked',   description: 'Connected Plaid to at least one bank.',       xp: 250, progress: 100, icon: '🏦', earned: true  },
+  { name: '2FA Enabled',   description: 'Two-factor authentication is active.',        xp: 300, progress: 40,  icon: '🛡️', earned: false },
+  { name: 'Fully Integrated', description: 'Connected all recommended integrations.', xp: 750, progress: 15,  icon: '🌐', earned: false },
 ]
 
 export default async function SettingsPage() {
-  const [profile, integrations] = await Promise.all([
+  const [profile, integrations, dbAchievements] = await Promise.all([
     getUserProfile().catch(() => null),
     getIntegrations().catch(() => []),
+    getAchievements('settings').catch(() => []),
   ])
 
-  const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
+  const achievements = (dbAchievements as any[]).length > 0
+    ? (dbAchievements as any[]).map((a: any) => ({
+        name:        a.name ?? '',
+        description: a.description ?? '',
+        xp:          Number(a.xp ?? 0),
+        progress:    Number(a.progress ?? (a.earned_at ? 100 : 0)),
+        icon:        a.icon ?? '🏆',
+        earned:      !!a.earned_at,
+      }))
+    : FALLBACK_ACHIEVEMENTS
+  const xpEarned = achievements.filter((a: any) => a.earned).reduce((s: number, a: any) => s + a.xp, 0)
   const intgList = (integrations as any[]) ?? []
   const connected = intgList.filter((i: any) => i.status === 'connected' || i.connected)
   const settings = (profile?.settings as Record<string, any>) ?? {}
@@ -63,13 +72,13 @@ export default async function SettingsPage() {
           { label: 'XP / Level',   value: `L${profile?.level ?? 1}`,  delta: `${(profile?.xp ?? 0).toLocaleString()} XP`, deltaPositive: true },
           { label: 'Streak',       value: `${profile?.streak ?? 0}d`,  delta: profile?.streak ? 'active' : 'start today'                      },
           { label: 'Connected',    value: String(connected.length),    delta: `of ${intgList.length} integrations`,         deltaPositive: connected.length > 0 },
-          { label: 'Badges',       value: String(ACHIEVEMENTS.filter(a => a.earned).length), delta: `of ${ACHIEVEMENTS.length}`               },
+          { label: 'Badges',       value: String(achievements.filter((a: any) => a.earned).length), delta: `of ${achievements.length}`               },
         ]}
         playerCard={playerCard}
         animationSlot={<HeroCanvas />}
       />
 
-      <Achievements items={ACHIEVEMENTS} xpEarned={xpEarned} />
+      <Achievements items={achievements} xpEarned={xpEarned} />
 
       {/* Profile Card + XP */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>

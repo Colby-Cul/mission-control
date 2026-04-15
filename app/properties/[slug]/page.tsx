@@ -10,7 +10,7 @@ import Achievements from '../../_components/Achievements'
 import { SpecCard } from '../../_components/SpecCard'
 import ComingSoon from '../../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getProperties, getEntityDocuments, getUserProfile } from '../../lib/queries'
+import { getProperties, getEntityDocuments, getUserProfile, getAchievements } from '../../lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,13 +19,11 @@ const USD = (n: number) =>
 
 const PCT = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
 
-const ACHIEVEMENTS = [
-  { name: 'Property Added',    description: 'Added this property to the portfolio.',          xp: 100, progress: 100, icon: '🏠', earned: true  },
-  { name: 'Equity Tracker',    description: 'Equity tracked and positive.',                  xp: 200, progress: 100, icon: '💎', earned: true  },
-  { name: 'Cash-Flow Pro',     description: 'Property generates positive monthly cash flow.', xp: 300, progress: 60,  icon: '💵', earned: false },
-  { name: 'Fully Occupied',    description: 'Zero vacancy this quarter.',                    xp: 250, progress: 50,  icon: '🔑', earned: false },
-  { name: 'Appreciated 10%',   description: 'Property value appreciated 10%+ since purchase.',xp: 400, progress: 40,  icon: '📈', earned: false },
-  { name: 'Zero Maintenance',  description: 'No maintenance issues in the last 6 months.',   xp: 200, progress: 70,  icon: '🔧', earned: false },
+const FALLBACK_ACHIEVEMENTS = [
+  { name: 'Property Added',    description: 'Added this property to the portfolio.',           xp: 100, progress: 100, icon: '🏠', earned: true  },
+  { name: 'Equity Tracker',    description: 'Equity tracked and positive.',                   xp: 200, progress: 100, icon: '💎', earned: true  },
+  { name: 'Cash-Flow Pro',     description: 'Property generates positive monthly cash flow.',  xp: 300, progress: 60,  icon: '💵', earned: false },
+  { name: 'Appreciated 10%',   description: 'Property value appreciated 10%+ since purchase.', xp: 400, progress: 40,  icon: '📈', earned: false },
 ]
 
 function slugify(name: string, id: string) {
@@ -35,9 +33,10 @@ function slugify(name: string, id: string) {
 }
 
 export default async function PropertyPage({ params }: { params: { slug: string } }) {
-  const [properties, profile] = await Promise.all([
+  const [properties, profile, dbAchievements] = await Promise.all([
     getProperties().catch(() => []),
     getUserProfile().catch(() => null),
+    getAchievements('property').catch(() => []),
   ])
 
   // Find property by slug field, or derive slug from name/id
@@ -62,7 +61,17 @@ export default async function PropertyPage({ params }: { params: { slug: string 
     )
   } catch { /* table may not exist */ }
 
-  const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
+  const achievements = (dbAchievements as any[]).length > 0
+    ? (dbAchievements as any[]).map((a: any) => ({
+        name:        a.name ?? '',
+        description: a.description ?? '',
+        xp:          Number(a.xp ?? 0),
+        progress:    Number(a.progress ?? (a.earned_at ? 100 : 0)),
+        icon:        a.icon ?? '🏆',
+        earned:      !!a.earned_at,
+      }))
+    : FALLBACK_ACHIEVEMENTS
+  const xpEarned = achievements.filter((a: any) => a.earned).reduce((s: number, a: any) => s + a.xp, 0)
 
   const playerCard = profile ? {
     name: profile.full_name ?? 'CEO',
@@ -95,7 +104,7 @@ export default async function PropertyPage({ params }: { params: { slug: string 
         animationSlot={<HeroCanvas />}
       />
 
-      <Achievements items={ACHIEVEMENTS} xpEarned={xpEarned} />
+      <Achievements items={achievements} xpEarned={xpEarned} />
 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
