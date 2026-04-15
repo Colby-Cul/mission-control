@@ -45,6 +45,15 @@ export async function getVisions() {
   return data ?? []
 }
 
+export async function getMilestones() {
+  const { data, error } = await supabase
+    .from('financial_milestones')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
 // ═══ Finance ═══════════════════════════════════════════════════════
 // Sign convention for net worth: depository/investment count positive,
 // credit/loan count negative (they're debt owed, not assets held).

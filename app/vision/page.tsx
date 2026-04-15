@@ -2,6 +2,9 @@
  * Vision Board — pixel-for-pixel port of vision-board-v5-option-d-terrain.html
  * Vision cards wired to `visions` table; account chips wired to financial_accounts.
  * XP wired to `users_profile`. Falls back to hardcoded demo when tables are empty.
+ *
+ * Interactive elements (modal, filter tabs, cards, drawers) are handled by VisionClient.
+ * The static HTML blob only keeps the hero, achievements, and milestones decoration.
  */
 import {
   getVisions,
@@ -10,6 +13,8 @@ import {
 } from '../lib/queries'
 import HeroCanvas from './HeroCanvas'
 import Hero from '../_components/Hero'
+import VisionClient from './VisionClient'
+import type { Vision } from './VisionClient'
 
 export const dynamic = 'force-dynamic'
 
@@ -206,8 +211,7 @@ export default async function VisionPage() {
   let accounts: any[] = []
   try { accounts = await getAccounts() } catch {}
 
-  // Build live HTML chunks
-  const visionGridHtml = buildVisionGrid(visions)
+  // Build live HTML chunks (vision grid now rendered by VisionClient; only accounts section remains)
   const linkedAccountsHtml = buildAccountCardsSection(accounts)
 
   // Page-specific CSS (app shell reset rules stripped)
@@ -934,19 +938,8 @@ textarea.form-input { height:72px; resize:vertical; }
     </div>
   </section>
 
-  <!-- ASSETS & PURCHASES -->
-  <section class="section">
-    <div class="section-header">
-      <h2 class="section-title">Assets & Purchases</h2>
-      <div class="filter-row">
-        <button class="filter-pill active" onclick="filterCards('all', this)">All</button>
-        <button class="filter-pill" onclick="filterCards('active', this)">Active</button>
-        <button class="filter-pill" onclick="filterCards('planning', this)">Planning</button>
-        <button class="filter-pill" onclick="filterCards('future', this)">Future</button>
-      </div>
-    </div>
-___VISION_GRID___
-  </section>
+  <!-- VISION GRID — replaced by VisionClient React component (see page.tsx return) -->
+  ___VISION_CLIENT_SLOT___
 
   <!-- FINANCIAL MILESTONES — Premium Widgets -->
   <!-- SVG gradient defs for milestones -->
@@ -1583,7 +1576,6 @@ document.getElementById('viewAllBtn').addEventListener('click', function() {
 </script>
 ___LINKED_ACCOUNTS___
 `
-    .replace('___VISION_GRID___', visionGridHtml)
     .replace('___LINKED_ACCOUNTS___', linkedAccountsHtml)
 
   const netWorth = accounts.reduce((s: number, a: any) => {
@@ -1632,7 +1624,21 @@ ___LINKED_ACCOUNTS___
         }}
         animationSlot={<HeroCanvas />}
       />
-      <div dangerouslySetInnerHTML={{ __html: bodyContent }} />
+      {/* Split the body around the vision client slot so VisionClient is a real React component */}
+      {(() => {
+        const [before, after] = bodyContent.split('___VISION_CLIENT_SLOT___')
+        return (
+          <>
+            <div dangerouslySetInnerHTML={{ __html: before ?? '' }} />
+            <VisionClient
+              initialVisions={visions as Vision[]}
+              initialMilestones={[]}
+              accounts={accounts.map((a: any) => ({ id: a.id, name: a.name, type: a.type ?? null, mask: a.mask ?? null }))}
+            />
+            <div dangerouslySetInnerHTML={{ __html: after ?? '' }} />
+          </>
+        )
+      })()}
     </>
   )
 }
