@@ -9,11 +9,12 @@
  *   QUICKBOOKS_CLIENT_SECRET
  *   QUICKBOOKS_REDIRECT_URI   e.g. https://mc-merge-v7-latest.vercel.app/api/qb/callback
  *   QUICKBOOKS_ENV            'sandbox' (default) | 'production'
+ *   SUPABASE_SERVICE_ROLE_KEY required for upsert under RLS — admin-only
  *
- * Storage: `quickbooks_connections` keyed by `company_key`. We use the seed
- * user id as the company_key so the dashboard can multi-tenant later by
- * swapping in a real company identifier (e.g. entity slug). The table also
- * tracks `realm_id`, `expires_at`, `refresh_token_expires_at` so we can
+ * Storage: `quickbooks_connections` keyed by `company_key`. We now key each
+ * row by an entity slug (e.g. `xome-home`, `culbertson-gray`) so the user can
+ * connect multiple QuickBooks companies — one per entity. Each row carries its
+ * own `realm_id`, `expires_at`, and `refresh_token_expires_at` so we can
  * detect a stale refresh_token (101-day lifetime) and force a reconnect.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -30,11 +31,6 @@ export function currentUserId(): string {
   )
 }
 
-/** Primary company key for QB (single-tenant today; will map to entity slug later). */
-export function currentCompanyKey(): string {
-  return process.env.QUICKBOOKS_COMPANY_KEY || currentUserId()
-}
-
 export function isQbOAuthConfigured(): boolean {
   return !!(
     process.env.QUICKBOOKS_CLIENT_ID &&
@@ -43,13 +39,44 @@ export function isQbOAuthConfigured(): boolean {
   )
 }
 
-/** Supabase admin (service-role) client for server-side writes under RLS. */
+/**
+ * True when `SUPABASE_SERVICE_ROLE_KEY` is set. Writes into
+ * `quickbooks_connections` require the service role to bypass RLS.
+ */
+export function isQbStorageWritable(): boolean {
+  return !!process.env.SUPABASE_SERVICE_ROLE_KEY
+}
+
+/**
+ * Supabase admin (service-role) client for server-side writes under RLS.
+ *
+ * NOTE: for WRITE operations use `supabaseAdminStrict()` which throws when
+ * the service role key is missing. Reads can still use this fallback-anon
+ * client because the `quickbooks_connections` RLS policy permits SELECT for
+ * everyone today.
+ */
 export function supabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   return createClient(url, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+}
+
+/**
+ * Strict admin client: throws if the service role key isn't configured.
+ * Use for writes — protects against silent insert-under-RLS failures.
+ */
+export function supabaseAdminStrict() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY not configured — admin must set this in Vercel env to enable QB token storage',
+    )
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  return createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 }
@@ -149,7 +176,13 @@ async function refreshAccessToken(refreshToken: string): Promise<QbTokenResponse
   return (await res.json()) as QbTokenResponse
 }
 
-/** Persist (upsert) a QB connection row for company_key. */
+/**
+ * Persist (upsert) a QB connection row for company_key.
+ *
+ * Requires `SUPABASE_SERVICE_ROLE_KEY`. Throws a descriptive error when that
+ * env var is missing so the callback can bounce the user to an error page
+ * rather than silently failing under RLS.
+ */
 export async function upsertQbConnection(input: {
   companyKey: string
   realmId: string | null
@@ -160,7 +193,8 @@ export async function upsertQbConnection(input: {
   scope?: string | null
   tokenType?: string | null
 }): Promise<void> {
-  const sb = supabaseAdmin()
+  // Strict admin — throws the SUPABASE_SERVICE_ROLE_KEY error message when unset.
+  const sb = supabaseAdminStrict()
   const row = {
     company_key: input.companyKey,
     realm_id: input.realmId,
@@ -183,6 +217,7 @@ export async function upsertQbConnection(input: {
 
 /** Load the QB connection for a company_key (null if none). */
 export async function getQbConnection(companyKey: string): Promise<QbConnection | null> {
+  if (!companyKey) return null
   try {
     const sb = supabaseAdmin()
     const { data, error } = await sb
@@ -201,10 +236,30 @@ export async function getQbConnection(companyKey: string): Promise<QbConnection 
   }
 }
 
-/** Delete a connection row. */
-export async function deleteQbConnection(companyKey: string): Promise<void> {
+/** List every QB connection row — for the multi-connection admin view. */
+export async function listQbConnections(): Promise<QbConnection[]> {
   try {
     const sb = supabaseAdmin()
+    const { data, error } = await sb
+      .from('quickbooks_connections')
+      .select('*')
+      .order('updated_at', { ascending: false })
+    if (error) {
+      console.error('[qb] listQbConnections error', error)
+      return []
+    }
+    return (data as QbConnection[] | null) ?? []
+  } catch (e) {
+    console.error('[qb] listQbConnections threw', e)
+    return []
+  }
+}
+
+/** Delete a connection row. */
+export async function deleteQbConnection(companyKey: string): Promise<void> {
+  if (!companyKey) return
+  try {
+    const sb = isQbStorageWritable() ? supabaseAdminStrict() : supabaseAdmin()
     await sb.from('quickbooks_connections').delete().eq('company_key', companyKey)
   } catch (e) {
     console.error('[qb] delete threw', e)
@@ -237,13 +292,14 @@ export async function logQbEvent(input: {
 }
 
 /**
- * Return a live access_token + realmId for a user, refreshing if needed.
- * Returns null if not connected or refresh_token has expired.
+ * Return a live access_token + realmId for a specific companyKey (entity
+ * slug), refreshing if needed. Returns null if not connected or refresh_token
+ * has expired.
  */
 export async function getQbClient(
-  userId: string,
+  companyKey: string,
 ): Promise<{ realmId: string; accessToken: string } | null> {
-  const companyKey = userId || currentCompanyKey()
+  if (!companyKey) return null
   const row = await getQbConnection(companyKey)
   if (!row || !row.realm_id) return null
 
@@ -297,7 +353,7 @@ export async function getQbClient(
   }
 }
 
-// ─── 60-second per-(userId,path) cache ────────────────────────────────────────
+// ─── 60-second per-(companyKey,path) cache ────────────────────────────────────
 
 interface CacheEntry {
   t: number
@@ -306,8 +362,8 @@ interface CacheEntry {
 const CACHE = new Map<string, CacheEntry>()
 const CACHE_TTL_MS = 60_000
 
-function cacheKey(userId: string, path: string): string {
-  return `${userId}::${path}`
+function cacheKey(companyKey: string, path: string): string {
+  return `${companyKey}::${path}`
 }
 
 function cacheGet<T>(key: string): T | null {
@@ -327,20 +383,24 @@ function cacheSet(key: string, data: unknown) {
 /**
  * Low-level authed fetch against the QBO v3 API. Swallows every error and
  * returns null so server components never throw from a failed QB call.
+ *
+ * Keyed by `companyKey` (entity slug) so each entity has its own realm /
+ * token cache.
  */
 export async function qbFetch<T>(
-  userId: string,
+  companyKey: string,
   path: string,
   opts: RequestInit = {},
 ): Promise<T | null> {
+  if (!companyKey) return null
   const isGet = !opts.method || opts.method.toUpperCase() === 'GET'
-  const key = cacheKey(userId, path)
+  const key = cacheKey(companyKey, path)
   if (isGet) {
     const cached = cacheGet<T>(key)
     if (cached !== null) return cached
   }
 
-  const client = await getQbClient(userId)
+  const client = await getQbClient(companyKey)
   if (!client) return null
 
   try {
@@ -359,7 +419,7 @@ export async function qbFetch<T>(
       await logQbEvent({
         kind: 'api-error',
         status: 'error',
-        detail: { path, status: res.status, body: txt.slice(0, 300) },
+        detail: { companyKey, path, status: res.status, body: txt.slice(0, 300) },
       })
       return null
     }
@@ -371,18 +431,22 @@ export async function qbFetch<T>(
     await logQbEvent({
       kind: 'api-exception',
       status: 'error',
-      detail: { path, error: String(e) },
+      detail: { companyKey, path, error: String(e) },
     })
     return null
   }
 }
 
-// ─── Typed helpers ────────────────────────────────────────────────────────────
+// ─── Typed helpers (all entity-scoped) ────────────────────────────────────────
 
-export async function getQbCompanyInfo(userId: string): Promise<any> {
-  const client = await getQbClient(userId)
+export async function getQbCompanyInfo(companyKey: string): Promise<any> {
+  if (!companyKey) return null
+  const client = await getQbClient(companyKey)
   if (!client) return null
-  return qbFetch<any>(userId, `companyinfo/${encodeURIComponent(client.realmId)}?minorversion=70`)
+  return qbFetch<any>(
+    companyKey,
+    `companyinfo/${encodeURIComponent(client.realmId)}?minorversion=70`,
+  )
 }
 
 /** YTD default date range helper. */
@@ -394,10 +458,11 @@ function ytdRange(): { start: string; end: string } {
 }
 
 export async function getQbProfitLoss(
-  userId: string,
+  companyKey: string,
   startDate?: string,
   endDate?: string,
 ): Promise<any> {
+  if (!companyKey) return null
   const r = ytdRange()
   const start = startDate ?? r.start
   const end = endDate ?? r.end
@@ -407,31 +472,37 @@ export async function getQbProfitLoss(
     summarize_column_by: 'Total',
     minorversion: '70',
   })
-  return qbFetch<any>(userId, `reports/ProfitAndLoss?${qs.toString()}`)
+  return qbFetch<any>(companyKey, `reports/ProfitAndLoss?${qs.toString()}`)
 }
 
-export async function getQbBalanceSheet(userId: string, asOf?: string): Promise<any> {
+export async function getQbBalanceSheet(companyKey: string, asOf?: string): Promise<any> {
+  if (!companyKey) return null
   const end = asOf ?? new Date().toISOString().slice(0, 10)
   const qs = new URLSearchParams({
     end_date: end,
     summarize_column_by: 'Total',
     minorversion: '70',
   })
-  return qbFetch<any>(userId, `reports/BalanceSheet?${qs.toString()}`)
+  return qbFetch<any>(companyKey, `reports/BalanceSheet?${qs.toString()}`)
 }
 
-export async function getQbAccountsList(userId: string): Promise<any> {
+export async function getQbAccountsList(companyKey: string): Promise<any> {
+  if (!companyKey) return null
   // QBO uses ?query=select * from Account
   const q = encodeURIComponent("select * from Account where Active = true")
-  return qbFetch<any>(userId, `query?query=${q}&minorversion=70`)
+  return qbFetch<any>(companyKey, `query?query=${q}&minorversion=70`)
 }
 
-export async function getQbRecentTransactions(userId: string, limit = 20): Promise<any> {
+export async function getQbRecentTransactions(
+  companyKey: string,
+  limit = 20,
+): Promise<any> {
+  if (!companyKey) return null
   const safeLimit = Math.max(1, Math.min(500, Number(limit) || 20))
   const q = encodeURIComponent(
     `select * from Purchase order by TxnDate DESC maxresults ${safeLimit}`,
   )
-  return qbFetch<any>(userId, `query?query=${q}&minorversion=70`)
+  return qbFetch<any>(companyKey, `query?query=${q}&minorversion=70`)
 }
 
 // ─── P&L / Balance Sheet parsers ──────────────────────────────────────────────

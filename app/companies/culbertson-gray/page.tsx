@@ -36,7 +36,6 @@ import {
   getEntityDocumentsByEntityId,
 } from '../../lib/queries'
 import {
-  currentCompanyKey,
   getQbConnection,
   getQbProfitLoss,
   parseProfitLoss,
@@ -123,14 +122,14 @@ export default async function CulbertsonGrayPage() {
   try { revenue30d = await getEntityRevenue30d(CG_SLUG) } catch {}
   try { expenses30d = await getEntityExpenses30d(CG_SLUG) } catch {}
 
-  // QuickBooks YTD P&L — only when this entity's QB realm is connected.
-  // Today we match on the default company_key; future work maps entity slug
-  // → realm via a lookup on entity_ownership.meta.qb_realm_id.
+  // QuickBooks YTD P&L — keyed by entity slug (multi-tenant).
+  // Each QB company is stored in quickbooks_connections.company_key = CG_SLUG,
+  // so `getQbConnection('culbertson-gray')` resolves this entity's realm.
   let qbPL: ParsedPL | null = null
   try {
-    const connection = await getQbConnection(currentCompanyKey())
+    const connection = await getQbConnection(CG_SLUG)
     if (connection?.realm_id) {
-      const raw = await getQbProfitLoss(currentCompanyKey())
+      const raw = await getQbProfitLoss(CG_SLUG)
       qbPL = parseProfitLoss(raw)
     }
   } catch {

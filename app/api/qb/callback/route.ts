@@ -3,15 +3,19 @@
  *
  * Intuit redirects here after the user grants consent. We:
  *   1. Validate state against the qb_oauth_state cookie (CSRF).
- *   2. Exchange `code` for access + refresh tokens at the bearer endpoint.
- *   3. Upsert the row into `quickbooks_connections` (keyed by company_key).
- *   4. Bounce back to the original `returnTo` with ?connected=quickbooks.
+ *   2. Decode the entity slug + returnTo from state.
+ *   3. Exchange `code` for access + refresh tokens at the bearer endpoint.
+ *   4. Upsert the row into `quickbooks_connections` keyed by entity slug.
+ *   5. Bounce to `/companies/<slug>?connected=quickbooks` by default, or to
+ *      a caller-provided returnTo when present.
  *
  * Any failure lands on `<returnTo>?highlight=quickbooks&error=<code>`.
+ *
+ * SUPABASE_SERVICE_ROLE_KEY must be set — `upsertQbConnection` throws with a
+ * clear message otherwise, which surfaces to the user as `?error=<msg>`.
  */
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  currentCompanyKey,
   exchangeCodeForTokens,
   isQbOAuthConfigured,
   logQbEvent,
@@ -29,13 +33,19 @@ function appOrigin(req: NextRequest): string {
   return new URL(req.url).origin
 }
 
-function decodeState(state: string | null): { nonce: string; returnTo: string } | null {
+function decodeState(
+  state: string | null,
+): { nonce: string; returnTo: string; entity: string | null } | null {
   if (!state) return null
   try {
     const raw = Buffer.from(state, 'base64url').toString('utf8')
     const parsed = JSON.parse(raw)
     if (typeof parsed?.n !== 'string' || typeof parsed?.r !== 'string') return null
-    return { nonce: parsed.n, returnTo: parsed.r }
+    return {
+      nonce: parsed.n,
+      returnTo: parsed.r,
+      entity: typeof parsed.e === 'string' && parsed.e.length > 0 ? parsed.e : null,
+    }
   } catch {
     return null
   }
@@ -67,9 +77,10 @@ export async function GET(req: NextRequest) {
 
   const decoded = decodeState(state)
   const returnTo = decoded?.returnTo ?? '/integrations'
+  const entitySlug = decoded?.entity ?? null
 
   if (oauthErr) {
-    await logQbEvent({ kind: 'callback-provider-error', status: 'error', detail: { oauthErr } })
+    await logQbEvent({ kind: 'callback-provider-error', status: 'error', detail: { oauthErr, entitySlug } })
     return bounce(origin, returnTo, { highlight: 'quickbooks', error: oauthErr })
   }
   if (!code) {
@@ -80,6 +91,13 @@ export async function GET(req: NextRequest) {
   }
   if (!decoded) {
     return bounce(origin, returnTo, { highlight: 'quickbooks', error: 'state-decode' })
+  }
+  if (!entitySlug) {
+    // Legacy state without entity — happens only for pre-multitenant OAuth links.
+    return bounce(origin, returnTo, {
+      highlight: 'quickbooks',
+      error: 'entity-missing-in-state',
+    })
   }
 
   const cookieNonce = req.cookies.get('qb_oauth_state')?.value
@@ -96,8 +114,10 @@ export async function GET(req: NextRequest) {
       ? new Date(now + tokens.x_refresh_token_expires_in * 1000).toISOString()
       : null
 
+    // NOTE: upsertQbConnection throws with a clear message if
+    // SUPABASE_SERVICE_ROLE_KEY is missing — we catch below and surface it.
     await upsertQbConnection({
-      companyKey: currentCompanyKey(),
+      companyKey: entitySlug,
       realmId,
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
@@ -106,9 +126,22 @@ export async function GET(req: NextRequest) {
       scope: tokens.scope ?? null,
       tokenType: tokens.token_type ?? 'bearer',
     })
-    await logQbEvent({ kind: 'connect-success', status: 'ok', detail: { realmId } })
+    await logQbEvent({
+      kind: 'connect-success',
+      status: 'ok',
+      detail: { realmId, entitySlug },
+    })
 
-    const res = bounce(origin, returnTo, { connected: 'quickbooks' })
+    // Default landing page: the entity's own dashboard. Callers that pass a
+    // returnTo (e.g. /integrations) get honored verbatim.
+    const defaultReturn = `/companies/${encodeURIComponent(entitySlug)}`
+    const effectiveReturn =
+      returnTo && returnTo !== '/integrations' ? returnTo : defaultReturn
+
+    const res = bounce(origin, effectiveReturn, {
+      connected: 'quickbooks',
+      entity: entitySlug,
+    })
     res.cookies.set('qb_oauth_state', '', { path: '/', maxAge: 0 })
     return res
   } catch (e: unknown) {
@@ -117,7 +150,7 @@ export async function GET(req: NextRequest) {
     await logQbEvent({ kind: 'token-exchange', status: 'error', detail: msg })
     return bounce(origin, returnTo, {
       highlight: 'quickbooks',
-      error: encodeURIComponent(msg.slice(0, 80)),
+      error: encodeURIComponent(msg.slice(0, 120)),
     })
   }
 }
