@@ -1,9 +1,10 @@
-import { getAccounts, getRecentTransactions, accountSignedBalance } from '../lib/queries'
+import { getAccounts, getRecentTransactions, accountSignedBalance, getCashFlowTimeline } from '../lib/queries'
+import Sparkline from '../_components/Sparkline'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CashFlowPage() {
-  const [accounts, txns] = await Promise.all([getAccounts(), getRecentTransactions(100)])
+  const [accounts, txns, cfTimeline] = await Promise.all([getAccounts(), getRecentTransactions(100), getCashFlowTimeline()])
 
   const total = accounts.reduce((s, a) => s + accountSignedBalance(a), 0)
   const inflow30 = txns.filter(t => Number(t.amount) < 0).reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
@@ -19,6 +20,11 @@ export default async function CashFlowPage() {
           {accounts.length} accounts · ${inflow30.toLocaleString(undefined, { maximumFractionDigits: 0 })} in ·
           {' '}${outflow30.toLocaleString(undefined, { maximumFractionDigits: 0 })} out (last {txns.length} txns)
         </p>
+      </div>
+
+      <div className="mc-card accent" style={{ marginBottom: 16 }}>
+        <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Cash Flow Trend · {cfTimeline.length} snapshots</h3>
+        <Sparkline data={cfTimeline as any} color="var(--blue, #4aa3ff)" fill="rgba(74,163,255,0.12)" />
       </div>
 
       <div className="mc-card accent" style={{ marginBottom: 16 }}>

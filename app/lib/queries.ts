@@ -245,3 +245,33 @@ export async function getIntegrations() {
   if (error) throw error
   return data ?? []
 }
+
+// ═══ Entity Documents (Files / Legal) ═════════════════════════════
+export async function getEntityDocuments(docTypes?: string[]) {
+  let q = supabase.from('entity_documents').select('*').order('created_at', { ascending: false, nullsFirst: false })
+  if (docTypes && docTypes.length > 0) q = q.in('document_type', docTypes)
+  const { data, error } = await q
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Company Milestones ════════════════════════════════════════════
+export async function getCompanyMilestones() {
+  const { data, error } = await supabase
+    .from('company_milestones')
+    .select('*')
+    .order('target_date', { ascending: true, nullsFirst: false })
+  if (error) throw error
+  return data ?? []
+}
+
+// ═══ Tasks (scoped helpers) ════════════════════════════════════════
+export async function getOpenTasks() {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*, project:projects(name)')
+    .not('status', 'in', '(done,cancelled,completed)')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}

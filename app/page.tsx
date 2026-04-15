@@ -1,9 +1,10 @@
-import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas, getAccounts, accountSignedBalance } from './lib/queries'
+import { getEntities, getAgents, getVisions, getAchievements, getUpcomingTaxDeadlines, getForgeIdeas, getAccounts, accountSignedBalance, getNetWorthTimeline, getCashFlowTimeline } from './lib/queries'
+import Sparkline from './_components/Sparkline'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const [entities, agents, visions, achievements, deadlines, ideas, accounts] = await Promise.all([
+  const [entities, agents, visions, achievements, deadlines, ideas, accounts, nwTimeline, cfTimeline] = await Promise.all([
     getEntities(),
     getAgents(),
     getVisions(),
@@ -11,6 +12,8 @@ export default async function DashboardPage() {
     getUpcomingTaxDeadlines(),
     getForgeIdeas('new'),
     getAccounts(),
+    getNetWorthTimeline(),
+    getCashFlowTimeline(),
   ])
   const netWorth = accounts.reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
 
@@ -24,6 +27,17 @@ export default async function DashboardPage() {
           {entities.length} active entities · {agents.filter(a => a.status === 'active').length} of {agents.length} agents online ·
           {' '}{ideas.length} new Forge ideas waiting review · {deadlines.length} upcoming tax deadlines
         </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+        <div className="mc-card accent">
+          <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Net Worth · last {nwTimeline.length} snapshots</h3>
+          <Sparkline data={nwTimeline as any} color="var(--green)" fill="rgba(80,200,120,0.12)" />
+        </div>
+        <div className="mc-card accent">
+          <h3 style={{ fontSize: 13, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Cash Flow · last {cfTimeline.length} snapshots</h3>
+          <Sparkline data={cfTimeline as any} color="var(--blue, #4aa3ff)" fill="rgba(74,163,255,0.12)" />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
