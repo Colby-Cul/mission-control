@@ -3,16 +3,23 @@
  * Ported from live Accounts.jsx: full accounts table (Banking/Investment/Credit),
  * net worth KPIs, properties summary.
  * Hero metric: net worth / total balances
+ *
+ * v7 additions:
+ *  - Owner column with inline EntitySelect (Personal / Entity + dropdown)
+ *  - LinkAccountBar at top for scoped Plaid link flow
  */
 import Hero from '../_components/Hero'
 import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from '../_components/HeroCanvasDefault'
+import EntitySelect from '../_components/EntitySelect'
+import LinkAccountBar from '../_components/LinkAccountBar'
 import {
   getAccounts,
   accountSignedBalance,
   getProperties,
+  getEntities,
 } from '../lib/queries'
 
 export const dynamic = 'force-dynamic'
@@ -33,36 +40,76 @@ const DEFAULT_ACHIEVEMENTS = [
   { name: 'Real Estate King', description: 'Property portfolio value exceeds $3M.',           xp: 600, progress: 60,  icon: '🏡', earned: false },
 ]
 
+/** Type pill colors matching live site */
 function typeBadge(type: string, subtype?: string): { bg: string; color: string; label: string } {
   const t = String(type ?? '').toLowerCase()
-  if (t === 'credit')     return { bg: 'rgba(239,68,68,0.1)',     color: '#ef4444', label: subtype || 'Credit'      }
-  if (t === 'investment') return { bg: 'rgba(139,92,246,0.1)',    color: '#8b5cf6', label: subtype || 'Investment'  }
-  if (t === 'brokerage')  return { bg: 'rgba(139,92,246,0.1)',    color: '#8b5cf6', label: subtype || 'Brokerage'   }
-  return                         { bg: 'rgba(16,185,129,0.1)',    color: '#10b981', label: subtype || 'Depository'  }
+  const s = String(subtype ?? '').toLowerCase()
+  if (t === 'credit')                          return { bg: 'rgba(239,68,68,0.12)',   color: '#ef4444', label: subtype || 'Credit'    }
+  if (t === 'investment' || t === 'brokerage') return { bg: 'rgba(139,92,246,0.12)', color: '#8b5cf6', label: subtype || 'Brokerage'  }
+  if (s === 'utma')                            return { bg: 'rgba(139,92,246,0.12)', color: '#8b5cf6', label: 'UTMA'                  }
+  if (t === 'loan')                            return { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: subtype || 'Loan'       }
+  if (s === 'cash management' || s === 'cash') return { bg: 'rgba(249,115,22,0.12)', color: '#f97316', label: subtype || 'Cash'       }
+  return                                              { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', label: subtype || 'Checking'   }
+}
+
+/** Group accounts by owner: personal first, then one section per entity */
+function groupByOwner(accounts: any[], entityMap: Record<string, string>) {
+  const personal: any[] = []
+  const byEntity: Record<string, any[]> = {}
+
+  for (const a of accounts) {
+    if (a.account_scope === 'entity' && a.entity_id) {
+      if (!byEntity[a.entity_id]) byEntity[a.entity_id] = []
+      byEntity[a.entity_id].push(a)
+    } else {
+      personal.push(a)
+    }
+  }
+
+  const groups: { key: string; label: string; accounts: any[] }[] = []
+  if (personal.length) groups.push({ key: 'personal', label: 'Personal (Colby)', accounts: personal })
+  for (const [eid, accts] of Object.entries(byEntity)) {
+    groups.push({ key: eid, label: entityMap[eid] ?? eid, accounts: accts })
+  }
+  return groups
+}
+
+const TH_STYLE: React.CSSProperties = {
+  fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.06em',
+  padding: '10px 10px', textAlign: 'left', borderBottom: '1px solid var(--border)', fontWeight: 600,
 }
 
 export default async function AccountsPage() {
-  const [accounts, properties] = await Promise.allSettled([
+  const [accounts, properties, entities] = await Promise.allSettled([
     getAccounts(),
     getProperties().catch(() => []),
+    getEntities().catch(() => []),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
-  const depositoryAccts   = (accounts as any[]).filter((a: any) => String(a.type ?? '').toLowerCase() === 'depository')
-  const investmentAccts   = (accounts as any[]).filter((a: any) => ['investment', 'brokerage'].includes(String(a.type ?? '').toLowerCase()))
-  const creditAccts       = (accounts as any[]).filter((a: any) => String(a.type ?? '').toLowerCase() === 'credit')
+  const accts = accounts as any[]
+  const ents  = (entities as any[]).map((e: any) => ({ id: e.id, entity_name: e.entity_name }))
+
+  const depositoryAccts   = accts.filter((a: any) => String(a.type ?? '').toLowerCase() === 'depository')
+  const investmentAccts   = accts.filter((a: any) => ['investment', 'brokerage'].includes(String(a.type ?? '').toLowerCase()))
+  const creditAccts       = accts.filter((a: any) => String(a.type ?? '').toLowerCase() === 'credit')
 
   const liquidTotal     = depositoryAccts.reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
   const investmentTotal = investmentAccts.reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
   const creditDebt      = creditAccts.reduce((s: number, a: any) => s + Math.abs(Number(a.balance_current ?? 0)), 0)
-  const netWorth        = (accounts as any[]).reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
-  const institutionCount = new Set((accounts as any[]).map((a: any) => a.institution_id ?? a.institution_name ?? a.name)).size
+  const netWorth        = accts.reduce((s: number, a: any) => s + accountSignedBalance(a), 0)
+  const institutionCount = new Set(accts.map((a: any) => a.institution_id ?? a.institution_name ?? a.name)).size
 
   const xpEarned = DEFAULT_ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
 
-  // Sort accounts by absolute balance descending
-  const sortedAccounts = [...(accounts as any[])].sort(
+  const sortedAccounts = [...accts].sort(
     (a: any, b: any) => Math.abs(Number(b.balance_current ?? 0)) - Math.abs(Number(a.balance_current ?? 0)),
   )
+
+  // Build entity name lookup
+  const entityMap: Record<string, string> = {}
+  for (const e of ents) entityMap[e.id] = e.entity_name
+
+  const groups = groupByOwner(sortedAccounts, entityMap)
 
   return (
     <>
@@ -87,7 +134,7 @@ export default async function AccountsPage() {
         <div className="section-header">
           <div className="section-header-left">
             <h2 className="section-title">Balance Summary</h2>
-            <span className="achieve-count">{(accounts as any[]).length} accounts</span>
+            <span className="achieve-count">{accts.length} accounts</span>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
@@ -114,55 +161,96 @@ export default async function AccountsPage() {
         </div>
       </section>
 
-      {/* Full Accounts Table */}
-      {(accounts as any[]).length > 0 ? (
+      {/* Link new account bar */}
+      <LinkAccountBar entities={ents} />
+
+      {/* Accounts table grouped by owner */}
+      {accts.length > 0 ? (
         <section style={{ marginBottom: 28 }}>
           <div className="section-header">
             <div className="section-header-left">
               <h2 className="section-title">All Accounts</h2>
+              <span className="achieve-count">{accts.length} accounts · {groups.length} owner group{groups.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
-          <SpecCard dataSource="financial_accounts">
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr>
-                    {(['Account', 'Institution', 'Type', 'Balance'] as string[]).map(h => (
-                      <th key={h} style={{
-                        fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.06em',
-                        padding: '10px 10px', textAlign: h === 'Balance' ? 'right' : 'left',
-                        borderBottom: '1px solid var(--border)', fontWeight: 600,
-                      }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedAccounts.map((a: any, i: number) => {
-                    const badge = typeBadge(a.type, a.subtype)
-                    const bal   = Number(a.balance_current ?? 0)
-                    const isNeg = bal < 0 || String(a.type ?? '').toLowerCase() === 'credit'
-                    return (
-                      <tr key={a.id ?? i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-                        <td style={{ padding: '10px 10px', fontWeight: 500 }}>
-                          {a.name}
-                          {a.mask && <span style={{ color: 'var(--dim)', fontSize: 10, marginLeft: 6 }}>···{a.mask}</span>}
-                        </td>
-                        <td style={{ padding: '10px 10px', fontSize: 11, color: 'var(--dim)' }}>{a.institution_name ?? a.account_scope ?? a.entity_id ?? '—'}</td>
-                        <td style={{ padding: '10px 10px' }}>
-                          <span style={{ fontSize: 10, fontFamily: 'var(--mo)', background: badge.bg, color: badge.color, padding: '2px 6px', borderRadius: 4 }}>
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 10px', textAlign: 'right', fontFamily: 'var(--mo)', color: isNeg ? 'var(--red)' : 'inherit' }}>
-                          {isNeg ? `-${USD2(Math.abs(bal))}` : USD2(bal)}
-                        </td>
+
+          {groups.map(group => (
+            <div key={group.key} style={{ marginBottom: 20 }}>
+              {/* Group header */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: 8, padding: '0 2px',
+              }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                  letterSpacing: '0.08em', color: group.key === 'personal' ? 'var(--green)' : 'var(--purple)',
+                  background: group.key === 'personal' ? 'rgba(16,185,129,0.1)' : 'rgba(139,92,246,0.1)',
+                  padding: '3px 8px', borderRadius: 4,
+                }}>
+                  {group.key === 'personal' ? 'Personal' : 'Entity'}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{group.label}</span>
+                <span style={{ fontSize: 11, color: 'var(--dim)' }}>{group.accounts.length} account{group.accounts.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              <SpecCard dataSource="financial_accounts">
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                    <thead>
+                      <tr>
+                        <th style={TH_STYLE}>Account</th>
+                        <th style={TH_STYLE}>Institution</th>
+                        <th style={TH_STYLE}>Type</th>
+                        <th style={TH_STYLE}>Owner</th>
+                        <th style={{ ...TH_STYLE, textAlign: 'right' }}>Balance</th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {group.accounts.map((a: any, i: number) => {
+                        const badge  = typeBadge(a.type, a.subtype)
+                        const bal    = Number(a.balance_current ?? 0)
+                        const isNeg  = bal < 0 || String(a.type ?? '').toLowerCase() === 'credit'
+                        return (
+                          <tr key={a.id ?? i} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
+                            <td style={{ padding: '10px 10px', fontWeight: 500 }}>
+                              {a.name}
+                              {a.mask && <span style={{ color: 'var(--dim)', fontSize: 10, marginLeft: 6 }}>···{a.mask}</span>}
+                            </td>
+                            <td style={{ padding: '10px 10px', fontSize: 11, color: 'var(--dim)' }}>
+                              {a.institution_name ?? '—'}
+                            </td>
+                            <td style={{ padding: '10px 10px' }}>
+                              <span style={{
+                                fontSize: 10, fontFamily: 'var(--mo)',
+                                background: badge.bg, color: badge.color,
+                                padding: '2px 6px', borderRadius: 4,
+                              }}>
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 10px' }}>
+                              <EntitySelect
+                                accountId={a.id}
+                                currentScope={a.account_scope ?? 'personal'}
+                                currentEntity={a.entity_id ?? null}
+                                entities={ents}
+                              />
+                            </td>
+                            <td style={{
+                              padding: '10px 10px', textAlign: 'right',
+                              fontFamily: 'var(--mo)', color: isNeg ? 'var(--red)' : 'inherit',
+                            }}>
+                              {isNeg ? `-${USD2(Math.abs(bal))}` : USD2(bal)}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </SpecCard>
             </div>
-          </SpecCard>
+          ))}
         </section>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>

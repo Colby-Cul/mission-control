@@ -642,7 +642,7 @@ export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
   // Fetch all edges, financial accounts, entities, and properties in parallel
   const [edgesResult, accountsResult, entitiesResult, propertiesResult] = await Promise.allSettled([
     supabase.from('entity_ownership_edges').select('parent_entity_id, parent_type, child_entity_id, child_type, ownership_pct'),
-    supabase.from('financial_accounts').select('entity_id, balance_current, type'),
+    supabase.from('financial_accounts').select('entity_id, account_scope, balance_current, type'),
     supabase.from('entity_ownership').select('id, entity_name'),
     supabase.from('property_assets').select('id, address, city, current_value, mortgage_balance'),
   ])
@@ -677,15 +677,23 @@ export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
     })
   }
 
-  // Build account balance map: entityId → signed balance sum
+  // Build account balance map: entityId → signed balance sum.
+  // account_scope='personal'  → attributed directly to 'colby'
+  // account_scope='entity'    → attributed to entity_id (matches entity_ownership.id)
+  // Legacy null entity_id with scope='entity' → skipped (orphaned row)
   const balanceMap: Record<string, number> = {}
   for (const acct of accounts) {
-    const eid = acct.entity_id
-    if (!eid) continue
     const bal = Number(acct.balance_current ?? 0)
     const t = String(acct.type ?? '').toLowerCase()
     const signed = (t === 'credit' || t === 'loan') ? -bal : bal
-    balanceMap[eid] = (balanceMap[eid] ?? 0) + signed
+    const scope = acct.account_scope ?? 'personal'
+    if (scope === 'personal') {
+      // Personal accounts belong directly to Colby
+      balanceMap['colby'] = (balanceMap['colby'] ?? 0) + signed
+    } else if (scope === 'entity' && acct.entity_id) {
+      // Entity-owned accounts: map to the entity via entity_id = entity_ownership.id
+      balanceMap[acct.entity_id] = (balanceMap[acct.entity_id] ?? 0) + signed
+    }
   }
 
   const breakdown: NetWorthBreakdown['byEntity'] = []
