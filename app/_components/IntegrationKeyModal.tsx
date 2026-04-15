@@ -167,7 +167,9 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
       const res = await fetch('/api/integrations/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider }),
+        // Pass the typed-but-unsaved values so Test validates the new token
+        // before Save & Redeploy. Falls back to stored env vars for any blank fields.
+        body: JSON.stringify({ provider, values }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.success) {
