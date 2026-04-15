@@ -149,15 +149,23 @@ function GroupIcon({ group, activeHref }: { group: NavGroup; activeHref: string 
     return activeHref.startsWith(c.href)
   })
 
+  // Clicking the group icon navigates to the first child; hover reveals the flyout with all children.
+  const primary = group.children[0]
+
   return (
     <div className="sb-group-wrap">
-      <div className={`sb-item${isGroupActive ? ' on' : ''}`} aria-label={group.label}>
+      <Link
+        href={primary.href}
+        className={`sb-item${isGroupActive ? ' on' : ''}`}
+        aria-label={`${group.label} — ${primary.label}`}
+        aria-haspopup="menu"
+      >
         {group.icon}
         <span className="sb-tooltip">
           {group.label}
           <span className="sb-tooltip-group">Group</span>
         </span>
-      </div>
+      </Link>
       {/* Flyout panel */}
       <div className="sb-flyout" role="menu" aria-label={`${group.label} navigation`}>
         <div className="sb-flyout-label">{group.label}</div>

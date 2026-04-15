@@ -190,7 +190,8 @@ a { color: inherit; text-decoration: none; }
 .sb-flyout {
   display: none;
   position: absolute;
-  left: calc(100% + 8px);
+  left: 100%;
+  padding-left: 8px; /* hover-bridge so cursor can cross the gap */
   top: 0;
   min-width: 180px;
   background: rgba(12,12,26,0.97);
@@ -433,11 +434,12 @@ a { color: inherit; text-decoration: none; }
   z-index: 4;
 }
 
-/* Hero canvas */
+/* Hero canvas — decorative; never consume pointer events */
 #heroCanvas {
   position: absolute;
   inset: 0;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* Hero text */

@@ -404,6 +404,23 @@ export async function getTopExpenseCategories(limit = 5) {
 }
 
 // ═══ Rental helpers ════════════════════════════════════════════════
+
+/**
+ * Fetch all non-declined bookings from the rental_bookings table.
+ * Columns mirror the Lodgify export: property_id, arrival, departure,
+ * source, total_amount, status, guest_name, guest_count.
+ * Table may not exist yet — returns [] on error so the page degrades gracefully.
+ */
+export async function getRentalBookings() {
+  const { data, error } = await supabase
+    .from('rental_bookings')
+    .select('*')
+    .neq('status', 'Declined')
+    .order('arrival', { ascending: false })
+  if (error) return []
+  return data ?? []
+}
+
 export async function getRentalProperties() {
   const { data, error } = await supabase
     .from('property_assets')
