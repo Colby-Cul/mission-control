@@ -58,7 +58,7 @@ function KpiTile({
 }: { label: string; value: string | number; sub: string; color: string }) {
   return (
     <div style={{
-      padding: '12px 14px',
+      padding: '16px 18px',
       background: 'rgba(255,255,255,0.02)',
       borderRadius: 10,
       border: '1px solid var(--border)',
@@ -425,7 +425,7 @@ export default function RentalsWidgets({ bookings }: { bookings: any[] }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {propertyPerf.map(p => (
             <SpecCard key={p.id} accent dataSource="rental_bookings">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: 'var(--dim)' }}>Lodgify ID: {p.id}</div>

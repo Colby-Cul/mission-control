@@ -69,7 +69,7 @@ function DroppableColumn({
       </div>
 
       {/* Cards */}
-      <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 120 }}>
+      <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, minHeight: 120 }}>
         {children}
       </div>
     </div>

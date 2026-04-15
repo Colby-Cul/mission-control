@@ -436,7 +436,7 @@ export default async function VisionPage() {
 }
 .la-account-group {
   background:linear-gradient(135deg, rgba(249,115,22,0.08), rgba(139,92,246,0.04));
-  border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px;
+  border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:20px;
 }
 .la-group-title {
   font-size:10px; font-weight:600; color:var(--orange); text-transform:uppercase;
@@ -648,8 +648,8 @@ export default async function VisionPage() {
 .ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--orange)); }
 .ms-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
-.ms-
-.ms-
+.ms-body { padding:20px 24px; }
+.ms-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; }
 .ms-header-left { display:flex; align-items:center; gap:14px; }
 .ms-icon-wrap {
   width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
@@ -663,7 +663,7 @@ export default async function VisionPage() {
 .ms-card.purple .ms-target-val { color:var(--purple); }
 
 /* Center: Gauge + Chart side by side */
-.ms-viz { display:flex; align-items:center; gap:24px; margin-bottom:24px; }
+.ms-viz { display:flex; align-items:center; gap:24px; margin-bottom:24px; padding:0 24px; }
 
 /* Large Gauge Ring */
 .ms-gauge-wrap { position:relative; width:130px; height:130px; flex-shrink:0; }

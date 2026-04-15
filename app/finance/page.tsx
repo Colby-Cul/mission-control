@@ -735,8 +735,8 @@ export default async function FinancePage() {
     .ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--orange)); }
     .ms-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
-    .ms-
-    .ms-
+    .ms-body { padding: 20px 24px; }
+    .ms-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:16px; }
     .ms-header-left { display:flex; align-items:center; gap:14px; }
     .ms-icon-wrap {
       width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
@@ -759,7 +759,7 @@ export default async function FinancePage() {
     }
 
     /* Center: Gauge + Chart side by side */
-    .ms-viz { display:flex; align-items:center; gap:24px; margin-bottom:20px; padding:0 28px; }
+    .ms-viz { display:flex; align-items:center; gap:24px; margin-bottom:20px; padding:12px 24px; }
 
     /* Large Gauge Ring — 140px */
     .ms-gauge-wrap { position:relative; width:130px; height:130px; flex-shrink:0; }
@@ -813,7 +813,7 @@ export default async function FinancePage() {
     /* Bottom Stats Row */
     .ms-stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:0; border-top:1px solid var(--border); }
     .ms-stat {
-      padding:16px 20px; text-align:center;
+      padding:18px 20px; text-align:center;
       border-right:1px solid var(--border);
     }
     .ms-stat:last-child { border-right:none; }
@@ -825,12 +825,12 @@ export default async function FinancePage() {
     .ms-stat-val.purple-c { color:var(--purple); }
 
     /* Insight line at bottom */
-    .ms-insight { padding:12px 28px; border-top:1px solid var(--border); font-size:11px; color:var(--dim); }
+    .ms-insight { padding:12px 24px; border-top:1px solid var(--border); font-size:11px; color:var(--dim); }
     .ms-insight::before { content:'💡 '; }
 
     /* Management Company Pills */
     .mgmt-chain {
-      display:flex; align-items:center; gap:8px; margin-top:8px; padding:10px 28px 16px;
+      display:flex; align-items:center; gap:8px; margin-top:8px; padding:10px 24px 16px;
     }
     .mgmt-pill {
       display:inline-flex; align-items:center; gap:6px;
@@ -865,7 +865,7 @@ export default async function FinancePage() {
     .prop-card.green::before { background:linear-gradient(90deg, var(--green), var(--lime)); }
     .prop-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
-    .prop-
+    .prop-header { display:flex; align-items:center; justify-content:space-between; padding:22px 24px 16px; }
     .prop-header-left { display:flex; align-items:center; gap:14px; }
     .prop-icon {
       width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
@@ -886,7 +886,7 @@ export default async function FinancePage() {
 
     /* Occupancy arc gauge */
     .prop-viz {
-      display:flex; align-items:center; gap:24px; padding:20px 28px;
+      display:flex; align-items:center; gap:24px; padding:16px 24px 20px;
     }
     .prop-occ-wrap {
       position:relative; width:120px; height:120px; flex-shrink:0;
@@ -936,7 +936,7 @@ export default async function FinancePage() {
       border-top:1px solid var(--border);
     }
     .prop-stat {
-      padding:14px 16px; text-align:center;
+      padding:16px 18px; text-align:center;
       border-right:1px solid var(--border);
     }
     .prop-stat:last-child { border-right:none; }
