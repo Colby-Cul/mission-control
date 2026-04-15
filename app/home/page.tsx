@@ -7,6 +7,7 @@
 import Hero from '../_components/Hero'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from '../_components/HeroCanvasDefault'
+import UpcomingEventsCard from './UpcomingEventsCard'
 
 export const dynamic = 'force-dynamic'
 
@@ -42,14 +43,7 @@ export default function HomePage() {
           dataSource="coming-soon:home.quick_actions"
           skeleton="kpi"
         />
-        <ComingSoon
-          title="Upcoming Events"
-          reason="Next 7 days from Google Calendar — meetings, deadlines, and important dates."
-          icon="📅"
-          connect="google"
-          dataSource="coming-soon:home.calendar"
-          skeleton="table"
-        />
+        <UpcomingEventsCard />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 28 }}>

@@ -9,7 +9,8 @@ import Achievements from '../_components/Achievements'
 import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
-import { getUserProfile, getIntegrations, getAchievements } from '../lib/queries'
+import { getUserProfile, getIntegrations, getAchievements, getGoogleToken } from '../lib/queries'
+import { isGoogleOAuthConfigured } from '../lib/google'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -22,11 +23,14 @@ const FALLBACK_ACHIEVEMENTS = [
 ]
 
 export default async function SettingsPage() {
-  const [profile, integrations, dbAchievements] = await Promise.all([
+  const [profile, integrations, dbAchievements, googleToken] = await Promise.all([
     getUserProfile().catch(() => null),
     getIntegrations().catch(() => []),
     getAchievements('settings').catch(() => []),
+    getGoogleToken().catch(() => null),
   ])
+  const googleOAuthReady = isGoogleOAuthConfigured()
+  const isGoogleConnected = !!googleToken
 
   const achievements = (dbAchievements as any[]).length > 0
     ? (dbAchievements as any[]).map((a: any) => ({
@@ -165,6 +169,72 @@ export default async function SettingsPage() {
           )}
         </SpecCard>
       </div>
+
+      {/* Google OAuth status */}
+      <SpecCard accent dataSource="user_tokens" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+            Google Workspace
+          </div>
+          {isGoogleConnected ? (
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--green)',
+              background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
+              padding: '3px 10px', borderRadius: 5, textTransform: 'uppercase',
+              letterSpacing: '0.05em', fontFamily: 'var(--mo)',
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+              CONNECTED
+            </div>
+          ) : (
+            <div style={{
+              fontSize: 10, fontWeight: 700, color: 'var(--dim)',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+              padding: '3px 10px', borderRadius: 5, textTransform: 'uppercase',
+              letterSpacing: '0.05em', fontFamily: 'var(--mo)',
+            }}>
+              NOT CONNECTED
+            </div>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 12 }}>
+          Calendar events + Gmail threads on the Home dashboard. Uses OAuth — tokens stored encrypted per user.
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {googleOAuthReady ? (
+            <>
+              <a href="/api/auth/google" style={{
+                fontSize: 11, fontWeight: 600, padding: '5px 14px', borderRadius: 6,
+                background: 'rgba(249,115,22,0.15)', color: 'var(--orange)',
+                border: '1px solid rgba(249,115,22,0.3)', textDecoration: 'none',
+              }}>
+                {isGoogleConnected ? 'Reconnect' : 'Connect Google'}
+              </a>
+              {isGoogleConnected && (
+                <form action="/api/auth/google/disconnect" method="post" style={{ display: 'inline' }}>
+                  <button type="submit" style={{
+                    fontSize: 11, fontWeight: 600, padding: '5px 14px', borderRadius: 6,
+                    background: 'rgba(239,68,68,0.08)', color: 'var(--red)',
+                    border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}>
+                    Disconnect
+                  </button>
+                </form>
+              )}
+            </>
+          ) : (
+            <div style={{
+              fontSize: 11, color: 'var(--dim)', fontStyle: 'italic',
+              padding: '5px 10px', background: 'rgba(255,255,255,0.02)',
+              borderRadius: 6, border: '1px dashed rgba(255,255,255,0.08)',
+            }}>
+              Waiting on OAuth setup — contact admin
+            </div>
+          )}
+        </div>
+      </SpecCard>
 
       {/* Integrations summary — link to /integrations */}
       <SpecCard accent dataSource="integrations" style={{ marginBottom: 24 }}>
