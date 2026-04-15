@@ -23,6 +23,18 @@ import Hero from '../../_components/Hero'
 import { SpecCard } from '../../_components/SpecCard'
 import ComingSoon from '../../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
+import CompanyTabs, { type TabDef } from '../[slug]/CompanyTabs'
+import SalesRevenueTab from '../[slug]/SalesRevenueTab'
+import OwnershipCard from '../../_components/OwnershipCard'
+import SlugEditButton from '../[slug]/_SlugEditButton'
+import {
+  getEntityBySlug,
+  getCompanyTeam,
+  getCompanyMilestonesByEntityId,
+  getEntityRevenue30d,
+  getEntityExpenses30d,
+  getEntityDocumentsByEntityId,
+} from '../../lib/queries'
 import {
   getFubIdentity,
   getFubKpis,
@@ -82,8 +94,26 @@ function pct(n: number, total: number): number {
 
 // ─── Page ───────────────────────────────────────────────────────────────
 
+const CG_SLUG = 'culbertson-gray'
+
 export default async function CulbertsonGrayPage() {
   const configured = isFubConfigured()
+
+  // ── Entity metadata (legal name / DBA / display_name) ─────────
+  let entity: any = null
+  try { entity = await getEntityBySlug(CG_SLUG) } catch {}
+
+  // ── Tab-level fetches in parallel with FUB data ───────────────
+  let team: any[] = []
+  let milestones: any[] = []
+  let documents: any[] = []
+  let revenue30d = 0
+  let expenses30d = 0
+  try { team = await getCompanyTeam(CG_SLUG) } catch {}
+  try { milestones = await getCompanyMilestonesByEntityId(CG_SLUG) } catch {}
+  try { documents = await getEntityDocumentsByEntityId(CG_SLUG) } catch {}
+  try { revenue30d = await getEntityRevenue30d(CG_SLUG) } catch {}
+  try { expenses30d = await getEntityExpenses30d(CG_SLUG) } catch {}
 
   // Fetch everything in parallel. Each returns { data, error } — no throw.
   const [
@@ -142,8 +172,26 @@ export default async function CulbertsonGrayPage() {
     ? 'Loading FUB data…'
     : 'Connect FUB to activate this dashboard'
 
-  const accountName =
-    (identity as any)?.account?.name || 'The Culbertson and Gray Group'
+  // ── Display/Legal/DBA resolution — merged C&C / C&G entity ─────
+  // Prefer DB values; fall back to FUB identity account name, then hardcoded.
+  const legalName   = entity?.entity_name ?? 'Culbertson and Culbertson'
+  const displayName =
+    (entity as any)?.display_name ??
+    (identity as any)?.account?.name ??
+    'The Culbertson and Gray Group'
+  const dba         = (entity as any)?.dba ?? 'The Culbertson and Gray Group, Inc'
+  const entityType  = entity?.entity_type ?? 'S-Corp'
+  const formationSt = (entity as any)?.formation_state ?? entity?.state ?? 'CA'
+
+  // Subtitle fragments — skip nulls gracefully.
+  const subtitleFragments: string[] = []
+  if (legalName && legalName !== displayName) subtitleFragments.push(legalName)
+  if (entityType) subtitleFragments.push(entityType)
+  if (formationSt) subtitleFragments.push(formationSt)
+  if (dba) subtitleFragments.push(`DBA: ${dba}`)
+  const entitySubtitle = subtitleFragments.join(' · ')
+
+  const accountName = displayName
 
   const kpiCards = kpis
     ? [
@@ -193,6 +241,18 @@ export default async function CulbertsonGrayPage() {
   const maxSparkY = today ? Math.max(1, ...today.spark7d.map(s => s.count)) : 1
   const maxVolumeY = volume ? Math.max(1, ...volume.map(v => v.count)) : 1
 
+  // ── Tab definitions (uniform across operational companies) ────
+  const tabs: TabDef[] = [
+    { id: 'overview',   label: 'Overview' },
+    { id: 'sales',      label: 'Sales & Revenue' },
+    { id: 'crm',        label: 'CRM & Activity', count: kpis?.activeDeals ?? null },
+    { id: 'team',       label: 'Team',       count: team.length,       empty: team.length === 0 },
+    { id: 'financials', label: 'Financials' },
+    { id: 'documents',  label: 'Documents',  count: documents.length,  empty: documents.length === 0 },
+    { id: 'milestones', label: 'Milestones', count: milestones.length, empty: milestones.length === 0 },
+    { id: 'ownership',  label: 'Ownership',  hidden: !entity?.id },
+  ]
+
   return (
     <>
       <Hero
@@ -205,8 +265,23 @@ export default async function CulbertsonGrayPage() {
         animationSlot={<HeroCanvas />}
       />
 
+      {/* Legal name + DBA subtitle line under hero */}
+      {entitySubtitle && (
+        <div
+          style={{
+            fontSize: 12,
+            color: 'rgba(255,255,255,0.5)',
+            margin: '12px 0 4px',
+            letterSpacing: '0.01em',
+            fontFamily: 'DM Sans, sans-serif',
+          }}
+        >
+          {entitySubtitle}
+        </div>
+      )}
+
       {/* Back link */}
-      <div style={{ margin: '16px 0 24px' }}>
+      <div style={{ margin: '8px 0 16px' }}>
         <Link
           href="/companies"
           style={{
@@ -221,6 +296,12 @@ export default async function CulbertsonGrayPage() {
           ← All Companies
         </Link>
       </div>
+
+      {/* ─── Tab bar (sticky) ──────────────────────────────────── */}
+      <CompanyTabs tabs={tabs} defaultTab="overview" />
+
+      {/* ─── Overview tab — KPI strip ──────────────────────────── */}
+      <div data-tab="overview">
 
       {/* ─── KPI strip ──────────────────────────────────────────────── */}
       <div
@@ -263,6 +344,21 @@ export default async function CulbertsonGrayPage() {
           </SpecCard>
         ))}
       </div>
+
+      </div>{/* ─── end overview tab ─── */}
+
+      {/* ─── Sales & Revenue tab ───────────────────────────────── */}
+      <div data-tab="sales">
+        <SalesRevenueTab
+          slug={CG_SLUG}
+          entityName={displayName}
+          revenue30d={revenue30d}
+          expenses30d={expenses30d}
+        />
+      </div>
+
+      {/* ─── CRM & Activity tab (all FUB widgets below) ────────── */}
+      <div data-tab="crm">
 
       {/* ─── Widget 1 · Active Lead Pipeline ─────────────────────── */}
       {pipeline ? (
@@ -956,6 +1052,222 @@ export default async function CulbertsonGrayPage() {
           dataSource="fub:getFubRecentClosed"
           skeleton="table"
         />
+      )}
+
+      </div>{/* ─── end CRM tab ─── */}
+
+      {/* ─── Team tab ──────────────────────────────────────────── */}
+      <div data-tab="team">
+        {team.length > 0 ? (
+          <SpecCard accent dataSource={`company_team:${CG_SLUG}`} style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'rgba(255,255,255,0.85)',
+                marginBottom: 14,
+              }}
+            >
+              Team — {team.length} members
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+              {team.map((m: any) => (
+                <div
+                  key={m.id ?? m.name}
+                  style={{
+                    padding: 16,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: 12,
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 4 }}>{m.role ?? '—'}</div>
+                </div>
+              ))}
+            </div>
+          </SpecCard>
+        ) : (
+          <ComingSoon
+            title="Team"
+            reason="No team members recorded in company_team yet. Add members via the Team page."
+            icon="👥"
+            dataSource={`company_team:${CG_SLUG}`}
+            skeleton="table"
+          />
+        )}
+      </div>
+
+      {/* ─── Financials tab ─────────────────────────────────────── */}
+      <div data-tab="financials">
+        {revenue30d > 0 || expenses30d > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 24 }}>
+            <SpecCard accent dataSource={`financial_transactions:revenue:${CG_SLUG}`}>
+              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.85)', marginBottom: 14 }}>
+                Revenue — 30d
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--green)' }}>
+                {fmtCurrency(revenue30d)}
+              </div>
+            </SpecCard>
+            <SpecCard accent dataSource={`financial_transactions:expenses:${CG_SLUG}`}>
+              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.85)', marginBottom: 14 }}>
+                Expenses — 30d
+              </div>
+              <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                {fmtCurrency(expenses30d)}
+              </div>
+            </SpecCard>
+          </div>
+        ) : (
+          <ComingSoon
+            title="Financials"
+            reason="No transactions tagged to this entity in the last 30 days. Tag transactions via /accounts."
+            icon="💳"
+            dataSource={`financial_transactions:${CG_SLUG}`}
+            skeleton="kpi"
+          />
+        )}
+      </div>
+
+      {/* ─── Documents tab ─────────────────────────────────────── */}
+      <div data-tab="documents">
+        {documents.length > 0 ? (
+          <SpecCard accent dataSource={`entity_documents:${CG_SLUG}`} style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'rgba(255,255,255,0.85)',
+                marginBottom: 14,
+              }}
+            >
+              Entity Documents — {documents.length}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {documents.map((d: any) => (
+                <div
+                  key={d.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '8px 10px',
+                    background: 'rgba(255,255,255,0.02)',
+                    borderRadius: 6,
+                    fontSize: 12,
+                  }}
+                >
+                  <span>{d.document_name ?? d.document_type ?? 'Document'}</span>
+                  <span style={{ color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    {d.created_at ? d.created_at.split('T')[0] : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </SpecCard>
+        ) : (
+          <ComingSoon
+            title="Documents"
+            reason="No documents uploaded for this entity yet."
+            icon="📄"
+            dataSource={`entity_documents:${CG_SLUG}`}
+            skeleton="table"
+          />
+        )}
+      </div>
+
+      {/* ─── Milestones tab ────────────────────────────────────── */}
+      <div data-tab="milestones">
+        {milestones.length > 0 ? (
+          <SpecCard accent dataSource={`company_milestones:${CG_SLUG}`} style={{ marginBottom: 24 }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: 'rgba(255,255,255,0.85)',
+                marginBottom: 14,
+              }}
+            >
+              Milestones — {milestones.length}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {milestones.map((m: any) => (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: '12px 14px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: 10,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{m.title}</div>
+                    {m.notes && (
+                      <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 4 }}>{m.notes}</div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {m.target_date && (
+                      <span style={{ fontSize: 11, color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                        {m.target_date}
+                      </span>
+                    )}
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        padding: '3px 8px',
+                        borderRadius: 6,
+                        background: m.status === 'completed' ? 'rgba(16,185,129,0.1)' : m.status === 'in_progress' ? 'rgba(245,158,11,0.1)' : 'rgba(139,92,246,0.1)',
+                        color: m.status === 'completed' ? 'var(--green)' : m.status === 'in_progress' ? 'var(--amber)' : 'var(--purple)',
+                      }}
+                    >
+                      {(m.status ?? 'upcoming').replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SpecCard>
+        ) : (
+          <ComingSoon
+            title="Milestones"
+            reason="No milestones recorded for this entity yet."
+            icon="🎯"
+            dataSource={`company_milestones:${CG_SLUG}`}
+            skeleton="table"
+          />
+        )}
+      </div>
+
+      {/* ─── Ownership tab ─────────────────────────────────────── */}
+      {entity?.id && (
+        <div data-tab="ownership" style={{ paddingBottom: 40 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.9)', margin: 0 }}>
+              Ownership Structure
+            </h2>
+            <SlugEditButton entityId={entity.id} entityName={entity.entity_name ?? CG_SLUG} />
+          </div>
+          <OwnershipCard
+            entityId={entity.id}
+            entityName={entity.entity_name ?? CG_SLUG}
+            entityType={entity.entity_type ?? null}
+          />
+        </div>
       )}
 
       {/* ─── Footer meta ─────────────────────────────────────────── */}
