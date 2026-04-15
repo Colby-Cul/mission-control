@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import Link from 'next/link'
 import {
   Plus, RefreshCw, LayoutGrid, List, BarChart2, Search, Filter,
   ChevronDown, Bot, CheckCircle2, Clock, AlertTriangle, X, Edit2, Zap
@@ -145,9 +146,18 @@ function ProjectCard({
       borderRadius: 14,
       padding: 16,
       cursor: 'default',
+      position: 'relative',
     }}>
+      {/* Clickable overlay — excludes buttons */}
+      <Link
+        href={`/projects/${project.id}`}
+        style={{
+          position: 'absolute', inset: 0, borderRadius: 14, zIndex: 0,
+        }}
+        aria-label={`Open ${project.name ?? 'project'} detail`}
+      />
       {/* ── Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, position: 'relative', zIndex: 1 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', marginBottom: 4, lineHeight: 1.3 }}>
             {project.name ?? project.title ?? 'Untitled'}
@@ -175,6 +185,7 @@ function ProjectCard({
         </div>
       </div>
 
+      <div style={{ position: 'relative', zIndex: 1 }}>
       {project.description && (
         <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 10, lineHeight: 1.5 }}>
           {String(project.description).slice(0, 100)}{String(project.description).length > 100 ? '…' : ''}
@@ -316,6 +327,7 @@ function ProjectCard({
           <Edit2 size={12} />
         </button>
       </div>
+      </div>{/* end body zIndex wrapper */}
     </div>
   )
 }
@@ -713,7 +725,10 @@ export default function ProjectsClient({
             data={filtered as unknown as Record<string, unknown>[]}
             filterValue={search}
             filterKeys={['name', 'title', 'description', 'owner']}
-            onRowClick={(row) => setFormModal({ open: true, project: row as unknown as Project })}
+            onRowClick={(row) => {
+              const p = row as unknown as Project
+              window.location.href = `/projects/${p.id}`
+            }}
             emptyMessage="No projects match your filters"
           />
         </div>
