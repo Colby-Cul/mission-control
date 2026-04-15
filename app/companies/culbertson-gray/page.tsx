@@ -42,6 +42,7 @@ import {
   parseProfitLoss,
   type ParsedPL,
 } from '../../lib/quickbooks'
+import { getMondayData, type ExpenseView } from '../../lib/monday-adapter'
 import {
   getFubIdentity,
   getFubKpis,
@@ -134,6 +135,16 @@ export default async function CulbertsonGrayPage() {
     }
   } catch {
     qbPL = null
+  }
+
+  // Monday Company Expenses board (8737854919) — powers the Financials tab
+  // Expenses card. Returns null gracefully when the key or board is missing.
+  let expenseView: ExpenseView | null = null
+  try {
+    const r = await getMondayData('culbertson.expense_categories')
+    expenseView = (r.data as ExpenseView | null) ?? null
+  } catch {
+    expenseView = null
   }
 
   // Fetch everything in parallel. Each returns { data, error } — no throw.
@@ -1124,6 +1135,91 @@ export default async function CulbertsonGrayPage() {
 
       {/* ─── Financials tab ─────────────────────────────────────── */}
       <div data-tab="financials">
+        {/* Recurring operating expenses from Monday Company Expenses board */}
+        {expenseView && expenseView.total_items > 0 && (
+          <SpecCard accent dataSource="monday:culbertson/expense_categories" style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Operating Expenses — Monday
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                {expenseView.total_items} recurring costs
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 14 }}>
+              <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                  Annualized Total
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                  {fmtCurrency(expenseView.total_annual)}
+                </div>
+              </div>
+              <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                  Monthly Equivalent
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                  {fmtCurrency(expenseView.total_monthly_equiv)}
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              By Office
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10, marginBottom: 14 }}>
+              {expenseView.by_office.map(o => (
+                <div key={o.office} style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{o.office}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)', marginTop: 2 }}>
+                    {fmtCurrency(o.annual)}
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
+                    {o.count} costs · {fmtCurrency(o.monthly)}/mo
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              Top Recurring Costs
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ color: 'var(--dim)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Vendor</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Office</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 500 }}>Frequency</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 500 }}>Per Cycle</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 500 }}>Annual</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenseView.rows.slice(0, 10).map(r => {
+                  const freqMult = r.frequency.toLowerCase().includes('year') || r.frequency.toLowerCase().includes('annual')
+                    ? 1
+                    : r.frequency.toLowerCase().includes('quarter')
+                    ? 4
+                    : r.frequency.toLowerCase().includes('month')
+                    ? 12
+                    : r.frequency.toLowerCase().includes('week')
+                    ? 52
+                    : 1
+                  return (
+                    <tr key={r.id} style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.92)' }}>
+                      <td style={{ padding: '6px 8px', fontWeight: 600 }}>{r.company || r.name}</td>
+                      <td style={{ padding: '6px 8px', color: 'var(--dim)' }}>{r.office}</td>
+                      <td style={{ padding: '6px 8px', color: 'var(--dim)' }}>{r.frequency}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mo)' }}>{fmtCurrency(r.amount)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mo)', color: 'var(--orange)' }}>
+                        {fmtCurrency(r.amount * freqMult)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </SpecCard>
+        )}
         {qbPL && (
           <SpecCard accent dataSource="quickbooks:ProfitAndLoss" style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
