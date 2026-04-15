@@ -543,13 +543,31 @@ export async function getProjectCosts(projectId: string) {
 
 // ═══ Ownership Graph ═══════════════════════════════════════════════
 
-/** All ownership edges */
+/** All ownership edges (entity→entity AND entity→property) */
 export async function getOwnershipEdges() {
   const { data, error } = await supabase
     .from('entity_ownership_edges')
     .select('*')
     .order('created_at', { ascending: true })
   if (error) return []
+  return data ?? []
+}
+
+/** Ownership edges for a specific property (parents only) */
+export async function getPropertyOwnershipEdges(propertyId: string) {
+  const { data, error } = await supabase
+    .from('entity_ownership_edges')
+    .select('*, parent:entity_ownership!entity_ownership_edges_parent_entity_id_fkey(id, entity_name, entity_type, slug, purpose)')
+    .eq('child_entity_id', propertyId)
+    .eq('child_type', 'property')
+  if (error) {
+    const { data: d2 } = await supabase
+      .from('entity_ownership_edges')
+      .select('*')
+      .eq('child_entity_id', propertyId)
+      .eq('child_type', 'property')
+    return d2 ?? []
+  }
   return data ?? []
 }
 
@@ -607,29 +625,47 @@ export interface NetWorthBreakdown {
 /**
  * Walk the ownership graph starting from 'colby' and accumulate
  * account balances weighted by ownership percentage along each path.
+ * Also cascades through property edges: equity = current_value − mortgage_balance,
+ * multiplied by cumulative ownership %.
  * Returns total + per-entity breakdown.
  */
 export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
-  // Fetch all edges and all financial accounts in parallel
-  const [edgesResult, accountsResult, entitiesResult] = await Promise.allSettled([
-    supabase.from('entity_ownership_edges').select('parent_entity_id, parent_type, child_entity_id, ownership_pct'),
+  // Fetch all edges, financial accounts, entities, and properties in parallel
+  const [edgesResult, accountsResult, entitiesResult, propertiesResult] = await Promise.allSettled([
+    supabase.from('entity_ownership_edges').select('parent_entity_id, parent_type, child_entity_id, child_type, ownership_pct'),
     supabase.from('financial_accounts').select('entity_id, balance_current, type'),
     supabase.from('entity_ownership').select('id, entity_name'),
+    supabase.from('property_assets').select('id, address, city, current_value, mortgage_balance'),
   ])
 
   const edges: any[] = edgesResult.status === 'fulfilled' ? (edgesResult.value.data ?? []) : []
   const accounts: any[] = accountsResult.status === 'fulfilled' ? (accountsResult.value.data ?? []) : []
   const entities: any[] = entitiesResult.status === 'fulfilled' ? (entitiesResult.value.data ?? []) : []
+  const properties: any[] = propertiesResult.status === 'fulfilled' ? (propertiesResult.value.data ?? []) : []
 
   const entityNameMap: Record<string, string> = {}
   entities.forEach((e: any) => { entityNameMap[e.id] = e.entity_name })
 
-  // Build adjacency map: parentId → [{childId, pct}]
-  const childMap: Record<string, { childId: string; pct: number }[]> = {}
+  // Property equity map: propertyId → equity (value − mortgage)
+  const propertyEquityMap: Record<string, number> = {}
+  const propertyNameMap: Record<string, string> = {}
+  for (const prop of properties) {
+    const val = Number(prop.current_value ?? 0)
+    const mort = Number(prop.mortgage_balance ?? 0)
+    propertyEquityMap[prop.id] = val - mort
+    propertyNameMap[prop.id] = `${prop.address ?? prop.city ?? 'Property'} (${prop.city ?? ''})`
+  }
+
+  // Build adjacency map: parentId → [{childId, pct, childType}]
+  const childMap: Record<string, { childId: string; pct: number; childType: string }[]> = {}
   for (const edge of edges) {
     const pid = edge.parent_entity_id
     if (!childMap[pid]) childMap[pid] = []
-    childMap[pid].push({ childId: edge.child_entity_id, pct: Number(edge.ownership_pct) / 100 })
+    childMap[pid].push({
+      childId: edge.child_entity_id,
+      pct: Number(edge.ownership_pct) / 100,
+      childType: edge.child_type ?? 'entity',
+    })
   }
 
   // Build account balance map: entityId → signed balance sum
@@ -664,11 +700,24 @@ export async function getNetWorthFromGraph(): Promise<NetWorthBreakdown> {
 
     // Walk children
     const children = childMap[nodeId] ?? []
-    for (const { childId, pct } of children) {
-      dfs(childId, effectivePct * pct)
+    for (const { childId, pct, childType } of children) {
+      if (childType === 'property') {
+        // Property leaf: compute equity and add Colby's share
+        const equity = propertyEquityMap[childId]
+        if (equity !== undefined && equity !== 0) {
+          breakdown.push({
+            entityId: childId,
+            entityName: propertyNameMap[childId] ?? childId,
+            amount: equity * effectivePct * pct,
+            effectivePct: effectivePct * pct * 100,
+          })
+        }
+      } else {
+        dfs(childId, effectivePct * pct)
+      }
     }
 
-    visited.delete(nodeId) // allow same node via different paths (not recommended but safe)
+    visited.delete(nodeId) // allow same node via different paths
   }
 
   dfs('colby', 1.0)
@@ -701,19 +750,38 @@ export interface TaxStructureNode {
   formationState: string | null
   purpose: string | null
   parents: { parentId: string; pct: number; role: string | null }[]
-  children: { childId: string; pct: number; role: string | null }[]
+  children: { childId: string; pct: number; role: string | null; childType: string }[]
+  // property-specific fields (populated only when entityType === 'property')
+  propertyMeta?: {
+    address: string | null
+    city: string | null
+    state: string | null
+    propertyPurpose: string | null   // 'primary-residence' | 'rental' | 'vacation' | 'investment'
+    purchaseDate: string | null
+    purchasePrice: number | null
+    costBasis: number | null
+    currentValue: number | null
+    mortgageBalance: number | null
+    depreciationTakenYtd: number
+  }
 }
 
 export async function getTaxStructure(): Promise<TaxStructureNode[]> {
-  const [entitiesResult, edgesResult] = await Promise.allSettled([
+  const [entitiesResult, edgesResult, propertiesResult] = await Promise.allSettled([
     supabase.from('entity_ownership').select('id, entity_name, entity_type, tax_classification, ein, formation_state, purpose'),
-    supabase.from('entity_ownership_edges').select('parent_entity_id, child_entity_id, ownership_pct, role'),
+    supabase.from('entity_ownership_edges').select('parent_entity_id, child_entity_id, child_type, ownership_pct, role'),
+    supabase.from('property_assets').select('id, address, city, state, purpose, purchase_date, purchase_price, cost_basis, current_value, mortgage_balance, depreciation_taken_ytd'),
   ])
 
   const entities: any[] = entitiesResult.status === 'fulfilled' ? (entitiesResult.value.data ?? []) : []
   const edges: any[] = edgesResult.status === 'fulfilled' ? (edgesResult.value.data ?? []) : []
+  const properties: any[] = propertiesResult.status === 'fulfilled' ? (propertiesResult.value.data ?? []) : []
 
-  return entities.map((e: any) => ({
+  const propertyMap: Record<string, any> = {}
+  properties.forEach((p: any) => { propertyMap[p.id] = p })
+
+  // Entity nodes
+  const entityNodes: TaxStructureNode[] = entities.map((e: any) => ({
     id: e.id,
     name: e.entity_name,
     entityType: e.entity_type,
@@ -722,12 +790,76 @@ export async function getTaxStructure(): Promise<TaxStructureNode[]> {
     formationState: e.formation_state,
     purpose: e.purpose,
     parents: edges
-      .filter((ed: any) => ed.child_entity_id === e.id)
+      .filter((ed: any) => ed.child_entity_id === e.id && (ed.child_type ?? 'entity') === 'entity')
       .map((ed: any) => ({ parentId: ed.parent_entity_id, pct: Number(ed.ownership_pct), role: ed.role })),
     children: edges
       .filter((ed: any) => ed.parent_entity_id === e.id)
-      .map((ed: any) => ({ childId: ed.child_entity_id, pct: Number(ed.ownership_pct), role: ed.role })),
+      .map((ed: any) => ({ childId: ed.child_entity_id, pct: Number(ed.ownership_pct), role: ed.role, childType: ed.child_type ?? 'entity' })),
   }))
+
+  // Property nodes (leaf nodes in the tax graph)
+  const propertyEdges = edges.filter((ed: any) => ed.child_type === 'property')
+  const referencedPropertyIds = new Set(propertyEdges.map((ed: any) => ed.child_entity_id))
+
+  const propertyNodes: TaxStructureNode[] = properties
+    .filter((p: any) => referencedPropertyIds.has(p.id))
+    .map((p: any) => ({
+      id: p.id,
+      name: p.address ?? p.city ?? 'Property',
+      entityType: 'property',
+      taxClassification: null,
+      ein: null,
+      formationState: p.state ?? null,
+      purpose: p.purpose ?? null,
+      parents: propertyEdges
+        .filter((ed: any) => ed.child_entity_id === p.id)
+        .map((ed: any) => ({ parentId: ed.parent_entity_id, pct: Number(ed.ownership_pct), role: ed.role })),
+      children: [],
+      propertyMeta: {
+        address: p.address ?? null,
+        city: p.city ?? null,
+        state: p.state ?? null,
+        propertyPurpose: p.purpose ?? null,
+        purchaseDate: p.purchase_date ?? null,
+        purchasePrice: p.purchase_price != null ? Number(p.purchase_price) : null,
+        costBasis: p.cost_basis != null ? Number(p.cost_basis) : null,
+        currentValue: p.current_value != null ? Number(p.current_value) : null,
+        mortgageBalance: p.mortgage_balance != null ? Number(p.mortgage_balance) : null,
+        depreciationTakenYtd: Number(p.depreciation_taken_ytd ?? 0),
+      },
+    }))
+
+  return [...entityNodes, ...propertyNodes]
+}
+
+/**
+ * For each property, fetch its parent ownership edges with entity names/slugs.
+ * Returns a map: propertyId → [{entityName, slug, pct, role}]
+ */
+export async function getPropertyOwnershipMap(): Promise<Record<string, { entityName: string; slug: string | null; pct: number; role: string | null }[]>> {
+  const [edgesResult, entitiesResult] = await Promise.allSettled([
+    supabase.from('entity_ownership_edges').select('parent_entity_id, child_entity_id, ownership_pct, role').eq('child_type', 'property'),
+    supabase.from('entity_ownership').select('id, entity_name, slug'),
+  ])
+  const edges: any[] = edgesResult.status === 'fulfilled' ? (edgesResult.value.data ?? []) : []
+  const entityRows: any[] = entitiesResult.status === 'fulfilled' ? (entitiesResult.value.data ?? []) : []
+
+  const entityMap: Record<string, { entity_name: string; slug: string | null }> = {}
+  entityRows.forEach((e: any) => { entityMap[e.id] = { entity_name: e.entity_name, slug: e.slug } })
+
+  const result: Record<string, { entityName: string; slug: string | null; pct: number; role: string | null }[]> = {}
+  for (const edge of edges) {
+    const propId = edge.child_entity_id
+    if (!result[propId]) result[propId] = []
+    const ent = entityMap[edge.parent_entity_id]
+    result[propId].push({
+      entityName: ent?.entity_name ?? edge.parent_entity_id,
+      slug: ent?.slug ?? null,
+      pct: Number(edge.ownership_pct),
+      role: edge.role ?? null,
+    })
+  }
+  return result
 }
 
 /** Milestones derived from tasks with is_milestone = true */

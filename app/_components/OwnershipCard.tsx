@@ -13,6 +13,7 @@ interface Edge {
   parent_entity_id: string
   parent_type: string
   child_entity_id: string
+  child_type?: string
   ownership_pct: number
   role: string | null
   acquired_at: string | null
@@ -155,6 +156,7 @@ function AddEdgeModal({
   thisEntityId,
   thisEntityName,
   allEntities,
+  childType,
   onClose,
   onSaved,
 }: {
@@ -162,6 +164,7 @@ function AddEdgeModal({
   thisEntityId: string
   thisEntityName: string
   allEntities: EntityOption[]
+  childType?: 'entity' | 'property'
   onClose: () => void
   onSaved: () => void
 }) {
@@ -181,9 +184,11 @@ function AddEdgeModal({
     setSaving(true)
     setErr('')
     const finalRole = role === '_custom' ? customRole : role
+    // For property ownership, mode is always 'parent' (entity owns this property)
+    const effectiveChildType = childType === 'property' ? 'property' : 'entity'
     const payload = mode === 'parent'
-      ? { parent_entity_id: counterpartId, parent_type: 'entity', child_entity_id: thisEntityId, ownership_pct: pctNum, role: finalRole || null, acquired_at: acquiredAt || null, notes: notes || null }
-      : { parent_entity_id: thisEntityId, parent_type: 'entity', child_entity_id: counterpartId, ownership_pct: pctNum, role: finalRole || null, acquired_at: acquiredAt || null, notes: notes || null }
+      ? { parent_entity_id: counterpartId, parent_type: 'entity', child_entity_id: thisEntityId, child_type: effectiveChildType, ownership_pct: pctNum, role: finalRole || null, acquired_at: acquiredAt || null, notes: notes || null }
+      : { parent_entity_id: thisEntityId, parent_type: 'entity', child_entity_id: counterpartId, child_type: effectiveChildType, ownership_pct: pctNum, role: finalRole || null, acquired_at: acquiredAt || null, notes: notes || null }
     const { error } = await supabase.from('entity_ownership_edges').insert(payload)
     setSaving(false)
     if (error) { setErr(error.message); return }
@@ -191,7 +196,9 @@ function AddEdgeModal({
     onClose()
   }
 
-  const label = mode === 'parent' ? 'Parent (who owns this entity)' : 'Child (entity this entity owns)'
+  const label = mode === 'parent'
+    ? (childType === 'property' ? 'Owned By (which entity owns this property)' : 'Parent (who owns this entity)')
+    : 'Child (entity this entity owns)'
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
@@ -278,10 +285,13 @@ export default function OwnershipCard({
   entityId,
   entityName,
   entityType,
+  childType = 'entity',
 }: {
   entityId: string
   entityName: string
   entityType: string | null
+  /** 'entity' (default) for companies; 'property' for property pages */
+  childType?: 'entity' | 'property'
 }) {
   const [parents, setParents] = useState<Edge[]>([])
   const [children, setChildren] = useState<Edge[]>([])
@@ -289,11 +299,24 @@ export default function OwnershipCard({
   const [modal, setModal] = useState<'parent' | 'child' | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const isPropertyMode = childType === 'property'
+
   const load = useCallback(async () => {
     setLoading(true)
+
+    // For property mode: only query parent edges scoped to child_type='property'
+    // For entity mode: query all edges (default child_type='entity' or null)
+    const parentQuery = isPropertyMode
+      ? supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).eq('child_type', 'property')
+      : supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).neq('child_type', 'property')
+
+    const childQuery = isPropertyMode
+      ? Promise.resolve({ data: [] })  // properties have no children
+      : supabase.from('entity_ownership_edges').select('*').eq('parent_entity_id', entityId).neq('child_type', 'property')
+
     const [pRes, cRes, eRes] = await Promise.all([
-      supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId),
-      supabase.from('entity_ownership_edges').select('*').eq('parent_entity_id', entityId),
+      parentQuery,
+      childQuery,
       supabase.from('entity_ownership').select('id, entity_name, entity_type, slug, purpose'),
     ])
 
@@ -310,10 +333,10 @@ export default function OwnershipCard({
       }))
 
     setParents(enrich(pRes.data ?? [], 'parent_entity_id'))
-    setChildren(enrich(cRes.data ?? [], 'child_entity_id'))
+    setChildren(enrich((cRes as any).data ?? [], 'child_entity_id'))
     setAllEntities(eRes.data ?? [])
     setLoading(false)
-  }, [entityId])
+  }, [entityId, isPropertyMode])
 
   useEffect(() => { load() }, [load])
 
@@ -331,23 +354,56 @@ export default function OwnershipCard({
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
               Ownership Structure
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600 }}>Entity Graph</div>
+            <div style={{ fontSize: 15, fontWeight: 600 }}>
+              {isPropertyMode ? 'Property Ownership' : 'Entity Graph'}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={{ ...btnStyle('rgba(249,115,22,0.12)'), border: '1px solid rgba(249,115,22,0.2)', color: 'var(--orange)', fontSize: 11, padding: '6px 12px' }}
               onClick={() => setModal('parent')}>
               + Add Parent
             </button>
-            <button style={{ ...btnStyle('rgba(139,92,246,0.12)'), border: '1px solid rgba(139,92,246,0.2)', color: 'var(--purple)', fontSize: 11, padding: '6px 12px' }}
-              onClick={() => setModal('child')}>
-              + Add Child
-            </button>
+            {!isPropertyMode && (
+              <button style={{ ...btnStyle('rgba(139,92,246,0.12)'), border: '1px solid rgba(139,92,246,0.2)', color: 'var(--purple)', fontSize: 11, padding: '6px 12px' }}
+                onClick={() => setModal('child')}>
+                + Add Child
+              </button>
+            )}
           </div>
         </div>
 
         {loading ? (
           <div style={dimText}>Loading ownership data…</div>
+        ) : isPropertyMode ? (
+          /* Property mode: single "Owned By" column, no children */
+          <div>
+            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>Owned By</div>
+            {parents.length === 0 ? (
+              <div style={dimText}>No parent owners recorded — use "+ Add Parent" to link an entity</div>
+            ) : (
+              parents.map(p => (
+                <div key={p.id} style={edgeRow}>
+                  <div>
+                    {p.counterpart_slug ? (
+                      <a href={`/companies/${p.counterpart_slug}`} style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>
+                        {p.counterpart_name ?? p.parent_entity_id}
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>
+                        {p.counterpart_name ?? p.parent_entity_id}
+                      </span>
+                    )}
+                    {p.role && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.role}</div>}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                    {p.ownership_pct}%
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         ) : (
+          /* Entity mode: two-column Owned By / Owns */
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
             {/* Owned By */}
             <div>
@@ -407,8 +463,8 @@ export default function OwnershipCard({
           </div>
         )}
 
-        {/* Mini tree SVG */}
-        {!loading && (parents.length > 0 || children.length > 0) && (
+        {/* Mini tree SVG — only for entity mode */}
+        {!isPropertyMode && !loading && (parents.length > 0 || children.length > 0) && (
           <MiniTree
             entityName={entityName}
             entityType={entityType}
@@ -424,6 +480,7 @@ export default function OwnershipCard({
           thisEntityId={entityId}
           thisEntityName={entityName}
           allEntities={allEntities}
+          childType={childType}
           onClose={() => setModal(null)}
           onSaved={load}
         />

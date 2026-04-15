@@ -9,6 +9,7 @@ import Hero from '../../_components/Hero'
 import Achievements from '../../_components/Achievements'
 import { SpecCard } from '../../_components/SpecCard'
 import ComingSoon from '../../_components/ComingSoon'
+import OwnershipCard from '../../_components/OwnershipCard'
 import HeroCanvas from './HeroCanvas'
 import { getProperties, getEntityDocuments, getUserProfile, getAchievements } from '../../lib/queries'
 
@@ -188,6 +189,16 @@ export default async function PropertyPage({ params }: { params: { slug: string 
           </div>
         )}
       </SpecCard>
+
+      {/* Ownership Structure */}
+      <div style={{ marginBottom: 24 }}>
+        <OwnershipCard
+          entityId={p.id}
+          entityName={p.address ?? p.city ?? 'Property'}
+          entityType={null}
+          childType="property"
+        />
+      </div>
 
       {/* Maintenance Log */}
       <div style={{ marginBottom: 24 }}>
