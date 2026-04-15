@@ -54,23 +54,44 @@ function buildVisionGrid(visions: any[]): string {
   const cardsHtml = visions.map(v => {
     const pct = Math.min(100, Math.max(0, Number(v.progress_pct ?? 0)))
     const stat = v.status ?? 'planning'
-    const imgUrl = v.image_url ?? `https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80`
-    const targetRange = v.target_amount
-      ? USD(v.target_amount)
-      : (v.target_range ?? '—')
+    const imgUrl = v.image_url ?? v.img ?? `https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80`
+
+    // Build target range string: prefer target_low/target_high, then target_amount, then target_label
+    let targetRange = v.target_label ?? '—'
+    if (v.target_low != null && v.target_high != null) {
+      targetRange = `${USD(Number(v.target_low))} — ${USD(Number(v.target_high))}`
+    } else if (v.target_amount != null) {
+      targetRange = USD(Number(v.target_amount))
+    }
+
     const note = v.description ?? v.note ?? ''
     const badgeClass = statusClass(stat)
     const badgeText = stat.toUpperCase()
 
+    // current_saved progress bar HTML
+    const currentSaved = v.current_saved != null ? Number(v.current_saved) : null
+    const savedStr = currentSaved != null ? USD(currentSaved) : null
+
+    // category chip
+    const categoryHtml = (v.category ?? v.name) ? `<span class="vision-cat-chip">${v.category ?? ''}</span>` : ''
+
+    // linked_accounts pills
+    const linkedAccts = Array.isArray(v.linked_accounts) ? v.linked_accounts as string[] : []
+    const linkedAcctsHtml = linkedAccts.length > 0
+      ? `<div class="vision-linked-accts">${linkedAccts.slice(0, 3).map((a: string) => `<span class="vision-acct-pill">${a}</span>`).join('')}</div>`
+      : ''
+
     return `<div class="vision-card" data-status="${stat}">
         <div class="card-image-wrap">
-          <img src="${imgUrl}" alt="${v.title ?? 'Vision'}" />
+          <img src="${imgUrl}" alt="${v.title ?? v.name ?? 'Vision'}" />
           <div class="card-image-overlay"></div>
           <span class="status-badge ${badgeClass}">${badgeText}</span>
+          ${categoryHtml ? `<span class="vision-cat-chip">${v.category ?? ''}</span>` : ''}
         </div>
         <div class="card-content">
-          <h3 class="card-title">${v.title ?? 'Untitled Vision'}</h3>
+          <h3 class="card-title">${v.title ?? v.name ?? 'Untitled Vision'}</h3>
           <p class="card-target">${targetRange}</p>
+          ${savedStr ? `<p class="card-saved">Saved: <strong>${savedStr}</strong></p>` : ''}
           <p class="card-note">${note}</p>
           <div class="card-stats-row">
             <div class="progress-ring-wrap">
@@ -78,12 +99,13 @@ function buildVisionGrid(visions: any[]): string {
               <span class="progress-pct">${pct}%</span>
             </div>
             <div class="card-stats-col">
-              ${v.monthly_needed ? `<span class="card-stat-dim">${USD(v.monthly_needed)}/mo needed to save</span>` : ''}
-              ${v.eta_months ? `<span class="card-stat-dim">${v.eta_months} mo at current pace</span>` : ''}
-              ${v.target_date ? `<span class="card-stat-dim">Target: ${v.target_date}</span>` : ''}
+              ${v.monthly_needed ? `<span class="card-stat-dim">${USD(Number(v.monthly_needed))}/mo needed</span>` : ''}
+              ${v.eta_months != null ? `<span class="card-stat-dim">${v.eta_months} mo at current pace</span>` : ''}
+              ${v.target_date ? `<span class="card-stat-dim">Target: ${v.target_date}</span>` : v.deadline ? `<span class="card-stat-dim">Target: ${v.deadline}</span>` : ''}
             </div>
           </div>
           ${v.gap_alert ? `<div class="gap-alert">⚠ ${v.gap_alert}</div>` : ''}
+          ${linkedAcctsHtml}
         </div>
       </div>`
   }).join('\n')
@@ -576,6 +598,22 @@ export default async function VisionPage() {
   padding:10px 14px; border-radius:10px; font-size:12px; font-weight:500;
   background:rgba(245,158,11,0.08); color:var(--amber);
   border:1px solid rgba(245,158,11,0.15);
+}
+
+/* Vision card extra fields */
+.card-saved { font-size:12px; color:var(--green); margin-bottom:10px; font-family:'IBM Plex Mono',monospace; }
+.vision-cat-chip {
+  position:absolute; bottom:12px; left:12px;
+  font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em;
+  padding:3px 8px; border-radius:5px;
+  background:rgba(0,0,0,0.55); color:rgba(255,255,255,0.6);
+  backdrop-filter:blur(4px);
+}
+.vision-linked-accts { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+.vision-acct-pill {
+  font-size:9px; font-family:'IBM Plex Mono',monospace; padding:2px 7px; border-radius:4px;
+  background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2);
+  color:var(--green); text-transform:uppercase; letter-spacing:0.05em;
 }
 
 /* Add Card */

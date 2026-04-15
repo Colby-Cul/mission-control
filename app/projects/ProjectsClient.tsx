@@ -28,6 +28,20 @@ interface Project {
   due_date?: string
   assigned_agent?: string
   created_at?: string
+  // Extended data fields (migration: add_projects_tasks_visions_data_fields)
+  health_score?: number | null
+  budget_used?: number
+  budget_total?: number
+  milestone_count?: number
+  blockers?: string[]
+  linked_agent?: string
+  linked_entity?: string
+  last_update_ts?: string | null
+  task_count?: number
+  done_count?: number
+  total_cost?: number
+  agents?: string[]
+  models_used?: string[]
   [key: string]: unknown
 }
 
@@ -109,6 +123,22 @@ function ProjectCard({
   const norm = normalizeStatus(project.status)
   const color = STATUS_COLORS[norm] ?? 'rgba(255,255,255,0.4)'
 
+  // Derived fields
+  const taskCount    = Number(project.task_count ?? 0)
+  const doneCount    = Number(project.done_count ?? 0)
+  const budgetUsed   = Number(project.budget_used ?? project.total_cost ?? 0)
+  const budgetTotal  = Number(project.budget_total ?? 0)
+  const budgetPct    = budgetTotal > 0 ? Math.min(100, Math.round((budgetUsed / budgetTotal) * 100)) : null
+  const budgetOver   = budgetTotal > 0 && budgetUsed > budgetTotal
+  const agentsList   = Array.isArray(project.agents) ? project.agents as string[] : []
+  const modelsArr    = Array.isArray(project.models_used) ? project.models_used as string[] : []
+  const healthScore  = project.health_score != null ? Number(project.health_score) : null
+  const healthColor  = healthScore == null ? 'var(--dim)' : healthScore >= 80 ? 'var(--green)' : healthScore >= 50 ? 'var(--amber)' : 'var(--red)'
+  const blockers     = Array.isArray(project.blockers) ? project.blockers as string[] : []
+  const milestoneCount = Number(project.milestone_count ?? 0)
+
+  const fmtCost = (v: number) => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : v > 0 ? `$${v.toFixed(0)}` : '$0'
+
   return (
     <div className="mc-card" style={{
       borderLeft: `3px solid ${color}`,
@@ -116,18 +146,33 @@ function ProjectCard({
       padding: 16,
       cursor: 'default',
     }}>
+      {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', marginBottom: 4, lineHeight: 1.3 }}>
             {project.name ?? project.title ?? 'Untitled'}
           </div>
-          {entity && (
-            <div style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 600, marginBottom: 4 }}>
-              {entity.entity_name}
-            </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {entity && (
+              <div style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 600 }}>
+                {entity.entity_name}
+              </div>
+            )}
+            {(project.linked_entity ?? project.entity_id) && !entity && (
+              <div style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 600 }}>
+                {String(project.linked_entity ?? project.entity_id)}
+              </div>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <StatusBadge status={project.status} />
+          {healthScore != null && (
+            <span style={{ fontSize: 9, fontFamily: 'var(--mo)', color: healthColor }}>
+              health {healthScore}%
+            </span>
           )}
         </div>
-        <StatusBadge status={project.status} />
       </div>
 
       {project.description && (
@@ -136,37 +181,118 @@ function ProjectCard({
         </div>
       )}
 
+      {/* ── Progress ── */}
       <div style={{ marginBottom: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: 'var(--t3)' }}>Progress</span>
+          <span style={{ fontSize: 11, color: 'var(--t3)' }}>
+            Progress
+            {taskCount > 0 && <span style={{ color: 'var(--t4)', marginLeft: 6 }}>{doneCount}/{taskCount} tasks</span>}
+          </span>
           <span style={{ fontSize: 11, color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{pct}%</span>
         </div>
         <ProgressBar pct={pct} color={color} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12, fontSize: 11 }}>
+      {/* ── Budget bar ── */}
+      {budgetTotal > 0 && (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--t3)' }}>Budget</span>
+            <span style={{ fontSize: 11, fontFamily: 'var(--mo)', color: budgetOver ? 'var(--red)' : 'var(--t2)' }}>
+              {fmtCost(budgetUsed)} / {fmtCost(budgetTotal)}
+            </span>
+          </div>
+          <ProgressBar pct={budgetPct ?? 0} color={budgetOver ? 'var(--red)' : 'var(--amber)'} />
+        </div>
+      )}
+
+      {/* ── Metadata grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10, fontSize: 11 }}>
         {project.owner && (
           <div>
-            <div style={{ color: 'var(--t4)', marginBottom: 2 }}>Owner</div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Owner</div>
             <div style={{ color: 'var(--t2)', fontWeight: 500 }}>{String(project.owner)}</div>
           </div>
         )}
         {(project.target_date ?? project.due_date) && (
           <div>
-            <div style={{ color: 'var(--t4)', marginBottom: 2 }}>Due</div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Due</div>
             <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>
               {String(project.target_date ?? project.due_date)}
             </div>
           </div>
         )}
-        {project.assigned_agent && (
+        {(project.assigned_agent ?? project.linked_agent) && (
           <div>
-            <div style={{ color: 'var(--t4)', marginBottom: 2 }}>Agent</div>
-            <div style={{ color: 'var(--purple)', fontWeight: 500 }}>{String(project.assigned_agent)}</div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Agent</div>
+            <div style={{ color: 'var(--purple)', fontWeight: 500 }}>{String(project.assigned_agent ?? project.linked_agent)}</div>
+          </div>
+        )}
+        {milestoneCount > 0 && (
+          <div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Milestones</div>
+            <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{milestoneCount}</div>
+          </div>
+        )}
+        {taskCount > 0 && (
+          <div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tasks</div>
+            <div style={{ color: 'var(--t2)', fontFamily: 'var(--mo)' }}>{doneCount}/{taskCount} done</div>
+          </div>
+        )}
+        {budgetUsed > 0 && budgetTotal === 0 && (
+          <div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cost</div>
+            <div style={{ color: 'var(--amber)', fontFamily: 'var(--mo)' }}>{fmtCost(budgetUsed)}</div>
+          </div>
+        )}
+        {project.last_update_ts && (
+          <div>
+            <div style={{ color: 'var(--t4)', marginBottom: 2, fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Updated</div>
+            <div style={{ color: 'var(--t3)', fontFamily: 'var(--mo)', fontSize: 10 }}>
+              {new Date(String(project.last_update_ts)).toLocaleDateString()}
+            </div>
           </div>
         )}
       </div>
 
+      {/* ── Blockers ── */}
+      {blockers.length > 0 && (
+        <div style={{
+          marginBottom: 10, padding: '6px 8px',
+          background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)',
+          borderRadius: 6,
+        }}>
+          <div style={{ fontSize: 9, fontFamily: 'var(--mo)', color: 'var(--red)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            {blockers.length} Blocker{blockers.length > 1 ? 's' : ''}
+          </div>
+          {blockers.slice(0, 2).map((b: string, i: number) => (
+            <div key={i} style={{ fontSize: 11, color: 'var(--red)', lineHeight: 1.4 }}>· {b}</div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Agents + models pills ── */}
+      {(agentsList.length > 0 || modelsArr.length > 0) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 10 }}>
+          {agentsList.slice(0, 3).map((a: string) => (
+            <span key={a} style={{
+              fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--mo)',
+              background: 'rgba(139,92,246,0.1)', color: 'var(--purple)',
+              textTransform: 'uppercase', letterSpacing: '0.05em',
+            }}>{a}</span>
+          ))}
+          {modelsArr.slice(0, 2).map((m: string) => (
+            <span key={m} style={{
+              fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--mo)',
+              background: 'rgba(249,115,22,0.08)', color: 'var(--orange)',
+              textTransform: 'uppercase', letterSpacing: '0.05em',
+            }}>{String(m).split('/').pop()}</span>
+          ))}
+        </div>
+      )}
+
+      {/* ── Actions ── */}
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           onClick={() => onAskAgent(project)}

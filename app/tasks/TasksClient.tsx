@@ -24,6 +24,21 @@ interface Task {
   snooze_until?: string
   created_at?: string
   project?: { id?: string; name?: string } | null
+  // Extended data fields (migration: add_projects_tasks_visions_data_fields)
+  tags?: string[]
+  subtasks_count?: number
+  attachments_count?: number
+  last_commented_by?: string | null
+  time_estimate?: number | null    // minutes
+  time_logged?: number             // minutes
+  xp_reward?: number
+  // Live-data fields from sessions
+  agent?: string
+  model?: string
+  tokens?: number
+  total_cost?: number
+  duration_minutes?: number
+  session_id?: string
   [key: string]: unknown
 }
 
@@ -156,6 +171,16 @@ function TaskRow({
   const isDone = STATUS_DONE.has((task.status ?? '').toLowerCase())
   const entity = entities.find((e) => e.id === task.entity_id)
 
+  // Derived helpers
+  const tags = Array.isArray(task.tags) ? task.tags as string[] : []
+  const subtaskCount = Number(task.subtasks_count ?? 0)
+  const attachCount  = Number(task.attachments_count ?? 0)
+  const timeEst      = task.time_estimate != null ? Number(task.time_estimate) : null
+  const timeLogged   = Number(task.time_logged ?? 0)
+  const xpReward     = Number(task.xp_reward ?? 0)
+  const totalCost    = task.total_cost != null ? Number(task.total_cost) : null
+  const fmtMin       = (m: number) => m >= 60 ? `${Math.floor(m/60)}h${m%60>0?` ${m%60}m`:''}` : `${m}m`
+
   return (
     <div style={{
       display: 'grid', gridTemplateColumns: '20px 20px 1fr auto',
@@ -173,12 +198,46 @@ function TaskRow({
         <div style={{ fontWeight: 500, fontSize: 14, color: 'var(--t1)', textDecoration: isDone ? 'line-through' : 'none', lineHeight: 1.3 }}>
           {getTaskTitle(task)}
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
           {task.project?.name && <span style={{ fontSize: 11, color: 'var(--orange)', fontWeight: 600 }}>{task.project.name}</span>}
           {entity && <span style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 600 }}>{entity.entity_name}</span>}
-          {task.due_date && <span style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--mo)' }}>{task.due_date}</span>}
+          {task.due_date && <span style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--mo)' }}>{String(task.due_date)}</span>}
           <PriorityPill priority={task.priority} />
           {task.owner && <span style={{ fontSize: 11, color: 'var(--t3)' }}>{String(task.owner)}</span>}
+          {task.agent && <span style={{ fontSize: 10, color: 'var(--purple)', fontFamily: 'var(--mo)' }}>{String(task.agent)}</span>}
+          {task.model && <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{String(task.model)}</span>}
+        </div>
+        {/* ── Sub-row: tags + time + cost + xp + attachments ── */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+          {tags.slice(0, 3).map((tag: string) => (
+            <span key={tag} style={{
+              fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)',
+              background: 'rgba(255,255,255,0.05)', color: 'var(--dim)',
+              textTransform: 'uppercase', letterSpacing: '0.05em',
+            }}>{tag}</span>
+          ))}
+          {timeEst != null && (
+            <span style={{ fontSize: 10, color: 'var(--t4)', fontFamily: 'var(--mo)' }}>
+              ⏱ {timeLogged > 0 ? `${fmtMin(timeLogged)}/` : ''}{fmtMin(timeEst)}
+            </span>
+          )}
+          {totalCost != null && totalCost > 0 && (
+            <span style={{ fontSize: 10, color: 'var(--amber)', fontFamily: 'var(--mo)' }}>
+              ${totalCost.toFixed(2)}
+            </span>
+          )}
+          {xpReward > 0 && (
+            <span style={{ fontSize: 10, color: 'var(--orange)', fontWeight: 600 }}>+{xpReward} XP</span>
+          )}
+          {subtaskCount > 0 && (
+            <span style={{ fontSize: 10, color: 'var(--t4)' }}>{subtaskCount} subtasks</span>
+          )}
+          {attachCount > 0 && (
+            <span style={{ fontSize: 10, color: 'var(--t4)' }}>{attachCount} files</span>
+          )}
+          {task.last_commented_by && (
+            <span style={{ fontSize: 10, color: 'var(--dim)' }}>💬 {String(task.last_commented_by)}</span>
+          )}
         </div>
       </div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
