@@ -1,0 +1,5172 @@
+# Lodgify API — Inventory (Mission Control v7)
+
+**Base URL:** `https://api.lodgify.com`
+**Auth header:** `X-ApiKey: <LODGIFY_API_KEY>`
+**Scanned:** 2026-04-15T20:54:23.648Z
+
+PII redacted: names shown as `J. S.` (first + last initial); emails/phones/addresses masked.
+
+## Endpoint Summary
+
+| Endpoint | Path | HTTP | Total | Samples |
+|---|---|---|---|---|
+| properties | `/v2/properties?size=100` | 200 | 2 | 2 |
+| property_533203 | `/v2/properties/533203` | 200 | — | 1 |
+| property_533203_rooms | `/v2/properties/533203/rooms` | 200 | 1 | 1 |
+| property_746614 | `/v2/properties/746614` | 200 | — | 1 |
+| property_746614_rooms | `/v2/properties/746614/rooms` | 200 | 1 | 1 |
+| bookings_Upcoming | `/v2/reservations/bookings?size=100&stayFilter=Upcoming` | 200 | 57 | 5 |
+| bookings_Current | `/v2/reservations/bookings?size=100&stayFilter=Current` | 200 | 0 | 0 |
+| bookings_Stayed | `/v2/reservations/bookings?size=100&stayFilter=Stayed` | 200 | 57 | 5 |
+| quotes | `/v2/reservations/quotes?size=25` | 404 | — | 0 |
+| externalBookings | `/v2/reservations/externalBookings?size=25` | 404 | — | 0 |
+| rates_settings_533203 | `/v2/rates/settings?HouseId=533203` | 200 | — | 1 |
+| rates_calendar_533203 | `/v2/rates/calendar?HouseId=533203&RoomTypeId=599857&StartDate=2026-04-15&EndDate=2026-07-14` | 200 | — | 1 |
+| availability_533203 | `/v2/availability/533203` | 200 | 1 | 1 |
+| rates_settings_746614 | `/v2/rates/settings?HouseId=746614` | 200 | — | 1 |
+| rates_calendar_746614 | `/v2/rates/calendar?HouseId=746614&RoomTypeId=813739&StartDate=2026-04-15&EndDate=2026-07-14` | 200 | — | 1 |
+| availability_746614 | `/v2/availability/746614` | 500 | — | 1 |
+| messaging_threads | `/v2/messaging/threads?size=50` | 404 | — | 0 |
+| reviews | `/v2/reviews` | 404 | — | 0 |
+| v1_reservations_deprecated | `/v1/reservation?size=10` | 200 | 301 | 5 |
+| v1_reviews_deprecated | `/v1/reviews?size=10` | 404 | — | 0 |
+
+## Properties Roster
+
+| id | internal_name | display name |
+|---|---|---|
+| `533203` | 47 Shasta Trail, Graeagle CA | Family Cabin in Graeagle CA w/King Bed & EV Charge |
+| `746614` |  | Luxury Northstar Getaway • On Golf Course |
+
+## Supabase `property_assets` mapping (Phase 2)
+
+Migration: `v7_property_assets_lodgify_columns` — added `lodgify_property_id bigint`, `lodgify_internal_name text`, index `property_assets_lodgify_idx`.
+
+| property_assets.id | address | city | lodgify_property_id | lodgify_internal_name | matched |
+|---|---|---|---|---|---|
+| `60cbcc48-dde9-4bc1-bd12-144ec52bbb66` | 47 Shasta Trl | Graeagle | `533203` | 47 Shasta Trail, Graeagle CA | yes |
+| `c38a62e3-d856-442a-b602-ceb97ba915ad` | 210 Bitter Brush Way | Truckee | `746614` | Luxury Northstar Getaway • On Golf Course | yes (internal_name empty in Lodgify — matched via Truckee city / display name) |
+| `a3f4478d-aba5-4337-80ee-3acd462a8c94` | 7246 Orchard Cir | Penryn | `null` | `null` | **unmatched — primary residence, not listed on Lodgify** |
+
+## Endpoint availability notes
+
+- `v2/reservations/quotes`, `v2/reservations/externalBookings`, `v2/guests`, `v2/messaging/threads`, `v2/reviews`: all return **404** for this API key (scope limitation). Adapter treats these as disabled and returns `null`.
+- `v1/reservation`: **200 (301 rows)**. Kept as a historical fallback in case v2 bookings paging misses anything; derive `source` from v2 `source`/`source_text` fields per spec.
+- `v1/rates/settings`, `v1/reviews`: **404 / UnsupportedApiVersion** — confirmed deprecated; skipped.
+- `v2/availability/746614`: intermittent **500** (upstream bug with `DateTime` parsing). Adapter catches and returns `null`.
+
+## properties
+
+**Path:** `/v2/properties?size=100` · **Status:** 200 · **Total:** 2
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `name` | string |
+| `internal_name` | string |
+| `description` | string |
+| `latitude` | number |
+| `longitude` | number |
+| `address` | string |
+| `hide_address` | boolean |
+| `zip` | string |
+| `city` | string |
+| `state` | string |
+| `country_code` | string |
+| `country` | string |
+| `image_url` | string |
+| `has_addons` | boolean |
+| `has_agreement` | boolean |
+| `agreement_text` | null |
+| `agreement_url` | null |
+| `contact` | object |
+| `rating` | number |
+| `price_unit_in_days` | number |
+| `min_price` | number |
+| `original_min_price` | number |
+| `max_price` | number |
+| `original_max_price` | number |
+| `rooms` | array<[object Object]> |
+| `in_out_max_date` | string |
+| `in_out` | null |
+| `currency_code` | string |
+| `created_at` | string |
+| `updated_at` | string |
+| `is_active` | boolean |
+| `subscription_plans` | array<string> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 533203,
+    "name": "F. C.",
+    "internal_name": "47 Shasta Trail, Graeagle CA",
+    "description": "An idyllic retreat at 47 Shasta Trail, Graeagle, CA - charming cabin in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4 TV in the family room. Explore hiking and biking trails, and marvel at the local wildlife. If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker!  Embark on an idyllic retreat at 47 Shasta Trail, Graeagle, CA - a charming cabin nestled in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4K TV in the family room on the large couch that features a queen pull-out bed for extra sleeping! Explore hiking and biking trails, and marvel at the local wildlife (We have 3 deer that currently sleep under the decks at night and often wonder into the backyard). Three restful bedrooms feature sleeping for 10, TVs in every room so kids can watch their own shows or movies as they unwind from exploring everything the mountains have to offer all day. It's the perfect sanctuary for a tranquil escape or for a group of golfers looking for a great place to stay with the crew as they play some of the greatest golf courses in the Sierra Nevadas all just a stone's throw away. Quickly and easily walk to the town of Graeagle for breakfast, lunch, dinner, coffee, or just for good company and a nightcap at the Knotty Pine. If pickleball or Tennis is your thing, we are just a block from the courts! You will love this home!  If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker! New Fridge with extra icemaker for your highball drinks, plus a brand new electric stove and dishwasher just installed!  You'll have access to the whole home and the garage.  We are not onsite and live about two hours away. However we are available by text for the fastest response during your stay, and of course to call or Facetime to help with using any of the home features. I do have friends that live in the area should something become an issue and we need to send someone over on a more urgent notice.  Incredibly quiet neighborhood located in the heart of Graeagle. Easily walk to all restaurants, bars, shops, etc. The Tennis and Pickle Ball quarts are a block away from the house. Close to all the great golf courses in the area, and literally a couple blocks from the Graeagle Golf Course. We have 4 kids and they ride their bikes all day long around the neighborhood.  Plenty of parking in front of the home as well as in front of the garage and in the garage.  You will receive a code to access to the house as well as the garage the day of check in.",
+    "latitude": 39.760433,
+    "longitude": -120.614192,
+    "address": "[redacted]",
+    "hide_address": false,
+    "zip": "[redacted]",
+    "city": "[redacted]",
+    "state": "California",
+    "country_code": "US",
+    "country": "United States",
+    "image_url": "//l.icdbcdn.com/oh/1ed0461e-3fa6-4dfe-9901-6d24c5abf691.jpg?f=32",
+    "has_addons": true,
+    "has_agreement": false,
+    "agreement_text": null,
+    "agreement_url": null,
+    "contact": {
+      "spoken_languages": [
+        "en"
+      ]
+    },
+    "rating": 5,
+    "price_unit_in_days": 1,
+    "min_price": 254.28038650618748,
+    "original_min_price": 300,
+    "max_price": 459.3998982878454,
+    "original_max_price": 542,
+    "rooms": [
+      {
+        "id": 599857,
+        "name": "F. C."
+      }
+    ],
+    "in_out_max_date": "0001-01-01",
+    "in_out": null,
+    "currency_code": "USD",
+    "created_at": "2023-12-13T22:40:36",
+    "updated_at": "2024-07-23T02:25:33",
+    "is_active": true,
+    "subscription_plans": [
+      "Ultimate"
+    ]
+  },
+  {
+    "id": 746614,
+    "name": "L. C.",
+    "internal_name": "",
+    "description": "<p>Bring the whole family to this great place with lots of room for fun.Escape to 5000 Acres at Martis Valley, a warm Northstar retreat with panoramic forest views. Enjoy direct access to Tompkins Trail and Northstar Golf Course, a chef’s kitchen, and two spacious family rooms with games and TVs. After a day of adventure, relax in the great room or soak in the hot tub overlooking classic Tahoe scenery. This remodeled home offers comfort, style, and space to unwind with your group.</p>",
+    "latitude": 39.2943854,
+    "longitude": -120.1207838,
+    "address": "[redacted]",
+    "hide_address": true,
+    "zip": "[redacted]",
+    "city": "[redacted]",
+    "state": "California",
+    "country_code": "US",
+    "country": "United States",
+    "image_url": "//l.icdbcdn.com/oh/6319a60b-6af1-4a20-9c76-064e5e26b952.jpg?f=32",
+    "has_addons": false,
+    "has_agreement": false,
+    "agreement_text": null,
+    "agreement_url": null,
+    "contact": {
+      "spoken_languages": []
+    },
+    "rating": 0,
+    "price_unit_in_days": 1,
+    "min_price": 678.0810306831667,
+    "original_min_price": 800,
+    "max_price": 3215.7992880149177,
+    "original_max_price": 3794,
+    "rooms": [
+      {
+        "id": 813739,
+        "name": "L. C."
+      }
+    ],
+    "in_out_max_date": "0001-01-01",
+    "in_out": null,
+    "currency_code": "USD",
+    "created_at": "2025-12-10T22:33:40",
+    "updated_at": "2026-01-15T20:58:39",
+    "is_active": true,
+    "subscription_plans": [
+      "Ultimate"
+    ]
+  }
+]
+```
+
+## property_533203
+
+**Path:** `/v2/properties/533203` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `name` | string |
+| `internal_name` | string |
+| `description` | string |
+| `latitude` | number |
+| `longitude` | number |
+| `address` | string |
+| `hide_address` | boolean |
+| `zip` | string |
+| `city` | string |
+| `state` | string |
+| `country_code` | string |
+| `country` | string |
+| `image_url` | string |
+| `has_addons` | boolean |
+| `has_agreement` | boolean |
+| `agreement_text` | null |
+| `agreement_url` | null |
+| `contact` | object |
+| `rating` | number |
+| `price_unit_in_days` | number |
+| `min_price` | number |
+| `original_min_price` | number |
+| `max_price` | number |
+| `original_max_price` | number |
+| `rooms` | array<[object Object]> |
+| `in_out_max_date` | string |
+| `in_out` | null |
+| `currency_code` | string |
+| `created_at` | string |
+| `updated_at` | string |
+| `is_active` | boolean |
+| `subscription_plans` | array<string> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 533203,
+    "name": "F. C.",
+    "internal_name": "47 Shasta Trail, Graeagle CA",
+    "description": "An idyllic retreat at 47 Shasta Trail, Graeagle, CA - charming cabin in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4 TV in the family room. Explore hiking and biking trails, and marvel at the local wildlife. If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker!  Embark on an idyllic retreat at 47 Shasta Trail, Graeagle, CA - a charming cabin nestled in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4K TV in the family room on the large couch that features a queen pull-out bed for extra sleeping! Explore hiking and biking trails, and marvel at the local wildlife (We have 3 deer that currently sleep under the decks at night and often wonder into the backyard). Three restful bedrooms feature sleeping for 10, TVs in every room so kids can watch their own shows or movies as they unwind from exploring everything the mountains have to offer all day. It's the perfect sanctuary for a tranquil escape or for a group of golfers looking for a great place to stay with the crew as they play some of the greatest golf courses in the Sierra Nevadas all just a stone's throw away. Quickly and easily walk to the town of Graeagle for breakfast, lunch, dinner, coffee, or just for good company and a nightcap at the Knotty Pine. If pickleball or Tennis is your thing, we are just a block from the courts! You will love this home!  If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker! New Fridge with extra icemaker for your highball drinks, plus a brand new electric stove and dishwasher just installed!  You'll have access to the whole home and the garage.  We are not onsite and live about two hours away. However we are available by text for the fastest response during your stay, and of course to call or Facetime to help with using any of the home features. I do have friends that live in the area should something become an issue and we need to send someone over on a more urgent notice.  Incredibly quiet neighborhood located in the heart of Graeagle. Easily walk to all restaurants, bars, shops, etc. The Tennis and Pickle Ball quarts are a block away from the house. Close to all the great golf courses in the area, and literally a couple blocks from the Graeagle Golf Course. We have 4 kids and they ride their bikes all day long around the neighborhood.  Plenty of parking in front of the home as well as in front of the garage and in the garage.  You will receive a code to access to the house as well as the garage the day of check in.",
+    "latitude": 39.760433,
+    "longitude": -120.614192,
+    "address": "[redacted]",
+    "hide_address": false,
+    "zip": "[redacted]",
+    "city": "[redacted]",
+    "state": "California",
+    "country_code": "US",
+    "country": "United States",
+    "image_url": "//l.icdbcdn.com/oh/1ed0461e-3fa6-4dfe-9901-6d24c5abf691.jpg?f=32",
+    "has_addons": true,
+    "has_agreement": false,
+    "agreement_text": null,
+    "agreement_url": null,
+    "contact": {
+      "spoken_languages": [
+        "en"
+      ]
+    },
+    "rating": 5,
+    "price_unit_in_days": 1,
+    "min_price": 254.28038650618748,
+    "original_min_price": 300,
+    "max_price": 459.3998982878454,
+    "original_max_price": 542,
+    "rooms": [
+      {
+        "id": 599857,
+        "name": "F. C."
+      }
+    ],
+    "in_out_max_date": "0001-01-01",
+    "in_out": null,
+    "currency_code": "USD",
+    "created_at": "2023-12-13T22:40:36",
+    "updated_at": "2024-07-23T02:25:33",
+    "is_active": true,
+    "subscription_plans": [
+      "Ultimate"
+    ]
+  }
+]
+```
+
+## property_533203_rooms
+
+**Path:** `/v2/properties/533203/rooms` · **Status:** 200 · **Total:** 1
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `images` | array<[object Object]> |
+| `amenities` | object |
+| `description` | string |
+| `breakfast_included` | boolean |
+| `has_parking` | boolean |
+| `adults_only` | boolean |
+| `pets_allowed` | null |
+| `show_additional_key_facts` | boolean |
+| `id` | number |
+| `name` | string |
+| `image_url` | string |
+| `max_people` | number |
+| `units` | number |
+| `has_wifi` | boolean |
+| `has_meal_plan` | boolean |
+| `bedrooms` | number |
+| `bathrooms` | number |
+| `area_unit` | string |
+| `area` | number |
+| `min_price` | number |
+| `original_min_price` | number |
+| `max_price` | number |
+| `original_max_price` | number |
+| `price_unit_in_days` | number |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "images": [
+      {
+        "text": "Graeagle Family Room",
+        "url": "//l.icdbcdn.com/oh/b951247c-2bb5-4bec-87ad-aca493bc9c51.jpg?f=32"
+      },
+      {
+        "text": "Tennis and Pickle Ball Courts",
+        "url": "//l.icdbcdn.com/oh/55c30a4a-072f-4ed6-95b5-88392df013df.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Meadows Golf Course and Restaurant",
+        "url": "//l.icdbcdn.com/oh/4bfcc17c-4a19-4222-ae11-3f1f34f2062d.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom #3",
+        "url": "//l.icdbcdn.com/oh/65b8c10c-ad7d-487c-891b-1d314495b567.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom #2 queen w/Bunk Beds as well",
+        "url": "//l.icdbcdn.com/oh/3ad6dc74-92de-4f91-a478-366a31d32363.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom #1",
+        "url": "//l.icdbcdn.com/oh/a5c623ad-53d1-470e-9e86-a8a6fefc2e63.jpg?f=32"
+      },
+      {
+        "text": "Family Room Area view from Upstairs",
+        "url": "//l.icdbcdn.com/oh/441aae2f-94b6-4414-aeba-5fb52d023344.jpg?f=32"
+      },
+      {
+        "text": "Kitchen Table",
+        "url": "//l.icdbcdn.com/oh/717b17cb-0906-43f8-954b-1a5a7ba6451c.jpg?f=32"
+      },
+      {
+        "text": "Front Deck",
+        "url": "//l.icdbcdn.com/oh/13fab9a9-9932-4dc8-9c25-f0a07597338b.jpg?f=32"
+      },
+      {
+        "text": "Front Door Entry with electronic lock",
+        "url": "//l.icdbcdn.com/oh/fbb19aa3-9cd1-478e-a24f-5c5ab12f9d3e.jpg?f=32"
+      },
+      {
+        "text": "IMG 6950",
+        "url": "//l.icdbcdn.com/oh/5591042b-dc6f-456f-9c12-ecce1e5c79d0.jpg?f=32"
+      },
+      {
+        "text": "Huge Front porch with porch swing",
+        "url": "//l.icdbcdn.com/oh/772e15b5-6536-4dcc-b2fd-1e0c30ed4b10.jpg?f=32"
+      },
+      {
+        "text": "Family Room w/Pull out couch and 86\" TV",
+        "url": "//l.icdbcdn.com/oh/9e3f08af-e4cb-461e-a774-041dd35521f6.jpg?f=32"
+      },
+      {
+        "text": "Master Bedroom w/California King and 65\" TV",
+        "url": "//l.icdbcdn.com/oh/b5dd66d4-dd05-41c6-905a-4df4a7a08eef.jpg?f=32"
+      },
+      {
+        "text": "Master Bedroom ",
+        "url": "//l.icdbcdn.com/oh/18499b73-3e34-40e4-9332-c588aeafcaf6.jpg?f=32"
+      },
+      {
+        "text": "Firepit on Deck",
+        "url": "//l.icdbcdn.com/oh/90fee4ec-5002-4053-8acf-6d37739233ed.jpg?f=32"
+      },
+      {
+        "text": "Home has a Traeger Smoker and Charcoal Webber",
+        "url": "//l.icdbcdn.com/oh/39ba3118-f338-49d3-8169-2a1f76d655b7.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Tennis Club",
+        "url": "//l.icdbcdn.com/oh/973ba9ba-1aa3-42e2-8e1f-25e0a7d6ea36.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Tennis and Pickle Ball Courts",
+        "url": "//l.icdbcdn.com/oh/3dad0ee4-84d3-417e-9edf-685ad852050f.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Store",
+        "url": "//l.icdbcdn.com/oh/c4506d23-adf0-4a1d-ba51-78f6945c7418.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Coffee Shop",
+        "url": "//l.icdbcdn.com/oh/c9acd8b9-6122-457a-921d-f812e01b7ec6.jpg?f=32"
+      },
+      {
+        "text": "Greagle Coffee Shop",
+        "url": "//l.icdbcdn.com/oh/b1e67cd7-898c-4ebe-a688-71caee20461c.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Store",
+        "url": "//l.icdbcdn.com/oh/030b4c97-59c4-44ec-822a-6286666e15f8.jpg?f=32"
+      },
+      {
+        "text": "Front Deck",
+        "url": "//l.icdbcdn.com/oh/8b27395b-eeed-4821-a1d1-90fc337e49bf.jpg?f=32"
+      },
+      {
+        "text": "Front Deck and Entry",
+        "url": "//l.icdbcdn.com/oh/a911d623-41f1-4658-a312-069cae689da9.jpg?f=32"
+      },
+      {
+        "text": "Half Bath",
+        "url": "//l.icdbcdn.com/oh/5ebcb408-742d-4b93-ae22-b154fdc057ce.jpg?f=32"
+      },
+      {
+        "text": "Laundry Room and Half Bath",
+        "url": "//l.icdbcdn.com/oh/bc6d99d8-4e4f-4b27-b21b-ba76a02fe90f.jpg?f=32"
+      },
+      {
+        "text": "Upstairs ful bath",
+        "url": "//l.icdbcdn.com/oh/4095768b-e562-4469-8988-563331edfae1.jpg?f=32"
+      },
+      {
+        "text": "Master Bath",
+        "url": "//l.icdbcdn.com/oh/a21baf25-7b16-4118-97f1-26bee8290b8e.jpg?f=32"
+      },
+      {
+        "text": "Side Yard and Deck View",
+        "url": "//l.icdbcdn.com/oh/1c44163e-d97a-47e1-aaf4-ab7bc6268ec5.jpg?f=32"
+      },
+      {
+        "text": "Graeagle Pond and walking trail",
+        "url": "//l.icdbcdn.com/oh/7848b60f-51b1-4eb3-8758-cf5530d08948.jpg?f=32"
+      },
+      {
+        "text": "Front View of Home",
+        "url": "//l.icdbcdn.com/oh/a17a41b1-3d87-415d-9bd6-1eff08f191ac.jpg?f=32"
+      },
+      {
+        "text": "Family Room with 86\" TV and pull out couch",
+        "url": "//l.icdbcdn.com/oh/1ed0461e-3fa6-4dfe-9901-6d24c5abf691.jpg?f=32"
+      }
+    ],
+    "amenities": {
+      "room": [
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 RoomsBalcony"
+        },
+        {
+          "name": "R.",
+          "prefix": "3",
+          "bracket": "Private",
+          "text": "3 Bathroom"
+        },
+        {
+          "name": "R.",
+          "prefix": "3",
+          "bracket": "Private",
+          "text": "3 Bedroom"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Dining-Room"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Kitchen"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Living room"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Playroom"
+        }
+      ],
+      "further-info": [],
+      "cooking": [
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Blender"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Coffee machine"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Cooking utensils"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Dishwasher"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Kitchen stove"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Microwave"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Oven"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Refrigerator"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Spices"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Toaster"
+        }
+      ],
+      "entertainment": [
+        {
+          "name": "E.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Stereo system"
+        },
+        {
+          "name": "E.",
+          "prefix": null,
+          "bracket": null,
+          "text": "TV (Cable)"
+        },
+        {
+          "name": "E.",
+          "prefix": "WirelessBroadband",
+          "bracket": null,
+          "text": "Wireless Broadband Internet"
+        }
+      ],
+      "heating": [
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Ceiling fans"
+        },
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fireplace"
+        },
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Heating available"
+        }
+      ],
+      "laundry": [
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Bathroom & Laundry"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Clothes dryer"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Iron & Board"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Washing machine"
+        }
+      ],
+      "livingroom": [],
+      "miscellaneous": [
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Vacuum cleaner"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Carbon Monoxide Detector"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fire Extinguisher"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "First aid kit"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Security system"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Smoke Detector"
+        }
+      ],
+      "outside": [],
+      "sanitary": [
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Hair dryer"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Essentials"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Shower"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Towel-set"
+        }
+      ],
+      "sleeping": [
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Bed linen"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Baby crib"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Child bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Double bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fold-away bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "King bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Loft bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Queen bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Sofa bed"
+        }
+      ],
+      "parking": [
+        {
+          "name": "P.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Parking garage"
+        },
+        {
+          "name": "P.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Parking available"
+        },
+        {
+          "name": "P.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Parking-on-street"
+        }
+      ]
+    },
+    "description": "An idyllic retreat at 47 Shasta Trail, Graeagle, CA - charming cabin in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4 TV in the family room. Explore hiking and biking trails, and marvel at the local wildlife. If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker!  Embark on an idyllic retreat at 47 Shasta Trail, Graeagle, CA - a charming cabin nestled in the Sierra Nevada Mountains. With its rustic allure and modern comforts, this cozy property invites you to unwind by the stone fireplace or watch a movie with the family on the 86\" 4K TV in the family room on the large couch that features a queen pull-out bed for extra sleeping! Explore hiking and biking trails, and marvel at the local wildlife (We have 3 deer that currently sleep under the decks at night and often wonder into the backyard). Three restful bedrooms feature sleeping for 10, TVs in every room so kids can watch their own shows or movies as they unwind from exploring everything the mountains have to offer all day. It's the perfect sanctuary for a tranquil escape or for a group of golfers looking for a great place to stay with the crew as they play some of the greatest golf courses in the Sierra Nevadas all just a stone's throw away. Quickly and easily walk to the town of Graeagle for breakfast, lunch, dinner, coffee, or just for good company and a nightcap at the Knotty Pine. If pickleball or Tennis is your thing, we are just a block from the courts! You will love this home!  If you like to BBQ we have two! We have the old trusty and faithful Webber charcoal grill, and we also have a very easy-to-use Traeger Electric Smoker! New Fridge with extra icemaker for your highball drinks, plus a brand new electric stove and dishwasher just installed!  You'll have access to the whole home and the garage.  We are not onsite and live about two hours away. However we are available by text for the fastest response during your stay, and of course to call or Facetime to help with using any of the home features. I do have friends that live in the area should something become an issue and we need to send someone over on a more urgent notice.  Incredibly quiet neighborhood located in the heart of Graeagle. Easily walk to all restaurants, bars, shops, etc. The Tennis and Pickle Ball quarts are a block away from the house. Close to all the great golf courses in the area, and literally a couple blocks from the Graeagle Golf Course. We have 4 kids and they ride their bikes all day long around the neighborhood.  Plenty of parking in front of the home as well as in front of the garage and in the garage.  You will receive a code to access to the house as well as the garage the day of check in.",
+    "breakfast_included": false,
+    "has_parking": true,
+    "adults_only": false,
+    "pets_allowed": null,
+    "show_additional_key_facts": false,
+    "id": 599857,
+    "name": "F. C.",
+    "image_url": "//l.icdbcdn.com/oh/1ed0461e-3fa6-4dfe-9901-6d24c5abf691.jpg?f=32",
+    "max_people": 12,
+    "units": 1,
+    "has_wifi": true,
+    "has_meal_plan": false,
+    "bedrooms": 3,
+    "bathrooms": 3,
+    "area_unit": "sqf",
+    "area": 2735,
+    "min_price": 254.28038650618748,
+    "original_min_price": 300,
+    "max_price": 459.3998982878454,
+    "original_max_price": 542,
+    "price_unit_in_days": 0
+  }
+]
+```
+
+## property_746614
+
+**Path:** `/v2/properties/746614` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `name` | string |
+| `internal_name` | string |
+| `description` | string |
+| `latitude` | number |
+| `longitude` | number |
+| `address` | string |
+| `hide_address` | boolean |
+| `zip` | string |
+| `city` | string |
+| `state` | string |
+| `country_code` | string |
+| `country` | string |
+| `image_url` | string |
+| `has_addons` | boolean |
+| `has_agreement` | boolean |
+| `agreement_text` | null |
+| `agreement_url` | null |
+| `contact` | object |
+| `rating` | number |
+| `price_unit_in_days` | number |
+| `min_price` | number |
+| `original_min_price` | number |
+| `max_price` | number |
+| `original_max_price` | number |
+| `rooms` | array<[object Object]> |
+| `in_out_max_date` | string |
+| `in_out` | null |
+| `currency_code` | string |
+| `created_at` | string |
+| `updated_at` | string |
+| `is_active` | boolean |
+| `subscription_plans` | array<string> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 746614,
+    "name": "L. C.",
+    "internal_name": "",
+    "description": "<p>Bring the whole family to this great place with lots of room for fun.Escape to 5000 Acres at Martis Valley, a warm Northstar retreat with panoramic forest views. Enjoy direct access to Tompkins Trail and Northstar Golf Course, a chef’s kitchen, and two spacious family rooms with games and TVs. After a day of adventure, relax in the great room or soak in the hot tub overlooking classic Tahoe scenery. This remodeled home offers comfort, style, and space to unwind with your group.</p>",
+    "latitude": 39.2943854,
+    "longitude": -120.1207838,
+    "address": "[redacted]",
+    "hide_address": true,
+    "zip": "[redacted]",
+    "city": "[redacted]",
+    "state": "California",
+    "country_code": "US",
+    "country": "United States",
+    "image_url": "//l.icdbcdn.com/oh/6319a60b-6af1-4a20-9c76-064e5e26b952.jpg?f=32",
+    "has_addons": false,
+    "has_agreement": false,
+    "agreement_text": null,
+    "agreement_url": null,
+    "contact": {
+      "spoken_languages": []
+    },
+    "rating": 0,
+    "price_unit_in_days": 1,
+    "min_price": 678.0810306831667,
+    "original_min_price": 800,
+    "max_price": 3215.7992880149177,
+    "original_max_price": 3794,
+    "rooms": [
+      {
+        "id": 813739,
+        "name": "L. C."
+      }
+    ],
+    "in_out_max_date": "0001-01-01",
+    "in_out": null,
+    "currency_code": "USD",
+    "created_at": "2025-12-10T22:33:40",
+    "updated_at": "2026-01-15T20:58:39",
+    "is_active": true,
+    "subscription_plans": [
+      "Ultimate"
+    ]
+  }
+]
+```
+
+## property_746614_rooms
+
+**Path:** `/v2/properties/746614/rooms` · **Status:** 200 · **Total:** 1
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `images` | array<[object Object]> |
+| `amenities` | object |
+| `description` | string |
+| `breakfast_included` | boolean |
+| `has_parking` | boolean |
+| `adults_only` | boolean |
+| `pets_allowed` | boolean |
+| `show_additional_key_facts` | boolean |
+| `id` | number |
+| `name` | string |
+| `image_url` | string |
+| `max_people` | number |
+| `units` | number |
+| `has_wifi` | boolean |
+| `has_meal_plan` | boolean |
+| `bedrooms` | number |
+| `bathrooms` | number |
+| `area_unit` | string |
+| `area` | number |
+| `min_price` | number |
+| `original_min_price` | number |
+| `max_price` | number |
+| `original_max_price` | number |
+| `price_unit_in_days` | number |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "images": [
+      {
+        "text": "",
+        "url": "//l.icdbcdn.com/oh/16bfc954-7615-4ef0-9d15-935979fe71b9.jpg?f=32"
+      },
+      {
+        "text": "",
+        "url": "//l.icdbcdn.com/oh/046339c2-051e-4675-a826-4bdcbd33cd91.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Master Sitting Area",
+        "url": "//l.icdbcdn.com/oh/095d840e-2588-4142-b1b9-0fc6a2c898ea.jpg?f=32"
+      },
+      {
+        "text": "",
+        "url": "//l.icdbcdn.com/oh/dcd2bcb2-9982-4526-a003-7264dc2a7695.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Family and game room",
+        "url": "//l.icdbcdn.com/oh/2a33ef18-2922-4d30-8bc6-b15d9c57d63f.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Family and game room",
+        "url": "//l.icdbcdn.com/oh/f32e1225-9411-436d-9889-aca77af5c32c.jpg?f=32"
+      },
+      {
+        "text": "",
+        "url": "//l.icdbcdn.com/oh/413d2065-a740-42a1-98d1-de53a5dea7cd.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Family and game room",
+        "url": "//l.icdbcdn.com/oh/66f3cb82-0c81-4b21-b387-aae6bc34fc28.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Family and game room",
+        "url": "//l.icdbcdn.com/oh/c92d87bb-ff55-4936-b209-9bfbc9e42784.jpg?f=32"
+      },
+      {
+        "text": "Kitchen",
+        "url": "//l.icdbcdn.com/oh/609957be-3162-455b-94d7-8cee368e73c0.jpg?f=32"
+      },
+      {
+        "text": "Kitchen",
+        "url": "//l.icdbcdn.com/oh/baddd5ab-fc79-4987-b795-00444efe05b6.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Family and game room",
+        "url": "//l.icdbcdn.com/oh/8a83e67a-37d7-456c-bcc7-671727596bfc.jpg?f=32"
+      },
+      {
+        "text": "Bottom Deck",
+        "url": "//l.icdbcdn.com/oh/4ff25c8f-e235-45c1-a311-a0dbb0c9cec4.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Master Bath",
+        "url": "//l.icdbcdn.com/oh/da3dea1e-f470-4643-b188-5fe4b85017a9.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Master",
+        "url": "//l.icdbcdn.com/oh/570d92de-ad34-4f22-ab74-3a5eeddfd04f.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Hallway Bath",
+        "url": "//l.icdbcdn.com/oh/ecdc025a-51b9-4993-9450-3e1f39712129.jpg?f=32"
+      },
+      {
+        "text": "View of Martis Valley from top deck",
+        "url": "//l.icdbcdn.com/oh/6319a60b-6af1-4a20-9c76-064e5e26b952.jpg?f=32"
+      },
+      {
+        "text": "",
+        "url": "//l.icdbcdn.com/oh/fcc0f7b6-d0e9-4b5c-992f-5f6063d90985.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Office and Bedroom",
+        "url": "//l.icdbcdn.com/oh/f5a18163-88cf-4db9-833e-8ad7f2adc800.jpg?f=32"
+      },
+      {
+        "text": "Downstairs Office and Bedroom",
+        "url": "//l.icdbcdn.com/oh/dd70f4bf-99bc-4edc-a911-f4278f115560.jpg?f=32"
+      },
+      {
+        "text": "Upstairs living/game room",
+        "url": "//l.icdbcdn.com/oh/022c6917-0217-4cd3-8b69-be9b10187667.jpg?f=32"
+      },
+      {
+        "text": "Upstairs living/game room",
+        "url": "//l.icdbcdn.com/oh/a8501528-e73a-4ce1-8c0b-3068f648c66f.jpg?f=32"
+      },
+      {
+        "text": "Upstairs living/game room",
+        "url": "//l.icdbcdn.com/oh/cfc23e1f-8ead-4a74-87f9-b01f006ad419.jpg?f=32"
+      },
+      {
+        "text": "Upstairs living/game room",
+        "url": "//l.icdbcdn.com/oh/1fbdcc29-e397-4915-9e68-32cdcba4cdf9.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Movie Room",
+        "url": "//l.icdbcdn.com/oh/8afd7373-a78d-44c0-b541-00a78b43662a.jpg?f=32"
+      },
+      {
+        "text": "Upstairs hall bath",
+        "url": "//l.icdbcdn.com/oh/28874859-ff7d-47b8-b77e-816ec3bc294b.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom",
+        "url": "//l.icdbcdn.com/oh/9da4672c-cf0d-40be-bd1b-922cf4d3356d.jpg?f=32"
+      },
+      {
+        "text": "View from spa on top deck",
+        "url": "//l.icdbcdn.com/oh/eb3dcd49-60bb-4244-abb9-a7db9934c349.jpg?f=32"
+      },
+      {
+        "text": "Bunk Bed Room Bath",
+        "url": "//l.icdbcdn.com/oh/516ce272-8e6f-4378-868a-9fdf28aa3417.jpg?f=32"
+      },
+      {
+        "text": "Bunk Bed Room",
+        "url": "//l.icdbcdn.com/oh/c9a1ac81-fe94-4b04-a4c5-cb7ce9b0491f.jpg?f=32"
+      },
+      {
+        "text": "Bunk Bed Room",
+        "url": "//l.icdbcdn.com/oh/e995fa93-096d-42a7-b214-c3952370b521.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom on suite #1",
+        "url": "//l.icdbcdn.com/oh/ad409c9c-379d-4f3c-8f2d-5b0361bdf31f.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom",
+        "url": "//l.icdbcdn.com/oh/f07803f2-f127-4963-a97f-2c8aef875d22.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Bedroom",
+        "url": "//l.icdbcdn.com/oh/8cdc8cfb-9526-418d-a18b-f6fe1f4dacb7.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Movie Room",
+        "url": "//l.icdbcdn.com/oh/8b8b9902-15b7-4436-b0ca-27e5a3c32035.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (38 of 48)",
+        "url": "//l.icdbcdn.com/oh/d0cb5424-b825-4fe8-bc2a-bd2e2d31faee.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (37 of 48)",
+        "url": "//l.icdbcdn.com/oh/be170df9-4d99-4530-a14c-54576eaef541.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (36 of 48)",
+        "url": "//l.icdbcdn.com/oh/5893e702-a91d-4998-b8de-d4e35cb41055.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (35 of 48)",
+        "url": "//l.icdbcdn.com/oh/b3f34adf-bbcf-427b-b643-caf06f37b042.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Master",
+        "url": "//l.icdbcdn.com/oh/3bca7ca8-1420-40fa-8dcd-01eb36caa708.jpg?f=32"
+      },
+      {
+        "text": "Master Bath",
+        "url": "//l.icdbcdn.com/oh/2caf3395-c085-4165-85d9-3888d5bfd4b2.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Master Bathroom",
+        "url": "//l.icdbcdn.com/oh/948d6aa6-8cc6-4fc3-a905-226b31562646.jpg?f=32"
+      },
+      {
+        "text": "Upstairs Master",
+        "url": "//l.icdbcdn.com/oh/6207ff91-0ac9-4d3b-bacb-2c87cb6d23ad.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (27 of 48)",
+        "url": "//l.icdbcdn.com/oh/02e702bc-3527-49a8-aaf5-848e2d67911f.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (25 of 48)",
+        "url": "//l.icdbcdn.com/oh/ca8963ba-9cd4-45a4-b798-51cc8f257528.jpg?f=32"
+      },
+      {
+        "text": "210 Bitterbrush Way (24 of 48)",
+        "url": "//l.icdbcdn.com/oh/7029d985-7fe3-445c-a9d8-77b0c80bf692.jpg?f=32"
+      }
+    ],
+    "amenities": {
+      "room": [
+        {
+          "name": "R.",
+          "prefix": "6",
+          "bracket": "Private",
+          "text": "6 Bathroom"
+        },
+        {
+          "name": "R.",
+          "prefix": "7",
+          "bracket": "Private",
+          "text": "7 Bedroom"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Dining-Room"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Kitchen"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Living room"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 Playroom"
+        },
+        {
+          "name": "R.",
+          "prefix": "1",
+          "bracket": "Private",
+          "text": "1 RoomsTerrace"
+        },
+        {
+          "name": "R.",
+          "prefix": "6",
+          "bracket": "Private",
+          "text": "6 Toilet"
+        }
+      ],
+      "further-info": [],
+      "cooking": [
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Blender"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Coffee machine"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Cooking utensils"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Dishwasher"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Grill"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Kitchen stove"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Kitchenette"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Microwave"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Oven"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Refrigerator"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Spices"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Toaster"
+        },
+        {
+          "name": "C.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Water purifier"
+        }
+      ],
+      "entertainment": [
+        {
+          "name": "E.",
+          "prefix": null,
+          "bracket": null,
+          "text": "DVD-Player"
+        },
+        {
+          "name": "E.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Stereo system"
+        },
+        {
+          "name": "E.",
+          "prefix": "WirelessBroadband",
+          "bracket": null,
+          "text": "Wireless Broadband Internet"
+        }
+      ],
+      "heating": [
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Air conditioning"
+        },
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Central heating"
+        },
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fireplace"
+        },
+        {
+          "name": "H.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Heating available"
+        }
+      ],
+      "laundry": [
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Bathroom & Laundry"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Clothes dryer"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Iron & Board"
+        },
+        {
+          "name": "L.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Washing machine"
+        }
+      ],
+      "livingroom": [],
+      "miscellaneous": [
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Vacuum cleaner"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Carbon Monoxide Detector"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fire Extinguisher"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "First aid kit"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Security system"
+        },
+        {
+          "name": "M.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Smoke Detector"
+        }
+      ],
+      "outside": [],
+      "sanitary": [
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Hair dryer"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Essentials"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Shower"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Towel-set"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Hot Tub"
+        }
+      ],
+      "sleeping": [
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Bed linen"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Fold-away bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "King bed"
+        },
+        {
+          "name": "S.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Loft bed"
+        }
+      ],
+      "parking": [
+        {
+          "name": "P.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Parking garage"
+        },
+        {
+          "name": "P.",
+          "prefix": null,
+          "bracket": null,
+          "text": "Parking available"
+        }
+      ]
+    },
+    "description": "<p>Bring the whole family to this great place with lots of room for fun.Escape to 5000 Acres at Martis Valley, a warm Northstar retreat with panoramic forest views. Enjoy direct access to Tompkins Trail and Northstar Golf Course, a chef’s kitchen, and two spacious family rooms with games and TVs. After a day of adventure, relax in the great room or soak in the hot tub overlooking classic Tahoe scenery. This remodeled home offers comfort, style, and space to unwind with your group.</p>",
+    "breakfast_included": false,
+    "has_parking": true,
+    "adults_only": false,
+    "pets_allowed": false,
+    "show_additional_key_facts": false,
+    "id": 813739,
+    "name": "L. C.",
+    "image_url": "//l.icdbcdn.com/oh/6319a60b-6af1-4a20-9c76-064e5e26b952.jpg?f=32",
+    "max_people": 22,
+    "units": 1,
+    "has_wifi": true,
+    "has_meal_plan": false,
+    "bedrooms": 7,
+    "bathrooms": 6,
+    "area_unit": "sqf",
+    "area": 4765,
+    "min_price": 678.0810306831667,
+    "original_min_price": 800,
+    "max_price": 3215.7992880149177,
+    "original_max_price": 3794,
+    "price_unit_in_days": 0
+  }
+]
+```
+
+## bookings_Upcoming
+
+**Path:** `/v2/reservations/bookings?size=100&stayFilter=Upcoming` · **Status:** 200 · **Total:** 57
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `user_id` | number |
+| `arrival` | string |
+| `departure` | string |
+| `property_id` | number |
+| `rooms` | array<[object Object]> |
+| `guest` | object |
+| `language` | string |
+| `status` | string |
+| `is_unavailable` | boolean |
+| `is_overbooked` | boolean |
+| `tentative_expires_at` | null |
+| `source` | string |
+| `source_text` | string |
+| `created_from_ip` | null |
+| `created_at` | string |
+| `updated_at` | string |
+| `canceled_at` | null |
+| `is_new` | boolean |
+| `is_deleted` | boolean |
+| `currency_code` | string |
+| `total_amount` | number |
+| `subtotals` | object |
+| `amount_paid` | number |
+| `amount_due` | number |
+| `quote` | object |
+| `transactions` | null |
+| `damage_protection` | null |
+| `notes` | string |
+| `thread_uid` | string |
+| `external_booking` | null |
+| `check_in` | object |
+| `check_out` | object |
+| `upgraded_enquiry_id` | null |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 15365989,
+    "user_id": 617399,
+    "arrival": "2026-07-15",
+    "departure": "2026-07-19",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 10,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 10,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "C. R.",
+      "email": null,
+      "phone": "[redacted]",
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Open",
+    "is_unavailable": true,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2245835816\",\"migrationThreadId\":\"2245835816\",\"confirmationCode\":\"\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-07-30T15:05:17",
+    "updated_at": "2025-11-24T23:57:01",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2960,
+    "subtotals": {
+      "stay": 2960,
+      "promotions": 0,
+      "fees": 0,
+      "taxes": 0,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2960,
+    "quote": {
+      "id": 13694997,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "ExpiredByGuest",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "",
+    "thread_uid": "2f4e9982-fafa-4132-9434-559940cecd4e",
+    "external_booking": null,
+    "check_in": {
+      "time": null,
+      "initiator": null
+    },
+    "check_out": {
+      "time": null,
+      "initiator": null
+    },
+    "upgraded_enquiry_id": null
+  },
+  {
+    "id": 16597221,
+    "user_id": 617399,
+    "arrival": "2026-09-17",
+    "departure": "2026-09-20",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 1,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "T.",
+      "email": null,
+      "phone": null,
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Open",
+    "is_unavailable": true,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2323181747\",\"migrationThreadId\":\"2323181747\",\"confirmationCode\":\"\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-10-15T05:37:00",
+    "updated_at": "2025-10-15T05:37:00",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2046.8,
+    "subtotals": {
+      "stay": 2046.8,
+      "promotions": 0,
+      "fees": 0,
+      "taxes": 0,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2046.8,
+    "quote": {
+      "id": 14983794,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "NotSent",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "",
+    "thread_uid": "f052bab1-6b99-4785-bd42-046c6deb93f4",
+    "external_booking": null,
+    "check_in": {
+      "time": "16:00:00",
+      "initiator": "Policy"
+    },
+    "check_out": {
+      "time": "10:00:00",
+      "initiator": "Policy"
+    },
+    "upgraded_enquiry_id": null
+  },
+  {
+    "id": 17023231,
+    "user_id": 617399,
+    "arrival": "2026-06-04",
+    "departure": "2026-06-07",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 8,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 8,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "M. B.",
+      "email": null,
+      "phone": "[redacted]",
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Booked",
+    "is_unavailable": false,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2349498987\",\"migrationThreadId\":\"2349498987\",\"confirmationCode\":\"HM8K5PSNQ8\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-11-12T20:04:28",
+    "updated_at": "2025-12-13T17:54:34",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2362.14,
+    "subtotals": {
+      "stay": 1917.1,
+      "promotions": 0,
+      "fees": 250,
+      "taxes": 195.04,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2362.14,
+    "quote": {
+      "id": 15432486,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "Agreed",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "Guest Email: [email] Guest Phone: +14406356890 Guest First Name: Michael Guest Last Name: Browne Adult Count: 8 Guest date of birth: 1955-05-21 Guest Address: 5375 Port Chester Drive, Hudson, OH 44236 Guest will arrive at 16:00 Guest will arrive By Car Verification documentation uploaded successfully Verification documentation uploaded successfully CA_PRE_CHECKIN_COMPLETE: Yes",
+    "thread_uid": "e88972cb-85c4-4a29-96c5-fd60dd10dead",
+    "external_booking": null,
+    "check_in": {
+      "time": "16:00:00",
+      "initiator": "Policy"
+    },
+    "check_out": {
+      "time": "10:00:00",
+      "initiator": "Policy"
+    },
+    "upgraded_enquiry_id": null
+  }
+]
+```
+
+## bookings_Current
+
+**Path:** `/v2/reservations/bookings?size=100&stayFilter=Current` · **Status:** 200 · **Total:** 0
+
+## bookings_Stayed
+
+**Path:** `/v2/reservations/bookings?size=100&stayFilter=Stayed` · **Status:** 200 · **Total:** 57
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `user_id` | number |
+| `arrival` | string |
+| `departure` | string |
+| `property_id` | number |
+| `rooms` | array<[object Object]> |
+| `guest` | object |
+| `language` | string |
+| `status` | string |
+| `is_unavailable` | boolean |
+| `is_overbooked` | boolean |
+| `tentative_expires_at` | null |
+| `source` | string |
+| `source_text` | string |
+| `created_from_ip` | null |
+| `created_at` | string |
+| `updated_at` | string |
+| `canceled_at` | null |
+| `is_new` | boolean |
+| `is_deleted` | boolean |
+| `currency_code` | string |
+| `total_amount` | number |
+| `subtotals` | object |
+| `amount_paid` | number |
+| `amount_due` | number |
+| `quote` | object |
+| `transactions` | null |
+| `damage_protection` | null |
+| `notes` | string |
+| `thread_uid` | string |
+| `external_booking` | null |
+| `check_in` | object |
+| `check_out` | object |
+| `upgraded_enquiry_id` | null |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 15365989,
+    "user_id": 617399,
+    "arrival": "2026-07-15",
+    "departure": "2026-07-19",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 10,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 10,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "C. R.",
+      "email": null,
+      "phone": "[redacted]",
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Open",
+    "is_unavailable": true,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2245835816\",\"migrationThreadId\":\"2245835816\",\"confirmationCode\":\"\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-07-30T15:05:17",
+    "updated_at": "2025-11-24T23:57:01",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2960,
+    "subtotals": {
+      "stay": 2960,
+      "promotions": 0,
+      "fees": 0,
+      "taxes": 0,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2960,
+    "quote": {
+      "id": 13694997,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "ExpiredByGuest",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "",
+    "thread_uid": "2f4e9982-fafa-4132-9434-559940cecd4e",
+    "external_booking": null,
+    "check_in": {
+      "time": null,
+      "initiator": null
+    },
+    "check_out": {
+      "time": null,
+      "initiator": null
+    },
+    "upgraded_enquiry_id": null
+  },
+  {
+    "id": 16597221,
+    "user_id": 617399,
+    "arrival": "2026-09-17",
+    "departure": "2026-09-20",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 1,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 1,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "T.",
+      "email": null,
+      "phone": null,
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Open",
+    "is_unavailable": true,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2323181747\",\"migrationThreadId\":\"2323181747\",\"confirmationCode\":\"\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-10-15T05:37:00",
+    "updated_at": "2025-10-15T05:37:00",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2046.8,
+    "subtotals": {
+      "stay": 2046.8,
+      "promotions": 0,
+      "fees": 0,
+      "taxes": 0,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2046.8,
+    "quote": {
+      "id": 14983794,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "NotSent",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "",
+    "thread_uid": "f052bab1-6b99-4785-bd42-046c6deb93f4",
+    "external_booking": null,
+    "check_in": {
+      "time": "16:00:00",
+      "initiator": "Policy"
+    },
+    "check_out": {
+      "time": "10:00:00",
+      "initiator": "Policy"
+    },
+    "upgraded_enquiry_id": null
+  },
+  {
+    "id": 17023231,
+    "user_id": 617399,
+    "arrival": "2026-06-04",
+    "departure": "2026-06-07",
+    "property_id": 533203,
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 8,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 8,
+        "key_code": ""
+      }
+    ],
+    "guest": {
+      "name": "M. B.",
+      "email": null,
+      "phone": "[redacted]",
+      "country_code": null
+    },
+    "language": "en",
+    "status": "Booked",
+    "is_unavailable": false,
+    "is_overbooked": false,
+    "tentative_expires_at": null,
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"2349498987\",\"migrationThreadId\":\"2349498987\",\"confirmationCode\":\"HM8K5PSNQ8\",\"isMarkedAsManual\":false}",
+    "created_from_ip": null,
+    "created_at": "2025-11-12T20:04:28",
+    "updated_at": "2025-12-13T17:54:34",
+    "canceled_at": null,
+    "is_new": true,
+    "is_deleted": false,
+    "currency_code": "USD",
+    "total_amount": 2362.14,
+    "subtotals": {
+      "stay": 1917.1,
+      "promotions": 0,
+      "fees": 250,
+      "taxes": 195.04,
+      "addons": 0,
+      "vat": 0
+    },
+    "amount_paid": 0,
+    "amount_due": 2362.14,
+    "quote": {
+      "id": 15432486,
+      "policy": {
+        "name": "N.",
+        "payments": "Not scheduled in Lodgify",
+        "cancellation": "",
+        "damage_deposit": ""
+      },
+      "status": "Agreed",
+      "scheduled_transactions": null,
+      "scheduled_damage_protection": null,
+      "room_type_items": null,
+      "addon_items": null,
+      "other_items": null,
+      "vat_items": null,
+      "rental_contract_uid": null
+    },
+    "transactions": null,
+    "damage_protection": null,
+    "notes": "Guest Email: [email] Guest Phone: +14406356890 Guest First Name: Michael Guest Last Name: Browne Adult Count: 8 Guest date of birth: 1955-05-21 Guest Address: 5375 Port Chester Drive, Hudson, OH 44236 Guest will arrive at 16:00 Guest will arrive By Car Verification documentation uploaded successfully Verification documentation uploaded successfully CA_PRE_CHECKIN_COMPLETE: Yes",
+    "thread_uid": "e88972cb-85c4-4a29-96c5-fd60dd10dead",
+    "external_booking": null,
+    "check_in": {
+      "time": "16:00:00",
+      "initiator": "Policy"
+    },
+    "check_out": {
+      "time": "10:00:00",
+      "initiator": "Policy"
+    },
+    "upgraded_enquiry_id": null
+  }
+]
+```
+
+## quotes
+
+**Path:** `/v2/reservations/quotes?size=25` · **Status:** 404
+
+## externalBookings
+
+**Path:** `/v2/reservations/externalBookings?size=25` · **Status:** 404
+
+## rates_settings_533203
+
+**Path:** `/v2/rates/settings?HouseId=533203` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `bookability` | number |
+| `check_in_hour` | number |
+| `check_out_hour` | number |
+| `booking_window_days` | number |
+| `advance_notice_days` | number |
+| `advance_notice_hours` | number |
+| `preparation_time_days` | number |
+| `currency_code` | string |
+| `vat` | number |
+| `is_vat_exclusive` | boolean |
+| `fees` | array<[object Object]> |
+| `taxes` | array<[object Object]> |
+| `promotions` | array<[object Object]> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "bookability": 0,
+    "check_in_hour": 16,
+    "check_out_hour": 10,
+    "booking_window_days": 0,
+    "advance_notice_days": 1,
+    "advance_notice_hours": 24,
+    "preparation_time_days": 0,
+    "currency_code": "USD",
+    "vat": 0,
+    "is_vat_exclusive": true,
+    "fees": [
+      {
+        "fee_name": "Graeagle Cleaning Fee",
+        "fee_type": "CleaningFee",
+        "applied_for_nights": 0,
+        "charge_type": "SingleCharge",
+        "frequency": "PerStay",
+        "price": {
+          "is_vat_exclusive": false,
+          "vat_percentage": 0,
+          "rate_type": "Fixed",
+          "amount": 250,
+          "percentage": null
+        }
+      }
+    ],
+    "taxes": [
+      {
+        "tax_name": "Local VAT Tax",
+        "tax_type": "TransientOccupancyTax",
+        "charge_type": "SingleCharge",
+        "frequency": "PerStay",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 9
+        }
+      }
+    ],
+    "promotions": [
+      {
+        "name": "A. P.",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 10
+        },
+        "early_booker_days": null,
+        "last_minute_days": 1,
+        "minimum_stay_days": null,
+        "booking_dates": [],
+        "stay_dates": [],
+        "codes": []
+      },
+      {
+        "name": "A. P.",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 5
+        },
+        "early_booker_days": 180,
+        "last_minute_days": null,
+        "minimum_stay_days": null,
+        "booking_dates": [],
+        "stay_dates": [],
+        "codes": []
+      },
+      {
+        "name": "2. P.",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 20
+        },
+        "early_booker_days": null,
+        "last_minute_days": null,
+        "minimum_stay_days": 2,
+        "booking_dates": [],
+        "stay_dates": [],
+        "codes": [
+          {
+            "code": "47ShastaTrl20",
+            "is_active": true
+          }
+        ]
+      },
+      {
+        "name": "F. D.",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 10
+        },
+        "early_booker_days": null,
+        "last_minute_days": null,
+        "minimum_stay_days": null,
+        "booking_dates": [],
+        "stay_dates": [],
+        "codes": [
+          {
+            "code": "FREQUENT",
+            "is_active": true
+          }
+        ]
+      }
+    ]
+  }
+]
+```
+
+## rates_calendar_533203
+
+**Path:** `/v2/rates/calendar?HouseId=533203&RoomTypeId=599857&StartDate=2026-04-15&EndDate=2026-07-14` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `calendar_items` | array<[object Object]> |
+| `rate_settings` | object |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "calendar_items": [
+      {
+        "date": "2026-04-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 316,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 331,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 321,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 325,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 322,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 320,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 421,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 417,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 404,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 383,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 389,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 397,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 403,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 388,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 369,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 376,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 430,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 444,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 444,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 519,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 539,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 603,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 522,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 572,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 572,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 567,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 651,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 806,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 798,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 770,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 564,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 581,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 551,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 571,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 618,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 658,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-31",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 565,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 552,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 601,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 610,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 677,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 694,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 787,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 709,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 706,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 723,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 732,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 759,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1265,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1250,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 637,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 664,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 725,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 807,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 876,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 939,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 940,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 797,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 777,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 700,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 1,
+            "max_stay": 1125,
+            "price_per_day": 542,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 812,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 878,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 790,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 585,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 550,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 564,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 632,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1420,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1801,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1988,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 1201,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 758,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 673,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 612,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 711,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 890,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 884,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 681,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 541,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 1125,
+            "price_per_day": 544,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      }
+    ],
+    "rate_settings": {
+      "bookability": 0,
+      "check_in_hour": 16,
+      "check_out_hour": 10,
+      "booking_window_days": 0,
+      "advance_notice_days": 1,
+      "advance_notice_hours": 24,
+      "preparation_time_days": 0,
+      "currency_code": "USD",
+      "vat": 0,
+      "is_vat_exclusive": true,
+      "fees": [
+        {
+          "fee_name": "Graeagle Cleaning Fee",
+          "fee_type": "CleaningFee",
+          "applied_for_nights": 0,
+          "charge_type": "SingleCharge",
+          "frequency": "PerStay",
+          "price": {
+            "is_vat_exclusive": false,
+            "vat_percentage": 0,
+            "rate_type": "Fixed",
+            "amount": 250,
+            "percentage": null
+          }
+        }
+      ],
+      "taxes": [
+        {
+          "tax_name": "Local VAT Tax",
+          "tax_type": "TransientOccupancyTax",
+          "charge_type": "SingleCharge",
+          "frequency": "PerStay",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 9
+          }
+        }
+      ],
+      "promotions": [
+        {
+          "name": "A. P.",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 10
+          },
+          "early_booker_days": null,
+          "last_minute_days": 1,
+          "minimum_stay_days": null,
+          "booking_dates": [],
+          "stay_dates": [],
+          "codes": []
+        },
+        {
+          "name": "A. P.",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 5
+          },
+          "early_booker_days": 180,
+          "last_minute_days": null,
+          "minimum_stay_days": null,
+          "booking_dates": [],
+          "stay_dates": [],
+          "codes": []
+        },
+        {
+          "name": "2. P.",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 20
+          },
+          "early_booker_days": null,
+          "last_minute_days": null,
+          "minimum_stay_days": 2,
+          "booking_dates": [],
+          "stay_dates": [],
+          "codes": [
+            {
+              "code": "47ShastaTrl20",
+              "is_active": true
+            }
+          ]
+        },
+        {
+          "name": "F. D.",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 10
+          },
+          "early_booker_days": null,
+          "last_minute_days": null,
+          "minimum_stay_days": null,
+          "booking_dates": [],
+          "stay_dates": [],
+          "codes": [
+            {
+              "code": "FREQUENT",
+              "is_active": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+]
+```
+
+## availability_533203
+
+**Path:** `/v2/availability/533203` · **Status:** 200 · **Total:** 1
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `user_id` | number |
+| `property_id` | number |
+| `room_type_id` | number |
+| `periods` | array<[object Object]> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "user_id": 617399,
+    "property_id": 533203,
+    "room_type_id": 599857,
+    "periods": [
+      {
+        "start": "0001-01-01",
+        "end": "0001-01-01",
+        "available": 1,
+        "closed_period": null,
+        "bookings": [],
+        "channel_calendars": []
+      }
+    ]
+  }
+]
+```
+
+## rates_settings_746614
+
+**Path:** `/v2/rates/settings?HouseId=746614` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `bookability` | number |
+| `check_in_hour` | number |
+| `check_out_hour` | number |
+| `booking_window_days` | number |
+| `advance_notice_days` | number |
+| `advance_notice_hours` | number |
+| `preparation_time_days` | number |
+| `currency_code` | string |
+| `vat` | number |
+| `is_vat_exclusive` | boolean |
+| `fees` | array<[object Object]> |
+| `taxes` | array<[object Object]> |
+| `promotions` | array<empty> |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "bookability": 0,
+    "check_in_hour": 16,
+    "check_out_hour": 10,
+    "booking_window_days": 365,
+    "advance_notice_days": 2,
+    "advance_notice_hours": 48,
+    "preparation_time_days": 1,
+    "currency_code": "USD",
+    "vat": 2,
+    "is_vat_exclusive": false,
+    "fees": [
+      {
+        "fee_name": "Cleaning Fee",
+        "fee_type": "CleaningFee",
+        "applied_for_nights": 0,
+        "charge_type": "SingleCharge",
+        "frequency": "PerStay",
+        "price": {
+          "is_vat_exclusive": true,
+          "vat_percentage": 9,
+          "rate_type": "Fixed",
+          "amount": 600,
+          "percentage": null
+        }
+      }
+    ],
+    "taxes": [
+      {
+        "tax_name": "Placer County TOT",
+        "tax_type": "TransientOccupancyTax",
+        "charge_type": "SingleCharge",
+        "frequency": "PerStay",
+        "price": {
+          "rate_type": "Percentage",
+          "amount": null,
+          "percentage": 2
+        }
+      }
+    ],
+    "promotions": []
+  }
+]
+```
+
+## rates_calendar_746614
+
+**Path:** `/v2/rates/calendar?HouseId=746614&RoomTypeId=813739&StartDate=2026-04-15&EndDate=2026-07-14` · **Status:** 200
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `calendar_items` | array<[object Object]> |
+| `rate_settings` | object |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "calendar_items": [
+      {
+        "date": "2026-04-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-04-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 853,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1122,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1156,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1143,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 808,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 903,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 880,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-05-31",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 835,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1017,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 989,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 891,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 840,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 846,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 964,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1151,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1194,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 980,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-15",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 919,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-16",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-17",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 800,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-18",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1236,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-19",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1386,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-20",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1370,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-21",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1090,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-22",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1005,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-23",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 839,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-24",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1274,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-25",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1368,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-26",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1604,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-27",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 4,
+            "max_stay": 30,
+            "price_per_day": 1558,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-28",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1278,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-29",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-06-30",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-01",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1426,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-02",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 2311,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-03",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 2410,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-04",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 2408,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-05",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1517,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-06",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-07",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1300,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-08",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1543,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-09",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1602,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-10",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1886,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-11",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1984,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-12",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 7,
+            "max_stay": 30,
+            "price_per_day": 1467,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-13",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 2,
+            "max_stay": 30,
+            "price_per_day": 1605,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      },
+      {
+        "date": "2026-07-14",
+        "is_default": false,
+        "prices": [
+          {
+            "min_stay": 3,
+            "max_stay": 30,
+            "price_per_day": 1673,
+            "price_per_additional_guest": 0,
+            "additional_guests_starts_from": 0
+          }
+        ]
+      }
+    ],
+    "rate_settings": {
+      "bookability": 0,
+      "check_in_hour": 16,
+      "check_out_hour": 10,
+      "booking_window_days": 365,
+      "advance_notice_days": 2,
+      "advance_notice_hours": 48,
+      "preparation_time_days": 1,
+      "currency_code": "USD",
+      "vat": 2,
+      "is_vat_exclusive": false,
+      "fees": [
+        {
+          "fee_name": "Cleaning Fee",
+          "fee_type": "CleaningFee",
+          "applied_for_nights": 0,
+          "charge_type": "SingleCharge",
+          "frequency": "PerStay",
+          "price": {
+            "is_vat_exclusive": true,
+            "vat_percentage": 9,
+            "rate_type": "Fixed",
+            "amount": 600,
+            "percentage": null
+          }
+        }
+      ],
+      "taxes": [
+        {
+          "tax_name": "Placer County TOT",
+          "tax_type": "TransientOccupancyTax",
+          "charge_type": "SingleCharge",
+          "frequency": "PerStay",
+          "price": {
+            "rate_type": "Percentage",
+            "amount": null,
+            "percentage": 2
+          }
+        }
+      ],
+      "promotions": []
+    }
+  }
+]
+```
+
+## availability_746614
+
+**Path:** `/v2/availability/746614` · **Status:** 500
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `message` | string |
+| `code` | number |
+| `correlation_id` | string |
+| `event_id` | null |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "message": "The added or subtracted value results in an un-representable DateTime. (Parameter 'value')",
+    "code": 666,
+    "correlation_id": "0HNKR0PBM0G14:0000004F",
+    "event_id": null
+  }
+]
+```
+
+## messaging_threads
+
+**Path:** `/v2/messaging/threads?size=50` · **Status:** 404
+
+## reviews
+
+**Path:** `/v2/reviews` · **Status:** 404
+
+## v1_reservations_deprecated
+
+**Path:** `/v1/reservation?size=10` · **Status:** 200 · **Total:** 301
+
+**Shape:**
+
+| Field | Type |
+|---|---|
+| `id` | number |
+| `type` | string |
+| `booking_type` | string |
+| `status` | string |
+| `source` | string |
+| `source_text` | string |
+| `guest` | object |
+| `arrival` | string |
+| `departure` | string |
+| `people` | number |
+| `total_guest_breakdown` | object |
+| `property_id` | number |
+| `property_name` | string |
+| `rooms` | array<[object Object]> |
+| `created_at` | string |
+| `is_replied` | boolean |
+| `updated_at` | string |
+| `is_deleted` | boolean |
+| `date_deleted` | null |
+| `total_amount` | number |
+| `total_paid` | number |
+| `amount_to_pay` | number |
+| `thread_uid` | string |
+| `upgraded_enquiry_id` | null |
+| `currency` | object |
+
+**Sample (PII redacted):**
+
+```json
+[
+  {
+    "id": 8197684,
+    "type": "Booking",
+    "booking_type": "InstantBooking",
+    "status": "Booked",
+    "source": "BookingCom",
+    "source_text": "[phone]|4489752045",
+    "guest": {
+      "guest_name": {
+        "first_name": "S. C.",
+        "last_name": "",
+        "full_name": "S. C."
+      },
+      "name": "S. C.",
+      "external_id": null,
+      "email": "[redacted]",
+      "phone_numbers": [
+        "[phone]"
+      ],
+      "phone": "[redacted]",
+      "locale": null,
+      "street_address1": null,
+      "street_address2": null,
+      "city": null,
+      "country_code": null,
+      "postal_code": null,
+      "state": null,
+      "id": "qzq-TIZCxkiZtRwyI6uQDQ",
+      "country_name": null
+    },
+    "arrival": "2024-08-23",
+    "departure": "2024-08-25",
+    "people": 10,
+    "total_guest_breakdown": {
+      "adults": 10,
+      "children": 0,
+      "infants": 0,
+      "pets": 0
+    },
+    "property_id": 533203,
+    "property_name": "Family Cabin in Graeagle CA w/King Bed & EV Charge",
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 10,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 10,
+        "key_code": "2294",
+        "name": "F. C."
+      }
+    ],
+    "created_at": "2023-09-21T04:31:49",
+    "is_replied": false,
+    "updated_at": "0001-01-01T00:00:00",
+    "is_deleted": false,
+    "date_deleted": null,
+    "total_amount": 1094.91,
+    "total_paid": 0,
+    "amount_to_pay": 0,
+    "thread_uid": "4cbe3aab-4286-48c6-99b5-1c3223ab900d",
+    "upgraded_enquiry_id": null,
+    "currency": {
+      "id": 50,
+      "code": "USD",
+      "name": "U. D.",
+      "euro_forex": 1.1798,
+      "symbol": "$  "
+    }
+  },
+  {
+    "id": 8193617,
+    "type": "Booking",
+    "booking_type": "InstantBooking",
+    "status": "Booked",
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"1672306025\",\"migrationThreadId\":\"1672306025\",\"confirmationCode\":\"HM3T5HPMPX\",\"isMarkedAsManual\":true}",
+    "guest": {
+      "guest_name": {
+        "first_name": "J. P.",
+        "last_name": "",
+        "full_name": "J. P."
+      },
+      "name": "J. P.",
+      "external_id": null,
+      "email": null,
+      "phone_numbers": [
+        "[phone]"
+      ],
+      "phone": "[redacted]",
+      "locale": null,
+      "street_address1": null,
+      "street_address2": null,
+      "city": null,
+      "country_code": null,
+      "postal_code": null,
+      "state": null,
+      "id": "eWQBrI5nuEqZHydS40n3uA",
+      "country_name": null
+    },
+    "arrival": "2023-12-12",
+    "departure": "2023-12-14",
+    "people": 3,
+    "total_guest_breakdown": {
+      "adults": 3,
+      "children": 0,
+      "infants": 0,
+      "pets": 0
+    },
+    "property_id": 533203,
+    "property_name": "Family Cabin in Graeagle CA w/King Bed & EV Charge",
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 3,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 3,
+        "key_code": "7261",
+        "name": "F. C."
+      }
+    ],
+    "created_at": "2023-12-13T22:57:34",
+    "is_replied": false,
+    "updated_at": "0001-01-01T00:00:00",
+    "is_deleted": false,
+    "date_deleted": null,
+    "total_amount": 476.98,
+    "total_paid": 0,
+    "amount_to_pay": 0,
+    "thread_uid": "ac016479-678e-4ab8-991f-2752e349f7b8",
+    "upgraded_enquiry_id": null,
+    "currency": {
+      "id": 50,
+      "code": "USD",
+      "name": "U. D.",
+      "euro_forex": 1.1798,
+      "symbol": "$  "
+    }
+  },
+  {
+    "id": 8193618,
+    "type": "Booking",
+    "booking_type": "InstantBooking",
+    "status": "Booked",
+    "source": "AirbnbIntegration",
+    "source_text": "{\"listingId\":\"[phone]\",\"houseId\":533203,\"roomTypeId\":599857,\"threadId\":\"1671808322\",\"migrationThreadId\":\"1671808322\",\"confirmationCode\":\"HMKWWJ5EQY\",\"isMarkedAsManual\":true}",
+    "guest": {
+      "guest_name": {
+        "first_name": "M. Y.",
+        "last_name": "",
+        "full_name": "M. Y."
+      },
+      "name": "M. Y.",
+      "external_id": null,
+      "email": null,
+      "phone_numbers": [
+        "[phone]"
+      ],
+      "phone": "[redacted]",
+      "locale": null,
+      "street_address1": null,
+      "street_address2": null,
+      "city": null,
+      "country_code": null,
+      "postal_code": null,
+      "state": null,
+      "id": "hTPVHVX5Bk-v01fF8DgxEg",
+      "country_name": null
+    },
+    "arrival": "2024-02-16",
+    "departure": "2024-02-18",
+    "people": 8,
+    "total_guest_breakdown": {
+      "adults": 8,
+      "children": 0,
+      "infants": 0,
+      "pets": 0
+    },
+    "property_id": 533203,
+    "property_name": "Family Cabin in Graeagle CA w/King Bed & EV Charge",
+    "rooms": [
+      {
+        "room_type_id": 599857,
+        "guest_breakdown": {
+          "adults": 8,
+          "children": 0,
+          "infants": 0,
+          "pets": 0
+        },
+        "people": 8,
+        "key_code": "4599",
+        "name": "F. C."
+      }
+    ],
+    "created_at": "2023-12-13T22:57:35",
+    "is_replied": true,
+    "updated_at": "0001-01-01T00:00:00",
+    "is_deleted": false,
+    "date_deleted": null,
+    "total_amount": 1014.79,
+    "total_paid": 0,
+    "amount_to_pay": 0,
+    "thread_uid": "1dd53385-f955-4f06-afd3-57c5f0383112",
+    "upgraded_enquiry_id": null,
+    "currency": {
+      "id": 50,
+      "code": "USD",
+      "name": "U. D.",
+      "euro_forex": 1.1798,
+      "symbol": "$  "
+    }
+  }
+]
+```
+
+## v1_reviews_deprecated
+
+**Path:** `/v1/reviews?size=10` · **Status:** 404
