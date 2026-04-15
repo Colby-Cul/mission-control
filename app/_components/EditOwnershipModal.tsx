@@ -1,18 +1,18 @@
 'use client'
 /**
- * EditOwnershipModal — edit ALL ownership edges for one entity at once.
- * Columns: Counterparty | Direction | % | Role | Acquired | Actions (delete)
- * "+ Add Row" at bottom. Save commits all rows (insert new, update changed, delete removed).
- * Validation: per-entity sum of parent % warns if != 100 but does not block.
+ * EditOwnershipModal — plain-English two-section editor.
+ * Section 1: "THIS ENTITY IS OWNED BY" (parent relationships)
+ * Section 2: "THIS ENTITY OWNS" (child relationships)
+ * Each row reads like a sentence, no ambiguous direction arrows.
  */
 import React, { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 interface Edge {
-  id?: string           // undefined = new (not yet saved)
+  id?: string
   counterpart_id: string
   counterpart_name?: string
-  direction: 'owns' | 'owned-by'  // 'owns' = this entity is parent; 'owned-by' = this entity is child
+  direction: 'owns' | 'owned-by'
   pct: string
   role: string
   acquired: string
@@ -30,13 +30,6 @@ const ROLE_OPTIONS = [
   'sole member', 'managing member', 'member', 'shareholder',
   'beneficiary', 'grantor/beneficiary', '99% member', '1% member',
   'general partner', 'limited partner', 'trustee',
-]
-
-const US_STATES = [
-  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
-  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
-  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
-  'VA','WA','WV','WI','WY','DC',
 ]
 
 interface Props {
@@ -58,11 +51,9 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
   const load = useCallback(async () => {
     setLoading(true)
     const [parentRes, childRes, entRes] = await Promise.all([
-      // edges where this entity is the child (owned-by)
       childType === 'property'
         ? supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).eq('child_type', 'property')
         : supabase.from('entity_ownership_edges').select('*').eq('child_entity_id', entityId).neq('child_type', 'property'),
-      // edges where this entity is the parent (owns)
       childType === 'entity'
         ? supabase.from('entity_ownership_edges').select('*').eq('parent_entity_id', entityId).neq('child_type', 'property')
         : Promise.resolve({ data: [] }),
@@ -103,7 +94,7 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
       .filter(r => r.direction === 'owned-by' && !r._deleted)
       .reduce((s, r) => s + (parseFloat(r.pct) || 0), 0)
     if (parentPct > 0 && Math.abs(parentPct - 100) > 0.01) {
-      setWarn(`Parent ownership sums to ${parentPct.toFixed(1)}% — should be 100%`)
+      setWarn(`Parent ownership sums to ${parentPct.toFixed(1)}% — ideally 100%`)
     } else {
       setWarn('')
     }
@@ -117,15 +108,12 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
     })
   }
 
-  function addRow() {
-    setRows(prev => [...prev, {
-      counterpart_id: '',
-      direction: 'owned-by',
-      pct: '',
-      role: '',
-      acquired: '',
-      _dirty: true,
-    }])
+  function addParentRow() {
+    setRows(prev => [...prev, { counterpart_id: '', direction: 'owned-by', pct: '', role: '', acquired: '', _dirty: true }])
+  }
+
+  function addChildRow() {
+    setRows(prev => [...prev, { counterpart_id: '', direction: 'owns', pct: '', role: '', acquired: '', _dirty: true }])
   }
 
   function removeRow(idx: number) {
@@ -141,16 +129,16 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
     setErr('')
     try {
       for (const row of rows) {
-        if (!row._dirty && !row._deleted && row.id) continue // skip untouched
+        if (!row._dirty && !row._deleted && row.id) continue
 
         if (row._deleted && row.id) {
           const { error } = await supabase.from('entity_ownership_edges').delete().eq('id', row.id)
           if (error) throw error
           continue
         }
-        if (row._deleted) continue // was new + deleted before saving
+        if (row._deleted) continue
 
-        if (!row.counterpart_id) continue // skip empty rows
+        if (!row.counterpart_id) continue
         const pctNum = parseFloat(row.pct)
         if (isNaN(pctNum)) { setErr('All rows need a valid % value'); setSaving(false); return }
 
@@ -192,164 +180,360 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
     }
   }
 
-  const visibleRows = rows.filter(r => !r._deleted)
+  const parentRows = rows.filter(r => r.direction === 'owned-by' && !r._deleted)
+  const childRows  = rows.filter(r => r.direction === 'owns'     && !r._deleted)
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: '#0a0a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 32px', width: '100%', maxWidth: 780, maxHeight: '90vh', overflow: 'auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-          <div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
-              Ownership Edges
+      <div style={{
+        background: '#0a0a1a',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 20,
+        width: '100%',
+        maxWidth: 900,
+        maxHeight: '90vh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        {/* Fixed header */}
+        <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
+                Ownership Structure
+              </div>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
+                {entityName}
+              </h2>
+              <p style={{ margin: '6px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                Define who owns this entity (parents) and what this entity owns (children).
+              </p>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>Edit Ownership — {entityName}</div>
+            <button style={iconBtn} onClick={onClose}>✕</button>
           </div>
-          <button style={iconBtn} onClick={onClose}>✕</button>
+
+          {warn && (
+            <div style={{ marginTop: 14, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, padding: '8px 14px', fontSize: 12, color: '#f59e0b' }}>
+              ⚠ {warn}
+            </div>
+          )}
         </div>
 
-        {warn && (
-          <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#f59e0b', marginBottom: 14 }}>
-            ⚠ {warn}
-          </div>
-        )}
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px 28px' }}>
+          {loading ? (
+            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '20px 0' }}>Loading…</div>
+          ) : (
+            <>
+              {/* ── SECTION 1: PARENTS ─────────────────────────────── */}
+              <SectionHeader
+                pill="PARENT"
+                pillColor="#8b5cf6"
+                title="THIS ENTITY IS OWNED BY"
+                subtitle={`Who holds an ownership stake in ${entityName}`}
+              />
 
-        {loading ? (
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, padding: '20px 0' }}>Loading edges…</div>
-        ) : (
-          <>
-            {/* Table */}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                    {['Counterparty', 'Direction', '%', 'Role', 'Acquired', ''].map(h => (
-                      <th key={h} style={{ padding: '6px 10px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 10, whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleRows.length === 0 && (
-                    <tr>
-                      <td colSpan={6} style={{ padding: '20px 10px', color: 'rgba(255,255,255,0.3)', fontSize: 13, textAlign: 'center' }}>
-                        No ownership edges — add one below
-                      </td>
-                    </tr>
-                  )}
-                  {visibleRows.map((row, displayIdx) => {
-                    // find actual index in rows array (needed for mutation)
+              {parentRows.length === 0 ? (
+                <EmptyState message={`${entityName} has no recorded owners yet.`} />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                  {parentRows.map((row) => {
                     const actualIdx = rows.indexOf(row)
                     return (
-                      <tr key={actualIdx} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                        {/* Counterparty */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <select
-                            style={cellInput}
-                            value={row.counterpart_id}
-                            onChange={e => updateRow(actualIdx, { counterpart_id: e.target.value })}
-                          >
-                            <option value="">— select —</option>
-                            {allEntities
-                              .filter(e => e.id !== entityId)
-                              .map(e => (
-                                <option key={e.id} value={e.id}>{e.entity_name}</option>
-                              ))}
-                          </select>
-                        </td>
-                        {/* Direction */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <select
-                            style={{ ...cellInput, minWidth: 110 }}
-                            value={row.direction}
-                            onChange={e => updateRow(actualIdx, { direction: e.target.value as 'owns' | 'owned-by' })}
-                          >
-                            <option value="owned-by">Owned by ↑</option>
-                            {childType === 'entity' && <option value="owns">Owns ↓</option>}
-                          </select>
-                        </td>
-                        {/* % */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <input
-                            style={{ ...cellInput, width: 72 }}
-                            type="number" min="0" max="100" step="0.01"
-                            placeholder="100"
-                            value={row.pct}
-                            onChange={e => updateRow(actualIdx, { pct: e.target.value })}
-                          />
-                        </td>
-                        {/* Role */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <select
-                            style={{ ...cellInput, minWidth: 130 }}
-                            value={row.role}
-                            onChange={e => updateRow(actualIdx, { role: e.target.value })}
-                          >
-                            <option value="">— role —</option>
-                            {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
-                          </select>
-                        </td>
-                        {/* Acquired */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <input
-                            style={{ ...cellInput, width: 120 }}
-                            type="date"
-                            value={row.acquired}
-                            onChange={e => updateRow(actualIdx, { acquired: e.target.value })}
-                          />
-                        </td>
-                        {/* Delete */}
-                        <td style={{ padding: '8px 10px' }}>
-                          <button
-                            style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '4px 8px', fontSize: 11, color: '#ef4444', cursor: 'pointer' }}
-                            onClick={() => removeRow(actualIdx)}
-                          >
-                            Del
-                          </button>
-                        </td>
-                      </tr>
+                      <ParentRow
+                        key={actualIdx}
+                        row={row}
+                        entityName={entityName}
+                        allEntities={allEntities}
+                        entityId={entityId}
+                        onChange={patch => updateRow(actualIdx, patch)}
+                        onDelete={() => removeRow(actualIdx)}
+                      />
                     )
                   })}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              )}
 
-            {/* Add Row */}
-            <button
-              style={{ ...addBtn, marginTop: 12 }}
-              onClick={addRow}
-            >
-              + Add Row
-            </button>
-
-            {err && <div style={{ marginTop: 12, fontSize: 12, color: '#ef4444' }}>{err}</div>}
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button style={primaryBtn} disabled={saving} onClick={handleSave}>
-                {saving ? 'Saving…' : 'Save All Changes'}
+              <button style={addBtn} onClick={addParentRow}>
+                + Add Parent
               </button>
-              <button style={cancelBtn} onClick={onClose}>Cancel</button>
-            </div>
-          </>
-        )}
+
+              {/* Divider */}
+              <div style={{ margin: '32px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+
+              {/* ── SECTION 2: CHILDREN ────────────────────────────── */}
+              {childType === 'entity' && (
+                <>
+                  <SectionHeader
+                    pill="CHILD"
+                    pillColor="#f97316"
+                    title="THIS ENTITY OWNS"
+                    subtitle={`Entities and stakes that ${entityName} holds`}
+                  />
+
+                  {childRows.length === 0 ? (
+                    <EmptyState message={`${entityName} doesn't own other entities or properties yet.`} />
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                      {childRows.map((row) => {
+                        const actualIdx = rows.indexOf(row)
+                        return (
+                          <ChildRow
+                            key={actualIdx}
+                            row={row}
+                            entityName={entityName}
+                            allEntities={allEntities}
+                            entityId={entityId}
+                            onChange={patch => updateRow(actualIdx, patch)}
+                            onDelete={() => removeRow(actualIdx)}
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <button style={{ ...addBtn, color: '#f97316', borderColor: 'rgba(249,115,22,0.25)', background: 'rgba(249,115,22,0.06)' }} onClick={addChildRow}>
+                    + Add Child
+                  </button>
+                </>
+              )}
+
+              {err && <div style={{ marginTop: 16, fontSize: 13, color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '8px 14px' }}>{err}</div>}
+            </>
+          )}
+        </div>
+
+        {/* Fixed footer */}
+        <div style={{ padding: '16px 32px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, flexShrink: 0 }}>
+          <button style={primaryBtn} disabled={saving} onClick={handleSave}>
+            {saving ? 'Saving…' : 'Save All Changes'}
+          </button>
+          <button style={cancelBtn} onClick={onClose}>Cancel</button>
+        </div>
       </div>
     </div>
   )
 }
 
+// ── Sub-components ─────────────────────────────────────────────────
+
+function SectionHeader({ pill, pillColor, title, subtitle }: { pill: string; pillColor: string; title: string; subtitle: string }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: '0.1em',
+          color: pillColor, background: `${pillColor}18`,
+          border: `1px solid ${pillColor}40`,
+          borderRadius: 20, padding: '2px 9px',
+          fontFamily: 'IBM Plex Mono, monospace',
+        }}>
+          {pill}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
+          {title}
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.35)', paddingLeft: 2 }}>{subtitle}</p>
+    </div>
+  )
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div style={{
+      border: '1px dashed rgba(255,255,255,0.08)',
+      borderRadius: 12,
+      padding: '16px 20px',
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.3)',
+      marginBottom: 12,
+      fontStyle: 'italic',
+    }}>
+      {message}
+    </div>
+  )
+}
+
+interface RowProps {
+  row: { counterpart_id: string; pct: string; role: string; acquired: string }
+  entityName: string
+  allEntities: { id: string; entity_name: string; entity_type: string | null }[]
+  entityId: string
+  onChange: (patch: any) => void
+  onDelete: () => void
+}
+
+/** Sentence: [Entity name] owns [X]% of this entity · [role] */
+function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete }: RowProps) {
+  return (
+    <div style={rowContainer('#8b5cf6')}>
+      {/* Entity select */}
+      <div style={{ flex: '0 0 220px' }}>
+        <label style={rowLabel}>Parent entity</label>
+        <select style={cellSelect} value={row.counterpart_id} onChange={e => onChange({ counterpart_id: e.target.value })}>
+          <option value="">— select owner —</option>
+          {allEntities.filter(e => e.id !== entityId).map(e => (
+            <option key={e.id} value={e.id}>{e.entity_name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Sentence connector */}
+      <div style={connectorText}>owns</div>
+
+      {/* % */}
+      <div style={{ flex: '0 0 90px' }}>
+        <label style={rowLabel}>Ownership %</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input
+            style={{ ...cellInput, width: '100%' }}
+            type="number" min="0" max="100" step="0.01"
+            placeholder="100"
+            value={row.pct}
+            onChange={e => onChange({ pct: e.target.value })}
+          />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>%</span>
+        </div>
+      </div>
+
+      {/* Sentence connector */}
+      <div style={connectorText}>of this entity</div>
+
+      {/* Role */}
+      <div style={{ flex: '1 1 150px', minWidth: 120 }}>
+        <label style={rowLabel}>Role</label>
+        <select style={cellSelect} value={row.role} onChange={e => onChange({ role: e.target.value })}>
+          <option value="">— role —</option>
+          {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </div>
+
+      {/* Acquired */}
+      <div style={{ flex: '0 0 130px' }}>
+        <label style={rowLabel}>Since</label>
+        <input style={cellInput} type="date" value={row.acquired} onChange={e => onChange({ acquired: e.target.value })} />
+      </div>
+
+      {/* Delete */}
+      <button style={deleteBtn} onClick={onDelete} title="Remove">✕</button>
+    </div>
+  )
+}
+
+/** Sentence: [Entity name] owns [X]% of [child entity] · [role] */
+function ChildRow({ row, entityName, allEntities, entityId, onChange, onDelete }: RowProps) {
+  return (
+    <div style={rowContainer('#f97316')}>
+      {/* Entity name label */}
+      <div style={{ flex: '0 0 auto', paddingTop: 18 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#fdba74', whiteSpace: 'nowrap' as const }}>
+          {entityName}
+        </span>
+      </div>
+
+      {/* Sentence connector */}
+      <div style={connectorText}>owns</div>
+
+      {/* % */}
+      <div style={{ flex: '0 0 90px' }}>
+        <label style={rowLabel}>Ownership %</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input
+            style={{ ...cellInput, width: '100%' }}
+            type="number" min="0" max="100" step="0.01"
+            placeholder="100"
+            value={row.pct}
+            onChange={e => onChange({ pct: e.target.value })}
+          />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}>%</span>
+        </div>
+      </div>
+
+      {/* Sentence connector */}
+      <div style={connectorText}>of</div>
+
+      {/* Child entity select */}
+      <div style={{ flex: '0 0 220px' }}>
+        <label style={rowLabel}>Child entity</label>
+        <select style={cellSelect} value={row.counterpart_id} onChange={e => onChange({ counterpart_id: e.target.value })}>
+          <option value="">— select entity —</option>
+          {allEntities.filter(e => e.id !== entityId).map(e => (
+            <option key={e.id} value={e.id}>{e.entity_name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Role */}
+      <div style={{ flex: '1 1 150px', minWidth: 120 }}>
+        <label style={rowLabel}>Role</label>
+        <select style={cellSelect} value={row.role} onChange={e => onChange({ role: e.target.value })}>
+          <option value="">— role —</option>
+          {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </div>
+
+      {/* Acquired */}
+      <div style={{ flex: '0 0 130px' }}>
+        <label style={rowLabel}>Since</label>
+        <input style={cellInput} type="date" value={row.acquired} onChange={e => onChange({ acquired: e.target.value })} />
+      </div>
+
+      {/* Delete */}
+      <button style={deleteBtn} onClick={onDelete} title="Remove">✕</button>
+    </div>
+  )
+}
+
 // ── Shared styles ──────────────────────────────────────────────────
+
+const rowContainer = (accentColor: string): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'flex-end',
+  gap: 10,
+  flexWrap: 'wrap' as const,
+  background: `${accentColor}07`,
+  border: `1px solid ${accentColor}18`,
+  borderRadius: 12,
+  padding: '12px 16px',
+})
+
+const rowLabel: React.CSSProperties = {
+  display: 'block',
+  fontSize: 10,
+  color: 'rgba(255,255,255,0.35)',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.08em',
+  marginBottom: 4,
+  fontFamily: 'DM Sans, sans-serif',
+}
+
+const connectorText: React.CSSProperties = {
+  fontSize: 11,
+  color: 'rgba(255,255,255,0.3)',
+  fontStyle: 'italic',
+  paddingBottom: 8,
+  flexShrink: 0,
+  alignSelf: 'flex-end',
+}
+
 const cellInput: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.05)',
+  background: 'rgba(255,255,255,0.06)',
   border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 6,
-  padding: '5px 8px',
-  fontSize: 12,
+  borderRadius: 8,
+  padding: '7px 10px',
+  fontSize: 13,
   color: 'rgba(255,255,255,0.85)',
   fontFamily: 'DM Sans, sans-serif',
   outline: 'none',
+}
+
+const cellSelect: React.CSSProperties = {
+  ...cellInput,
   width: '100%',
 }
 
@@ -364,13 +548,26 @@ const iconBtn: React.CSSProperties = {
   flexShrink: 0,
 }
 
+const deleteBtn: React.CSSProperties = {
+  background: 'rgba(239,68,68,0.08)',
+  border: '1px solid rgba(239,68,68,0.15)',
+  borderRadius: 8,
+  padding: '6px 10px',
+  fontSize: 12,
+  color: 'rgba(239,68,68,0.7)',
+  cursor: 'pointer',
+  alignSelf: 'flex-end',
+  marginBottom: 1,
+  flexShrink: 0,
+}
+
 const addBtn: React.CSSProperties = {
-  background: 'rgba(249,115,22,0.1)',
-  border: '1px solid rgba(249,115,22,0.2)',
+  background: 'rgba(139,92,246,0.07)',
+  border: '1px solid rgba(139,92,246,0.2)',
   borderRadius: 8,
   padding: '7px 14px',
   fontSize: 12,
-  color: '#f97316',
+  color: '#a78bfa',
   cursor: 'pointer',
   fontFamily: 'DM Sans, sans-serif',
   fontWeight: 600,
