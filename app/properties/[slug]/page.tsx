@@ -11,7 +11,17 @@ import { SpecCard } from '../../_components/SpecCard'
 import ComingSoon from '../../_components/ComingSoon'
 import OwnershipCard from '../../_components/OwnershipCard'
 import HeroCanvas from './HeroCanvas'
+import LodgifyPropertyWidgets from './LodgifyPropertyWidgets'
 import { getProperties, getEntityDocuments, getUserProfile, getAchievements } from '../../lib/queries'
+import {
+  isLodgifyConfigured,
+  getLodgifyBookings,
+  getLodgifyOccupancy,
+  getLodgifyReviews,
+  getLodgifyUpcomingCheckins,
+  getLodgifyProperties,
+  type LodgifyBooking,
+} from '../../lib/lodgify'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +71,37 @@ export default async function PropertyPage({ params }: { params: { slug: string 
       d.property_id === p.id || d.entity_id === p.entity_id
     )
   } catch { /* table may not exist */ }
+
+  // ── Lodgify live data when matched ────────────────────────────
+  const lodgifyOn = isLodgifyConfigured()
+  const lId: number | null = p.lodgify_property_id != null ? Number(p.lodgify_property_id)
+                         : p.lodgify_id != null ? Number(p.lodgify_id)
+                         : null
+  const [lodgifyBookings, occupancy12, reviews, upcoming7, allLodgifyProps] = await Promise.all([
+    lodgifyOn && lId ? getLodgifyBookings({ stayFilter: 'All', max: 500 }).then(list => list.filter(b => b.property_id === lId)).catch(() => [] as LodgifyBooking[]) : Promise.resolve([] as LodgifyBooking[]),
+    lodgifyOn && lId ? getLodgifyOccupancy({ propertyId: lId, monthsBack: 12 }).catch(() => null) : Promise.resolve(null),
+    lodgifyOn ? getLodgifyReviews().catch(() => null) : Promise.resolve(null),
+    lodgifyOn ? getLodgifyUpcomingCheckins({ days: 90 }).catch(() => []) : Promise.resolve([]),
+    lodgifyOn ? getLodgifyProperties().catch(() => []) : Promise.resolve([]),
+  ])
+  const nextReservations = (upcoming7 ?? []).filter(c => c.propertyId === lId).slice(0, 10)
+  const thisYear = new Date().getFullYear()
+  const revOnly = lodgifyBookings.filter(b => {
+    const s = String(b.status ?? '').toLowerCase()
+    const src = String(b.source ?? '').toLowerCase()
+    if (s === 'declined' || s === 'cancelled' || s === 'canceled') return false
+    if (src === 'oh' || src === 'ownerhold') return false
+    return (b.total_amount ?? 0) > 0
+  })
+  const revenueYTD = revOnly
+    .filter(b => b.arrival?.slice(0, 4) === String(thisYear))
+    .reduce((s, b) => s + Number(b.total_amount ?? 0), 0)
+  const threadUids = new Set<string>()
+  for (const b of lodgifyBookings) {
+    const uid = (b as { thread_uid?: string | null }).thread_uid
+    if (uid) threadUids.add(uid)
+  }
+  const lodgifyName = allLodgifyProps.find(lp => lp.id === lId)?.name ?? p.name ?? p.address ?? ''
 
   const achievements = (dbAchievements as any[]).length > 0
     ? (dbAchievements as any[]).map((a: any) => ({
@@ -158,18 +199,49 @@ export default async function PropertyPage({ params }: { params: { slug: string 
         />
       </div>
 
-      {/* Bookings / Occupancy */}
-      <div style={{ marginBottom: 24 }}>
-        <ComingSoon
-          title="Bookings & Occupancy"
-          reason="Requires Lodgify integration — connect in Settings → Integrations to pull booking calendar."
-          icon="📅"
-          connect="lodgify"
-          dataSource="coming-soon:bookings"
-          skeleton="table"
-          minHeight={160}
-        />
-      </div>
+      {/* Bookings / Occupancy — live when matched */}
+      {lodgifyOn && lId ? (
+        <div style={{ marginBottom: 24 }}>
+          <LodgifyPropertyWidgets
+            propertyId={lId}
+            propertyName={lodgifyName}
+            occupancy={occupancy12}
+            bookings={lodgifyBookings.map(b => ({
+              id: b.id,
+              arrival: b.arrival,
+              departure: b.departure,
+              status: b.status,
+              source: b.source ?? null,
+              total_amount: Number(b.total_amount ?? 0),
+              currency_code: b.currency_code,
+              guestInitials: (() => {
+                const g = b.guest?.name
+                if (!g) return null
+                return g.trim().split(/\s+/).map(n => (n[0] ?? '').toUpperCase()).slice(0, 2).join('. ') + '.'
+              })(),
+            }))}
+            nextReservations={nextReservations.map(r => ({
+              arrival: r.arrival, departure: r.departure, nights: r.nights,
+              guestInitials: r.guestInitials, source: r.source, total: r.total, status: r.status,
+            }))}
+            revenueYTD={revenueYTD}
+            threadCount={threadUids.size}
+            reviews={reviews}
+          />
+        </div>
+      ) : (
+        <div style={{ marginBottom: 24 }}>
+          <ComingSoon
+            title="Bookings & Occupancy"
+            reason={lodgifyOn ? 'No Lodgify id matched for this property — set `lodgify_property_id` in property_assets.' : 'Requires Lodgify integration — connect in Settings → Integrations to pull booking calendar.'}
+            icon="📅"
+            connect="lodgify"
+            dataSource="coming-soon:bookings"
+            skeleton="table"
+            minHeight={160}
+          />
+        </div>
+      )}
 
       {/* Documents */}
       <SpecCard accent dataSource="entity_documents" style={{ marginBottom: 24 }}>
