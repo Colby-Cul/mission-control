@@ -15,7 +15,10 @@ import {
   getTopExpenseCategories,
   getNetWorthProjection,
   getRecurringCharges,
+  getUserProfile,
 } from '../lib/queries'
+import WhatIfSlider from './_components/WhatIfSlider'
+import { AlertTriangle } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,13 +37,14 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function CashFlowPage() {
-  const [accounts, txns30d, topExpenses, projection, recurring] = await Promise.allSettled([
+  const [accounts, txns30d, topExpenses, projection, recurring, profile] = await Promise.allSettled([
     getAccounts(),
     getTransactions30d(),
     getTopExpenseCategories(5),
     getNetWorthProjection().catch(() => ({ past: [], forecast: [] })),
     getRecurringCharges().catch(() => []),
-  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
+    getUserProfile().catch(() => null),
+  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : null)))
 
   // Plaid sign convention: negative amount = money coming IN (income/deposits)
   // positive amount = money going OUT (expenses/payments)
@@ -96,11 +100,12 @@ export default async function CashFlowPage() {
           { label: 'Savings Rate',   value: `${savingsRate}%`,      delta: 'of income kept',     deltaPositive: savingsRate > 20 },
         ]}
         playerCard={{
-          name: 'Colby Culbertson',
+          name: (profile as { full_name?: string } | null)?.full_name ?? 'Colby Culbertson',
           role: 'CEO · Cash Flow',
-          level: 12,
-          xpCurrent: xpEarned,
-          xpNext: xpEarned + 500,
+          // Single source of truth: users_profile.level; fall back to 1 (no drift)
+          level: (profile as { level?: number } | null)?.level ?? 1,
+          xpCurrent: (profile as { xp?: number } | null)?.xp ?? xpEarned,
+          xpNext: (profile as { xp_next?: number } | null)?.xp_next ?? xpEarned + 500,
           stats: [
             { key: 'Inflow',   value: USD(inflow30) },
             { key: 'Outflow',  value: USD(outflow30) },
@@ -110,6 +115,32 @@ export default async function CashFlowPage() {
         }}
         animationSlot={<HeroCanvas />}
       />
+
+      {/* Red-alert banner — auto-fires when liquidity is tight. Review flag:
+          savings rate < 5% OR runway < 2 months should scream visually, not
+          sit in neutral grey. */}
+      {(runwayMonths < 2 || savingsRate < 5) && (
+        <div style={{
+          margin: '0 0 20px',
+          padding: '12px 16px',
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.32)',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <AlertTriangle size={16} style={{ color: '#ef4444', flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#ef4444', lineHeight: 1.45 }}>
+            {runwayMonths < 2 && `Runway is ${runwayMonths} month${runwayMonths === 1 ? '' : 's'}. Aim for 6+.`}
+            {runwayMonths < 2 && savingsRate < 5 && ' '}
+            {savingsRate < 5 && `Savings rate ${savingsRate}% is below the 5% danger line.`}
+          </span>
+        </div>
+      )}
+
+      {/* What-If slider — model expense cuts against current burn. */}
+      <div style={{ marginBottom: 20 }}>
+        <WhatIfSlider liquidCash={totalLiquid} monthlyOutflow={outflow30} />
+      </div>
 
       <Achievements items={DEFAULT_ACHIEVEMENTS} xpEarned={xpEarned} />
 
