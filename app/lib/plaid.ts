@@ -161,6 +161,17 @@ export function getWebhookUrl(): string {
   return 'https://mc-merge-v7.vercel.app/api/plaid/webhook'
 }
 
+// ── OAuth Redirect URI ───────────────────────────────────────────────────────
+// Required for OAuth-based institutions (Schwab, Chase, Citi, etc.) that
+// redirect the user to the bank's login page, then back to us. Must match
+// an entry in Plaid Dashboard → Team Settings → API → Allowed redirect URIs.
+
+export function getRedirectUri(): string {
+  const explicit = process.env.PLAID_REDIRECT_URI?.trim()
+  if (explicit) return explicit
+  return 'https://mc-merge-v7.vercel.app/'
+}
+
 // ── Shared transactions sync ─────────────────────────────────────────────────
 // Used by: initial exchange, webhook handler (SYNC_UPDATES_AVAILABLE), safety
 // cron. Pulls from /transactions/sync with the stored cursor, paginates until
@@ -190,6 +201,9 @@ export async function syncTransactionsForItem(
       upsert: (rows: unknown, opts?: unknown) => Promise<{ error: { message: string } | null }>
       update: (row: unknown) => { eq: (col: string, val: string) => Promise<{ error: { message: string } | null }> }
       delete: () => { in: (col: string, vals: string[]) => Promise<{ error: { message: string } | null }> }
+      select: (cols?: string) => {
+        eq: (col: string, val: string) => Promise<{ data: Array<Record<string, unknown>> | null; error: { message: string } | null }>
+      }
     }
   },
 ): Promise<SyncResult> {
@@ -200,10 +214,27 @@ export async function syncTransactionsForItem(
     return { added: 0, modified: 0, removed: 0, error: `decrypt failed: ${e instanceof Error ? e.message : String(e)}` }
   }
 
+  // financial_accounts.id is an internal UUID; Plaid returns its own
+  // account_id. We must translate Plaid's id → our UUID before writing txns
+  // or the FK (financial_transactions.account_id → financial_accounts.id)
+  // rejects the insert. v6 wrote all 23 existing accounts with UUID PKs.
+  const { data: accts, error: acctErr } = await supa
+    .from('financial_accounts')
+    .select('id, plaid_account_id')
+    .eq('plaid_item_id', item.id)
+  if (acctErr) {
+    return { added: 0, modified: 0, removed: 0, error: `account lookup failed: ${acctErr.message}` }
+  }
+  const plaidToUuid = new Map<string, string>()
+  for (const a of (accts ?? []) as Array<{ id: string; plaid_account_id: string }>) {
+    plaidToUuid.set(a.plaid_account_id, a.id)
+  }
+
   let cursor = item.cursor ?? undefined
   let added = 0
   let modified = 0
   let removed = 0
+  let skippedUnmapped = 0
   const upsertBatch: Array<Record<string, unknown>> = []
   const modifyBatch: Array<Record<string, unknown>> = []
   const removedIds: string[] = []
@@ -217,9 +248,11 @@ export async function syncTransactionsForItem(
       })
       cursor = resp.data.next_cursor
       for (const t of resp.data.added ?? []) {
+        const accountUuid = plaidToUuid.get(t.account_id)
+        if (!accountUuid) { skippedUnmapped++; continue }
         upsertBatch.push({
           id: t.transaction_id,
-          account_id: t.account_id,
+          account_id: accountUuid,
           plaid_transaction_id: t.transaction_id,
           date: t.date,
           datetime: t.datetime ?? null,
@@ -235,9 +268,11 @@ export async function syncTransactionsForItem(
         })
       }
       for (const t of resp.data.modified ?? []) {
+        const accountUuid = plaidToUuid.get(t.account_id)
+        if (!accountUuid) { skippedUnmapped++; continue }
         modifyBatch.push({
           id: t.transaction_id,
-          account_id: t.account_id,
+          account_id: accountUuid,
           plaid_transaction_id: t.transaction_id,
           date: t.date,
           datetime: t.datetime ?? null,
@@ -265,13 +300,20 @@ export async function syncTransactionsForItem(
   modified = modifyBatch.length
   removed = removedIds.length
 
+  let upsertErr: string | undefined
   if (upsertBatch.length > 0) {
     const { error } = await supa.from('financial_transactions').upsert(upsertBatch, { onConflict: 'id' })
-    if (error) console.warn('[syncTxns] upsert added failed', error.message)
+    if (error) {
+      console.warn('[syncTxns] upsert added failed', error.message)
+      upsertErr = error.message
+    }
   }
   if (modifyBatch.length > 0) {
     const { error } = await supa.from('financial_transactions').upsert(modifyBatch, { onConflict: 'id' })
-    if (error) console.warn('[syncTxns] upsert modified failed', error.message)
+    if (error) {
+      console.warn('[syncTxns] upsert modified failed', error.message)
+      upsertErr = upsertErr || error.message
+    }
   }
   if (removedIds.length > 0) {
     const { error } = await supa.from('financial_transactions').delete().in('id', removedIds)
@@ -286,5 +328,16 @@ export async function syncTransactionsForItem(
   }).eq('id', item.id)
   if (updErr) console.warn('[syncTxns] plaid_items update failed', updErr.message)
 
-  return { added, modified, removed }
+  // Surface unmapped accounts and upsert errors so register-webhooks /
+  // sync-all responses tell us what broke instead of lying about success.
+  const issues: string[] = []
+  if (skippedUnmapped > 0) issues.push(`${skippedUnmapped} txns skipped (no matching financial_accounts row for their Plaid account_id)`)
+  if (upsertErr) issues.push(`upsert: ${upsertErr}`)
+
+  return {
+    added: upsertErr ? 0 : added,
+    modified: upsertErr ? 0 : modified,
+    removed,
+    ...(issues.length > 0 ? { error: issues.join('; ') } : {}),
+  }
 }
