@@ -1,14 +1,14 @@
 'use client'
 /**
- * LinkAccountBar — compact "Link new account" bar at the top of /accounts.
- * Scope selector (Personal / Entity) + entity dropdown + Link Bank / Link Brokerage.
- * Plaid is not wired in v7 yet — buttons show a toast. When Plaid is configured,
- * wire the success handler to POST /api/accounts/link with scope + entity_id.
+ * LinkAccountBar — real Plaid Link flow.
  *
- * TODO: replace the stub toast with a real PlaidLink component once
- *   NEXT_PUBLIC_PLAID_CLIENT_ID / PLAID_SECRET are configured in Vercel env.
+ * Click → fetch link_token → open Plaid Link popup → on success, POST
+ * public_token + metadata to /api/accounts/link/exchange. Server stores
+ * encrypted access_token, pulls accounts + initial transactions, returns
+ * counts. We toast the result and reload so /accounts shows the new rows.
  */
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { usePlaidLink, type PlaidLinkOnSuccess, type PlaidLinkOnExit } from 'react-plaid-link'
 
 interface Entity {
   id: string
@@ -44,21 +44,107 @@ const btn: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
+const btnDisabled: React.CSSProperties = { ...btn, opacity: 0.5, cursor: 'wait' }
+
 export default function LinkAccountBar({ entities }: Props) {
   const [scope, setScope] = useState<'personal' | 'entity'>('personal')
   const [entityId, setEntityId] = useState('')
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ msg: string; kind: 'info' | 'ok' | 'err' } | null>(null)
+  const [linkToken, setLinkToken] = useState<string | null>(null)
+  const [pendingProduct, setPendingProduct] = useState<'bank' | 'brokerage' | null>(null)
+  const [pending, setPending] = useState<'create' | 'exchange' | null>(null)
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(null), 3500)
+  function showToast(msg: string, kind: 'info' | 'ok' | 'err' = 'info', durationMs = 5000) {
+    setToast({ msg, kind })
+    setTimeout(() => setToast(null), durationMs)
   }
 
-  function handleLink(product: 'bank' | 'brokerage') {
-    // TODO: integrate real Plaid Link once NEXT_PUBLIC_PLAID_CLIENT_ID is set.
-    // On success, POST /api/accounts/link with { scope, entity_id, public_token, product }.
-    showToast('Plaid not yet configured — set PLAID_SECRET + NEXT_PUBLIC_PLAID_CLIENT_ID in Vercel env, then wire PlaidLink here.')
+  // react-plaid-link fires onSuccess with (public_token, metadata). We POST
+  // both to /exchange. Metadata includes institution info we use to avoid
+  // a second Plaid API round-trip on the server.
+  const onSuccess = useCallback<PlaidLinkOnSuccess>(async (public_token, metadata) => {
+    setPending('exchange')
+    setLinkToken(null)  // single-use; clear so the bar can relink if needed
+    try {
+      const resp = await fetch('/api/accounts/link/exchange', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          public_token,
+          product: pendingProduct ?? 'bank',
+          scope,
+          entity_id: entityId || null,
+          institution: {
+            institution_id: metadata.institution?.institution_id,
+            name: metadata.institution?.name,
+          },
+        }),
+      })
+      const data = await resp.json()
+      if (!resp.ok || !data.ok) {
+        showToast(`Link failed: ${data.error ?? resp.statusText}`, 'err', 8000)
+        setPending(null)
+        return
+      }
+      showToast(
+        `Linked ${data.institution} — ${data.account_count} account${data.account_count === 1 ? '' : 's'}, ${data.transaction_count} transactions imported. Refreshing…`,
+        'ok',
+        4000,
+      )
+      setTimeout(() => window.location.reload(), 1200)
+    } catch (e) {
+      showToast(`Link failed: ${e instanceof Error ? e.message : String(e)}`, 'err', 8000)
+    } finally {
+      setPending(null)
+    }
+  }, [pendingProduct, scope, entityId])
+
+  const onExit = useCallback<PlaidLinkOnExit>((err) => {
+    setLinkToken(null)
+    setPending(null)
+    if (err) showToast(`Plaid exited: ${err.error_message ?? err.error_code ?? 'user canceled'}`, 'info', 3500)
+  }, [])
+
+  const { open, ready } = usePlaidLink({
+    token: linkToken,
+    onSuccess,
+    onExit,
+  })
+
+  // When the link_token is ready and Plaid's iframe is ready, auto-open.
+  // usePlaidLink's `ready` flips true once the token + script are loaded.
+  if (linkToken && ready && pending !== 'exchange') {
+    // Defer to next tick so state updates settle first
+    setTimeout(() => open(), 0)
   }
+
+  async function handleLink(product: 'bank' | 'brokerage') {
+    if (scope === 'entity' && !entityId) {
+      showToast('Select an entity first', 'err', 3000)
+      return
+    }
+    setPending('create')
+    setPendingProduct(product)
+    try {
+      const resp = await fetch('/api/accounts/link/create-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, scope, entity_id: entityId || null }),
+      })
+      const data = await resp.json()
+      if (!resp.ok || !data.ok) {
+        showToast(`Can't start Plaid: ${data.error ?? resp.statusText}`, 'err', 8000)
+        setPending(null)
+        return
+      }
+      setLinkToken(data.link_token)  // Triggers auto-open above once ready
+    } catch (e) {
+      showToast(`Can't start Plaid: ${e instanceof Error ? e.message : String(e)}`, 'err', 8000)
+      setPending(null)
+    }
+  }
+
+  const busy = pending !== null
 
   return (
     <div style={{
@@ -77,7 +163,7 @@ export default function LinkAccountBar({ entities }: Props) {
         Link Account
       </span>
 
-      <select value={scope} style={sel} onChange={e => {
+      <select value={scope} style={sel} disabled={busy} onChange={e => {
         setScope(e.target.value as 'personal' | 'entity')
         if (e.target.value === 'personal') setEntityId('')
       }}>
@@ -86,7 +172,7 @@ export default function LinkAccountBar({ entities }: Props) {
       </select>
 
       {scope === 'entity' && (
-        <select value={entityId} style={{ ...sel, minWidth: 160 }} onChange={e => setEntityId(e.target.value)}>
+        <select value={entityId} style={{ ...sel, minWidth: 160 }} disabled={busy} onChange={e => setEntityId(e.target.value)}>
           <option value="">Select entity…</option>
           {entities.map(ent => (
             <option key={ent.id} value={ent.id}>{ent.entity_name}</option>
@@ -94,11 +180,23 @@ export default function LinkAccountBar({ entities }: Props) {
         </select>
       )}
 
-      <button style={btn} onClick={() => handleLink('bank')}>
-        Link Bank Account
+      <button
+        style={busy ? btnDisabled : btn}
+        disabled={busy}
+        onClick={() => handleLink('bank')}
+      >
+        {pending === 'create' && pendingProduct === 'bank' ? 'Starting…' :
+         pending === 'exchange' && pendingProduct === 'bank' ? 'Importing…' :
+         'Link Bank Account'}
       </button>
-      <button style={btn} onClick={() => handleLink('brokerage')}>
-        Link Brokerage
+      <button
+        style={busy ? btnDisabled : btn}
+        disabled={busy}
+        onClick={() => handleLink('brokerage')}
+      >
+        {pending === 'create' && pendingProduct === 'brokerage' ? 'Starting…' :
+         pending === 'exchange' && pendingProduct === 'brokerage' ? 'Importing…' :
+         'Link Brokerage'}
       </button>
 
       {toast && (
@@ -108,15 +206,15 @@ export default function LinkAccountBar({ entities }: Props) {
           left: 0,
           right: 0,
           background: 'rgba(30,30,40,0.97)',
-          border: '1px solid var(--border)',
+          border: `1px solid ${toast.kind === 'err' ? 'rgba(239,68,68,0.5)' : toast.kind === 'ok' ? 'rgba(16,185,129,0.5)' : 'var(--border)'}`,
           borderRadius: 8,
           padding: '10px 14px',
           fontSize: 12,
-          color: 'var(--amber)',
+          color: toast.kind === 'err' ? '#fca5a5' : toast.kind === 'ok' ? '#86efac' : 'var(--amber)',
           zIndex: 50,
           lineHeight: 1.5,
         }}>
-          {toast}
+          {toast.msg}
         </div>
       )}
     </div>
