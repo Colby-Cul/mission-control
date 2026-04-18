@@ -20,6 +20,16 @@ export async function GET() {
       { status: 200 },
     )
   }
+  const key = process.env.COINBASE_API_KEY || ''
+  const secret = process.env.COINBASE_API_SECRET || ''
+  const diag = {
+    key_prefix: key.slice(0, 20),
+    key_looks_like_cdp: key.startsWith('organizations/'),
+    secret_starts_with_begin: secret.includes('-----BEGIN'),
+    secret_has_literal_backslash_n: secret.includes('\\n'),
+    secret_has_real_newline: secret.includes('\n'),
+    secret_length: secret.length,
+  }
   const result = await pingCoinbase()
-  return NextResponse.json({ ...result, configured: true }, { status: 200 })
+  return NextResponse.json({ ...result, configured: true, diag }, { status: 200 })
 }

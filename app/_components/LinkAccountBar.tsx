@@ -7,8 +7,14 @@
  * encrypted access_token, pulls accounts + initial transactions, returns
  * counts. We toast the result and reload so /accounts shows the new rows.
  */
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { usePlaidLink, type PlaidLinkOnSuccess, type PlaidLinkOnExit } from 'react-plaid-link'
+
+// OAuth-institution resumption:
+// When a user comes back from Schwab/Chase/Citi OAuth, the URL contains
+// ?oauth_state_id=... and we need to re-open Plaid Link with the original
+// link_token + receivedRedirectUri so Plaid can finish the flow.
+const LINK_TOKEN_STORAGE_KEY = 'plaid_oauth_link_token'
 
 interface Entity {
   id: string
@@ -65,6 +71,9 @@ export default function LinkAccountBar({ entities }: Props) {
   const onSuccess = useCallback<PlaidLinkOnSuccess>(async (public_token, metadata) => {
     setPending('exchange')
     setLinkToken(null)  // single-use; clear so the bar can relink if needed
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(LINK_TOKEN_STORAGE_KEY)
+    }
     try {
       const resp = await fetch('/api/accounts/link/exchange', {
         method: 'POST',
@@ -102,13 +111,38 @@ export default function LinkAccountBar({ entities }: Props) {
   const onExit = useCallback<PlaidLinkOnExit>((err) => {
     setLinkToken(null)
     setPending(null)
+    setIsOAuthReturn(false)
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem(LINK_TOKEN_STORAGE_KEY)
+      // Clean OAuth query params from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('oauth_state_id')
+      window.history.replaceState({}, '', url.toString())
+    }
     if (err) showToast(`Plaid exited: ${err.error_message ?? err.error_code ?? 'user canceled'}`, 'info', 3500)
+  }, [])
+
+  // If we're returning from an OAuth-institution redirect (Schwab, Chase, etc.),
+  // the URL has ?oauth_state_id=... and we must pass receivedRedirectUri so
+  // Plaid can resume the flow.
+  const [isOAuthReturn, setIsOAuthReturn] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.has('oauth_state_id')) {
+      const saved = window.sessionStorage.getItem(LINK_TOKEN_STORAGE_KEY)
+      if (saved) {
+        setIsOAuthReturn(true)
+        setLinkToken(saved)
+      }
+    }
   }, [])
 
   const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess,
     onExit,
+    ...(isOAuthReturn ? { receivedRedirectUri: typeof window !== 'undefined' ? window.location.href : undefined } : {}),
   })
 
   // When the link_token is ready and Plaid's iframe is ready, auto-open.
@@ -136,6 +170,10 @@ export default function LinkAccountBar({ entities }: Props) {
         showToast(`Can't start Plaid: ${data.error ?? resp.statusText}`, 'err', 8000)
         setPending(null)
         return
+      }
+      // Save the link_token for OAuth resumption (Schwab, Chase, Citi, etc.)
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(LINK_TOKEN_STORAGE_KEY, data.link_token)
       }
       setLinkToken(data.link_token)  // Triggers auto-open above once ready
     } catch (e) {
