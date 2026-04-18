@@ -95,6 +95,69 @@ export default async function PersonalFinance() {
 
         <RecurringChargesList charges={recurring} />
 
+        {/* Personal-scope accounts list — the breakdown the user had in
+            /accounts, scoped to account_scope='personal' so you see which
+            cards/accounts contribute to the radial above. */}
+        <section style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14,
+          padding: '16px 18px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, letterSpacing: '.12em',
+              textTransform: 'uppercase', color: 'var(--cyan)',
+              fontFamily: 'var(--mo)',
+            }}>
+              Personal Accounts · {p.accounts.length}
+            </span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.07)' }} />
+            <a href="/settings/connected-accounts" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>
+              Manage connections →
+            </a>
+          </div>
+          {p.accounts.length === 0 ? (
+            <div style={{ padding: '20px 0', fontSize: 12, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+              No personal-scope accounts linked yet.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+              {p.accounts
+                .slice()
+                .sort((a, b) => Math.abs(Number(b.balance_current ?? 0)) - Math.abs(Number(a.balance_current ?? 0)))
+                .map((a, i) => {
+                  const bal = Number(a.balance_current ?? 0)
+                  const isCredit = a.type === 'credit'
+                  const color = isCredit ? '#ef4444' : a.type === 'investment' ? '#8b5cf6' : '#06b6d4'
+                  return (
+                    <div key={`${a.name}-${i}`} style={{
+                      display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center',
+                      padding: '10px 12px',
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      borderRadius: 10,
+                    }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12, color: '#f5f5f7', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                             title={a.name ?? ''}>
+                          {a.name ?? '—'}
+                        </div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--mo)', marginTop: 2, letterSpacing: '.04em', textTransform: 'uppercase' }}>
+                          {a.subtype ?? a.type ?? 'account'}{a.mask ? ` · ····${a.mask}` : ''}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 13, fontFamily: 'var(--mo)', color, fontWeight: 700, whiteSpace: 'nowrap' }}
+                           title={fmtMoneyExact(bal)}>
+                        {isCredit ? '-' : ''}{fmtMoney(Math.abs(bal))}
+                      </div>
+                    </div>
+                  )
+              })}
+            </div>
+          )}
+        </section>
+
         <p style={{
           fontSize: 11, color: 'rgba(255,255,255,0.3)',
           fontFamily: 'var(--mo)', textAlign: 'center',
