@@ -113,9 +113,13 @@ export async function POST(req: NextRequest) {
         const CHUNK = 200
         for (let i = 0; i < batch.length; i += CHUNK) {
           const slice = batch.slice(i, i + CHUNK)
+          // Upsert on plaid_transaction_id: v6 rows used uuid for id but the
+          // plaid_transaction_id column is unique. Matching on it lets us
+          // update existing rows in place rather than collide on the
+          // unique constraint.
           const { error, count } = await supabase
             .from('financial_transactions')
-            .upsert(slice as never, { onConflict: 'id', count: 'exact' })
+            .upsert(slice as never, { onConflict: 'plaid_transaction_id', count: 'exact' })
           if (error) {
             result.error = (result.error ? result.error + '; ' : '') + `upsert: ${error.message}`
           } else {

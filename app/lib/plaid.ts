@@ -370,14 +370,14 @@ export async function syncTransactionsForItem(
 
   let upsertErr: string | undefined
   if (upsertBatch.length > 0) {
-    const { error } = await supa.from('financial_transactions').upsert(upsertBatch, { onConflict: 'id' })
+    const { error } = await supa.from('financial_transactions').upsert(upsertBatch, { onConflict: 'plaid_transaction_id' })
     if (error) {
       console.warn('[syncTxns] upsert added failed', error.message)
       upsertErr = error.message
     }
   }
   if (modifyBatch.length > 0) {
-    const { error } = await supa.from('financial_transactions').upsert(modifyBatch, { onConflict: 'id' })
+    const { error } = await supa.from('financial_transactions').upsert(modifyBatch, { onConflict: 'plaid_transaction_id' })
     if (error) {
       console.warn('[syncTxns] upsert modified failed', error.message)
       upsertErr = upsertErr || error.message
