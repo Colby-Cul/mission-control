@@ -976,6 +976,91 @@ export async function getNetWorthTrend(months = 12) {
   return (data ?? []) as Array<{ metric_key: string; value: number | null; as_of: string | null }>
 }
 
+/** Personal-scope financial snapshot. Filters financial_accounts to
+ *  account_scope='personal'. Returns liquid cash, brokerage, debt, and
+ *  a net figure. Used on /finance/personal. */
+export async function getPersonalFinance(burnDays = 90) {
+  const { data: accounts } = await supabase
+    .from('financial_accounts')
+    .select('type, subtype, balance_current, account_scope, name, mask')
+    .eq('account_scope', 'personal')
+  const a = (accounts ?? []) as Array<{ type: string | null; subtype: string | null; balance_current: number | null; account_scope: string | null; name: string | null; mask: string | null }>
+
+  const liquidCash = a.filter(x => x.type === 'depository').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const brokerage  = a.filter(x => x.type === 'investment').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const creditDebt = a.filter(x => x.type === 'credit').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const netWorth   = liquidCash + brokerage - creditDebt
+
+  // Personal monthly burn from transactions (positive amounts = outflow)
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - burnDays)
+  const { data: txns } = await supabase
+    .from('financial_transactions')
+    .select('amount, date, category, personal_finance_category, name, merchant_name, account_scope')
+    .eq('account_scope', 'personal')
+    .gte('date', cutoff.toISOString().slice(0, 10))
+  const txnsList = (txns ?? []) as Array<{ amount: number | null; date: string | null; category: unknown; personal_finance_category: unknown; name: string | null; merchant_name: string | null }>
+
+  const totalOutflow = txnsList.filter(t => Number(t.amount ?? 0) > 0).reduce((s, t) => s + Number(t.amount ?? 0), 0)
+  const totalInflow  = txnsList.filter(t => Number(t.amount ?? 0) < 0).reduce((s, t) => s + Math.abs(Number(t.amount ?? 0)), 0)
+  const monthlyBurn  = (totalOutflow / burnDays) * 30
+  const emergencyMonths = monthlyBurn > 0 ? liquidCash / monthlyBurn : null
+  const savingsRate  = totalInflow > 0 ? ((totalInflow - totalOutflow) / totalInflow) * 100 : null
+
+  return {
+    accounts: a,
+    liquidCash, brokerage, creditDebt, netWorth,
+    monthlyBurn, emergencyMonths, savingsRate,
+    recentOutflow: totalOutflow, recentInflow: totalInflow,
+    burnDays,
+  }
+}
+
+/** Recurring / subscription-looking charges in the personal scope. Simple
+ *  heuristic: same merchant name recurring at roughly monthly cadence. */
+export async function getPersonalRecurring(days = 120) {
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - days)
+  const { data } = await supabase
+    .from('financial_transactions')
+    .select('amount, date, name, merchant_name, account_scope')
+    .eq('account_scope', 'personal')
+    .gt('amount', 0)
+    .gte('date', cutoff.toISOString().slice(0, 10))
+  const list = (data ?? []) as Array<{ amount: number | null; date: string | null; name: string | null; merchant_name: string | null }>
+
+  const byMerchant = new Map<string, { amounts: number[]; dates: string[] }>()
+  for (const t of list) {
+    const key = (t.merchant_name || t.name || '').trim()
+    if (!key) continue
+    const cur = byMerchant.get(key) || { amounts: [], dates: [] }
+    cur.amounts.push(Number(t.amount ?? 0))
+    if (t.date) cur.dates.push(t.date)
+    byMerchant.set(key, cur)
+  }
+
+  return Array.from(byMerchant.entries())
+    .map(([merchant, v]) => {
+      const avgAmount = v.amounts.reduce((s, x) => s + x, 0) / v.amounts.length
+      const maxGapDays = v.dates.length > 1
+        ? Math.max(...v.dates.slice(1).map((d, i) =>
+            (new Date(d).getTime() - new Date(v.dates[i]).getTime()) / 86400000
+          ))
+        : null
+      return {
+        merchant,
+        occurrences: v.amounts.length,
+        avgAmount,
+        totalAmount: v.amounts.reduce((s, x) => s + x, 0),
+        likelyRecurring: v.amounts.length >= 2 && v.amounts.length <= 12 &&
+          (maxGapDays == null || maxGapDays <= 45),
+      }
+    })
+    .filter(r => r.likelyRecurring && r.avgAmount >= 5)
+    .sort((a, b) => b.totalAmount - a.totalAmount)
+    .slice(0, 20)
+}
+
 // ═══ Ownership Graph ═══════════════════════════════════════════════
 
 /** All ownership edges (entity→entity AND entity→property) */
