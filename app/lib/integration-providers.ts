@@ -204,10 +204,17 @@ export const PROVIDERS: Record<string, IntegrationProvider> = {
   },
   'coinbase': {
     provider: 'coinbase',
-    kind: 'oauth',
-    envVars: ['COINBASE_CLIENT_ID', 'COINBASE_CLIENT_SECRET'],
-    connectHref: undefined,
+    kind: 'api-key',
+    envVars: ['COINBASE_API_KEY', 'COINBASE_API_SECRET'],
     docsUrl: 'https://www.coinbase.com/settings/api',
+    keyFormat: 'API key + secret (HMAC signing)',
+    rotateInstructions:
+      '1. Log into Coinbase → Settings → API\n' +
+      '2. Click "+ New API Key"\n' +
+      '3. Under Scopes, grant only: wallet:accounts:read (read-only)\n' +
+      '4. Optionally wallet:user:read for balances display names\n' +
+      '5. Skip IP allowlist (Vercel IPs rotate) — rely on the secret instead\n' +
+      '6. Copy both values into the fields below',
   },
   'canva': {
     provider: 'canva',

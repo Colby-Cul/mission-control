@@ -128,11 +128,10 @@ export async function POST(req: NextRequest) {
   }
 
   // 3) AI-generated recommendations (aggregates only)
-  try {
-    const startedAt = new Date().toISOString()
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
-
-    const contextJson = {
+  // startedAt + contextJson hoisted so the catch block can persist a truthful
+  // error row via logAgentRun.
+  const startedAt = new Date().toISOString()
+  const contextJson = {
       vision: {
         name: vision.name,
         category: vision.category,
@@ -158,10 +157,13 @@ export async function POST(req: NextRequest) {
           entity: e.entity_name,
           monthly_revenue: round(e.revenue, 0),
         })),
-        vision_midpoint_as_pct_of_net_worth: pctOfNetWorth != null ? round(pctOfNetWorth, 1) : null,
-        vision_midpoint_as_pct_of_liquid: pctOfLiquid != null ? round(pctOfLiquid, 1) : null,
-      },
-    }
+      vision_midpoint_as_pct_of_net_worth: pctOfNetWorth != null ? round(pctOfNetWorth, 1) : null,
+      vision_midpoint_as_pct_of_liquid: pctOfLiquid != null ? round(pctOfLiquid, 1) : null,
+    },
+  }
+
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
     const system = `You are a sharp, pragmatic financial planner advising a high-net-worth entrepreneur on achieving a specific "vision board" goal (car, house, yacht, experience, etc.). You receive an aggregate snapshot — no raw transactions, no account numbers.
 
@@ -224,6 +226,16 @@ Guidelines:
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[vision/plan] Claude error:', msg)
+    void logAgentRun({
+      startedAt,
+      input: contextJson,
+      output: null,
+      tokens: 0,
+      cost: 0,
+      status: 'error',
+      error: msg,
+      kind: 'vision.plan',
+    })
     baseline.notes = `AI call failed (${msg.slice(0, 120)}) — showing baseline plan.`
     return NextResponse.json(baseline)
   }
@@ -413,6 +425,7 @@ async function logAgentRun(opts: {
   cost: number
   status: string
   kind: string
+  error?: string
 }) {
   try {
     await supabase.from('agent_runs').insert({
@@ -423,7 +436,8 @@ async function logAgentRun(opts: {
       status: opts.status,
       started_at: opts.startedAt,
       ended_at: new Date().toISOString(),
-    })
+      error: opts.error ?? null,
+    } as never)
   } catch {
     /* log-only */
   }

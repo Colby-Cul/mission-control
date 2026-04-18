@@ -15,6 +15,7 @@ import {
   getCompanyKpisByEntityId,
   getCompanyTeam,
   getCompanyMilestonesByEntityId,
+  getCompanyAssets,
   getAchievementsByEntityId,
   getAccountsByEntityId,
   getEntityRevenue30d,
@@ -132,6 +133,13 @@ export default async function CompanyPage({ params }: Props) {
 
   let milestones: any[] = []
   try { milestones = await getCompanyMilestonesByEntityId(entityKey) } catch {}
+
+  let assets: Awaited<ReturnType<typeof getCompanyAssets>> = []
+  // entity_id on company_assets uses the row.id (ent-* format) — try both slug and entity.id
+  try { assets = await getCompanyAssets(entityKey) } catch {}
+  if (assets.length === 0 && entity?.id && entity.id !== entityKey) {
+    try { assets = await getCompanyAssets(entity.id) } catch {}
+  }
 
   let achievements: any[] = []
   // Try slug-based first, fall back to entity.id if entity exists
@@ -1280,6 +1288,53 @@ export default async function CompanyPage({ params }: Props) {
         }
       </section>
 
+      <!-- COMPANY ASSETS (websites, apps, IP owned by this entity) -->
+      <section data-tab="assets" style="margin-bottom:40px;">
+        ${assets.length > 0
+          ? `<div class="bank-accounts-card" style="border-color:rgba(16,185,129,0.2)">
+              <div class="card-title">Company Assets · ${assets.length}</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;padding:12px;">
+                ${assets.map((a: any) => {
+                  const kindIcon: Record<string, string> = {
+                    website: '🌐', web_app: '🖥️', mobile_app: '📱',
+                    saas_product: '⚙️', domain: '🔗', ai_system: '🤖',
+                    brand: '✨', ip: '📜', other: '📦',
+                  }
+                  const statusColor: Record<string, string> = {
+                    live: 'var(--green)', staging: 'var(--amber)',
+                    building: 'var(--blue)', archived: 'var(--dim)',
+                    licensed: 'var(--purple)', internal: 'var(--orange)',
+                  }
+                  const icon = kindIcon[a.kind] ?? '📦'
+                  const color = statusColor[a.status] ?? 'var(--dim)'
+                  const urlEsc = (a.url ?? '').replace(/"/g, '&quot;')
+                  return `<div style="padding:16px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,0.02);">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;">
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:22px;">${icon}</span>
+                        <div>
+                          <div style="font-size:14px;font-weight:700;color:var(--t1);">${a.name}</div>
+                          <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--dim);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;">${a.kind.replace('_',' ')}</div>
+                        </div>
+                      </div>
+                      <span style="font-size:9px;font-family:'IBM Plex Mono',monospace;padding:3px 8px;border-radius:4px;border:1px solid ${color};color:${color};text-transform:uppercase;letter-spacing:0.06em;">${a.status}</span>
+                    </div>
+                    ${a.description ? `<div style="font-size:12px;color:var(--t2);line-height:1.45;margin-bottom:10px;">${a.description}</div>` : ''}
+                    ${a.url ? `<a href="${urlEsc}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--orange);text-decoration:none;margin-bottom:8px;">${String(a.url).replace('https://','').replace('http://','')} ↗</a>` : ''}
+                    ${a.tags && a.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${a.tags.map((t: string) => `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--dim);font-family:'IBM Plex Mono',monospace;">${t}</span>`).join('')}</div>` : ''}
+                    ${a.monthly_revenue ? `<div style="font-size:11px;color:var(--green);margin-top:8px;font-family:'IBM Plex Mono',monospace;">$${Number(a.monthly_revenue).toLocaleString()}/mo revenue</div>` : ''}
+                  </div>`
+                }).join('')}
+              </div>
+            </div>`
+          : `<div class="coming-soon-inline" data-source="company_assets:${slug}">
+              <span class="cs-icon">🌐</span>
+              <div class="cs-label">No assets yet</div>
+              Websites, apps, and IP owned by this entity will appear here. Add rows to <code>company_assets</code> with entity_id=${slug}.
+            </div>`
+        }
+      </section>
+
       <!-- DOCUMENTS -->
       <section data-tab="documents" style="margin-bottom:40px;">
         ${hasDocs
@@ -1353,6 +1408,12 @@ export default async function CompanyPage({ params }: Props) {
       empty: team.length === 0,
     },
     { id: 'financials',  label: 'Financials' },
+    {
+      id: 'assets',
+      label: 'Assets',
+      count: assets.length,
+      empty: assets.length === 0,
+    },
     {
       id: 'documents',
       label: 'Documents',

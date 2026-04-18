@@ -20,6 +20,7 @@ import {
   type ParsedBS,
 } from '../lib/quickbooks'
 import { getEntities } from '../lib/queries'
+import { getCoinbaseHoldings, type CoinbaseHoldingsSummary } from '../lib/coinbase'
 
 export const dynamic = 'force-dynamic'
 
@@ -177,6 +178,11 @@ export default async function FinancePage() {
     qbEntityBSs = []
   }
   const connectedBSs = qbEntityBSs.filter(x => x.bs)
+
+  // Coinbase — crypto holdings pulled live via HMAC-signed v2 API.
+  // Returns configured=false gracefully when env vars aren't set.
+  let coinbaseHoldings: CoinbaseHoldingsSummary | null = null
+  try { coinbaseHoldings = await getCoinbaseHoldings() } catch {}
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -3024,6 +3030,8 @@ export default async function FinancePage() {
       </div>
     </div>
 
+    <!-- ___CRYPTO_SPLIT___ — Crypto Holdings JSX card is injected here -->
+
     <!-- CASH FLOW SECTION - FLOW DASHBOARD -->
     <div class="section">
       <div class="section-title">Flow Dashboard</div>
@@ -4080,6 +4088,13 @@ ___ACCOUNTS_GRID___
     .replace('___ACCOUNTS_GRID___', accountsGridHtml)
     .replace('___TXN_LIST___', txnListHtml)
 
+  // Split bodyContent so we can inject the Crypto Holdings card right AFTER
+  // the Real Estate Portfolio section (per CEO directive — crypto sits with
+  // real-asset rollups, not standalone). Gamification stays adjacent to Hero.
+  const bodyParts = bodyContent.split('<!-- ___CRYPTO_SPLIT___ — Crypto Holdings JSX card is injected here -->')
+  const bodyBeforeCrypto = bodyParts[0] ?? bodyContent
+  const bodyAfterCrypto = bodyParts[1] ?? ''
+
   // Compute net worth — prefer graph-cascaded, fall back to raw account sum
   const rawNetWorth = accounts.reduce((s: number, a: any) => {
     const b = typeof a.current_balance === 'number' ? a.current_balance : parseFloat(a.current_balance ?? '0') || 0
@@ -4135,142 +4150,181 @@ ___ACCOUNTS_GRID___
         animationSlot={<HeroCanvas />}
       />
 
-      {/* QuickBooks Balance Sheet — one card per connected entity */}
+      {/* bodyContent BEFORE Crypto split — Achievements (directly under hero),
+          TRUE NET WORTH, Business Entities, Real Estate Portfolio.
+          QuickBooks Balance Sheet moved to entity pages (/companies/[slug]). */}
+      <div dangerouslySetInnerHTML={{ __html: bodyBeforeCrypto }} />
+
+      {/* Coinbase Crypto Holdings — sits with the real-asset rollup (after Real Estate) */}
       <section style={{ marginBottom: 28 }}>
         <div className="section-header">
           <div className="section-header-left">
-            <h2 className="section-title">QuickBooks Balance Sheet</h2>
-            {connectedBSs.length > 0 && (
+            <h2 className="section-title">Crypto Holdings</h2>
+            {coinbaseHoldings?.configured && coinbaseHoldings.accounts.length > 0 && (
               <span className="achieve-count">
-                live · {connectedBSs.length} {connectedBSs.length === 1 ? 'entity' : 'entities'}
+                live · {coinbaseHoldings.accounts.length}{' '}
+                {coinbaseHoldings.accounts.length === 1 ? 'currency' : 'currencies'}
               </span>
             )}
           </div>
         </div>
-        {connectedBSs.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {connectedBSs.map(entry => {
-              const bs = entry.bs!
-              return (
-                <SpecCard
-                  key={entry.slug}
-                  accent
-                  dataSource={`quickbooks:BalanceSheet:${entry.slug}`}
+        {!coinbaseHoldings?.configured ? (
+          <ComingSoon
+            title="Coinbase Crypto Holdings"
+            reason="Generate a read-only API key at coinbase.com/settings/api (scope: wallet:accounts:read), then add COINBASE_API_KEY and COINBASE_API_SECRET to Vercel env. Balances refresh every 2 minutes."
+            icon="₿"
+            connect="coinbase"
+            dataSource="coming-soon:coinbase_holdings"
+            skeleton="kpi"
+          />
+        ) : coinbaseHoldings.error ? (
+          <ComingSoon
+            title="Coinbase Crypto Holdings"
+            reason={`Coinbase returned an error: ${coinbaseHoldings.error}. Check the API key's permissions (needs wallet:accounts:read) and the secret.`}
+            icon="⚠️"
+            connect="coinbase"
+            dataSource="coming-soon:coinbase_error"
+            skeleton="kpi"
+          />
+        ) : coinbaseHoldings.accounts.length === 0 ? (
+          <ComingSoon
+            title="Coinbase Crypto Holdings"
+            reason="Coinbase connection is live, but no non-zero balances were found on this account."
+            icon="₿"
+            dataSource="coming-soon:coinbase_empty"
+            skeleton="kpi"
+          />
+        ) : (
+          <SpecCard accent dataSource="coinbase:holdings">
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                marginBottom: 16,
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    color: 'var(--dim)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    marginBottom: 2,
+                  }}
+                >
+                  Coinbase Consumer · {coinbaseHoldings.accounts.length}{' '}
+                  {coinbaseHoldings.accounts.length === 1 ? 'currency' : 'currencies'}
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace' }}>
+                  {USD(coinbaseHoldings.total_usd)}
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  color: 'var(--dim)',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                updated{' '}
+                {new Date(coinbaseHoldings.last_fetched_at).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                gap: 12,
+              }}
+            >
+              {coinbaseHoldings.accounts.map(a => (
+                <div
+                  key={a.id}
+                  style={{
+                    padding: '14px 16px',
+                    background: 'rgba(255,255,255,0.02)',
+                    borderRadius: 12,
+                    border: '1px solid var(--border)',
+                  }}
                 >
                   <div
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'baseline',
-                      marginBottom: 12,
-                      gap: 12,
-                      flexWrap: 'wrap',
+                      marginBottom: 6,
                     }}
                   >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontFamily: 'IBM Plex Mono, monospace',
-                          color: 'var(--dim)',
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          marginBottom: 2,
-                        }}
-                      >
-                        QuickBooks Balance Sheet · {entry.name}
-                      </div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>
-                        as of {bs.asOf}
-                      </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      {a.currency_code}
                     </div>
-                    <a
-                      href={`/companies/${encodeURIComponent(entry.slug)}`}
+                    <div
                       style={{
                         fontSize: 10,
+                        color: 'var(--dim)',
                         fontFamily: 'IBM Plex Mono, monospace',
-                        color: 'var(--orange)',
-                        textDecoration: 'none',
                         letterSpacing: '0.04em',
                       }}
                     >
-                      Open {entry.name} →
-                    </a>
+                      {a.name}
+                    </div>
                   </div>
                   <div
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 12,
+                      fontSize: 20,
+                      fontWeight: 700,
+                      fontFamily: 'IBM Plex Mono, monospace',
+                      color: 'var(--orange)',
+                      marginBottom: 4,
                     }}
                   >
-                    {([
-                      ['Total Assets', USD(bs.totalAssets), 'var(--green)'],
-                      ['Total Liabilities', USD(bs.totalLiabilities), 'var(--red)'],
-                      ['Total Equity', USD(bs.totalEquity), 'var(--orange)'],
-                    ] as [string, string, string][]).map(
-                      ([label, val, color]) => (
-                        <div
-                          key={label}
-                          style={{
-                            padding: '14px 16px',
-                            background: 'rgba(255,255,255,0.02)',
-                            borderRadius: 12,
-                            border: '1px solid var(--border)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 10,
-                              color: 'var(--dim)',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.08em',
-                              marginBottom: 6,
-                            }}
-                          >
-                            {label}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 22,
-                              fontWeight: 700,
-                              fontFamily: 'IBM Plex Mono, monospace',
-                              color,
-                            }}
-                          >
-                            {val}
-                          </div>
-                        </div>
-                      ),
-                    )}
+                    {a.balance_usd != null ? USD(a.balance_usd) : '—'}
                   </div>
                   <div
                     style={{
-                      fontSize: 10,
+                      fontSize: 11,
                       color: 'var(--dim)',
-                      marginTop: 12,
-                      lineHeight: 1.5,
+                      fontFamily: 'IBM Plex Mono, monospace',
                     }}
                   >
-                    Pulled live from QuickBooks Online · {bs.currency} · cached 60s
+                    {a.balance_amount.toLocaleString(undefined, { maximumFractionDigits: 8 })}{' '}
+                    {a.currency_code}
                   </div>
-                </SpecCard>
-              )
-            })}
-          </div>
-        ) : (
-          <ComingSoon
-            title="QuickBooks Balance Sheet"
-            reason="Connect a QuickBooks company per entity on the Integrations page to pull live Assets, Liabilities, and Equity directly from QBO. Each connected entity gets its own Balance Sheet card here."
-            icon="📒"
-            connect="qb"
-            dataSource="coming-soon:quickbooks_balance_sheet"
-            skeleton="kpi"
-          />
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: 'var(--dim)',
+                marginTop: 12,
+                lineHeight: 1.5,
+              }}
+            >
+              Pulled live from Coinbase v2 · USD via spot prices · cached 120s
+            </div>
+          </SpecCard>
         )}
       </section>
 
-      <div dangerouslySetInnerHTML={{ __html: bodyContent }} />
+      {/* bodyContent AFTER Crypto split — Flow Dashboard, AI Ops Intelligence,
+          Spending Intelligence, Credit & Debt, Connected Accounts. */}
+      <div dangerouslySetInnerHTML={{ __html: bodyAfterCrypto }} />
     </>
   )
 }

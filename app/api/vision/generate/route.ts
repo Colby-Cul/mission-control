@@ -112,9 +112,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(fallback)
   }
 
-  // Run Claude to synthesize
+  // Run Claude to synthesize. startedAt lives outside the try so the catch
+  // block can persist an agent_runs row with a correct started_at.
+  const startedAt = new Date().toISOString()
   try {
-    const startedAt = new Date().toISOString()
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
     const system = `You are a financial planning assistant helping turn a user's "vision board" dream into a structured card. The user describes something they want to buy, save for, or experience (house, yacht, boat, car, vacation, education, investment, etc.). You must return ONLY valid JSON matching the schema — no prose, no markdown.
@@ -203,7 +204,18 @@ Rules:
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[vision/generate] Claude error:', msg)
-    // Degrade to non-AI fallback
+    // Persist the failure so it surfaces in agent_runs / Command Deck /
+    // daily digest instead of silently degrading to fallback card.
+    void logAgentRun({
+      startedAt,
+      input: { description, url, imageHint, intake: summarizeIntake(intake) },
+      output: null,
+      tokens: 0,
+      cost: 0,
+      status: 'error',
+      error: msg,
+      kind: 'vision.generate',
+    })
     const fallback = fallbackCard(description, intake, imageHint, url)
     fallback.notes = `AI call failed (${msg.slice(0, 120)}) — fell back to URL metadata + description.`
     return NextResponse.json(fallback)
@@ -256,6 +268,7 @@ async function logAgentRun(opts: {
   cost: number
   status: string
   kind: string
+  error?: string
 }) {
   try {
     await supabase.from('agent_runs').insert({
@@ -266,8 +279,10 @@ async function logAgentRun(opts: {
       status: opts.status,
       started_at: opts.startedAt,
       ended_at: new Date().toISOString(),
-    })
-  } catch {
-    /* log-only — do not fail the user's request */
+      error: opts.error ?? null,
+    } as never)
+  } catch (e) {
+    // Log to console so failure to persist isn't completely invisible.
+    console.error('[logAgentRun] insert failed:', e instanceof Error ? e.message : String(e))
   }
 }

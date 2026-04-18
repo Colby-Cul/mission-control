@@ -39,6 +39,19 @@ interface Task {
   total_cost?: number
   duration_minutes?: number
   session_id?: string
+  // Latest agent_runs row for this task (populated server-side in page.tsx)
+  latest_run?: {
+    id: string
+    agent_id: string | null
+    status: string | null
+    started_at: string | null
+    ended_at: string | null
+    cost: number | null
+    tokens: number | null
+    error: string | null
+    output: Record<string, unknown> | null
+  } | null
+  run_count?: number
   [key: string]: unknown
 }
 
@@ -206,6 +219,26 @@ function TaskRow({
           {task.owner && <span style={{ fontSize: 11, color: 'var(--t3)' }}>{String(task.owner)}</span>}
           {task.agent && <span style={{ fontSize: 10, color: 'var(--purple)', fontFamily: 'var(--mo)' }}>{String(task.agent)}</span>}
           {task.model && <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{String(task.model)}</span>}
+          {/* Latest agent_runs activity — the real feedback loop */}
+          {task.latest_run && (() => {
+            const r = task.latest_run!
+            const badgeColor =
+              r.status === 'completed' ? 'var(--green)' :
+              r.status === 'running'   ? 'var(--cyan)'  :
+              r.status === 'blocked'   ? 'var(--yellow)':
+              r.status === 'false_report' ? 'var(--yellow)' :
+              r.status === 'error' || r.status === 'failed' ? 'var(--red)' : 'var(--t4)'
+            const durMs = r.ended_at && r.started_at ? (new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()) : null
+            return (
+              <span
+                style={{ fontSize: 10, color: badgeColor, fontFamily: 'var(--mo)', border: `1px solid ${badgeColor}`, borderRadius: 3, padding: '1px 5px' }}
+                title={r.error ? `${r.agent_id}: ${r.error}` : `${r.agent_id} — ${r.status}`}
+              >
+                ▸ {r.agent_id ?? 'agent'} {r.status ?? '—'}{durMs ? ` · ${(durMs/1000).toFixed(1)}s` : ''}
+                {task.run_count && task.run_count > 1 ? ` (${task.run_count} runs)` : ''}
+              </span>
+            )
+          })()}
         </div>
         {/* ── Sub-row: tags + time + cost + xp + attachments ── */}
         <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>

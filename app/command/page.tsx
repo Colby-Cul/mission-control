@@ -48,7 +48,18 @@ export default async function CommandPage() {
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
 
   const todayCount   = (sessions as any[]).length
-  const blockedTasks = (sessions as any[]).filter((s: any) => s.status === 'error' || s.status === 'failed')
+  // Surface every stuck/failed state: error/failed (hard), blocked (agent asked
+  // for human), false_report (agent claimed done but output was deferral). Also
+  // include 'running' rows older than 10 min — those are "stuck running".
+  const now = Date.now()
+  const blockedTasks = (sessions as any[]).filter((s: any) => {
+    if (s.status === 'error' || s.status === 'failed' || s.status === 'blocked' || s.status === 'false_report') return true
+    if (s.status === 'running' && s.started_at) {
+      const ageMs = now - new Date(s.started_at).getTime()
+      if (ageMs > 10 * 60 * 1000) return true
+    }
+    return false
+  })
   const completed    = (sessions as any[]).filter((s: any) => s.status === 'done' || s.status === 'completed')
   const projectCount = (projects as any[]).filter((p: any) => p.status === 'active').length
   const openIncidents = (incidents as any[]).filter((i: any) => i.status !== 'resolved').length
@@ -81,17 +92,31 @@ export default async function CommandPage() {
           </div>
           {blockedTasks.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {blockedTasks.slice(0, 8).map((t: any) => (
-                <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(t.title || 'Session').slice(0, 50)}</div>
-                    <div style={{ fontSize: 10, color: 'var(--dim)' }}>{t.agent_name ?? 'agent'} · {fmtDate(t.started_at)}</div>
+              {blockedTasks.slice(0, 8).map((t: any) => {
+                // Surface the actual error/reason so you don't have to drill in
+                const reason: string | null =
+                  t.error ??
+                  (t.output && typeof t.output === 'object' && t.output.verification?.reason) ??
+                  null
+                return (
+                  <div key={t.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(t.title || 'Session').slice(0, 50)}</div>
+                        <div style={{ fontSize: 10, color: 'var(--dim)' }}>{t.agent_name ?? t.agent_id ?? 'agent'} · {fmtDate(t.started_at)}</div>
+                      </div>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(239,68,68,0.1)', color: 'var(--red)', marginLeft: 8 }}>
+                        {t.status}
+                      </span>
+                    </div>
+                    {reason && (
+                      <div style={{ fontSize: 10, color: 'var(--red)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={reason}>
+                        → {String(reason).slice(0, 120)}
+                      </div>
+                    )}
                   </div>
-                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 3, background: 'rgba(239,68,68,0.1)', color: 'var(--red)', marginLeft: 8 }}>
-                    {t.status}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div style={{ color: 'var(--green)', fontSize: 13, padding: '12px 0' }}>No blocked or error sessions in the last 24h.</div>

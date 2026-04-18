@@ -55,60 +55,35 @@ export interface InvokeAgentOptions {
   contextId?: string
 }
 
-// ─── Hard-coded fallback agent roster (all 50 OpenClaw agents) ───────────────
-// Source: ls ~/.openclaw/agents/ — excludes placeholder your_discord_monitor_agent_id
+// ─── Hard-coded fallback agent roster — the 23 REAL OpenClaw agents ─────────
+// Source of truth: ~/.openclaw/agents/ + PROD `agents` table on Supabase.
+// Models here reflect the 5-tier routing plan locked 2026-04-18 (see
+// ~/.claude/.../project_openclaw_reliability_plan.md).
 
 export const BUILTIN_AGENTS: Agent[] = [
-  { id: 'acp-codex',           name: 'ACP Codex',           description: 'ACP coding delegation runtime',              status: 'idle',   capabilities: ['code','delegate'],             tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'acp-defaultagent',    name: 'ACP Default Agent',   description: 'ACP default agent handler',                  status: 'idle',   capabilities: ['route','handle'],              tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'general',    model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'agentmail',           name: 'AgentMail',           description: 'Inbox AI — Christine CLS contact handler',   status: 'active', capabilities: ['email','triage','respond'],     tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 12,   created_at: '' },
-  { id: 'analytics-bot',       name: 'Analytics Bot',       description: 'Data analytics and reporting agent',         status: 'idle',   capabilities: ['analyze','report','query'],     tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 8,    created_at: '' },
-  { id: 'apex-coder-backup',   name: 'Apex Coder Backup',   description: 'Backup coding agent for heavy tasks',        status: 'idle',   capabilities: ['code','build','test'],          tier: 'backup',   trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'assistant',           name: 'Assistant',           description: 'General-purpose assistant agent',            status: 'idle',   capabilities: ['assist','draft','plan'],        tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'general',    model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 5,    created_at: '' },
-  { id: 'beacon',              name: 'Beacon',              description: 'Signal & notification dispatch agent',       status: 'idle',   capabilities: ['notify','alert','broadcast'],   tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 13,   created_at: '' },
-  { id: 'bookkeeper',          name: 'Bookkeeper',          description: 'Expense tracking and financial review',      status: 'idle',   capabilities: ['finance','expense','audit'],    tier: 'primary',  trigger_type: 'cron',    health_status: 'degraded', knowledge_level: 'expert',    model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 359,  created_at: '' },
-  { id: 'brinley',             name: 'Brinley',             description: 'Specialized workflow agent',                 status: 'idle',   capabilities: ['workflow','execute'],           tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'cfo',                 name: 'CFO',                 description: 'Chief Financial Officer AI — financial ops', status: 'active', capabilities: ['finance','forecast','budget'],   tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 0.59, created_at: '' },
-  { id: 'claude-opus',         name: 'Claude Opus',         description: 'Anthropic Claude Opus model agent',          status: 'idle',   capabilities: ['reason','analyze','write'],     tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'claude-sonnet',       name: 'Claude Sonnet',       description: 'Anthropic Claude Sonnet model agent',        status: 'active', capabilities: ['reason','code','write'],        tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'codex',               name: 'Codex',               description: 'OpenAI Codex coding agent',                  status: 'idle',   capabilities: ['code','refactor','generate'],   tier: 'backup',   trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'codex-default',       name: 'Codex Default',       description: 'Default Codex agent configuration',         status: 'idle',   capabilities: ['code','complete'],              tier: 'backup',   trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'coding-agent',        name: 'Coding Agent',        description: 'General coding and development agent',       status: 'active', capabilities: ['code','debug','review'],        tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 50,   created_at: '' },
-  { id: 'communication-bot',   name: 'Communication Bot',   description: 'Multi-channel messaging agent',              status: 'idle',   capabilities: ['message','send','slack'],       tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 2,    created_at: '' },
-  { id: 'cron',                name: 'Cron',                description: 'Scheduled task execution agent',             status: 'active', capabilities: ['schedule','run','trigger'],     tier: 'primary',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 20,   created_at: '' },
-  { id: 'crypto-analyst',      name: 'Crypto Analyst',      description: 'Cryptocurrency portfolio analysis agent',    status: 'idle',   capabilities: ['analyze','price','portfolio'],  tier: 'utility',  trigger_type: 'cron',    health_status: 'degraded', knowledge_level: 'specialist', model: 'claude-opus-4-6',  owner: 'Jarvis', cost_ytd: 221,  created_at: '' },
-  { id: 'default',             name: 'Default',             description: 'Default fallback agent',                    status: 'idle',   capabilities: ['route','handle'],              tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'general',    model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'designer',            name: 'Designer',            description: 'Design and creative assets agent',           status: 'idle',   capabilities: ['design','create','canva'],      tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'discord',             name: 'Discord',             description: 'Discord guild messaging agent',              status: 'active', capabilities: ['message','monitor','reply'],    tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 5,    created_at: '' },
-  { id: 'discord-chat',        name: 'Discord Chat',        description: 'Discord chat interaction handler',           status: 'idle',   capabilities: ['chat','respond','moderate'],    tier: 'backup',   trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 2,    created_at: '' },
-  { id: 'echo',                name: 'Echo',                description: 'Echo and relay agent for debugging',         status: 'idle',   capabilities: ['relay','debug','test'],         tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'general',    model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 40,   created_at: '' },
-  { id: 'exec',                name: 'Exec',                description: 'Executive command execution agent',          status: 'idle',   capabilities: ['execute','command','run'],      tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'execassistant',       name: 'Exec Assistant',      description: 'Executive assistant operations',             status: 'idle',   capabilities: ['assist','schedule','draft'],    tier: 'backup',   trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'executive-assistant', name: 'Executive Assistant', description: 'Victoria — executive assistant & comms',    status: 'active', capabilities: ['draft','schedule','comms'],     tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 15,   created_at: '' },
-  { id: 'fin-researcher',      name: 'Fin Researcher',      description: 'Financial research and market analysis',    status: 'idle',   capabilities: ['research','analyze','finance'], tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 10,   created_at: '' },
-  { id: 'herald',              name: 'Herald',              description: 'Announcement and broadcast agent',           status: 'idle',   capabilities: ['announce','broadcast','notify'], tier: 'utility', trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 158,  created_at: '' },
-  { id: 'infrastructure-bot',  name: 'Infrastructure Bot',  description: 'Infrastructure monitoring and ops agent',   status: 'active', capabilities: ['monitor','deploy','infra'],     tier: 'primary',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 25,   created_at: '' },
-  { id: 'lens',                name: 'Lens',                description: 'Visual analysis and image processing agent', status: 'idle',   capabilities: ['vision','analyze','extract'],   tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 54,   created_at: '' },
-  { id: 'main',                name: 'Main (Jarvis)',        description: 'Primary orchestrator — Mac Mini worker',    status: 'active', capabilities: ['research','plan','execute','delegate'], tier: 'primary', trigger_type: 'event', health_status: 'healthy', knowledge_level: 'expert', model: 'claude-sonnet-4-6', owner: 'Jarvis', cost_ytd: 300, dependencies: ['coding-agent','executive-assistant','cron'], created_at: '' },
-  { id: 'maven',               name: 'Maven',               description: 'Knowledge management and research agent',   status: 'idle',   capabilities: ['research','index','retrieve'],  tier: 'utility',  trigger_type: 'manual',  health_status: 'degraded', knowledge_level: 'specialist', model: 'gpt-4o',           owner: 'Jarvis', cost_ytd: 2.1,  created_at: '' },
-  { id: 'monday-com',          name: 'Monday.com',          description: 'Monday.com integration agent',              status: 'idle',   capabilities: ['tasks','boards','update'],      tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'monday-com-agent',    name: 'Monday.com Agent',    description: 'Extended Monday.com automation agent',      status: 'idle',   capabilities: ['automate','boards','items'],    tier: 'backup',   trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'mtp',                 name: 'MTP',                 description: 'Mission-to-plan execution agent',            status: 'idle',   capabilities: ['plan','execute','track'],       tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'openai-codex',        name: 'OpenAI Codex',        description: 'OpenAI Codex ACP delegation runtime',       status: 'idle',   capabilities: ['code','generate','refactor'],   tier: 'backup',   trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'openai-gpt-4o-mini',  name: 'OpenAI GPT-4o Mini',  description: 'OpenAI GPT-4o Mini lightweight agent',      status: 'idle',   capabilities: ['respond','draft','classify'],   tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'general',    model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'ops-runner',          name: 'Ops Runner',          description: 'Operational task runner and executor',      status: 'idle',   capabilities: ['run','execute','ops'],          tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'pulse',               name: 'Pulse',               description: 'Real-time monitoring and health-check agent', status: 'active', capabilities: ['monitor','alert','health'],   tier: 'primary',  trigger_type: 'cron',    health_status: 'degraded', knowledge_level: 'expert',    model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 115,  created_at: '' },
-  { id: 'quentin',             name: 'Quentin',             description: 'Query and question-answering agent',        status: 'idle',   capabilities: ['query','answer','retrieve'],    tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o',             owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'quill',               name: 'Quill',               description: 'Writing and content creation agent',        status: 'idle',   capabilities: ['write','draft','edit'],         tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'scribe',              name: 'Scribe',              description: 'Documentation and transcript agent',        status: 'idle',   capabilities: ['document','transcribe','note'],  tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'sentinel',            name: 'Sentinel',            description: 'Security monitoring and alerting agent',   status: 'active', capabilities: ['monitor','alert','secure'],     tier: 'primary',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 10,   created_at: '' },
-  { id: 'short-term-rental',   name: 'Short-Term Rental',   description: 'STR operations and guest management agent', status: 'idle',   capabilities: ['str','bookings','guests'],      tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 5,    created_at: '' },
-  { id: 'spark',               name: 'Spark',               description: 'Idea generation and brainstorming agent',   status: 'idle',   capabilities: ['ideate','brainstorm','create'],  tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'stock-analyst',       name: 'Stock Analyst',       description: 'Stock market analysis and tracking agent',  status: 'idle',   capabilities: ['analyze','price','portfolio'],  tier: 'utility',  trigger_type: 'cron',    health_status: 'degraded', knowledge_level: 'specialist', model: 'claude-opus-4-6',  owner: 'Jarvis', cost_ytd: 165,  created_at: '' },
-  { id: 'task-master',         name: 'Task Master',         description: 'Task planning and management agent',        status: 'idle',   capabilities: ['tasks','plan','delegate'],      tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'taskmaster',          name: 'Taskmaster',          description: 'Advanced task orchestration agent',         status: 'idle',   capabilities: ['orchestrate','tasks','run'],    tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0,    created_at: '' },
-  { id: 'tax-advisor',         name: 'Tax Advisor',         description: 'Tax strategy and compliance agent',         status: 'idle',   capabilities: ['tax','advise','compliance'],    tier: 'utility',  trigger_type: 'cron',    health_status: 'degraded', knowledge_level: 'expert',    model: 'claude-opus-4-6',    owner: 'Jarvis', cost_ytd: 204,  created_at: '' },
-  { id: 'validation',          name: 'Validation',          description: 'QA & verification agent',                  status: 'idle',   capabilities: ['validate','review','qa'],       tier: 'primary',  trigger_type: 'event',   health_status: 'degraded', knowledge_level: 'expert',    model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 176,  created_at: '' },
+  { id: 'main',                name: 'Jarvis',              description: 'Chief of Staff — primary orchestrator, your interface',        status: 'active', capabilities: ['research','plan','execute','delegate'],  tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, dependencies: ['coding-agent','executive-assistant'], created_at: '' },
+  { id: 'cfo',                 name: 'CFO',                 description: 'Financial orchestration + strategy across entities',           status: 'active', capabilities: ['finance','forecast','budget','tax'],       tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'bookkeeper',          name: 'Bookkeeper',          description: 'QuickBooks operations, expense categorization, reconciliation',status: 'idle',   capabilities: ['quickbooks','expense','reconcile'],        tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'fin-researcher',      name: 'Fin Researcher',      description: 'Long-context financial research + market analysis',            status: 'idle',   capabilities: ['research','analyze','finance'],            tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gemini-2.5-flash',   owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'tax-advisor',         name: 'Tax Advisor',         description: 'Tax strategy + compliance, S-Corp/C-Corp/LLC rules',           status: 'idle',   capabilities: ['tax','advise','compliance'],               tier: 'primary',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'crypto-analyst',      name: 'Crypto Analyst',      description: 'Crypto portfolio analysis + signal tracking',                  status: 'idle',   capabilities: ['analyze','price','portfolio'],             tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'stock-analyst',       name: 'Stock Analyst',       description: 'Equity market analysis, portfolio tracking',                   status: 'idle',   capabilities: ['analyze','price','portfolio'],             tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'coding-agent',        name: 'Coding Agent',        description: 'Production code generation, debug, review',                    status: 'active', capabilities: ['code','debug','review'],                    tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'designer',            name: 'Designer',            description: 'UI/UX + creative assets',                                      status: 'idle',   capabilities: ['design','create','canva'],                 tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'ops-runner',          name: 'Ops Runner',          description: 'DevOps, deploys, infra ops',                                   status: 'idle',   capabilities: ['deploy','run','ops'],                       tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'validation',          name: 'Validation',          description: 'QA + post-deploy verification',                                status: 'idle',   capabilities: ['validate','review','qa'],                   tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'maven',               name: 'Maven',               description: 'CMO — marketing orchestration, strategy',                      status: 'idle',   capabilities: ['market','strategy','campaign'],            tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'quill',               name: 'Quill',               description: 'Long-form content, customer-facing writing',                   status: 'idle',   capabilities: ['write','draft','edit'],                    tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'echo',                name: 'Echo',                description: 'Social media + short-form comms',                              status: 'idle',   capabilities: ['social','relay','reply'],                  tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'spark',               name: 'Spark',               description: 'Creative campaigns, brainstorming',                            status: 'idle',   capabilities: ['ideate','brainstorm','create'],            tier: 'primary',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'beacon',              name: 'Beacon',              description: 'SEO + analytics signal agent',                                 status: 'idle',   capabilities: ['seo','analyze','notify'],                  tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'lens',                name: 'Lens',                description: 'Long-context market research synthesis',                       status: 'idle',   capabilities: ['research','market','synthesize'],          tier: 'utility',  trigger_type: 'manual',  health_status: 'healthy', knowledge_level: 'specialist', model: 'gemini-2.5-flash',   owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'herald',              name: 'Herald',              description: 'PR + announcements, high-quality outbound',                    status: 'idle',   capabilities: ['announce','pr','broadcast'],               tier: 'primary',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'expert',     model: 'claude-sonnet-4-6',  owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'scribe',              name: 'Scribe',              description: 'Documentation + meeting transcripts',                          status: 'idle',   capabilities: ['document','transcribe','note'],             tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'executive-assistant', name: 'Victoria',            description: 'Executive assistant — scheduling, comms, meetings',            status: 'active', capabilities: ['schedule','draft','comms'],                 tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'short-term-rental',   name: 'STR Specialist',      description: 'Lodgify/Airbnb operations, guest management, pricing',         status: 'idle',   capabilities: ['str','bookings','guests'],                  tier: 'utility',  trigger_type: 'event',   health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'sentinel',            name: 'Sentinel',            description: 'Security monitoring + anomaly detection',                      status: 'active', capabilities: ['monitor','alert','secure'],                 tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
+  { id: 'pulse',               name: 'Pulse',               description: 'Real-time health monitoring, digest synthesis',                status: 'active', capabilities: ['monitor','alert','health'],                 tier: 'utility',  trigger_type: 'cron',    health_status: 'healthy', knowledge_level: 'specialist', model: 'gpt-4o-mini',        owner: 'Jarvis', cost_ytd: 0, created_at: '' },
 ]
 
 // ─── List available agents ────────────────────────────────────────────────────
@@ -168,42 +143,62 @@ export async function listRecentRuns(limit = 20): Promise<AgentRun[]> {
 export async function invokeAgent(opts: InvokeAgentOptions): Promise<AgentRun> {
   const { agentId, payload, contextType, contextId } = opts
 
-  // 1. Write the queued row — this is always real
+  // 1. Write the queued row. Schema on PROD: id/user_id/agent_id/project_id/
+  //    task_id/started_at/ended_at/status/input/output/tokens/cost/error.
+  //    The fields `payload`, `context_type`, `context_id`, `result` that the
+  //    old code used don't exist — they silently failed every insert. Now we
+  //    map correctly: payload→input, context_id→project_id OR task_id.
+  const projectId = contextType === 'project' ? contextId ?? null : null
+  const taskId    = contextType === 'task'    ? contextId ?? null : null
+
   const { data: runRow, error: insertErr } = await supabase
     .from('agent_runs')
     .insert({
       agent_id: agentId,
-      status: 'queued',
-      payload,
-      context_type: contextType ?? null,
-      context_id: contextId ?? null,
-      result: null,
-    })
+      status:   'queued',
+      input:    payload as never,
+      project_id: projectId,
+      task_id:  taskId,
+      started_at: new Date().toISOString(),
+    } as never)
     .select()
     .single()
 
   if (insertErr || !runRow) {
-    // Supabase insert failed (table might not exist yet) — return synthetic run
+    // DB persistence failed — the UI MUST see this instead of a fake "queued".
+    // Still attempt HTTP fire-and-forget so the agent does run, but mark the
+    // returned object as error so callers don't lie to the user.
+    const errMsg = insertErr?.message ?? 'agent_runs insert returned no row'
     const synthetic: AgentRun = {
       id: `stub-${Date.now()}`,
       agent_id: agentId,
-      status: 'queued',
+      status: 'error',
       payload,
       result: null,
       context_type: contextType ?? null,
       context_id: contextId ?? null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    }
-    console.warn('[agents] agent_runs insert failed:', insertErr?.message, '— using synthetic run')
-    // Still attempt HTTP fire-and-forget
+      error: `Failed to persist agent run: ${errMsg}`,
+    } as AgentRun & { error: string }
+    console.error('[agents] agent_runs insert failed:', errMsg)
     _fireAgentHttp(agentId, payload, synthetic.id).catch(() => {})
     return synthetic
   }
 
-  const run = runRow as AgentRun
+  const run = {
+    id: (runRow as any).id,
+    agent_id: (runRow as any).agent_id,
+    status: (runRow as any).status,
+    payload,
+    result: (runRow as any).output ?? null,
+    context_type: contextType ?? null,
+    context_id: contextId ?? null,
+    created_at: (runRow as any).started_at ?? new Date().toISOString(),
+    updated_at: (runRow as any).started_at ?? new Date().toISOString(),
+  } as AgentRun
 
-  // 2. Fire-and-forget to OpenClaw HTTP endpoint
+  // 2. Fire-and-forget to OpenClaw HTTP endpoint (gateway handles CLI dispatch)
   _fireAgentHttp(agentId, payload, run.id).catch(() => {})
 
   return run
@@ -224,10 +219,10 @@ async function _fireAgentHttp(
     null
 
   if (!base) {
-    // No endpoint configured — update run to reflect stub state
+    // No endpoint configured — mark as error so the UI can surface it
     await supabase
       .from('agent_runs')
-      .update({ status: 'queued', result: { stub: true, reason: 'no_endpoint_configured' } })
+      .update({ status: 'error', error: 'OpenClaw gateway not configured (NEXT_PUBLIC_OPENCLAW_API_URL)', ended_at: new Date().toISOString() } as never)
       .eq('id', runId)
     return
   }
@@ -238,15 +233,206 @@ async function _fireAgentHttp(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agentId, payload, runId }),
     })
-    const json = await resp.json().catch(() => ({}))
+    const json = (await resp.json().catch(() => ({}))) as any
+
+    if (!resp.ok) {
+      // Gateway rejected (e.g. 400 unknown agent). Surface the real error in
+      // agent_runs.error so task UIs can render it.
+      const errMsg = json?.error
+        ? `${json.error}${json.hint ? ' — ' + json.hint : ''}`
+        : `Gateway returned HTTP ${resp.status}`
+      await supabase
+        .from('agent_runs')
+        .update({ status: 'error', error: errMsg, ended_at: new Date().toISOString() } as never)
+        .eq('id', runId)
+      return
+    }
+
     await supabase
       .from('agent_runs')
-      .update({ status: resp.ok ? 'running' : 'error', result: json })
+      .update({ status: 'running', output: json as never } as never)
       .eq('id', runId)
   } catch (err) {
     await supabase
       .from('agent_runs')
-      .update({ status: 'error', result: { error: String(err) } })
+      .update({ status: 'error', error: String(err), ended_at: new Date().toISOString() } as never)
       .eq('id', runId)
   }
 }
+
+// ─── OpenClaw live-data.json feed ─────────────────────────────────────────────
+// Polls the runtime gateway for the LIVE agent roster + session activity.
+// v6 uses the same endpoint via gateway polling; we now mirror that on v7.
+//
+// Cached 30 s upstream — agent activity is bursty, but the dashboard doesn't
+// need sub-second freshness.
+
+export interface OpenclawLiveAgent {
+  id: string
+  name: string
+  sessionCount: number
+  knowledge?: unknown
+}
+
+export interface OpenclawLiveSession {
+  id: string
+  sessionId: string
+  agent: string
+  task: string
+  status: string           // 'in_progress' | 'done' | 'blocked' | 'queued' | ...
+  lane: string             // 'inprogress' | 'done' | 'blocked' | 'queued'
+  dateCreated: string
+  dateFinished: string | null
+  startTime: string
+  endTime: string | null
+  totalCost?: number
+  tokens?: number
+  model?: string
+  modelsUsed?: string[]
+  projectId?: string
+  isCron?: boolean
+  spawns?: number
+  parentSession?: string
+  estimatedTimeToCompletion?: string
+}
+
+export interface OpenclawLiveProject {
+  id: string
+  name: string
+  status: string
+  taskCount: number
+  doneCount: number
+  activeCount: number
+  totalCost: number
+  agents: string[]
+  agentsWorkedOn: string[]
+  modelsUsed: string[]
+  apiModelsUsed: string[]
+  sessions: OpenclawLiveSession[]
+  estimatedCostToCompletion: number
+  estimatedTimeToCompletion: string
+}
+
+export interface OpenclawLiveData {
+  generatedAt: string
+  agents: OpenclawLiveAgent[]
+  acpSessions: OpenclawLiveSession[]
+  projects: OpenclawLiveProject[]
+  metrics?: {
+    totalSessions?: number
+    totalTokens?: number
+    totalCost?: number
+    activeProjects?: number
+    cronJobsEnabled?: number
+  }
+}
+
+function gatewayBase(): string | null {
+  return (
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPENCLAW_API_URL) ||
+    null
+  )
+}
+
+/**
+ * Fetches /live-data.json from the OpenClaw runtime gateway.
+ * Returns null if the env var is missing, the gateway is unreachable,
+ * or the response isn't the expected shape — so callers can show a
+ * graceful "Gateway offline" fallback instead of crashing.
+ */
+export async function getOpenclawLiveData(): Promise<OpenclawLiveData | null> {
+  const base = gatewayBase()
+  if (!base) return null
+  try {
+    const res = await fetch(`${base}/live-data.json`, {
+      next: { revalidate: 30 },
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as OpenclawLiveData
+    if (!json || !Array.isArray(json.agents) || !Array.isArray(json.acpSessions)) {
+      return null
+    }
+    return json
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Builds a Map<agentId, {sessionCount, activeSessions, doneToday}> from the
+ * live feed — used by /agents page to overlay real live activity on top of
+ * the BUILTIN_AGENTS / DB agents roster.
+ */
+export function buildAgentActivity(
+  live: OpenclawLiveData | null,
+): Map<
+  string,
+  {
+    sessionCount: number
+    activeSessions: OpenclawLiveSession[]
+    doneToday: number
+    lastActivityAt: string | null
+    inProgressCount: number
+    blockedCount: number
+    totalCost: number
+  }
+> {
+  const out = new Map<
+    string,
+    {
+      sessionCount: number
+      activeSessions: OpenclawLiveSession[]
+      doneToday: number
+      lastActivityAt: string | null
+      inProgressCount: number
+      blockedCount: number
+      totalCost: number
+    }
+  >()
+  if (!live) return out
+
+  // Start from the live agents list (has sessionCount)
+  for (const a of live.agents) {
+    out.set(a.id.toLowerCase(), {
+      sessionCount: a.sessionCount || 0,
+      activeSessions: [],
+      doneToday: 0,
+      lastActivityAt: null,
+      inProgressCount: 0,
+      blockedCount: 0,
+      totalCost: 0,
+    })
+  }
+
+  // Fold in per-session detail from acpSessions
+  const today = new Date().toISOString().slice(0, 10)
+  for (const s of live.acpSessions) {
+    const key = (s.agent || '').toLowerCase()
+    if (!key) continue
+    const bucket = out.get(key) || {
+      sessionCount: 0,
+      activeSessions: [],
+      doneToday: 0,
+      lastActivityAt: null,
+      inProgressCount: 0,
+      blockedCount: 0,
+      totalCost: 0,
+    }
+    if (s.status === 'in_progress' || s.lane === 'inprogress') {
+      bucket.inProgressCount++
+      bucket.activeSessions.push(s)
+    }
+    if (s.status === 'blocked' || s.lane === 'blocked') bucket.blockedCount++
+    const endIso = s.dateFinished || s.endTime
+    if (endIso && endIso.startsWith(today)) bucket.doneToday++
+    const anchor = endIso || s.startTime || s.dateCreated
+    if (anchor && (!bucket.lastActivityAt || anchor > bucket.lastActivityAt)) {
+      bucket.lastActivityAt = anchor
+    }
+    bucket.totalCost += Number(s.totalCost || 0)
+    out.set(key, bucket)
+  }
+
+  return out
+}
+

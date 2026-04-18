@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { invokeAgent, listRecentRuns, type AgentRun } from '../lib/agents'
+import { formatDbError } from '../lib/format-error'
 import AgentTicker from '../_components/AgentTicker'
 import AskAgentModal from '../_components/AskAgentModal'
 import { STAGES, getStageDef, nextStage, deriveForgeStage, type StageKey } from './stageMapper'
@@ -494,9 +495,10 @@ function DeployModal({
     setDeploying(true)
     setResult(null)
     try {
-      // Invoke deployment agent — real row written to agent_runs
+      // Advance stage via ops-runner (real OpenClaw agent; 'deployment' was a
+      // non-existent stub that errored silently).
       await invokeAgent({
-        agentId: 'deployment',
+        agentId: 'ops-runner',
         payload: {
           action: 'advance_stage',
           ideaId: idea.id,
@@ -511,7 +513,7 @@ function DeployModal({
       setResult({ ok: true, message: `Advanced to ${nextDef.label} and queued deployment agent.` })
       setTimeout(onClose, 1200)
     } catch (e) {
-      setResult({ ok: false, message: `Deploy failed: ${e instanceof Error ? e.message : String(e)}` })
+      setResult({ ok: false, message: `Deploy failed: ${formatDbError(e)}` })
     } finally {
       setDeploying(false)
     }
@@ -656,7 +658,9 @@ export default function ForgeClient({
   const [search, setSearch] = useState('')
   const [stageFilter, setStageFilter] = useState('all')
   const [sortBy, setSortBy] = useState<'confidence' | 'date' | 'name'>('confidence')
-  const [showPanel, setShowPanel] = useState<'analytics' | 'review' | null>('review')
+  // Panel starts collapsed so the Kanban is the first thing you see.
+  // Click "Review Queue" or "Analytics" in the filter bar to expand below the board.
+  const [showPanel, setShowPanel] = useState<'analytics' | 'review' | null>(null)
   const [agentModal, setAgentModal] = useState<{ open: boolean; idea: EnrichedIdea | null }>({ open: false, idea: null })
   const [deployModal, setDeployModal] = useState<{ open: boolean; idea: EnrichedIdea | null }>({ open: false, idea: null })
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null)
@@ -819,27 +823,8 @@ export default function ForgeClient({
         </div>
       </div>
 
-      {/* ── Side panel ── */}
-      {showPanel === 'analytics' && (
-        <div className="mc-card accent" style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BarChart2 size={15} style={{ color: 'var(--orange)' }} /> Analytics
-          </div>
-          <AnalyticsPanel ideas={enriched} />
-        </div>
-      )}
-
-      {showPanel === 'review' && (
-        <div className="mc-card accent" style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <PackageCheck size={15} style={{ color: 'var(--orange)' }} /> Review Queue
-            <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>({stats.review} ideas need review)</span>
-          </div>
-          <ReviewQueue ideas={enriched} onDeploy={handleDeploy} onKill={handleKill} onAskAgent={(idea) => setAgentModal({ open: true, idea })} onClick={(idea) => setSelectedIdeaId(idea.id)} />
-        </div>
-      )}
-
-      {/* ── Main view ── */}
+      {/* ── Main view (Kanban / Table / Funnel) — primary work surface, sits
+            above the side panels so it's the first thing the CEO sees on load. */}
       {viewMode === 'kanban' && (
         <KanbanView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill} onShelve={handleShelve}
           onAskAgent={(idea) => setAgentModal({ open: true, idea })}
@@ -851,6 +836,26 @@ export default function ForgeClient({
           <TableView ideas={filtered} onDeploy={handleDeploy} onKill={handleKill}
             onAskAgent={(idea) => setAgentModal({ open: true, idea })}
             onClick={(idea) => setSelectedIdeaId(idea.id)} />
+        </div>
+      )}
+
+      {/* ── Side panels — opt-in, collapsed by default, rendered BELOW the board. */}
+      {showPanel === 'analytics' && (
+        <div className="mc-card accent" style={{ marginTop: 20, marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BarChart2 size={15} style={{ color: 'var(--orange)' }} /> Analytics
+          </div>
+          <AnalyticsPanel ideas={enriched} />
+        </div>
+      )}
+
+      {showPanel === 'review' && (
+        <div className="mc-card accent" style={{ marginTop: 20, marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <PackageCheck size={15} style={{ color: 'var(--orange)' }} /> Review Queue
+            <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>({stats.review} ideas need review)</span>
+          </div>
+          <ReviewQueue ideas={enriched} onDeploy={handleDeploy} onKill={handleKill} onAskAgent={(idea) => setAgentModal({ open: true, idea })} onClick={(idea) => setSelectedIdeaId(idea.id)} />
         </div>
       )}
 

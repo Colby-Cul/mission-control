@@ -42,20 +42,22 @@ const DEFAULT_ACHIEVEMENTS = [
 ]
 
 export default async function DashboardPage() {
-  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph, ownershipEdges, agentFeed, brief] = await Promise.allSettled([
-    getAccounts(),
-    getVisions(),
-    getOpenTasks(),
-    getEntities(),
-    getUpcomingTaxDeadlines(),
-    getAchievements('dashboard'),
-    getDoneTasksCount(),
+  // All wrapped with .catch defaults — any single failure degrades gracefully
+  // instead of 500-ing the server render.
+  const [accounts, visions, tasks, entities, deadlines, rawAchievements, doneCount, properties, nwGraph, ownershipEdges, agentFeed, brief] = await Promise.all([
+    getAccounts().catch(() => []),
+    getVisions().catch(() => []),
+    getOpenTasks().catch(() => []),
+    getEntities().catch(() => []),
+    getUpcomingTaxDeadlines().catch(() => []),
+    getAchievements('dashboard').catch(() => []),
+    getDoneTasksCount().catch(() => 0),
     getProperties().catch(() => []),
     getNetWorthFromGraph().catch(() => null),
     getOwnershipEdges().catch(() => []),
     getAgentActivityFeed(8).catch(() => []),
     getDailyBrief().catch(() => null),
-  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : (r.status === 'rejected' ? null : null))))
+  ])
   const dashEdgeCount = Array.isArray(ownershipEdges) ? (ownershipEdges as any[]).length : 0
 
   const netWorthGraph = nwGraph as Awaited<ReturnType<typeof getNetWorthFromGraph>> | null

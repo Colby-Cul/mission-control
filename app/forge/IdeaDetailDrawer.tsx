@@ -7,6 +7,9 @@ import {
   Target, ChevronDown, ChevronRight, Tag, StickyNote,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { formatDbError } from '../lib/format-error'
+import { invokeAgent } from '../lib/agents'
+import { parseArchitectureToTasks, buildJarvisOversightPrompt, type ProposedTask } from '../lib/project-kickoff'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -570,29 +573,140 @@ export default function IdeaDetailDrawer({
     setConverting(true)
     setConvertMsg(null)
     try {
+      const ideaName = getIdeaName(idea)
+
+      // 1. Create the project row
       const { data: project, error: pe } = await supabase
         .from('projects')
         .insert({
-          name: getIdeaName(idea),
+          name: ideaName,
           description: idea.tagline ?? idea.problem ?? null,
           status: 'active',
           source_forge_idea_id: idea.id,
-        })
+        } as never)
         .select()
         .single()
-      if (pe || !project) throw pe ?? new Error('No data')
+      if (pe || !project) throw pe ?? new Error('Insert returned no row')
+      const projectId = (project as any).id as string
+
+      // 2. Link Forge idea to the new project
       const { error: ue } = await supabase
         .from('forge_ideas')
-        .update({ converted_project_id: (project as any).id } as never)
+        .update({ converted_project_id: projectId } as never)
         .eq('id', idea.id)
-      if (!ue) {
-        const updated = { ...idea, converted_project_id: (project as any).id } as ForgeIdeaFull
-        setIdea(updated)
-        onIdeaUpdated?.(updated)
-        setConvertMsg(`Project "${getIdeaName(idea)}" created!`)
+      if (ue) throw ue
+
+      const updated = { ...idea, converted_project_id: projectId } as ForgeIdeaFull
+      setIdea(updated)
+      onIdeaUpdated?.(updated)
+
+      // 3. Parse the idea's agentic_architecture into a task breakdown.
+      //    This is Jarvis's "standing orders" — default routing by keyword so
+      //    work starts IMMEDIATELY. Jarvis still gets the oversight brief
+      //    below and can reassign if he disagrees with any routing.
+      const tasks: ProposedTask[] = parseArchitectureToTasks({
+        agenticArchitecture: (idea as any).agentic_architecture ?? null,
+        mvpScope: (idea as any).mvp_scope ?? null,
+        targetAudience: idea.target_audience ?? null,
+        fallbackName: ideaName,
+        maxTasks: 6,
+      })
+
+      // 4. Insert all task rows in a single batch (visible on /projects + entity pages)
+      let insertedTaskIds: string[] = []
+      try {
+        const { data: taskRows, error: te } = await supabase
+          .from('tasks')
+          .insert(
+            tasks.map(t => ({
+              project_id: projectId,
+              name: t.description.slice(0, 120),
+              description: t.description,
+              status: 'active',
+              priority: t.priority,
+              phase: t.phase,
+              agent: t.agent,
+            })) as never,
+          )
+          .select('id')
+        if (te) {
+          console.warn('[forge-convert] tasks insert soft-fail:', formatDbError(te))
+        } else {
+          insertedTaskIds = ((taskRows as any[]) ?? []).map(r => r.id)
+        }
+      } catch (err) {
+        console.warn('[forge-convert] tasks insert threw:', formatDbError(err))
       }
+
+      // 5. Dispatch each specialist IN PARALLEL — fire-and-forget via gateway.
+      //    Each invokeAgent call hits /api/agent/invoke → `openclaw agent`
+      //    CLI → queued session for that agent.
+      const dispatchPromises = tasks.map((t, idx) =>
+        invokeAgent({
+          agentId: t.agent,
+          payload: {
+            action: 'task_start',
+            taskIndex: idx + 1,
+            taskTotal: tasks.length,
+            projectId,
+            projectName: ideaName,
+            forgeIdeaId: idea.id,
+            taskId: insertedTaskIds[idx] ?? null,
+            prompt:
+              `New task assigned to you for project "${ideaName}":\n\n${t.description}\n\n` +
+              `Phase: ${t.phase}. Priority: ${t.priority}. ` +
+              `When done, mark the corresponding row in the tasks table as completed. ` +
+              `If this isn't in your wheelhouse, reply to Jarvis (agent: main) and request a reassignment.`,
+          },
+          contextType: 'project',
+          contextId: projectId,
+        }).catch(err => {
+          console.warn(`[forge-convert] dispatch to ${t.agent} failed:`, formatDbError(err))
+        }),
+      )
+
+      // 6. Fire Jarvis's oversight brief — he gets the full picture of what was
+      //    auto-dispatched and can reassign via sessions_send if he disagrees.
+      //    Deliberately runs in parallel with specialist dispatch so there's
+      //    no serialization cost.
+      const jarvisPromise = invokeAgent({
+        agentId: 'main',
+        payload: {
+          action: 'project_oversight',
+          projectId,
+          projectName: ideaName,
+          forgeIdeaId: idea.id,
+          tagline: idea.tagline ?? null,
+          mvpScope: (idea as any).mvp_scope ?? null,
+          agenticArchitecture: (idea as any).agentic_architecture ?? null,
+          targetAudience: idea.target_audience ?? null,
+          dispatchedTasks: tasks.map((t, i) => ({
+            ...t,
+            taskId: insertedTaskIds[i] ?? null,
+          })),
+          prompt: buildJarvisOversightPrompt({
+            projectName: ideaName,
+            projectId,
+            forgeIdeaId: idea.id,
+            tasks,
+          }),
+        },
+        contextType: 'project',
+        contextId: projectId,
+      }).catch(err => {
+        console.warn('[forge-convert] Jarvis oversight dispatch failed:', formatDbError(err))
+      })
+
+      // Don't block the UI on the dispatches — they're fire-and-forget. We already
+      // have the project + tasks in Supabase, so the user sees immediate results.
+      Promise.allSettled([...dispatchPromises, jarvisPromise])
+
+      const dispatchedAgents = Array.from(new Set(tasks.map(t => t.agent)))
+      setConvertMsg(
+        `Project "${ideaName}" created — ${tasks.length} tasks dispatched to ${dispatchedAgents.join(', ')}. Jarvis overseeing. See /projects.`,
+      )
     } catch (e) {
-      setConvertMsg(`Failed: ${e instanceof Error ? e.message : String(e)}`)
+      setConvertMsg(`Failed: ${formatDbError(e)}`)
     } finally {
       setConverting(false)
     }

@@ -177,6 +177,52 @@ export async function getCompanyKpis(entityId: string) {
   return data ?? []
 }
 
+// ═══ Company Assets (websites, apps, IP, domains owned by an entity) ═══
+// Surfaces on /companies/[slug] and lets the CEO see at-a-glance what digital
+// assets each company owns — CaliforniaLuxuryStays.com under CLS, OpenClaw +
+// Mission Control under Cabo Tropic Horizons Enterprises, etc.
+export async function getCompanyAssets(entityId: string) {
+  const { data, error } = await supabase
+    .from('company_assets')
+    .select('*')
+    .eq('entity_id', entityId)
+    .order('kind', { ascending: true })
+    .order('name', { ascending: true })
+  if (error) {
+    console.warn('[getCompanyAssets] soft-fail:', error.message)
+    return []
+  }
+  return (data ?? []) as Array<{
+    id: string
+    entity_id: string
+    name: string
+    kind: string
+    url: string | null
+    description: string | null
+    status: string
+    github_repo: string | null
+    vercel_project_id: string | null
+    monthly_revenue: number | null
+    launched_at: string | null
+    tags: string[] | null
+    notes: string | null
+  }>
+}
+
+/** All company assets across all entities — for dashboard rollups. */
+export async function getAllCompanyAssets() {
+  const { data, error } = await supabase
+    .from('company_assets')
+    .select('*, entity:entity_ownership(entity_name, slug, display_name)')
+    .order('entity_id')
+    .order('kind')
+  if (error) {
+    console.warn('[getAllCompanyAssets] soft-fail:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
 // ═══ Properties ════════════════════════════════════════════════════
 export async function getProperties() {
   const { data, error } = await supabase
@@ -198,12 +244,18 @@ export async function getPropertyPhotos(propertyId: string) {
 }
 
 // ═══ People — Agents ═══════════════════════════════════════════════
+// Soft-fail: these tables don't exist on PROD Supabase yet (seed-only in dev
+// branch). Return [] rather than throwing — pages fall back to BUILTIN_AGENTS
+// and the live gateway feed instead of hard-crashing the server render.
 export async function getAgents() {
   const { data, error } = await supabase
     .from('agents')
     .select('*')
     .order('tier', { ascending: false })
-  if (error) throw error
+  if (error) {
+    console.warn('[getAgents] soft-fail:', error.message)
+    return []
+  }
   return data ?? []
 }
 
@@ -213,7 +265,10 @@ export async function getAgentRunFeed(limit = 50) {
     .select('*, agent:agents(name, color)')
     .order('started_at', { ascending: false })
     .limit(limit)
-  if (error) throw error
+  if (error) {
+    console.warn('[getAgentRunFeed] soft-fail:', error.message)
+    return []
+  }
   return data ?? []
 }
 
@@ -621,13 +676,66 @@ export async function getProjectAgents(projectId: string) {
   return [...set]
 }
 
-/** Aggregated costs from tasks */
+/** Aggregated costs — prefers agent_runs (source of truth once the gateway
+ *  writes there), falls back to tasks totals if runs haven't accumulated yet.
+ *  Also rolls up a real progress % from task completion. */
 export async function getProjectCosts(projectId: string) {
   const tasks = await getProjectTasks(projectId)
-  const totalCost = tasks.reduce((sum: number, t: any) => sum + Number(t.total_cost ?? 0), 0)
-  const totalTokens = tasks.reduce((sum: number, t: any) => sum + Number(t.tokens ?? 0), 0)
-  const totalTimeLogged = tasks.reduce((sum: number, t: any) => sum + Number(t.time_logged ?? 0), 0)
-  return { totalCost, totalTokens, totalTimeLogged, taskCount: tasks.length }
+
+  // Live agent_runs for this project — cost, tokens, duration
+  const { data: runs } = await supabase
+    .from('agent_runs')
+    .select('cost, tokens, started_at, ended_at, status, agent_id')
+    .eq('project_id', projectId)
+
+  const runsList = (runs ?? []) as any[]
+  const runCost = runsList.reduce((s, r) => s + Number(r.cost ?? 0), 0)
+  const runTokens = runsList.reduce((s, r) => s + Number(r.tokens ?? 0), 0)
+  const runSeconds = runsList.reduce((s, r) => {
+    if (!r.started_at || !r.ended_at) return s
+    const ms = new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()
+    return s + Math.max(0, ms / 1000)
+  }, 0)
+
+  // Fallbacks from tasks when agent_runs hasn't populated yet
+  const fallbackCost   = tasks.reduce((s: number, t: any) => s + Number(t.total_cost ?? 0), 0)
+  const fallbackTokens = tasks.reduce((s: number, t: any) => s + Number(t.tokens ?? 0), 0)
+  const fallbackSeconds = tasks.reduce((s: number, t: any) => s + Number(t.time_logged ?? 0) * 3600, 0)
+
+  const totalCost       = runCost   > 0 ? runCost   : fallbackCost
+  const totalTokens     = runTokens > 0 ? runTokens : fallbackTokens
+  const totalSeconds    = runSeconds > 0 ? runSeconds : fallbackSeconds
+  const totalTimeLogged = totalSeconds / 3600  // hours
+
+  // Task completion rollup
+  const done = tasks.filter((t: any) => ['done','completed'].includes(String(t.status ?? '').toLowerCase())).length
+  const active = tasks.filter((t: any) => ['active','running','in_progress'].includes(String(t.status ?? '').toLowerCase())).length
+  const blocked = tasks.filter((t: any) => String(t.status ?? '').toLowerCase() === 'blocked').length
+  const pending = tasks.filter((t: any) => ['pending','new','queued'].includes(String(t.status ?? '').toLowerCase())).length
+  const pctComplete = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0
+
+  // Estimated total cost = actual spent / fraction complete (simple extrapolation)
+  const estimatedTotal = pctComplete > 0 && totalCost > 0
+    ? Math.round(totalCost / (pctComplete / 100))
+    : null
+
+  // Live session activity (from agent_runs not-yet-ended)
+  const liveRuns = runsList.filter(r => !r.ended_at && r.status !== 'error').length
+
+  return {
+    totalCost,
+    totalTokens,
+    totalTimeLogged,
+    taskCount: tasks.length,
+    done,
+    active,
+    blocked,
+    pending,
+    pctComplete,
+    estimatedTotal,
+    liveRuns,
+    runsCount: runsList.length,
+  }
 }
 
 // ═══ Ownership Graph ═══════════════════════════════════════════════

@@ -12,7 +12,7 @@ import ComingSoon from '../_components/ComingSoon'
 import HeroCanvas from './HeroCanvas'
 import AgentsClient from './AgentsClient'
 import { getAgents, getAgentRunFeed, getAchievements, getAgentCapabilityMatrix, getAgentCostBudgets } from '../lib/queries'
-import { BUILTIN_AGENTS } from '../lib/agents'
+import { BUILTIN_AGENTS, getOpenclawLiveData, buildAgentActivity } from '../lib/agents'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,13 +37,18 @@ function agentTypeColor(agent: any): string {
 }
 
 export default async function AgentsPage() {
-  const [agentsRaw, runs, dbAchievements, capMatrix, costBudgets] = await Promise.allSettled([
+  const [agentsRaw, runs, dbAchievements, capMatrix, costBudgets, liveDataRaw] = await Promise.allSettled([
     getAgents(),
     getAgentRunFeed(50),
     getAchievements('agents'),
     getAgentCapabilityMatrix().catch(() => ({ caps: [], matrix: [] })),
     getAgentCostBudgets().catch(() => []),
-  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])))
+    getOpenclawLiveData(),
+  ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : null)))
+
+  // Live feed from OpenClaw runtime gateway — merged into agent cards below.
+  const live = liveDataRaw as Awaited<ReturnType<typeof getOpenclawLiveData>>
+  const activityByAgent = buildAgentActivity(live)
 
   // Merge DB agents with BUILTIN_AGENTS — DB rows override builtins by id/slug
   const dbList = agentsRaw as any[]
@@ -71,21 +76,55 @@ export default async function AgentsPage() {
       }))
     : DEFAULT_ACHIEVEMENTS
 
-  const activeAgents = agents.filter((a: any) => a.status === 'active')
+  // "Active" now means: either the DB/builtin says active, OR the live runtime
+  // shows in-progress sessions for this agent. This replaces the stale filter
+  // that was missing 30+ agents doing real work.
   const today = new Date().toISOString().slice(0, 10)
-  const runsToday = runList.filter((r: any) => (r.started_at ?? r.created_at ?? '').startsWith(today))
-  const completedRuns = runList.filter((r: any) => r.status === 'done')
-  const avgLatencyMs = completedRuns.length > 0
-    ? completedRuns.reduce((s: number, r: any) => {
-        const start = r.started_at ? new Date(r.started_at).getTime() : 0
-        const end   = r.completed_at ? new Date(r.completed_at).getTime() : 0
-        return s + (end > start ? end - start : 0)
-      }, 0) / completedRuns.length
-    : 0
+  const activeAgents = agents.filter((a: any) => {
+    const live = activityByAgent.get(String(a.id ?? a.name).toLowerCase())
+    return a.status === 'active' || (live && live.inProgressCount > 0)
+  })
+
+  // Runs today = done sessions that finished today across all agents (live feed),
+  // or fallback to Supabase agent_runs if live feed unavailable.
+  const runsTodayLive = live
+    ? live.acpSessions.filter(s => {
+        const end = s.dateFinished || s.endTime || ''
+        return (s.status === 'done' || s.lane === 'done') && end.startsWith(today)
+      })
+    : null
+  const runsToday = runsTodayLive ?? runList.filter((r: any) => (r.started_at ?? r.created_at ?? '').startsWith(today))
+
+  // Queue depth = live in-progress sessions (preferred), else agent_runs fallback.
+  const queueDepth = live
+    ? live.acpSessions.filter(s => s.status === 'in_progress' || s.lane === 'inprogress').length
+    : runList.filter((r: any) => r.status === 'queued' || r.status === 'running').length
+
+  // Avg latency — live feed has startTime/endTime per session (done only).
+  let avgLatencyMs = 0
+  if (live) {
+    const doneSessions = live.acpSessions.filter(s => (s.status === 'done' || s.lane === 'done') && s.endTime && s.startTime)
+    if (doneSessions.length > 0) {
+      avgLatencyMs = doneSessions.reduce((sum, s) => {
+        const ms = new Date(s.endTime!).getTime() - new Date(s.startTime).getTime()
+        return sum + (ms > 0 ? ms : 0)
+      }, 0) / doneSessions.length
+    }
+  } else {
+    const completedRuns = runList.filter((r: any) => r.status === 'done')
+    avgLatencyMs = completedRuns.length > 0
+      ? completedRuns.reduce((s: number, r: any) => {
+          const start = r.started_at ? new Date(r.started_at).getTime() : 0
+          const end   = r.completed_at ? new Date(r.completed_at).getTime() : 0
+          return s + (end > start ? end - start : 0)
+        }, 0) / completedRuns.length
+      : 0
+  }
   const avgLatencyStr = avgLatencyMs > 0
-    ? avgLatencyMs > 60000 ? `${(avgLatencyMs / 60000).toFixed(1)}m` : `${(avgLatencyMs / 1000).toFixed(1)}s`
+    ? avgLatencyMs > 3600000 ? `${(avgLatencyMs / 3600000).toFixed(1)}h`
+      : avgLatencyMs > 60000 ? `${(avgLatencyMs / 60000).toFixed(1)}m`
+      : `${(avgLatencyMs / 1000).toFixed(1)}s`
     : '—'
-  const queueDepth = runList.filter((r: any) => r.status === 'queued' || r.status === 'running').length
 
   const xpEarned = achievements.filter((a: any) => a.earned).reduce((s: number, a: any) => s + a.xp, 0)
 
@@ -122,11 +161,21 @@ export default async function AgentsPage() {
              data-source="agents">
           {agents.map((agent: any) => {
             const color = agentTypeColor(agent)
+            // Live activity from OpenClaw gateway, keyed by lowercased id
+            const liveBucket = activityByAgent.get(String(agent.id ?? agent.name).toLowerCase())
+            const liveSessionCount = liveBucket?.sessionCount ?? 0
+            const liveInProgress = liveBucket?.inProgressCount ?? 0
+            const liveDoneToday = liveBucket?.doneToday ?? 0
+            const liveLastActivity = liveBucket?.lastActivityAt ?? null
+            const liveCostYtd = liveBucket?.totalCost ?? 0
+            const currentTask = liveBucket?.activeSessions?.[0]?.task ?? null
+
             const agentRunsToday = runList.filter((r: any) =>
               r.agent_id === agent.id && (r.started_at ?? r.created_at ?? '').startsWith(today)
             )
             const lastRun = runList.find((r: any) => r.agent_id === agent.id)
-            const isActive = agent.status === 'active'
+            // Agent is active if builtin/DB says so, OR live runtime shows in-progress sessions
+            const isActive = agent.status === 'active' || liveInProgress > 0
 
             // Resolve health color
             const healthColor: Record<string, string> = {
@@ -146,8 +195,11 @@ export default async function AgentsPage() {
             const latMs = agent.avg_latency_ms != null ? Number(agent.avg_latency_ms) : null
             const latStr = latMs == null ? '—' : latMs > 60000 ? `${(latMs/60000).toFixed(1)}m` : latMs > 1000 ? `${(latMs/1000).toFixed(1)}s` : `${Math.round(latMs)}ms`
 
-            // Runs today: prefer DB-derived live count, fallback to builtin field
-            const runsToday = agentRunsToday.length > 0 ? agentRunsToday.length : (agent.runs_today ?? 0)
+            // Runs today: prefer LIVE (gateway) count, else Supabase agent_runs, else builtin field
+            const runsToday =
+              liveDoneToday > 0 ? liveDoneToday
+                : agentRunsToday.length > 0 ? agentRunsToday.length
+                : (agent.runs_today ?? 0)
 
             return (
               <SpecCard key={agent.id} accent dataSource="agents">
@@ -264,14 +316,47 @@ export default async function AgentsPage() {
                   </div>
                 </div>
 
+                {/* ── Live session counters + last activity ── */}
+                {liveSessionCount > 0 && (
+                  <div style={{
+                    display: 'flex', gap: 8, marginBottom: 10,
+                    padding: '6px 10px', borderRadius: 8,
+                    background: 'rgba(16,185,129,0.06)',
+                    border: '1px solid rgba(16,185,129,0.18)',
+                  }}>
+                    <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--mo)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      ● Live
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--t2)' }}>
+                      {liveInProgress > 0 ? `${liveInProgress} in progress` : `${liveSessionCount} sessions`}
+                    </span>
+                  </div>
+                )}
+
+                {/* ── Current task (live) ── */}
+                {currentTask && (
+                  <div style={{
+                    fontSize: 11, color: 'var(--t2)', marginBottom: 10,
+                    padding: '6px 10px', borderRadius: 8,
+                    background: 'rgba(255,255,255,0.02)',
+                    borderLeft: `2px solid ${color}`,
+                    lineHeight: 1.4,
+                  }}>
+                    <span style={{ color: 'var(--dim)', fontSize: 9, fontFamily: 'var(--mo)', display: 'block', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Now working on</span>
+                    {currentTask.slice(0, 100)}{currentTask.length > 100 ? '…' : ''}
+                  </div>
+                )}
+
                 {/* ── Last run + owner ── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--dim)', marginBottom: 12 }}>
                   <span>
-                    {lastRun
-                      ? <>Last run: <strong style={{ color: 'white' }}>{new Date(lastRun.started_at ?? lastRun.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
-                      : agent.last_run_ts
-                        ? <>Last run: <strong style={{ color: 'white' }}>{new Date(agent.last_run_ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
-                        : 'No runs yet'}
+                    {liveLastActivity
+                      ? <>Last activity: <strong style={{ color: 'white' }}>{new Date(liveLastActivity).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></>
+                      : lastRun
+                        ? <>Last run: <strong style={{ color: 'white' }}>{new Date(lastRun.started_at ?? lastRun.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                        : agent.last_run_ts
+                          ? <>Last run: <strong style={{ color: 'white' }}>{new Date(agent.last_run_ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                          : 'No runs yet'}
                   </span>
                   {agent.owner && (
                     <span>Owner: <strong style={{ color: 'var(--t2)' }}>{agent.owner}</strong></span>
