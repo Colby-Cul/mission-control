@@ -252,72 +252,107 @@ interface ZillowIntakeResult {
   attributes?: Record<string, string | number>
 }
 
-async function fetchZillowViaRapidApi(
-  zpid: string,
+async function fetchZillowViaPrivateRapidApi(
+  fullUrl: string,
+  zpid: string | null,
   rapidKey: string,
-  host = 'zillow-com1.p.rapidapi.com',
+  host = 'private-zillow.p.rapidapi.com',
 ): Promise<ZillowIntakeResult | null> {
-  const url = `https://${host}/property?zpid=${encodeURIComponent(zpid)}`
+  // v6 uses /byurl?url=<full-zillow-url>. /byzpid?zpid=<zpid> returns the same
+  // shape. Prefer /byurl since it handles URL slug variants Zillow uses.
+  const endpoint = `https://${host}/byurl?url=${encodeURIComponent(fullUrl)}`
   try {
-    const resp = await fetch(url, {
+    const resp = await fetch(endpoint, {
       headers: {
-        'X-RapidAPI-Key': rapidKey,
-        'X-RapidAPI-Host': host,
+        'x-rapidapi-key': rapidKey,
+        'x-rapidapi-host': host,
       },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     })
     if (!resp.ok) {
-      console.warn(`[url-intake] Zillow RapidAPI ${resp.status} for zpid=${zpid}`)
+      console.warn(`[url-intake] private-zillow ${resp.status} for zpid=${zpid}`)
       return null
     }
     const body = await resp.json()
-    // The endpoint returns a flat object with fields like:
-    //   price, bedrooms, bathrooms, livingArea, yearBuilt, address, imgSrc,
-    //   hdpUrl, streetAddress, city, state, zipcode, description, ...
-    const priceNum = typeof body.price === 'number' ? body.price : null
-    const city = body.city ?? body.address?.city ?? null
-    const state = body.state ?? body.address?.state ?? null
-    const streetAddress = body.streetAddress ?? body.address?.streetAddress ?? null
-    const beds = body.bedrooms ?? null
-    const baths = body.bathrooms ?? null
-    const sqft = body.livingArea ?? null
+    // Response shape from private-zillow.p.rapidapi.com:
+    //   { PropertyAddress: { streetAddress, city, state, zipcode, ... },
+    //     zestimate: <rough market estimate>,
+    //     Price: <actual listing price — what we want>,
+    //     Bedrooms, Bathrooms, "Area(sqft)", yearBuilt,
+    //     daysOnZillow, PropertyZPID, PropertyZillowURL }
+    const addr = body.PropertyAddress ?? {}
+    const streetAddress = addr.streetAddress ?? null
+    const city = addr.city ?? null
+    const state = addr.state ?? null
+    const zipcode = addr.zipcode ?? null
+    const beds = body.Bedrooms ?? null
+    const baths = body.Bathrooms ?? null
+    const sqft = body['Area(sqft)'] ?? null
     const yearBuilt = body.yearBuilt ?? null
-    const image = body.imgSrc ?? body.image ?? null
+    const daysOnZillow = body.daysOnZillow ?? null
+
+    // Prefer the actual listing Price over zestimate — Price is what the seller
+    // is asking; zestimate is Zillow's algorithmic guess and can be way off
+    // on luxury or custom properties. Fall back to zestimate only if Price missing.
+    const listingPrice = typeof body.Price === 'number' && body.Price > 0 ? body.Price : null
+    const zestimate = typeof body.zestimate === 'number' && body.zestimate > 0 ? body.zestimate : null
+    const priceNum = listingPrice ?? zestimate
 
     const titleParts: string[] = []
     if (streetAddress) titleParts.push(streetAddress)
     if (city && state) titleParts.push(`${city}, ${state}`)
-    const title = titleParts.join(' — ') || `Zillow property ${zpid}`
+    const title = titleParts.join(' — ') || `Zillow property ${zpid ?? '?'}`
 
     const descParts: string[] = []
     if (beds) descParts.push(`${beds} bed`)
     if (baths) descParts.push(`${baths} bath`)
-    if (sqft) descParts.push(`${sqft.toLocaleString()} sqft`)
+    if (sqft) descParts.push(`${Number(sqft).toLocaleString()} sqft`)
     if (yearBuilt) descParts.push(`built ${yearBuilt}`)
+    if (daysOnZillow != null) descParts.push(`${daysOnZillow}d on Zillow`)
     if (city && state) descParts.push(`${city}, ${state}`)
-    const description = descParts.join(' · ') || body.description || undefined
+    const description = descParts.join(' · ') || undefined
 
-    const attributes: Record<string, string | number> = {}
+    const attributes: Record<string, string | number> = {
+      data_source: 'zillow-rapidapi',
+    }
     if (city) attributes.city = String(city)
     if (state) attributes.state = String(state)
+    if (zipcode) attributes.zipcode = String(zipcode)
     if (beds) attributes.bedrooms = Number(beds)
     if (baths) attributes.bathrooms = Number(baths)
     if (sqft) attributes.living_area_sqft = Number(sqft)
     if (yearBuilt) attributes.year_built = Number(yearBuilt)
-    if (body.homeType) attributes.home_type = String(body.homeType)
-    if (body.homeStatus) attributes.home_status = String(body.homeStatus)
+    if (zpid) attributes.zillow_zpid = zpid
+    if (zestimate) attributes.zestimate = Number(zestimate)
+    if (listingPrice) attributes.listing_price = Number(listingPrice)
+
+    // Photo fallback — the private-zillow /byurl endpoint doesn't include image
+    // URLs. Use Unsplash Source for a comparable luxury/single-family photo.
+    // Keyword search biased on property type + city so the image is at least
+    // in the right bucket ("luxury home, loomis" for a $5M property).
+    const tier =
+      priceNum && priceNum >= 3_000_000 ? 'luxury-home' :
+      priceNum && priceNum >= 1_000_000 ? 'modern-home' :
+      'single-family-home'
+    const imageKeywords = [tier, city, state].filter(Boolean).join(',').toLowerCase().replace(/\s+/g, '-')
+    const image = `https://source.unsplash.com/1600x900/?${encodeURIComponent(imageKeywords)}`
 
     return {
       title,
       description,
       image,
       price: priceNum && priceNum > 0
-        ? { low: priceNum, high: priceNum, currency: 'USD', label: `$${priceNum.toLocaleString()}` }
+        ? {
+            low: priceNum,
+            high: priceNum,
+            currency: 'USD',
+            label: `$${priceNum.toLocaleString()}${listingPrice ? ' (Zillow listing)' : ' (Zestimate)'}`,
+          }
         : undefined,
       attributes,
     }
   } catch (e) {
-    console.warn('[url-intake] Zillow RapidAPI fetch failed:', e instanceof Error ? e.message : String(e))
+    console.warn('[url-intake] private-zillow fetch failed:', e instanceof Error ? e.message : String(e))
     return null
   }
 }
@@ -334,15 +369,15 @@ export async function intakeUrl(url: string): Promise<IntakeResult> {
 
   // ── Domain-specialized fast paths (before generic HTML scrape) ──────────────
   // Zillow serves a JS SPA behind PerimeterX — plain HTTP returns a 403
-  // captcha page. If we have a RapidAPI key for a Zillow partner API we use
-  // that; otherwise we mark the intake as "needs-subscription" so the AI
-  // prompt can produce a clear area-estimate instead of pretending.
+  // captcha page. Use the private-zillow.p.rapidapi.com partner API (same one
+  // v6 uses for Zestimates on investment properties). Response shape differs
+  // from the zillow-com1 API — see fetchZillowViaPrivateRapidApi.
   if (/zillow\.com/.test(domain)) {
     const zpid = extractZpid(url)
     const rapidKey = process.env.RAPIDAPI_KEY
-    const rapidHost = process.env.RAPIDAPI_ZILLOW_HOST || 'zillow-com1.p.rapidapi.com'
-    if (zpid && rapidKey) {
-      const zData = await fetchZillowViaRapidApi(zpid, rapidKey, rapidHost)
+    const rapidHost = process.env.RAPIDAPI_ZILLOW_HOST || 'private-zillow.p.rapidapi.com'
+    if (rapidKey) {
+      const zData = await fetchZillowViaPrivateRapidApi(url, zpid, rapidKey, rapidHost)
       if (zData) {
         result.title = zData.title
         result.description = zData.description
@@ -354,13 +389,13 @@ export async function intakeUrl(url: string): Promise<IntakeResult> {
         return result
       }
     }
-    // Fall through to generic scrape — but annotate that we couldn't get live
-    // data so the AI doesn't pretend the area-estimate is a real listing price.
+    // Fall through to generic scrape (almost certainly returns empty); mark
+    // data source so AI prompt knows this is an area estimate not a listing.
     result.category = 'Real Estate'
     result.attributes = {
       zillow_zpid: zpid ?? 'unknown',
       data_source: 'area-estimate',
-      note: 'Zillow blocks plain scraping; set RAPIDAPI_ZILLOW_HOST to a subscribed Zillow RapidAPI for exact prices.',
+      note: 'Zillow RapidAPI returned no data; AI producing area estimate.',
     }
   }
 
