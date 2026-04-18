@@ -46,115 +46,134 @@ export async function GET(req: NextRequest) {
     details: Array<Record<string, unknown>>
   } = { processed: 0, dispatched: 0, errored: 0, stalled_redispatched: 0, details: [] }
 
-  // 1) Process outbox events (most recent first, limit 25 per tick)
+  // 1) Process outbox events. Limit per tick is small (6) because the gateway
+  // can't handle >4 parallel Sonnet calls — we saw 42/42 timeouts when all 21
+  // events dispatched simultaneously. With */5 cron, 6 events × 12 ticks/hr
+  // = 72 tasks/hr capacity, which is way more than we'll produce.
+  // BATCH_SIZE = concurrent dispatches. INTER_BATCH_MS = stagger.
+  const BATCH_SIZE = 4
+  const INTER_BATCH_MS = 3000
+  const MAX_PER_TICK = 12
+
   const { data: events, error: qErr } = await supabase
     .from('task_lifecycle_events')
     .select('*')
     .is('processed_at', null)
     .lt('retry_count', 5)
     .order('created_at', { ascending: true })
-    .limit(25)
+    .limit(MAX_PER_TICK)
   if (qErr) {
     return NextResponse.json({ ok: false, error: qErr.message }, { status: 500 })
   }
 
-  for (const ev of (events ?? []) as Array<Record<string, unknown>>) {
-    results.processed++
-    const taskId = ev.task_id as string
-    const toStage = ev.to_stage as string
-    const assignedAgent = ev.assigned_agent as string | null
-    const fromStage = ev.from_stage as string | null
+  // Batch the event list into groups of BATCH_SIZE. Within a batch, dispatch
+  // in parallel. Between batches, sleep INTER_BATCH_MS so the gateway can
+  // finish the previous round before we pile on more.
+  const allEvents = (events ?? []) as Array<Record<string, unknown>>
+  const batches: Array<typeof allEvents> = []
+  for (let i = 0; i < allEvents.length; i += BATCH_SIZE) {
+    batches.push(allEvents.slice(i, i + BATCH_SIZE))
+  }
 
-    try {
-      // Resolve the target agent for this transition
-      const targetAgent = resolveAgentForStage(toStage, assignedAgent)
-      if (!targetAgent) {
-        await markProcessed(ev.id as string, { skipped: `no agent for stage=${toStage}` })
-        continue
-      }
+  for (const batch of batches) {
+    await Promise.all(batch.map(async (ev) => {
+      results.processed++
+      const taskId = ev.task_id as string
+      const toStage = ev.to_stage as string
+      const assignedAgent = ev.assigned_agent as string | null
+      const fromStage = ev.from_stage as string | null
 
-      // Fetch task + project context for the invoke payload
-      const [{ data: task }, { data: project }] = await Promise.all([
-        supabase.from('tasks').select('*').eq('id', taskId).maybeSingle(),
-        ev.project_id
-          ? supabase.from('projects').select('*').eq('id', ev.project_id as string).maybeSingle()
-          : Promise.resolve({ data: null }),
-      ])
-      if (!task) {
-        await markProcessed(ev.id as string, { error: 'task not found' })
-        continue
-      }
+      try {
+        const targetAgent = resolveAgentForStage(toStage, assignedAgent)
+        if (!targetAgent) {
+          await markProcessed(ev.id as string, { skipped: `no agent for stage=${toStage}` })
+          return
+        }
 
-      const prompt = composePrompt(toStage, task as Record<string, unknown>, project as Record<string, unknown> | null, fromStage)
-      const runId = `orch-${taskId}-${Date.now()}`
+        const [{ data: task }, { data: project }] = await Promise.all([
+          supabase.from('tasks').select('*').eq('id', taskId).maybeSingle(),
+          ev.project_id
+            ? supabase.from('projects').select('*').eq('id', ev.project_id as string).maybeSingle()
+            : Promise.resolve({ data: null }),
+        ])
+        if (!task) {
+          await markProcessed(ev.id as string, { error: 'task not found' })
+          return
+        }
 
-      // Fire via mc-api tunnel
-      const resp = await fetch(`${openclawBase.replace(/\/$/, '')}/api/agent/invoke`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agent: targetAgent,
-          runId,
-          contextType: 'task',
-          contextId: taskId,
-          contextLabel: String(task.name ?? ''),
-          payload: {
-            action: `orchestrator:${toStage}`,
-            prompt,
-            taskId,
-            projectId: ev.project_id,
-            fromStage,
-            toStage,
-          },
-        }),
-        signal: AbortSignal.timeout(12000),
-      })
-      const ok = resp.ok
-      const body = await resp.json().catch(() => ({}))
+        const prompt = composePrompt(toStage, task as Record<string, unknown>, project as Record<string, unknown> | null, fromStage)
+        const runId = `orch-${taskId}-${Date.now()}`
 
-      if (!ok) {
+        const resp = await fetch(`${openclawBase.replace(/\/$/, '')}/api/agent/invoke`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agent: targetAgent,
+            runId,
+            contextType: 'task',
+            contextId: taskId,
+            contextLabel: String(task.name ?? ''),
+            payload: {
+              action: `orchestrator:${toStage}`,
+              prompt,
+              taskId,
+              projectId: ev.project_id,
+              fromStage,
+              toStage,
+            },
+          }),
+          signal: AbortSignal.timeout(12000),
+        })
+        const ok = resp.ok
+        const body = await resp.json().catch(() => ({}))
+
+        if (!ok) {
+          await supabase.from('task_lifecycle_events').update({
+            retry_count: ((ev.retry_count as number) ?? 0) + 1,
+            error: `HTTP ${resp.status}: ${JSON.stringify(body).slice(0, 200)}`,
+          } as never).eq('id', ev.id as string)
+          results.errored++
+          results.details.push({ task_id: taskId, to_stage: toStage, error: `HTTP ${resp.status}` })
+          return
+        }
+
+        await supabase.from('task_lifecycle_events').update({
+          processed_at: new Date().toISOString(),
+          processed_by: 'orchestrator-tick',
+          dispatch_run_id: runId,
+        } as never).eq('id', ev.id as string)
+
+        await supabase.from('tasks').update({
+          dispatch_count: ((task.dispatch_count as number) ?? 0) + 1,
+          last_activity_at: new Date().toISOString(),
+        } as never).eq('id', taskId)
+
+        await supabase.from('task_activity').insert({
+          task_id: taskId,
+          project_id: ev.project_id,
+          event_type: 'dispatched',
+          actor: 'orchestrator',
+          from_value: fromStage,
+          to_value: toStage,
+          details: { agent: targetAgent, runId },
+        } as never)
+
+        results.dispatched++
+        results.details.push({ task_id: taskId, to_stage: toStage, agent: targetAgent, run_id: runId })
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e)
         await supabase.from('task_lifecycle_events').update({
           retry_count: ((ev.retry_count as number) ?? 0) + 1,
-          error: `HTTP ${resp.status}: ${JSON.stringify(body).slice(0, 200)}`,
+          error: msg.slice(0, 500),
         } as never).eq('id', ev.id as string)
         results.errored++
-        results.details.push({ task_id: taskId, to_stage: toStage, error: `HTTP ${resp.status}` })
-        continue
+        results.details.push({ task_id: taskId, error: msg.slice(0, 120) })
       }
-
-      // Mark processed + record the dispatch run_id
-      await supabase.from('task_lifecycle_events').update({
-        processed_at: new Date().toISOString(),
-        processed_by: 'orchestrator-tick',
-        dispatch_run_id: runId,
-      } as never).eq('id', ev.id as string)
-
-      // Bump task.dispatch_count + log activity
-      await supabase.from('tasks').update({
-        dispatch_count: ((task.dispatch_count as number) ?? 0) + 1,
-        last_activity_at: new Date().toISOString(),
-      } as never).eq('id', taskId)
-
-      await supabase.from('task_activity').insert({
-        task_id: taskId,
-        project_id: ev.project_id,
-        event_type: 'dispatched',
-        actor: 'orchestrator',
-        from_value: fromStage,
-        to_value: toStage,
-        details: { agent: targetAgent, runId },
-      } as never)
-
-      results.dispatched++
-      results.details.push({ task_id: taskId, to_stage: toStage, agent: targetAgent, run_id: runId })
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      await supabase.from('task_lifecycle_events').update({
-        retry_count: ((ev.retry_count as number) ?? 0) + 1,
-        error: msg.slice(0, 500),
-      } as never).eq('id', ev.id as string)
-      results.errored++
-      results.details.push({ task_id: taskId, error: msg.slice(0, 120) })
+    }))
+    // Inter-batch stagger — gives the gateway time to finish the previous
+    // batch's Sonnet calls before we pile on more.
+    if (batches.indexOf(batch) < batches.length - 1) {
+      await new Promise((r) => setTimeout(r, INTER_BATCH_MS))
     }
   }
 
