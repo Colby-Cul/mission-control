@@ -821,6 +821,161 @@ export async function getProjectRecentRuns(projectId: string, limit = 12) {
   }>
 }
 
+// ═══ Empire View (macro financial dashboard) ═══════════════════════
+
+/** Asset-class breakdown for the Portfolio Allocation donut. Splits
+ *  financial_accounts into Real Estate / Cash / Brokerage / Credit
+ *  (debt shown as negative). Property values come from property_assets
+ *  when available; mortgage balance is netted out. */
+export async function getPortfolioAllocation() {
+  const [{ data: accounts }, { data: properties }] = await Promise.all([
+    supabase.from('financial_accounts').select('type, subtype, balance_current, account_scope'),
+    supabase.from('property_assets').select('current_value, mortgage_balance'),
+  ])
+  const a = (accounts ?? []) as Array<{ type: string | null; subtype: string | null; balance_current: number | null; account_scope: string | null }>
+  const p = (properties ?? []) as Array<{ current_value: number | null; mortgage_balance: number | null }>
+
+  const cash       = a.filter(x => x.type === 'depository').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const brokerage  = a.filter(x => x.type === 'investment').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const creditDebt = a.filter(x => x.type === 'credit').reduce((s, x) => s + Number(x.balance_current ?? 0), 0)
+  const realEstate = p.reduce((s, x) => s + Math.max(0, Number(x.current_value ?? 0) - Number(x.mortgage_balance ?? 0)), 0)
+
+  const buckets = [
+    { key: 'realEstate', label: 'Real Estate', value: realEstate, color: '#10b981' },
+    { key: 'cash',       label: 'Cash',        value: cash,       color: '#06b6d4' },
+    { key: 'brokerage',  label: 'Brokerage',   value: brokerage,  color: '#8b5cf6' },
+  ].filter(b => b.value > 0)
+  const totalAssets = buckets.reduce((s, b) => s + b.value, 0)
+  return { buckets, totalAssets, totalDebt: creditDebt, netWorth: totalAssets - creditDebt }
+}
+
+/** Monthly inflow/outflow totals for the last N months from
+ *  financial_transactions. Plaid convention: positive = outflow, negative
+ *  = inflow. We flip signs so the caller gets intuitive positives. */
+export async function getMonthlyCashFlow(months = 12) {
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - months)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  const { data } = await supabase
+    .from('financial_transactions')
+    .select('date, amount')
+    .gte('date', cutoffStr)
+  const list = (data ?? []) as Array<{ date: string | null; amount: number | null }>
+  const byMonth = new Map<string, { inflow: number; outflow: number; net: number; count: number }>()
+  for (const t of list) {
+    if (!t.date) continue
+    const key = t.date.slice(0, 7)  // YYYY-MM
+    const amt = Number(t.amount ?? 0)
+    const cur = byMonth.get(key) || { inflow: 0, outflow: 0, net: 0, count: 0 }
+    if (amt < 0) cur.inflow += Math.abs(amt)
+    else cur.outflow += amt
+    cur.net = cur.inflow - cur.outflow
+    cur.count += 1
+    byMonth.set(key, cur)
+  }
+  return Array.from(byMonth.entries())
+    .map(([month, v]) => ({ month, ...v }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+}
+
+/** Health score + KPIs per entity for the Empire View heat map.
+ *  Simple heuristic for now: green if any linked account > 0 and no
+ *  blocked tasks; red if blocked tasks > 0; amber otherwise. */
+export async function getEntityHeatMap() {
+  const [
+    { data: entities },
+    { data: accounts },
+    { data: tasks },
+  ] = await Promise.all([
+    supabase.from('entity_ownership').select('id, entity_name, entity_type, state, status').eq('status', 'active'),
+    supabase.from('financial_accounts').select('entity_id, balance_current, type'),
+    supabase.from('tasks').select('id, status, project_id'),
+  ])
+  const ents = (entities ?? []) as Array<{ id: string; entity_name: string; entity_type: string | null; state: string | null; status: string | null }>
+  const accts = (accounts ?? []) as Array<{ entity_id: string | null; balance_current: number | null; type: string | null }>
+  const tasksList = (tasks ?? []) as Array<{ id: string; status: string | null; project_id: string | null }>
+
+  // Balance by entity (depository + investment - credit)
+  const balByEntity = new Map<string, number>()
+  for (const a of accts) {
+    if (!a.entity_id) continue
+    const cur = balByEntity.get(a.entity_id) ?? 0
+    const bal = Number(a.balance_current ?? 0)
+    balByEntity.set(a.entity_id, cur + (a.type === 'credit' ? -bal : bal))
+  }
+
+  // Blocked task counts — project_id roughly maps to entity via convention
+  const blockedByProject = new Map<string, number>()
+  for (const t of tasksList) {
+    if (!t.project_id || t.status?.toLowerCase() !== 'blocked') continue
+    blockedByProject.set(t.project_id, (blockedByProject.get(t.project_id) ?? 0) + 1)
+  }
+
+  return ents.map(e => {
+    const balance = balByEntity.get(e.id) ?? 0
+    const blockedTasks = 0  // Would need entity↔project mapping; leave 0 for now
+    const health: 'healthy' | 'watch' | 'action' =
+      blockedTasks > 2 ? 'action' :
+      balance === 0 ? 'watch' :
+      'healthy'
+    return {
+      id: e.id,
+      name: e.entity_name,
+      type: e.entity_type,
+      state: e.state,
+      balance,
+      blockedTasks,
+      health,
+    }
+  }).sort((a, b) => b.balance - a.balance)
+}
+
+/** Top entities by recent inflow (revenue proxy). Requires
+ *  financial_accounts.entity_id populated so transactions can be
+ *  rolled up per entity. Returns at most `limit` rows. */
+export async function getTopRevenueEntities(limit = 5, days = 90) {
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - days)
+  const cutoffStr = cutoff.toISOString().slice(0, 10)
+
+  const [{ data: txns }, { data: accounts }, { data: entities }] = await Promise.all([
+    supabase.from('financial_transactions').select('account_id, amount, date').gte('date', cutoffStr).lt('amount', 0),
+    supabase.from('financial_accounts').select('id, entity_id'),
+    supabase.from('entity_ownership').select('id, entity_name'),
+  ])
+  const txnsList = (txns ?? []) as Array<{ account_id: string | null; amount: number | null }>
+  const acctEntityMap = new Map<string, string | null>()
+  ;(accounts ?? []).forEach((a: { id: string; entity_id: string | null }) => acctEntityMap.set(a.id, a.entity_id))
+  const entMap = new Map<string, string>()
+  ;(entities ?? []).forEach((e: { id: string; entity_name: string }) => entMap.set(e.id, e.entity_name))
+
+  const byEntity = new Map<string, number>()
+  for (const t of txnsList) {
+    if (!t.account_id) continue
+    const entId = acctEntityMap.get(t.account_id)
+    if (!entId) continue
+    byEntity.set(entId, (byEntity.get(entId) ?? 0) + Math.abs(Number(t.amount ?? 0)))
+  }
+  return Array.from(byEntity.entries())
+    .map(([id, revenue]) => ({ id, name: entMap.get(id) ?? id, revenue }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, limit)
+}
+
+/** Net Worth history points from kpi_snapshots (if populated). Uses the
+ *  real column names: metric_key + as_of. Returns [] if none recorded yet. */
+export async function getNetWorthTrend(months = 12) {
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - months)
+  const { data } = await supabase
+    .from('kpi_snapshots')
+    .select('metric_key, value, as_of')
+    .eq('metric_key', 'net_worth')
+    .gte('as_of', cutoff.toISOString())
+    .order('as_of', { ascending: true })
+  return (data ?? []) as Array<{ metric_key: string; value: number | null; as_of: string | null }>
+}
+
 // ═══ Ownership Graph ═══════════════════════════════════════════════
 
 /** All ownership edges (entity→entity AND entity→property) */
