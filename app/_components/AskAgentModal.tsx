@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { X, Send, Zap } from 'lucide-react'
 import { invokeAgent, listAvailableAgents, type Agent } from '../lib/agents'
+import { supabase } from '../lib/supabase'
 import { formatDbError } from '../lib/format-error'
 
 // Fallback prompts shown when the selected agent has no curated list.
@@ -113,6 +114,17 @@ export default function AskAgentModal({
   const [prompt, setPrompt] = useState(initialPrompt)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+  // Live poll state for the in-flight run so the user actually sees the
+  // agent's response (not just "queued"). Status transitions:
+  //   queued → running → completed | false_report | error
+  const [activeRun, setActiveRun] = useState<{
+    id: string
+    status: string
+    startedAt: number
+    output?: string
+    error?: string
+    verificationReason?: string
+  } | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -122,8 +134,56 @@ export default function AskAgentModal({
       })
       setPrompt(initialPrompt)
       setResult(null)
+      setActiveRun(null)
     }
   }, [open])
+
+  // Poll the active run every 2s until it reaches a terminal state. Gives
+  // up after 120s so a stuck agent doesn't keep the modal open indefinitely.
+  useEffect(() => {
+    if (!activeRun || !activeRun.id || activeRun.status === 'completed' || activeRun.status === 'error' || activeRun.status === 'false_report') return
+    const runId = activeRun.id
+    const startedAt = activeRun.startedAt
+    let cancelled = false
+
+    const tick = async () => {
+      if (cancelled) return
+      const { data } = await supabase
+        .from('agent_runs')
+        .select('id, status, output, error, ended_at')
+        .eq('id', runId)
+        .maybeSingle()
+      if (cancelled) return
+      if (data) {
+        const row = data as unknown as {
+          status: string | null
+          output: { tail?: string; verification?: { reason?: string; matched?: string } } | null
+          error: string | null
+        }
+        const nextStatus = row.status ?? 'running'
+        const output = row.output?.tail
+        const verificationReason = row.output?.verification?.reason
+        setActiveRun((prev) => prev && prev.id === runId ? {
+          ...prev,
+          status: nextStatus,
+          output: output ?? prev.output,
+          error: row.error ?? prev.error,
+          verificationReason: verificationReason ?? prev.verificationReason,
+        } : prev)
+      }
+      // Timeout guard
+      if (Date.now() - startedAt > 120_000 && !cancelled) {
+        setActiveRun((prev) => prev && prev.id === runId ? {
+          ...prev,
+          status: 'error',
+          error: 'Timed out after 120s — check the Command Deck for the full run record.',
+        } : prev)
+      }
+    }
+    const interval = setInterval(tick, 2000)
+    tick()
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [activeRun?.id, activeRun?.status])
 
   // Chips are computed from the currently-selected agent so switching agents
   // swaps the suggestions to match the agent's actual job.
@@ -139,6 +199,7 @@ export default function AskAgentModal({
     if (!prompt.trim() || !selectedAgent) return
     setSending(true)
     setResult(null)
+    setActiveRun(null)
     try {
       const run = await invokeAgent({
         agentId: selectedAgent,
@@ -146,7 +207,15 @@ export default function AskAgentModal({
         contextType,
         contextId,
       })
-      setResult({ ok: true, message: `Run queued — ID ${run.id.slice(0, 8)}… Status: ${run.status}` })
+      // Seed the polling state — the effect above will take over from here.
+      const runAny = run as typeof run & { error?: string }
+      setActiveRun({
+        id: run.id,
+        status: run.status,
+        startedAt: Date.now(),
+        error: runAny.error,
+      })
+      setResult({ ok: true, message: `Sent to ${selectedAgent}` })
     } catch (e) {
       setResult({ ok: false, message: `Failed: ${formatDbError(e)}` })
     } finally {
@@ -268,7 +337,7 @@ export default function AskAgentModal({
           onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.1)' }}
         />
 
-        {/* Result feedback */}
+        {/* Result feedback + live agent response */}
         {result && (
           <div style={{
             marginTop: 12, padding: '10px 14px', borderRadius: 8, fontSize: 12, fontFamily: 'var(--mo)',
@@ -279,6 +348,72 @@ export default function AskAgentModal({
             {result.message}
           </div>
         )}
+
+        {/* Live run status + streamed response. Polls agent_runs every 2s. */}
+        {activeRun && (() => {
+          const { status, output, error, verificationReason, id } = activeRun
+          const isTerminal = status === 'completed' || status === 'error' || status === 'false_report'
+          const headerColor =
+            status === 'completed' ? '#10b981' :
+            status === 'running'   ? '#60a5fa' :
+            status === 'blocked'   ? '#f59e0b' :
+            status === 'false_report' ? '#f59e0b' :
+            status === 'error' || status === 'failed' ? '#ef4444' : '#9ca3af'
+          const headerLabel =
+            status === 'completed' ? '✓ Response ready' :
+            status === 'running'   ? '▸ Agent is working…' :
+            status === 'queued'    ? '▸ Queued — waiting for agent to pick up' :
+            status === 'blocked'   ? '⚠ Agent is blocked — needs your input' :
+            status === 'false_report' ? '🎭 Agent replied with evasion (not a real answer)' :
+            status === 'error' || status === 'failed' ? '✗ Run failed' :
+            status
+          return (
+            <div style={{
+              marginTop: 12, padding: '12px 14px', borderRadius: 8, fontSize: 12,
+              background: 'rgba(15,23,42,0.6)',
+              border: `1px solid ${headerColor}40`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: output || error ? 10 : 0 }}>
+                <div style={{ color: headerColor, fontWeight: 600, fontFamily: 'var(--mo)' }}>
+                  {headerLabel}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                  {id.slice(0, 8)}…
+                  {!isTerminal && <span style={{ marginLeft: 8 }}>• {Math.floor((Date.now() - activeRun.startedAt) / 1000)}s</span>}
+                </div>
+              </div>
+              {verificationReason && (
+                <div style={{
+                  fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.08)',
+                  padding: '6px 10px', borderRadius: 4, marginBottom: 10,
+                  fontFamily: 'var(--mo)',
+                }}>
+                  Truthfulness layer flagged: {verificationReason}. Agent produced deferral instead of a real answer. Retry with a more specific prompt.
+                </div>
+              )}
+              {output && (
+                <div style={{
+                  maxHeight: 280, overflowY: 'auto',
+                  fontSize: 13, lineHeight: 1.55, color: 'var(--t1)',
+                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  fontFamily: 'inherit',
+                }}>
+                  {output}
+                </div>
+              )}
+              {error && !output && (
+                <div style={{ fontSize: 12, color: '#ef4444', fontFamily: 'var(--mo)' }}>
+                  {error}
+                </div>
+              )}
+              {!output && !error && (
+                <div style={{ fontSize: 11, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                  Typical runs take 10–60s. You can close this modal — the run continues in the background and shows up on the Command Deck.
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* /end scrollable body */}
         </div>

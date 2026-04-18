@@ -139,6 +139,41 @@ export default async function FinancePage() {
   let transactions: any[] = []
   try { transactions = await getRecentTransactions(20) } catch {}
 
+  // Real monthly income/expense aggregates from financial_transactions.
+  // Plaid convention: amount > 0 = money OUT (debit), amount < 0 = money IN.
+  // Last 90 days ÷ 3 gives a true monthly average that smooths spikes.
+  let monthlyIncome = 0
+  let monthlyExpenses = 0
+  let txnCount = 0
+  let entityCount = 0
+  try {
+    const { supabase } = await import('../lib/supabase')
+    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const { data: txns } = await supabase
+      .from('financial_transactions')
+      .select('amount')
+      .gte('date', since)
+    let inflow = 0
+    let outflow = 0
+    for (const t of (txns ?? []) as Array<{ amount: number | null }>) {
+      const a = Number(t.amount ?? 0)
+      if (!Number.isFinite(a)) continue
+      if (a < 0) inflow += Math.abs(a)
+      else outflow += a
+    }
+    monthlyIncome = Math.round(inflow / 3)
+    monthlyExpenses = Math.round(outflow / 3)
+    txnCount = (txns ?? []).length
+    // Entity count from the ownership graph — drives the player-card stat.
+    const { data: ents } = await supabase
+      .from('entity_ownership')
+      .select('id', { count: 'exact', head: false })
+      .eq('status', 'active')
+    entityCount = (ents ?? []).length
+  } catch (e) {
+    console.warn('[finance/page] monthly aggregate query failed', e)
+  }
+
   // Cascaded net worth from ownership graph
   let nwGraph: Awaited<ReturnType<typeof getNetWorthFromGraph>> | null = null
   try { nwGraph = await getNetWorthFromGraph() } catch {}
@@ -4115,9 +4150,16 @@ ___ACCOUNTS_GRID___
     ? nwBreakdownParts.join(' · ')
     : `${accounts.length} accounts linked`
 
-  const totalIncome = 30200
-  const totalExpenses = 23200
+  // Cash flow derived from financial_transactions (90-day avg). If the DB has
+  // no Plaid data yet, all zero — UI shows "—" and "awaiting transactions"
+  // instead of fake numbers.
+  const totalIncome = monthlyIncome
+  const totalExpenses = monthlyExpenses
   const netCashFlow = totalIncome - totalExpenses
+  const savingsRate = totalIncome > 0 ? Math.round((netCashFlow / totalIncome) * 100) : 0
+  const hasTxnData = txnCount > 0
+  const fmtK = (n: number) => n === 0 ? '—' : `$${(n / 1000).toFixed(1)}K`
+  const liveOrWaiting = hasTxnData ? 'live · 90d avg' : 'awaiting transactions'
 
   return (
     <>
@@ -4126,25 +4168,27 @@ ___ACCOUNTS_GRID___
         label="FINANCIAL COMMAND CENTER — LIVE"
         greeting="Total Net Worth Across All Entities"
         primaryMetric={netWorthFmt}
-        metricSubtitle={nwBreakdownParts.length > 0 ? nwSubtitle : `▲ +$142K this quarter · ${accounts.length} accounts`}
+        metricSubtitle={nwBreakdownParts.length > 0 ? nwSubtitle : `${accounts.length} accounts${hasTxnData ? ` · ${txnCount} transactions (90d)` : ''}`}
         kpiCards={[
-          { label: 'MONTHLY INCOME', value: `$${(totalIncome / 1000).toFixed(1)}K`, delta: 'live', deltaPositive: true },
-          { label: 'MONTHLY EXPENSES', value: `$${(totalExpenses / 1000).toFixed(1)}K`, delta: 'live' },
-          { label: 'NET CASH FLOW', value: `$${(netCashFlow / 1000).toFixed(1)}K`, delta: '+cash', deltaPositive: true },
-          { label: 'SAVINGS RATE', value: `${Math.round((netCashFlow / totalIncome) * 100)}%` },
+          { label: 'MONTHLY INCOME',   value: fmtK(totalIncome),   delta: liveOrWaiting, deltaPositive: hasTxnData },
+          { label: 'MONTHLY EXPENSES', value: fmtK(totalExpenses), delta: liveOrWaiting },
+          { label: 'NET CASH FLOW',    value: fmtK(netCashFlow),   delta: netCashFlow >= 0 ? '+cash' : '-burn', deltaPositive: netCashFlow >= 0 },
+          { label: 'SAVINGS RATE',     value: hasTxnData ? `${savingsRate}%` : '—' },
         ]}
         playerCard={{
           name: 'Colby Culbertson',
           role: 'CEO · Multi-Entity Operator',
-          level: 14,
-          xpCurrent: 8500,
-          xpNext: 10000,
+          // Level/XP derived from activity count — a placeholder model until
+          // we have a real XP table. At least not pure literals anymore.
+          level: Math.min(99, Math.max(1, Math.floor((accounts.length + entityCount) / 2) + Math.floor(txnCount / 50))),
+          xpCurrent: txnCount,
+          xpNext: Math.max(100, txnCount + 50),
           initials: 'CC',
           stats: [
             { key: 'NET WORTH', value: netWorthFmt },
             { key: 'ACCOUNTS', value: String(accounts.length) },
-            { key: 'ENTITIES', value: '7' },
-            { key: 'LEVEL', value: '14' },
+            { key: 'ENTITIES', value: String(entityCount || accounts.length) },
+            { key: 'TXNS (90d)', value: String(txnCount) },
           ],
         }}
         animationSlot={<HeroCanvas />}
