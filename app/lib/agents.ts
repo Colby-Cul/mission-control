@@ -89,17 +89,40 @@ export const BUILTIN_AGENTS: Agent[] = [
 // ─── List available agents ────────────────────────────────────────────────────
 
 export async function listAvailableAgents(): Promise<Agent[]> {
+  // Show the full 23-agent roster — not just rows with status='active'.
+  // 'active' in the DB means "currently running something", not "available".
+  // Filtering by it used to hide 21 agents from the Ask-Agent modal.
+  //
+  // Sort order: Jarvis (main) first — he's the orchestrator/escalation target
+  // for "why is this blocked?" questions. Then primary tier, then utility tier.
   try {
     const { data, error } = await supabase
       .from('agents')
       .select('*')
-      .eq('status', 'active')
       .order('name')
-    if (error || !data?.length) return BUILTIN_AGENTS
-    return data as Agent[]
+    if (error || !data?.length) return sortRoster(BUILTIN_AGENTS)
+    return sortRoster(data as Agent[])
   } catch {
-    return BUILTIN_AGENTS
+    return sortRoster(BUILTIN_AGENTS)
   }
+}
+
+function sortRoster(list: Agent[]): Agent[] {
+  // Deterministic priority: Jarvis first, then primary tier, then utility.
+  // Within a tier, preserve existing order (BUILTIN_AGENTS has meaningful
+  // functional grouping — finance, engineering, marketing, ops).
+  const tierRank = (a: Agent) => {
+    if (a.id === 'main') return 0
+    if (a.tier === 'primary') return 1
+    if (a.tier === 'utility') return 2
+    return 3
+  }
+  return [...list].sort((a, b) => {
+    const ra = tierRank(a)
+    const rb = tierRank(b)
+    if (ra !== rb) return ra - rb
+    return 0
+  })
 }
 
 // ─── Get run status ───────────────────────────────────────────────────────────
