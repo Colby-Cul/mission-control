@@ -26,9 +26,13 @@ export function plaidConfigured(): boolean {
 export function getPlaidClient(): PlaidApi {
   const clientId = requireEnv('PLAID_CLIENT_ID')
   const secret = requireEnv('PLAID_SECRET')
-  const env = requireEnv('PLAID_ENV').toLowerCase() as keyof typeof PlaidEnvironments
+  // Plaid SDK v42 dropped the 'development' tier — it was merged into
+  // production. Accept the legacy value and alias it so deployments with
+  // PLAID_ENV=development keep working.
+  const raw = requireEnv('PLAID_ENV').toLowerCase().trim()
+  const env = (raw === 'development' ? 'production' : raw) as keyof typeof PlaidEnvironments
   if (!PlaidEnvironments[env]) {
-    throw new Error(`Invalid PLAID_ENV: ${env}. Must be sandbox|development|production.`)
+    throw new Error(`Invalid PLAID_ENV: "${raw}". Must be sandbox|production (legacy "development" aliased to production).`)
   }
   const configuration = new Configuration({
     basePath: PlaidEnvironments[env],
