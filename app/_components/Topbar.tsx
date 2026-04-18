@@ -18,7 +18,9 @@ export default async function Topbar({ currentPage }: { currentPage: string }) {
     ? profile.full_name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
     : 'C'
 
-  const level  = profile?.level   ?? 7
+  // Single source of truth for LVL/XP — every page reads these same values
+  // via the Topbar. No more LVL 7/8/12/37/1 drift across pages.
+  const level  = profile?.level   ?? 1
   const xp     = profile?.xp      ?? 0
   const xpNext = profile?.xp_next ?? 1000
 

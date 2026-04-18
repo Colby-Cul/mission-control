@@ -3,10 +3,23 @@ import type { Database } from './database.types'
 
 // redesign-v7 branch (development). Swap envs for prod.
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Server-side queries ran into phantom-row reads on Vercel's warm runtime
+// when using the anon publishable key (fix also applied to the orchestrator
+// tick 2026-04-18). When this module loads in the Node runtime (no window),
+// prefer the service-role JWT — stripped of any stray \n or whitespace
+// Vercel injects. Falls back to anon on the client.
+const isServer = typeof window === 'undefined'
+const rawServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const serviceKey = rawServiceKey
+  .replace(/\\n/g, '')
+  .replace(/[^A-Za-z0-9._-]/g, '')
+  .trim()
+const key = isServer && serviceKey ? serviceKey : anonKey
 
 export const supabase = createClient<Database>(url, key, {
-  auth: { persistSession: true, autoRefreshToken: true },
+  auth: { persistSession: false, autoRefreshToken: false },
 })
 
 // Handy typed aliases for the most-queried tables

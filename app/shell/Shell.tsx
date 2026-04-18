@@ -156,7 +156,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <button className="btn">Export</button>
           <button className="btn btn-g">+ New</button>
           <div className="notif">🔔<div className="notif-dot" /></div>
-          <div className="xp"><span className="xp-lvl">LVL 7</span><div className="xp-bar"><div className="xp-fill" /></div></div>
+          {/* LVL/XP rendered by TopbarWrapper — don't hardcode a level here */}
           <div className="avatar">C</div>
         </div>
         <div className="page">{children}</div>

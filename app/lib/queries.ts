@@ -884,11 +884,14 @@ export async function getChildEdges(entityId: string) {
   return data ?? []
 }
 
-/** All entities (including person/trust nodes) for dropdown population */
+/** All entities (including person/trust nodes) for dropdown population.
+ *  Returns all columns; the `purpose` and `is_active` columns referenced
+ *  by earlier code aren't actually in the schema — requesting them made
+ *  PostgREST fail silently and the page rendered "0 entities". */
 export async function getAllEntitiesForGraph() {
   const { data, error } = await supabase
     .from('entity_ownership')
-    .select('id, entity_id, entity_name, entity_type, slug, purpose, is_active')
+    .select('*')
     .order('entity_name', { ascending: true })
   if (error) return []
   return data ?? []

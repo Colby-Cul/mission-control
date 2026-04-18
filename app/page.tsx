@@ -107,7 +107,7 @@ export default async function DashboardPage() {
         label="◆ NORTH STAR · EMPIRE COMMAND"
         greeting="Good morning, Colby."
         primaryMetric={USD(netWorth)}
-        metricSubtitle="Total Net Worth · all entities"
+        metricSubtitle="Empire Net Worth · all entities + personal"
         kpiCards={[
           { label: 'Active Visions', value: String(activeVisions),          delta: '+2 this quarter', deltaPositive: true },
           { label: 'Open Tasks',     value: String(openTaskCount),           delta: 'across all projects' },
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         playerCard={{
           name: 'Colby Culbertson',
           role: 'CEO · Empire Builder',
-          level: 12,
+          level: 1,
           xpCurrent: xpEarned,
           xpNext: xpEarned + 500,
           since: 'Jan 2024',
@@ -145,7 +145,7 @@ export default async function DashboardPage() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} data-source="financial_accounts,kpi_snapshots">
           <SpecCard accent dataSource="financial_accounts.balance_current">
-            <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Net Worth</div>
+            <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }} title="Empire Net Worth — all linked entities, trusts, and personal accounts">Empire Net Worth</div>
             <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', background: 'var(--grad-metric)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{USD(netWorth)}</div>
             <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>Cascaded ownership · {(accounts as any[]).length} accounts</div>
             {netWorthGraph && netWorthGraph.byEntity.length > 0 && (

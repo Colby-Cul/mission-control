@@ -111,7 +111,7 @@ export default async function ExecutivePage() {
         label="⬡ EXECUTIVE · COMMAND OVERVIEW"
         greeting="Executive Overview"
         primaryMetric={USD(netWorth)}
-        metricSubtitle="Total Net Worth · command center"
+        metricSubtitle="Empire Net Worth · command center"
         kpiCards={[
           { label: 'Entities',    value: String(entityCount || 7), delta: 'active LLCs & LPs', deltaPositive: true },
           { label: 'Open Tasks',  value: String(openTasks),         delta: 'in progress',       deltaPositive: false },
