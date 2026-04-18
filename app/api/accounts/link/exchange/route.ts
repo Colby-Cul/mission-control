@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
-import { getPlaidClient, plaidConfigured, encryptToken, productsFor, getWebhookUrl } from '../../../../lib/plaid'
+import {
+  getPlaidClient, plaidConfigured, encryptToken, productsFor,
+  getWebhookUrl, syncTransactionsForItem,
+} from '../../../../lib/plaid'
 import { supabase } from '../../../../lib/supabase'
-import type { AccountBase, InstitutionsGetByIdResponse, Transaction } from 'plaid'
+import type { AccountBase, InstitutionsGetByIdResponse } from 'plaid'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -118,7 +121,9 @@ export async function POST(req: NextRequest) {
   }
 
   const accountRows = accounts.map((a) => ({
-    id: a.account_id, // use Plaid's account_id as our PK
+    // Internal UUID for PK (matches v6 pattern). Plaid's ID goes in
+    // plaid_account_id. The transaction sync helper maps between them.
+    id: randomUUID(),
     plaid_item_id: itemsRowId,
     plaid_account_id: a.account_id,
     name: a.name,
@@ -142,57 +147,21 @@ export async function POST(req: NextRequest) {
     if (accErr) console.warn('[plaid exchange] financial_accounts upsert', accErr.message)
   }
 
-  // 5) Initial transaction pull via /transactions/sync. First call cursor=undefined.
+  // 5) Initial transaction pull — use the shared sync helper so we get the
+  // plaid_account_id → UUID mapping + cursor-on-success semantics instead of
+  // duplicating the logic (and its bugs) here.
   let txnCount = 0
-  let cursor: string | undefined
+  let syncError: string | undefined
   if (product === 'bank') {
-    try {
-      // Loop until has_more=false (Plaid may paginate on large first-syncs)
-      const txnsToInsert: Array<Record<string, unknown>> = []
-      for (let i = 0; i < 10; i++) {
-        const sResp = await client.transactionsSync({
-          access_token: accessToken,
-          cursor,
-          count: 250,
-        })
-        cursor = sResp.data.next_cursor
-        const added = (sResp.data.added ?? []) as Transaction[]
-        for (const t of added) {
-          txnsToInsert.push({
-            id: t.transaction_id,
-            account_id: t.account_id,
-            plaid_transaction_id: t.transaction_id,
-            date: t.date,
-            datetime: t.datetime ?? null,
-            name: t.name,
-            merchant_name: t.merchant_name ?? null,
-            amount: t.amount,
-            currency_code: t.iso_currency_code ?? 'USD',
-            category: t.category ?? null,
-            personal_finance_category: t.personal_finance_category?.primary ?? null,
-            pending: t.pending ?? false,
-            account_scope: scope,
-            entity_id: entityId,
-          })
-        }
-        if (!sResp.data.has_more) break
-      }
-      if (txnsToInsert.length > 0) {
-        const { error: txnErr } = await supabase
-          .from('financial_transactions')
-          .upsert(txnsToInsert as never, { onConflict: 'id' })
-        if (txnErr) console.warn('[plaid exchange] financial_transactions upsert', txnErr.message)
-        else txnCount = txnsToInsert.length
-      }
-      // Persist cursor so incremental sync resumes from here next time
-      if (cursor) {
-        await supabase.from('plaid_items')
-          .update({ cursor, last_synced_at: new Date().toISOString() } as never)
-          .eq('id', itemsRowId)
-      }
-    } catch (e) {
-      console.warn('[plaid exchange] transactionsSync failed', e)
-    }
+    const res = await syncTransactionsForItem(client, {
+      id: itemsRowId,
+      access_token_enc: enc,
+      account_scope: scope,
+      entity_id: entityId,
+      cursor: null,
+    }, supabase as never)
+    txnCount = res.added
+    syncError = res.error
   }
 
   return NextResponse.json({
@@ -201,6 +170,7 @@ export async function POST(req: NextRequest) {
     institution: institutionName,
     account_count: accountRows.length,
     transaction_count: txnCount,
+    ...(syncError ? { sync_warning: syncError } : {}),
   })
 }
 

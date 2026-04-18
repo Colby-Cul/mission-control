@@ -320,12 +320,17 @@ export async function syncTransactionsForItem(
     if (error) console.warn('[syncTxns] delete removed failed', error.message)
   }
 
-  const { error: updErr } = await supa.from('plaid_items').update({
-    cursor: cursor ?? null,
+  // Only advance the cursor if all writes succeeded. If upsert failed, keep
+  // the old cursor so the next sync re-pulls the same window. (This is why
+  // the 2,047 txns disappeared on the first back-fill — we advanced past
+  // them even though the FK violation dropped all writes.)
+  const updatePayload: Record<string, unknown> = {
     last_synced_at: new Date().toISOString(),
     error_code: null,
     error_message: null,
-  }).eq('id', item.id)
+  }
+  if (!upsertErr) updatePayload.cursor = cursor ?? null
+  const { error: updErr } = await supa.from('plaid_items').update(updatePayload).eq('id', item.id)
   if (updErr) console.warn('[syncTxns] plaid_items update failed', updErr.message)
 
   // Surface unmapped accounts and upsert errors so register-webhooks /
