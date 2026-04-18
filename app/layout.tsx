@@ -3,6 +3,7 @@ import './globals.css'
 import Sidebar from './_components/Sidebar'
 import TopbarWrapper from './_components/TopbarWrapper'
 import CommandPaletteGlobal from './_components/CommandPaletteGlobal'
+import { CalmModeProvider } from './_components/CalmMode'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* Global ⌘K palette listener (outside .app so it's always present) */}
         <CommandPaletteGlobal />
+        {/* Syncs body[data-calm="true"] from localStorage so CSS can freeze
+            motion app-wide. Also respects prefers-reduced-motion at the CSS
+            layer (see globals.css). */}
+        <CalmModeProvider />
       </body>
     </html>
   )

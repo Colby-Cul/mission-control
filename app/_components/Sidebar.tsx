@@ -47,10 +47,11 @@ interface NavGroup { id: string; label: string; icon: React.ReactNode; children:
 
 const NAV_GROUPS: NavGroup[] = [
   {
+    // Home group — North Star merged into Home per user direction (2026-04-18).
+    // /home redirects to / via next.config.js so any old bookmarks still work.
     id: 'home', label: 'Home', icon: <Home size={18} />,
     children: [
-      { label: 'Home',         icon: <Home size={15} />,           href: '/home' },
-      { label: 'North Star',   icon: <Star size={15} />,           href: '/' },
+      { label: 'Home',         icon: <Home size={15} />,           href: '/' },
       { label: 'Vision Board', icon: <Target size={15} />,         href: '/vision' },
       { label: 'Cash Flow',    icon: <DollarSign size={15} />,     href: '/cash-flow' },
       { label: 'Tax Center',   icon: <Shield size={15} />,         href: '/tax' },
@@ -154,6 +155,7 @@ export default function Sidebar() {
                 href={primary.href}
                 className={`sb-group-header${groupActive ? ' on' : ''}`}
                 aria-label={`${group.label} — ${primary.label}`}
+                title={group.label}
               >
                 <span className="sb-icon">{group.icon}</span>
                 <span className="sb-label">{group.label}</span>
@@ -169,6 +171,7 @@ export default function Sidebar() {
                       href={c.href}
                       className={`sb-child${on ? ' on' : ''}`}
                       aria-current={on ? 'page' : undefined}
+                      title={c.label}
                     >
                       <span className="sb-icon-sm">{c.icon}</span>
                       <span className="sb-label">{c.label}</span>
@@ -192,6 +195,7 @@ export default function Sidebar() {
               className={`sb-group-header${on ? ' on' : ''}`}
               aria-label={item.label}
               aria-current={on ? 'page' : undefined}
+              title={item.label}
             >
               <span className="sb-icon">{item.icon}</span>
               <span className="sb-label">{item.label}</span>

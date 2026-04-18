@@ -7,6 +7,8 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/floor', destination: '/agents', permanent: true },
+      // North Star merged into Home — old /home bookmarks still work.
+      { source: '/home', destination: '/', permanent: true },
     ]
   },
 }

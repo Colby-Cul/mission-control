@@ -207,6 +207,52 @@ a { color: inherit; text-decoration: none; }
   color: var(--orange);
   background: rgba(249,115,22,0.06);
 }
+/* Active child gets a 3px left-edge bar so the current page is obvious at
+   a glance — required for the collapsed-sidebar flow and ADHD wayfinding. */
+.sb-child.on::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--orange);
+}
+
+/* Calm Mode — respects OS-level prefers-reduced-motion AND user-toggled
+   data-calm="true" on <body>. Freezes hero canvas animations, removes
+   transitions, and stops any keyframes from running. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  canvas#heroCanvas,
+  canvas.hero-canvas {
+    opacity: 0.35;
+    filter: saturate(0.7);
+  }
+}
+body[data-calm="true"] *,
+body[data-calm="true"] *::before,
+body[data-calm="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+body[data-calm="true"] canvas#heroCanvas,
+body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7); }
+
+/* Focus rings — visible focus-visible outlines on all interactive items
+   so keyboard-first users know where they are. Disabled for mouse users. */
+*:focus-visible {
+  outline: 2px solid rgba(249,115,22,0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 .sb-child.on .sb-icon-sm { color: var(--orange); }
 
 .sb-bottom {

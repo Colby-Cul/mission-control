@@ -104,7 +104,7 @@ export default async function DashboardPage() {
   return (
     <>
       <Hero
-        label="◆ NORTH STAR · EMPIRE COMMAND"
+        label="◆ HOME · EMPIRE COMMAND"
         greeting="Good morning, Colby."
         primaryMetric={USD(netWorth)}
         metricSubtitle="Empire Net Worth · all entities + personal"

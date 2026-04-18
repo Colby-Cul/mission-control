@@ -12,6 +12,7 @@ import HeroCanvas from './HeroCanvas'
 import { getUserProfile, getIntegrations, getAchievements, getGoogleToken } from '../lib/queries'
 import { isGoogleOAuthConfigured } from '../lib/google'
 import Link from 'next/link'
+import { CalmModeToggle } from '../_components/CalmMode'
 
 export const dynamic = 'force-dynamic'
 
@@ -140,6 +141,11 @@ export default async function SettingsPage() {
         <SpecCard accent dataSource="users_profile">
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
             Preferences
+          </div>
+          {/* Neurodivergent-friendly settings — stored in localStorage,
+              mirrored to body[data-calm] by CalmModeProvider in layout. */}
+          <div style={{ marginBottom: 16 }}>
+            <CalmModeToggle />
           </div>
           {Object.keys(settings).length === 0 ? (
             <div>

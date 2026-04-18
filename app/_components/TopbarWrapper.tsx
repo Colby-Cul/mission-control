@@ -14,7 +14,8 @@ export default function TopbarWrapper() {
     const pathname = referer.split('?')[0].split('#')[0]
 
     const PAGE_MAP: Record<string, string> = {
-      '/':             'Dashboard',
+      '/':             'Home',
+      '/home':         'Home',
       '/vision':       'Vision Board',
       '/finance':      'Finance',
       '/cash-flow':    'Cash Flow',
