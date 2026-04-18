@@ -13,41 +13,48 @@ export default function TopbarWrapper() {
     const referer = headersList.get('x-pathname') ?? headersList.get('referer') ?? '/'
     const pathname = referer.split('?')[0].split('#')[0]
 
-    const PAGE_MAP: Record<string, string> = {
-      '/':             'Home',
-      '/home':         'Home',
-      '/vision':       'Vision Board',
-      '/finance':      'Finance',
-      '/cash-flow':    'Cash Flow',
-      '/companies':    'Companies',
-      '/properties':   'Properties',
-      '/projects':     'Projects',
-      '/tasks':        'Tasks',
-      '/tax':          'Tax Center',
-      '/agents':       'Agents',
-      '/forge':        'The Forge',
-      '/settings':     'Settings',
-      '/monitor':      'Monitor',
-      '/incidents':    'Incidents',
-      '/integrations': 'Integrations',
-      '/team':         'Team',
-      '/floor':        'The Floor',
-      '/docs':         'Docs Hub',
-      '/files':        'Files',
-      '/legal':        'Legal',
-      '/memory':       'Memory',
-      '/skills':       'Skill Lab',
-      '/activity':     'Activity',
-      '/sessions':     'Sessions',
-      '/rentals':      'Rentals',
-      '/photos':       'Photo Manager',
-      '/entities':     'Entity Map',
-    }
+    // Ordered most-specific-first so the prefix matcher picks /settings/*
+    // nested labels before 'Settings' itself.
+    const PAGE_MAP: Array<[string, string]> = [
+      ['/settings/connected-accounts', 'Settings · Connected Accounts'],
+      ['/settings/integrations',       'Settings · Integrations'],
+      ['/settings/entities',           'Settings · Entities'],
+      ['/settings/files',              'Settings · Files'],
+      ['/settings/documents',          'Settings · Documents'],
+      ['/settings/legal',              'Settings · Legal'],
+      ['/settings/memory',             'Settings · Memory'],
+      ['/settings/monitor',            'Settings · Monitor'],
+      ['/settings/incidents',          'Settings · Incidents'],
+      ['/settings/sessions',           'Settings · Sessions'],
+      ['/settings/skills',             'Settings · Skills'],
+      ['/settings/preferences',        'Settings · Preferences'],
+      ['/settings/security',           'Settings · Security'],
+      ['/settings/billing',            'Settings · Billing'],
+      ['/settings/export',             'Settings · Export'],
+      ['/settings',                    'Settings'],
+      ['/finance/personal',            'Finance · Personal'],
+      ['/finance',                     'Finance · Empire View'],
+      ['/cash-flow',                   'Cash Flow'],
+      ['/tax',                         'Tax Planning'],
+      ['/companies',                   'Companies'],
+      ['/properties',                  'Properties'],
+      ['/projects',                    'Projects'],
+      ['/tasks',                       'Tasks'],
+      ['/agents',                      'Agents'],
+      ['/team',                        'Team'],
+      ['/forge',                       'Forge'],
+      ['/vision',                      'Vision Board'],
+      ['/rentals',                     'Rentals'],
+      ['/photos',                      'Photos'],
+      ['/',                            'Home'],
+    ]
 
-    // Exact match first, then prefix match
-    currentPage = PAGE_MAP[pathname] ??
-      Object.entries(PAGE_MAP).find(([k]) => pathname.startsWith(k) && k !== '/')?.[1] ??
-      'Dashboard'
+    const exact = PAGE_MAP.find(([k]) => k === pathname)?.[1]
+    const prefix = !exact
+      ? PAGE_MAP.find(([k]) => k !== '/' && pathname.startsWith(k + '/'))?.[1]
+        ?? PAGE_MAP.find(([k]) => k !== '/' && pathname.startsWith(k))?.[1]
+      : null
+    currentPage = exact ?? prefix ?? 'Home'
   } catch {
     // headers() throws outside request context (e.g. static gen)
   }

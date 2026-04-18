@@ -45,30 +45,43 @@ import {
 interface NavItem { label: string; icon: React.ReactNode; href: string }
 interface NavGroup { id: string; label: string; icon: React.ReactNode; children: NavItem[] }
 
+// Sprint 1 IA restructure (2026-04-18). Top-level sidebar dropped from 30+
+// links to 9 — Home / Finance / Companies / Properties / Work / Agents /
+// Team / Forge / Settings. Back-office surfaces (Accounts, Integrations,
+// Entities, Files, Docs, Legal, Memory, Monitor, Incidents, Sessions,
+// Skills) moved under /settings/*. Old URLs still work via redirects in
+// next.config.js.
 const NAV_GROUPS: NavGroup[] = [
   {
-    // Home group — North Star merged into Home per user direction (2026-04-18).
-    // /home redirects to / via next.config.js so any old bookmarks still work.
     id: 'home', label: 'Home', icon: <Home size={18} />,
     children: [
-      { label: 'Home',         icon: <Home size={15} />,           href: '/' },
-      { label: 'Vision Board', icon: <Target size={15} />,         href: '/vision' },
-      { label: 'Cash Flow',    icon: <DollarSign size={15} />,     href: '/cash-flow' },
-      { label: 'Tax Center',   icon: <Shield size={15} />,         href: '/tax' },
+      { label: 'Home',         icon: <Home size={15} />,   href: '/' },
+      { label: 'Vision Board', icon: <Target size={15} />, href: '/vision' },
     ],
   },
   {
-    id: 'executive', label: 'Executive', icon: <Command size={18} />,
+    // Finance hub — four sub-views.
+    id: 'finance', label: 'Finance', icon: <DollarSign size={18} />,
     children: [
-      { label: 'Executive Overview', icon: <Command size={15} />,        href: '/executive' },
-      { label: 'Command Deck',       icon: <LayoutDashboard size={15} />, href: '/command' },
+      { label: 'Empire View',  icon: <Command size={15} />,      href: '/finance' },
+      { label: 'Personal',     icon: <Users size={15} />,        href: '/finance/personal' },
+      { label: 'Tax Planning', icon: <Shield size={15} />,       href: '/tax' },
+      { label: 'Cash Flow',    icon: <TrendingUp size={15} />,   href: '/cash-flow' },
     ],
   },
   {
-    id: 'people', label: 'People', icon: <Users size={18} />,
+    id: 'companies', label: 'Companies', icon: <Building2 size={18} />,
     children: [
-      { label: 'Team',   icon: <Users size={15} />, href: '/team' },
-      { label: 'Agents', icon: <Bot size={15} />,   href: '/agents' },
+      { label: 'All Companies', icon: <Building2 size={15} />,  href: '/companies' },
+      { label: 'Xome Home',     icon: <Building2 size={15} />,  href: '/companies/xome-home' },
+    ],
+  },
+  {
+    id: 'properties', label: 'Properties', icon: <Building size={18} />,
+    children: [
+      { label: 'All Properties', icon: <Building size={15} />, href: '/properties' },
+      { label: 'Rentals',        icon: <Home size={15} />,     href: '/rentals' },
+      { label: 'Photo Manager',  icon: <Camera size={15} />,   href: '/photos' },
     ],
   },
   {
@@ -79,46 +92,21 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    id: 'finance', label: 'Finance', icon: <DollarSign size={18} />,
+    id: 'agents', label: 'Agents', icon: <Bot size={18} />,
     children: [
-      { label: 'Dashboard',   icon: <DollarSign size={15} />, href: '/finance' },
-      { label: 'Xome Home',   icon: <Building2 size={15} />,  href: '/companies/xome-home' },
-      { label: 'Companies',   icon: <Building2 size={15} />,  href: '/companies' },
-      { label: 'Accounts',    icon: <CreditCard size={15} />, href: '/accounts' },
+      { label: 'Agent Fleet', icon: <Bot size={15} />, href: '/agents' },
     ],
   },
   {
-    id: 'documents', label: 'Documents', icon: <FileText size={18} />,
+    id: 'team', label: 'Team', icon: <Users size={18} />,
     children: [
-      { label: 'Docs Hub',           icon: <BookOpen size={15} />,  href: '/docs' },
-      { label: 'Workspace Files',    icon: <Folder size={15} />,    href: '/files' },
-      { label: 'Legal Docs',         icon: <Scale size={15} />,     href: '/legal' },
-      { label: 'Memory & Knowledge', icon: <Brain size={15} />,     href: '/memory' },
+      { label: 'People', icon: <Users size={15} />, href: '/team' },
     ],
   },
   {
-    id: 'engineering', label: 'Engineering', icon: <Flame size={18} />,
+    id: 'forge', label: 'Forge', icon: <Flame size={18} />,
     children: [
-      { label: 'The Forge',     icon: <Flame size={15} />,        href: '/forge' },
-      { label: 'Skill Lab',     icon: <FlaskConical size={15} />, href: '/skills' },
-      { label: 'Activity Feed', icon: <Activity size={15} />,     href: '/activity' },
-      { label: 'Sessions',      icon: <Clock size={15} />,        href: '/sessions' },
-    ],
-  },
-  {
-    id: 'operations', label: 'Operations', icon: <Monitor size={18} />,
-    children: [
-      { label: 'System Monitor',   icon: <Monitor size={15} />,        href: '/monitor' },
-      { label: 'Incident Room',    icon: <AlertTriangle size={15} />,  href: '/incidents' },
-      { label: 'Integrations Hub', icon: <Plug size={15} />,           href: '/integrations' },
-    ],
-  },
-  {
-    id: 'assets', label: 'Assets', icon: <Building size={18} />,
-    children: [
-      { label: 'Rentals',       icon: <Building size={15} />, href: '/rentals' },
-      { label: 'Photo Manager', icon: <Camera size={15} />,   href: '/photos' },
-      { label: 'Entity Map',    icon: <Map size={15} />,      href: '/entities' },
+      { label: 'Idea Pipeline', icon: <Flame size={15} />, href: '/forge' },
     ],
   },
 ]
