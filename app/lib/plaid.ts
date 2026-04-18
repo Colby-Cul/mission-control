@@ -253,6 +253,7 @@ export async function syncTransactionsForItem(
   // If we have no cursor yet (fresh item or reset), use /transactions/get for
   // a historical pull — /transactions/sync will return empty when Plaid has
   // already acknowledged everything via our past cursor advances.
+  let getError: string | undefined
   if (!cursor) {
     try {
       const endDate = new Date().toISOString().slice(0, 10)
@@ -294,10 +295,11 @@ export async function syncTransactionsForItem(
         if (offset >= total || page.length === 0) break
       }
     } catch (e) {
-      // Fall through — the /transactions/sync loop below is a no-op if we get
-      // here with upsertBatch populated, OR it may succeed if transactions/get
-      // failed but sync works.
-      console.warn('[syncTxns] transactionsGet failed', e instanceof Error ? e.message : String(e))
+      const err = e as { response?: { data?: unknown }; message?: string }
+      getError = err.response?.data
+        ? `transactionsGet: ${JSON.stringify(err.response.data).slice(0, 200)}`
+        : `transactionsGet: ${err.message ?? String(e)}`
+      console.warn('[syncTxns]', getError)
     }
   }
 
@@ -402,6 +404,7 @@ export async function syncTransactionsForItem(
   // Surface unmapped accounts and upsert errors so register-webhooks /
   // sync-all responses tell us what broke instead of lying about success.
   const issues: string[] = []
+  if (getError) issues.push(getError)
   if (skippedUnmapped > 0) issues.push(`${skippedUnmapped} txns skipped (no matching financial_accounts row for their Plaid account_id)`)
   if (upsertErr) issues.push(`upsert: ${upsertErr}`)
 
