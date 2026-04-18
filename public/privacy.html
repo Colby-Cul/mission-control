@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Privacy Policy — Jarvis Agent Enterprises</title>
+  <style>
+    body { margin:0; background:#030712; color:#e5e7eb; font-family:system-ui,-apple-system,sans-serif; line-height:1.7; }
+    .container { max-width:720px; margin:0 auto; padding:40px 24px 80px; }
+    h1 { color:#f9fafb; font-size:28px; margin-bottom:4px; }
+    h2 { color:#f9fafb; font-size:18px; margin-top:32px; border-bottom:1px solid #1f2937; padding-bottom:8px; }
+    .updated { color:#6b7280; font-size:13px; margin-bottom:32px; }
+    p, li { font-size:15px; color:#d1d5db; }
+    ul { padding-left:20px; }
+    a { color:#6366f1; }
+    .back { display:inline-block; margin-bottom:24px; color:#6366f1; text-decoration:none; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="/">&larr; Back to Mission Control</a>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: April 9, 2026</p>
+
+    <p>Jarvis Agent Enterprises ("we", "our", "us") operates Mission Control, an internal business management platform that integrates with third-party services including Intuit QuickBooks. This Privacy Policy describes how we collect, use, and protect information when you use our application.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>When you connect your QuickBooks account to Mission Control, we collect and store:</p>
+    <ul>
+      <li>OAuth access tokens and refresh tokens (used to communicate with the QuickBooks API on your behalf)</li>
+      <li>Your QuickBooks company identifier (Realm ID)</li>
+      <li>Financial data retrieved from QuickBooks, including invoices, expenses, accounts, customers, vendors, and financial reports</li>
+    </ul>
+    <p>We do not collect personal information beyond what is necessary to operate the integration.</p>
+
+    <h2>2. How We Use Your Information</h2>
+    <p>We use the information collected to:</p>
+    <ul>
+      <li>Display financial data within Mission Control dashboards</li>
+      <li>Generate financial reports and analytics for your business operations</li>
+      <li>Maintain a secure connection to your QuickBooks account</li>
+    </ul>
+    <p>We do not sell, rent, or share your financial data with any third parties.</p>
+
+    <h2>3. Data Storage and Security</h2>
+    <p>OAuth tokens are stored in an encrypted database hosted on Supabase with row-level security enabled. All data is transmitted over HTTPS/TLS. We follow industry-standard security practices including:</p>
+    <ul>
+      <li>Encryption of sensitive credentials at rest and in transit</li>
+      <li>Automatic token rotation and refresh</li>
+      <li>Immediate token revocation upon disconnection</li>
+      <li>No storage of QuickBooks usernames or passwords</li>
+    </ul>
+
+    <h2>4. Data Retention</h2>
+    <p>We retain your QuickBooks connection data only while your account is actively connected. When you disconnect QuickBooks from Mission Control, all OAuth tokens are immediately revoked with Intuit and deleted from our systems.</p>
+
+    <h2>5. Third-Party Services</h2>
+    <p>Mission Control connects to the following third-party services:</p>
+    <ul>
+      <li><strong>Intuit QuickBooks</strong> — Financial data access via OAuth 2.0</li>
+      <li><strong>Google reCAPTCHA v3</strong> — Fraud prevention during the connection process</li>
+      <li><strong>Supabase</strong> — Secure database hosting</li>
+      <li><strong>Vercel</strong> — Application hosting</li>
+    </ul>
+    <p>Each service is governed by its own privacy policy.</p>
+
+    <h2>6. Your Rights</h2>
+    <p>You may at any time:</p>
+    <ul>
+      <li>Disconnect your QuickBooks account, which revokes all tokens and deletes stored connection data</li>
+      <li>Request information about the data we store related to your account</li>
+      <li>Request deletion of all data associated with your account</li>
+    </ul>
+
+    <h2>7. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated revision date.</p>
+
+    <h2>8. Contact</h2>
+    <p>For questions about this Privacy Policy, contact us at <a href="mailto:colby@culbertsonandgray.com">colby@culbertsonandgray.com</a>.</p>
+  </div>
+</body>
+</html>

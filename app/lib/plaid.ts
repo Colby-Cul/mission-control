@@ -76,10 +76,16 @@ function loadKey(): Buffer {
 // still work.
 
 function legacyV6Key(): Buffer {
+  // v6 originally encrypted with a passphrase that included an actual newline
+  // character. When Vercel stores the env var, that newline round-trips as
+  // the two-char sequence `\n`. To recover the original passphrase bytes we
+  // must interpret the literal `\n` / `\r` / `\t` as their escape codes
+  // (NOT strip them, which is what v7-native loadKey does).
   const raw = requireEnv('PLAID_TOKEN_ENCRYPTION_KEY')
-    .replace(/\\[nrt]/g, '')
     .replace(/^["']|["']$/g, '')
-    .trim()
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
   return crypto.scryptSync(raw, 'plaid-token-salt', 32)
 }
 
