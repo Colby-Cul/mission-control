@@ -255,8 +255,8 @@ interface ZillowIntakeResult {
 async function fetchZillowViaRapidApi(
   zpid: string,
   rapidKey: string,
+  host = 'zillow-com1.p.rapidapi.com',
 ): Promise<ZillowIntakeResult | null> {
-  const host = 'zillow-com1.p.rapidapi.com'
   const url = `https://${host}/property?zpid=${encodeURIComponent(zpid)}`
   try {
     const resp = await fetch(url, {
@@ -333,13 +333,16 @@ export async function intakeUrl(url: string): Promise<IntakeResult> {
   const result: IntakeResult = { url, domain }
 
   // ── Domain-specialized fast paths (before generic HTML scrape) ──────────────
-  // Zillow serves a JS SPA with bot detection — plain HTTP returns null. If we
-  // have a RapidAPI key, hit the Zillow partner API for real structured data.
+  // Zillow serves a JS SPA behind PerimeterX — plain HTTP returns a 403
+  // captcha page. If we have a RapidAPI key for a Zillow partner API we use
+  // that; otherwise we mark the intake as "needs-subscription" so the AI
+  // prompt can produce a clear area-estimate instead of pretending.
   if (/zillow\.com/.test(domain)) {
     const zpid = extractZpid(url)
     const rapidKey = process.env.RAPIDAPI_KEY
+    const rapidHost = process.env.RAPIDAPI_ZILLOW_HOST || 'zillow-com1.p.rapidapi.com'
     if (zpid && rapidKey) {
-      const zData = await fetchZillowViaRapidApi(zpid, rapidKey)
+      const zData = await fetchZillowViaRapidApi(zpid, rapidKey, rapidHost)
       if (zData) {
         result.title = zData.title
         result.description = zData.description
@@ -351,7 +354,14 @@ export async function intakeUrl(url: string): Promise<IntakeResult> {
         return result
       }
     }
-    // Fall through — we'll try generic scrape but it almost always fails on Zillow
+    // Fall through to generic scrape — but annotate that we couldn't get live
+    // data so the AI doesn't pretend the area-estimate is a real listing price.
+    result.category = 'Real Estate'
+    result.attributes = {
+      zillow_zpid: zpid ?? 'unknown',
+      data_source: 'area-estimate',
+      note: 'Zillow blocks plain scraping; set RAPIDAPI_ZILLOW_HOST to a subscribed Zillow RapidAPI for exact prices.',
+    }
   }
 
   // 1) Pull raw HTML ourselves so we can run multiple strategies in parallel
