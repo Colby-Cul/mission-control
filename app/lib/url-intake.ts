@@ -222,6 +222,106 @@ function decodeEntities(s: string): string {
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
 }
 
+// ── Zillow via RapidAPI ──────────────────────────────────────────────────────
+// Zillow blocks plain scrapers. The zillow-com1.p.rapidapi.com partner API
+// returns structured property data including price, beds, baths, sqft, images.
+// Requires RAPIDAPI_KEY env var + active subscription to that RapidAPI.
+
+function extractZpid(url: string): string | null {
+  // Zillow homedetails URLs look like:
+  //   /homedetails/<slug>/<zpid>_zpid/
+  //   /b/<zpid>/
+  //   ?zpid=<zpid>
+  const m1 = url.match(/\/(\d{6,})_zpid/)
+  if (m1) return m1[1]
+  const m2 = url.match(/\/b\/(\d{6,})/)
+  if (m2) return m2[1]
+  try {
+    const u = new URL(url)
+    const q = u.searchParams.get('zpid')
+    if (q && /^\d{6,}$/.test(q)) return q
+  } catch { /* ignore */ }
+  return null
+}
+
+interface ZillowIntakeResult {
+  title?: string
+  description?: string
+  image?: string
+  price?: { low?: number; high?: number; currency?: string; label?: string }
+  attributes?: Record<string, string | number>
+}
+
+async function fetchZillowViaRapidApi(
+  zpid: string,
+  rapidKey: string,
+): Promise<ZillowIntakeResult | null> {
+  const host = 'zillow-com1.p.rapidapi.com'
+  const url = `https://${host}/property?zpid=${encodeURIComponent(zpid)}`
+  try {
+    const resp = await fetch(url, {
+      headers: {
+        'X-RapidAPI-Key': rapidKey,
+        'X-RapidAPI-Host': host,
+      },
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!resp.ok) {
+      console.warn(`[url-intake] Zillow RapidAPI ${resp.status} for zpid=${zpid}`)
+      return null
+    }
+    const body = await resp.json()
+    // The endpoint returns a flat object with fields like:
+    //   price, bedrooms, bathrooms, livingArea, yearBuilt, address, imgSrc,
+    //   hdpUrl, streetAddress, city, state, zipcode, description, ...
+    const priceNum = typeof body.price === 'number' ? body.price : null
+    const city = body.city ?? body.address?.city ?? null
+    const state = body.state ?? body.address?.state ?? null
+    const streetAddress = body.streetAddress ?? body.address?.streetAddress ?? null
+    const beds = body.bedrooms ?? null
+    const baths = body.bathrooms ?? null
+    const sqft = body.livingArea ?? null
+    const yearBuilt = body.yearBuilt ?? null
+    const image = body.imgSrc ?? body.image ?? null
+
+    const titleParts: string[] = []
+    if (streetAddress) titleParts.push(streetAddress)
+    if (city && state) titleParts.push(`${city}, ${state}`)
+    const title = titleParts.join(' — ') || `Zillow property ${zpid}`
+
+    const descParts: string[] = []
+    if (beds) descParts.push(`${beds} bed`)
+    if (baths) descParts.push(`${baths} bath`)
+    if (sqft) descParts.push(`${sqft.toLocaleString()} sqft`)
+    if (yearBuilt) descParts.push(`built ${yearBuilt}`)
+    if (city && state) descParts.push(`${city}, ${state}`)
+    const description = descParts.join(' · ') || body.description || undefined
+
+    const attributes: Record<string, string | number> = {}
+    if (city) attributes.city = String(city)
+    if (state) attributes.state = String(state)
+    if (beds) attributes.bedrooms = Number(beds)
+    if (baths) attributes.bathrooms = Number(baths)
+    if (sqft) attributes.living_area_sqft = Number(sqft)
+    if (yearBuilt) attributes.year_built = Number(yearBuilt)
+    if (body.homeType) attributes.home_type = String(body.homeType)
+    if (body.homeStatus) attributes.home_status = String(body.homeStatus)
+
+    return {
+      title,
+      description,
+      image,
+      price: priceNum && priceNum > 0
+        ? { low: priceNum, high: priceNum, currency: 'USD', label: `$${priceNum.toLocaleString()}` }
+        : undefined,
+      attributes,
+    }
+  } catch (e) {
+    console.warn('[url-intake] Zillow RapidAPI fetch failed:', e instanceof Error ? e.message : String(e))
+    return null
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 /**
@@ -231,6 +331,28 @@ function decodeEntities(s: string): string {
 export async function intakeUrl(url: string): Promise<IntakeResult> {
   const domain = getDomain(url)
   const result: IntakeResult = { url, domain }
+
+  // ── Domain-specialized fast paths (before generic HTML scrape) ──────────────
+  // Zillow serves a JS SPA with bot detection — plain HTTP returns null. If we
+  // have a RapidAPI key, hit the Zillow partner API for real structured data.
+  if (/zillow\.com/.test(domain)) {
+    const zpid = extractZpid(url)
+    const rapidKey = process.env.RAPIDAPI_KEY
+    if (zpid && rapidKey) {
+      const zData = await fetchZillowViaRapidApi(zpid, rapidKey)
+      if (zData) {
+        result.title = zData.title
+        result.description = zData.description
+        result.image = zData.image
+        result.price = zData.price
+        result.category = 'Real Estate'
+        result.attributes = zData.attributes
+        result.raw = { og: undefined, jsonLd: undefined, htmlSnippet: undefined }
+        return result
+      }
+    }
+    // Fall through — we'll try generic scrape but it almost always fails on Zillow
+  }
 
   // 1) Pull raw HTML ourselves so we can run multiple strategies in parallel
   let rawHtml = ''
@@ -242,7 +364,6 @@ export async function intakeUrl(url: string): Promise<IntakeResult> {
         'Accept-Language': 'en-US,en;q=0.9',
       },
       redirect: 'follow',
-      // @ts-expect-error — next's fetch accepts this
       next: { revalidate: 0 },
       signal: AbortSignal.timeout(8000),
     })

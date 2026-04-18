@@ -120,23 +120,38 @@ export async function POST(req: NextRequest) {
 
     const system = `You are a financial planning assistant helping turn a user's "vision board" dream into a structured card. The user describes something they want to buy, save for, or experience (house, yacht, boat, car, vacation, education, investment, etc.). You must return ONLY valid JSON matching the schema — no prose, no markdown.
 
+CORE PRINCIPLE: A vision is an ASPIRATIONAL GOAL, not a specific listing. Example: the user drops a Zillow URL for "5905 Barton Rd, Loomis CA". The vision name is "New Family Home in Loomis", NOT the street address. The specific property may be sold by the time they're ready to buy — the vision is what they're saving for, not which house.
+
 Schema:
 {
-  "name": string,                   // ≤ 60 chars, title-case, specific
+  "name": string,                   // ≤ 60 chars, title-case, ASPIRATIONAL + generic. See rules.
   "category": "Real Estate" | "Vehicle" | "Experience" | "Education" | "Investment" | "Other",
-  "target_low": number,             // dollars, low end of plausible cost range
-  "target_high": number,            // dollars, high end (can equal low)
-  "target_label": string,           // human-friendly, e.g. "$2M-$5M range"
+  "target_low": number,             // dollars, low end
+  "target_high": number,            // dollars, high end (can equal low when we have a real listing price)
+  "target_label": string,           // human-friendly, e.g. "$875K (Zillow listing)" or "$2M-$5M range"
   "description": string,            // ≤ 200 chars, 1-2 sentences describing the vision
   "deadline_suggestion": string,    // ISO date, reasonable timeframe (1-10 yrs out)
   "priority_suggestion": number     // 1-10, derived from user's urgency language
 }
 
-Rules:
-- Be specific but conservative with price estimates. For boats, cars, properties, etc., use real-world market ranges.
-- If the user provides a URL with a known price, anchor target_low / target_high to that price ±10%.
-- Description should be SCANNABLE — dyslexic-friendly, not a wall of text.
-- If the user mentions a timeframe ("in 5 years", "by 2030"), respect it. Otherwise pick a reasonable default.`
+NAME RULES — this is a vision, not a listing:
+- For REAL ESTATE: "New Family Home in <City>", "Dream Beach House in <City>", "Mountain Cabin in <City>", "Investment Duplex in <City>". NEVER include a specific street address or property ID. City + property type + adjective describing the dream.
+- For VEHICLES: the make/model/trim IS the vision — "Tesla Model S Plaid", "2024 Porsche 911 Turbo", "Sailboat · 40ft Catamaran".
+- For EXPERIENCES: "Family Trip to Japan", "6-Month European Sabbatical", "Honeymoon in Bora Bora".
+- For EDUCATION: "Stanford MBA", "Private K-8 Education".
+- For INVESTMENTS: the asset class — "Rental Property Portfolio", "Early-Stage Venture Fund Allocation".
+- Never prefix with the specific listing's street number, MLS ID, or VIN.
+
+PRICE RULES — prefer real data tightly over guesses loosely:
+- If scraped_url.price is present with a confirmed listing price, set target_low = target_high = that exact price (±0%). Use target_label like "$<price> (<domain> listing)".
+- If only a price RANGE is scraped (e.g. Airbnb price per night, category base model MSRP), use target_low/target_high from the range verbatim.
+- If NO price is scraped AND the user gave no number, estimate conservatively from domain knowledge. In that case use a ±15% range, and target_label should indicate "area estimate — no live listing".
+- NEVER apply ±10% hedge to a confirmed listing price. Confirmed = confirmed.
+
+OTHER RULES:
+- Description should be SCANNABLE — dyslexic-friendly, 1-2 short sentences. Lead with the user's aspiration, not listing specs.
+- If the user mentions a timeframe ("in 5 years", "by 2030"), respect it. Otherwise pick a reasonable default (3-5 yrs for large goals).
+- If scraped price disagrees with user's described budget, TRUST the scraped price — it's live data.`
 
     const userContent: string[] = []
     if (description) userContent.push(`USER'S VISION DESCRIPTION:\n${description}`)
