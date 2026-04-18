@@ -250,6 +250,57 @@ export async function syncTransactionsForItem(
   const modifyBatch: Array<Record<string, unknown>> = []
   const removedIds: string[] = []
 
+  // If we have no cursor yet (fresh item or reset), use /transactions/get for
+  // a historical pull — /transactions/sync will return empty when Plaid has
+  // already acknowledged everything via our past cursor advances.
+  if (!cursor) {
+    try {
+      const endDate = new Date().toISOString().slice(0, 10)
+      const startDate = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+      let offset = 0
+      const PAGE = 500
+      while (offset < 10_000) {
+        const resp = await client.transactionsGet({
+          access_token: accessToken,
+          start_date: startDate,
+          end_date: endDate,
+          options: { count: PAGE, offset },
+        })
+        pagesFetched++
+        const page = resp.data.transactions ?? []
+        plaidAdded += page.length
+        for (const t of page) {
+          const accountUuid = plaidToUuid.get(t.account_id)
+          if (!accountUuid) { skippedUnmapped++; continue }
+          upsertBatch.push({
+            id: t.transaction_id,
+            account_id: accountUuid,
+            plaid_transaction_id: t.transaction_id,
+            date: t.date,
+            datetime: t.datetime ?? null,
+            name: t.name,
+            merchant_name: t.merchant_name ?? null,
+            amount: t.amount,
+            currency_code: t.iso_currency_code ?? 'USD',
+            category: t.category ?? null,
+            personal_finance_category: t.personal_finance_category?.primary ?? null,
+            pending: t.pending ?? false,
+            account_scope: item.account_scope,
+            entity_id: item.entity_id,
+          })
+        }
+        const total = resp.data.total_transactions
+        offset += page.length
+        if (offset >= total || page.length === 0) break
+      }
+    } catch (e) {
+      // Fall through — the /transactions/sync loop below is a no-op if we get
+      // here with upsertBatch populated, OR it may succeed if transactions/get
+      // failed but sync works.
+      console.warn('[syncTxns] transactionsGet failed', e instanceof Error ? e.message : String(e))
+    }
+  }
+
   try {
     for (let i = 0; i < 20; i++) {
       const resp = await client.transactionsSync({
