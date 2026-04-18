@@ -68,6 +68,38 @@ function loadKey(): Buffer {
   throw new Error(`PLAID_TOKEN_ENCRYPTION_KEY must be 32 bytes (got hex-len=${raw.length}, b64-bytes=${b.length})`)
 }
 
+// Legacy v6 format: rows written by ~/mission-control stored the ciphertext
+// as a UTF-8 string "aes256:<iv-hex>:<tag-hex>:<ct-hex>" inside a bytea column.
+// The key in env was used as a passphrase, not raw bytes — scrypt-stretched
+// with fixed salt 'plaid-token-salt' to derive the 32-byte AES key. IV was
+// 16 bytes, not 12. We keep decrypt compatibility so the 7 existing items
+// still work.
+
+function legacyV6Key(): Buffer {
+  const raw = requireEnv('PLAID_TOKEN_ENCRYPTION_KEY')
+    .replace(/\\[nrt]/g, '')
+    .replace(/^["']|["']$/g, '')
+    .trim()
+  return crypto.scryptSync(raw, 'plaid-token-salt', 32)
+}
+
+function decryptV6Legacy(cipherText: string): string {
+  const prefixed = cipherText.startsWith('aes256:') ? cipherText.slice(7) : cipherText
+  const parts = prefixed.split(':')
+  if (parts.length !== 3) throw new Error('legacy: expected aes256:iv:tag:ct (3 segments)')
+  const [ivHex, tagHex, dataHex] = parts
+  const key = legacyV6Key()
+  const iv = Buffer.from(ivHex, 'hex')
+  const tag = Buffer.from(tagHex, 'hex')
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv)
+  decipher.setAuthTag(tag)
+  const plain = Buffer.concat([decipher.update(dataHex, 'hex'), decipher.final()])
+  return plain.toString('utf8')
+}
+
+// v7 native format (what new exchanges write): raw binary in bytea,
+// iv(12) || tag(16) || ciphertext(N), key loaded as raw 32 bytes.
+
 export function encryptToken(plain: string): Buffer {
   const key = loadKey()
   const iv = crypto.randomBytes(12)
@@ -78,6 +110,15 @@ export function encryptToken(plain: string): Buffer {
 }
 
 export function decryptToken(enc: Buffer): string {
+  // Detect v6 legacy: the first 7 bytes are the ASCII of "aes256:".
+  // ASCII 'a'=0x61 'e'=0x65 's'=0x73 '2'=0x32 '5'=0x35 '6'=0x36 ':'=0x3A
+  if (enc.length >= 7 &&
+      enc[0] === 0x61 && enc[1] === 0x65 && enc[2] === 0x73 &&
+      enc[3] === 0x32 && enc[4] === 0x35 && enc[5] === 0x36 &&
+      enc[6] === 0x3a) {
+    return decryptV6Legacy(enc.toString('utf8'))
+  }
+  // Native v7 binary format
   const key = loadKey()
   const iv = enc.subarray(0, 12)
   const tag = enc.subarray(12, 28)
