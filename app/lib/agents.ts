@@ -108,20 +108,31 @@ export async function listAvailableAgents(): Promise<Agent[]> {
 }
 
 function sortRoster(list: Agent[]): Agent[] {
-  // Deterministic priority: Jarvis first, then primary tier, then utility.
-  // Within a tier, preserve existing order (BUILTIN_AGENTS has meaningful
-  // functional grouping — finance, engineering, marketing, ops).
+  // Priority order for the Ask-Agent picker:
+  //   1. Jarvis (main) — orchestrator / escalation target
+  //   2. Orchestrators (cfo, maven) — project-management escalation
+  //   3. Primary / A-tier agents
+  //   4. Utility / B-tier agents
+  //   5. Everything else (alphabetical)
+  //
+  // DB tier values are inconsistent ('A'/'B'/'primary'/'utility'/'Medium'/
+  // 'High'/'Low'). Normalize to lowercase and accept any 'primary'/'A'/'high'
+  // as the upper tier.
+  const ORCHESTRATORS = new Set(['main', 'cfo', 'maven'])
   const tierRank = (a: Agent) => {
     if (a.id === 'main') return 0
-    if (a.tier === 'primary') return 1
-    if (a.tier === 'utility') return 2
-    return 3
+    if (ORCHESTRATORS.has(a.id)) return 1
+    const t = String(a.tier ?? '').toLowerCase()
+    if (t === 'primary' || t === 'a' || t === 'high') return 2
+    if (t === 'utility' || t === 'b' || t === 'low') return 3
+    return 4
   }
   return [...list].sort((a, b) => {
     const ra = tierRank(a)
     const rb = tierRank(b)
     if (ra !== rb) return ra - rb
-    return 0
+    // within a tier, alphabetical by name
+    return String(a.name ?? a.id).localeCompare(String(b.name ?? b.id))
   })
 }
 
