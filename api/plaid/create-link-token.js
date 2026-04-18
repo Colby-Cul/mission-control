@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
     const includeInvestments = products.includes(Products.Investments) ||
       products.includes("investments");
 
-    const redirectUri = process.env.PLAID_REDIRECT_URI || "https://mission-control-peach-omega.vercel.app/";
+    const redirectUri = process.env.PLAID_REDIRECT_URI || "https://mc-merge-v7.vercel.app/";
 
     const request = {
       user: {

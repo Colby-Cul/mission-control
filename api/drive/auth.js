@@ -3,7 +3,7 @@
 
 const GOOGLE_CLIENT_ID = (process.env.GOOGLE_DRIVE_CLIENT_ID || "").trim();
 const GOOGLE_CLIENT_SECRET = (process.env.GOOGLE_DRIVE_CLIENT_SECRET || "").trim();
-const REDIRECT_URI = "https://mission-control-peach-omega.vercel.app/api/drive/auth";
+const REDIRECT_URI = "https://mc-merge-v7.vercel.app/api/drive/auth";
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 
 function sendJson(res, statusCode, payload) {

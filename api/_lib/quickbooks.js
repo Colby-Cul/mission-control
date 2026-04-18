@@ -12,7 +12,7 @@ const QUICKBOOKS_SCOPES = (process.env.QUICKBOOKS_SCOPES || "com.intuit.quickboo
   .filter(Boolean);
 const QUICKBOOKS_REDIRECT_URI =
   process.env.QUICKBOOKS_REDIRECT_URI ||
-  "https://mission-control-peach-omega.vercel.app/api/qb/callback";
+  "https://mc-merge-v7.vercel.app/api/qb/callback";
 
 // ── QuickBooks API ──────────────────────────────────────────────────────────
 const QB_SANDBOX_BASE = "https://sandbox-quickbooks.api.intuit.com";

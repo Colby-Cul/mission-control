@@ -135,7 +135,7 @@ module.exports = async function handler(req, res) {
             });
 
             // Call the analyze endpoint internally
-            const analyzeUrl = `https://mission-control-peach-omega.vercel.app/api/documents/analyze`;
+            const analyzeUrl = `https://mc-merge-v7.vercel.app/api/documents/analyze`;
             const analyzeRes = await fetch(analyzeUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },

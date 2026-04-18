@@ -4,7 +4,7 @@ STARTUP: Read ~/.openclaw/persistent-memory/PROJECT_REGISTRY.md for the master p
 
 - **Repo:** https://github.com/Colby-Cul/mission-control
 - **Stack:** React + Vite, Recharts, deployed to Vercel + GitHub Pages
-- **Production:** https://mission-control-peach-omega.vercel.app
+- **Production:** https://mc-merge-v7.vercel.app
 - **Data:** `bash src/data/generate-live-data.sh` regenerates from OpenClaw runtime
 - **Deploy:** `vercel --prod --yes` for production, `git push` for GitHub Pages
 

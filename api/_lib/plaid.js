@@ -41,7 +41,7 @@ function withCredentials(params = {}) {
 function getWebhookUrl() {
   return (
     process.env.PLAID_WEBHOOK_URL ||
-    "https://mission-control-peach-omega.vercel.app/api/plaid/webhook"
+    "https://mc-merge-v7.vercel.app/api/plaid/webhook"
   );
 }
 

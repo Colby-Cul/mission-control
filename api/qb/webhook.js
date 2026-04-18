@@ -11,7 +11,7 @@ const {
  *
  * Handles disconnect and data-change notifications from Intuit.
  * Register this URL in the Intuit Developer Portal under Webhooks:
- *   https://mission-control-peach-omega.vercel.app/api/qb/webhook
+ *   https://mc-merge-v7.vercel.app/api/qb/webhook
  *
  * Required env var: INTUIT_WEBHOOK_VERIFIER_TOKEN
  */

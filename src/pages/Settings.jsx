@@ -144,7 +144,7 @@ const Settings = () => {
           </div>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Vercel</div>
-            <div style={{ fontSize: 11, color: C.muted }}>mission-control-peach-omega.vercel.app</div>
+            <div style={{ fontSize: 11, color: C.muted }}>mc-merge-v7.vercel.app</div>
           </div>
           <div style={{ padding: 12, borderRadius: 8, background: C.surface, border: `1px solid ${C.border}` }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Tailscale</div>

@@ -3,7 +3,7 @@ const COINBASE_TOKEN_URL = "https://api.coinbase.com/oauth/token";
 const COINBASE_API_BASE = "https://api.coinbase.com/v2";
 const COINBASE_REDIRECT_URI =
   process.env.COINBASE_REDIRECT_URI ||
-  "https://mission-control-peach-omega.vercel.app/api/coinbase/callback";
+  "https://mc-merge-v7.vercel.app/api/coinbase/callback";
 const COINBASE_SCOPES = "wallet:accounts:read,wallet:transactions:read";
 
 function getCoinbaseConfig() {
