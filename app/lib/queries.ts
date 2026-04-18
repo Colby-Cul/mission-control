@@ -738,6 +738,89 @@ export async function getProjectCosts(projectId: string) {
   }
 }
 
+/** Pulls the forge idea linked to this project, if any. Projects created
+ *  from the Forge carry `source_forge_idea_id` — the idea contains the
+ *  richer PRD fields (problem, how_it_works, agentic_architecture, revenue
+ *  model, path-to-100k, mvp_scope, build time, confidence). */
+export async function getForgeIdeaForProject(projectId: string) {
+  const project = await getProjectById(projectId)
+  const ideaId = project?.source_forge_idea_id as string | undefined
+  if (!ideaId) return null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from('forge_ideas') as any)
+    .select('*')
+    .eq('id', ideaId)
+    .maybeSingle()
+  return data as Record<string, unknown> | null
+}
+
+/** Per-agent and per-model cost + token breakdown for this project.
+ *  Source: agent_runs (the real gateway trace). Falls back to task totals
+ *  only if there are no runs recorded yet. */
+export async function getProjectCostBreakdown(projectId: string) {
+  const { data: runs } = await supabase
+    .from('agent_runs')
+    .select('agent_id, cost, tokens, started_at, ended_at, status')
+    .eq('project_id', projectId)
+  const list = (runs ?? []) as Array<{
+    agent_id: string | null
+    cost: number | null
+    tokens: number | null
+    started_at: string | null
+    ended_at: string | null
+    status: string | null
+  }>
+
+  const byAgent = new Map<string, { runs: number; cost: number; tokens: number; seconds: number }>()
+  let total = { runs: 0, cost: 0, tokens: 0, seconds: 0 }
+
+  for (const r of list) {
+    const agent = r.agent_id || 'unknown'
+    const cost = Number(r.cost ?? 0)
+    const tokens = Number(r.tokens ?? 0)
+    const secs = r.started_at && r.ended_at
+      ? Math.max(0, (new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()) / 1000)
+      : 0
+    const cur = byAgent.get(agent) || { runs: 0, cost: 0, tokens: 0, seconds: 0 }
+    cur.runs += 1
+    cur.cost += cost
+    cur.tokens += tokens
+    cur.seconds += secs
+    byAgent.set(agent, cur)
+    total.runs += 1
+    total.cost += cost
+    total.tokens += tokens
+    total.seconds += secs
+  }
+
+  const agents = Array.from(byAgent.entries())
+    .map(([agent, v]) => ({ agent, ...v }))
+    .sort((a, b) => b.cost - a.cost)
+
+  return { agents, total }
+}
+
+/** Most recent agent runs for a project — activity feed. Newest first. */
+export async function getProjectRecentRuns(projectId: string, limit = 12) {
+  const { data } = await supabase
+    .from('agent_runs')
+    .select('id, agent_id, task_id, status, started_at, ended_at, cost, tokens, error')
+    .eq('project_id', projectId)
+    .order('started_at', { ascending: false })
+    .limit(limit)
+  return (data ?? []) as Array<{
+    id: string
+    agent_id: string | null
+    task_id: string | null
+    status: string | null
+    started_at: string | null
+    ended_at: string | null
+    cost: number | null
+    tokens: number | null
+    error: string | null
+  }>
+}
+
 // ═══ Ownership Graph ═══════════════════════════════════════════════
 
 /** All ownership edges (entity→entity AND entity→property) */

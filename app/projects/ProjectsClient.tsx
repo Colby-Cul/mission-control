@@ -11,6 +11,13 @@ import { invokeAgent, BUILTIN_AGENTS } from '../lib/agents'
 import KanbanBoard, { type KanbanColumn } from '../_components/KanbanBoard'
 import DataTable, { type Column } from '../_components/DataTable'
 import AskAgentModal from '../_components/AskAgentModal'
+import PrioritySelector from './[id]/_components/PrioritySelector'
+
+// Compact priority badge that opens a P0–P3 editor when clicked. Wraps the
+// shared PrioritySelector at size="sm" so it sits nicely on project cards.
+function CardPriorityBadge({ projectId, priority }: { projectId: string; priority?: string | null }) {
+  return <PrioritySelector projectId={projectId} initial={priority ?? 'p2'} size="sm" />
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -175,8 +182,11 @@ function ProjectCard({
             )}
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-          <StatusBadge status={project.status} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <CardPriorityBadge projectId={String(project.id)} priority={project.priority as string | null | undefined} />
+            <StatusBadge status={project.status} />
+          </div>
           {healthScore != null && (
             <span style={{ fontSize: 9, fontFamily: 'var(--mo)', color: healthColor }}>
               health {healthScore}%
