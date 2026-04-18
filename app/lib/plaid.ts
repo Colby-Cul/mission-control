@@ -191,6 +191,13 @@ export interface SyncResult {
   modified: number
   removed: number
   error?: string
+  // Diagnostic counters
+  accountsMapped?: number
+  plaidAdded?: number
+  plaidModified?: number
+  plaidRemoved?: number
+  skippedUnmapped?: number
+  pagesFetched?: number
 }
 
 export async function syncTransactionsForItem(
@@ -235,6 +242,10 @@ export async function syncTransactionsForItem(
   let modified = 0
   let removed = 0
   let skippedUnmapped = 0
+  let plaidAdded = 0
+  let plaidModified = 0
+  let plaidRemoved = 0
+  let pagesFetched = 0
   const upsertBatch: Array<Record<string, unknown>> = []
   const modifyBatch: Array<Record<string, unknown>> = []
   const removedIds: string[] = []
@@ -246,7 +257,11 @@ export async function syncTransactionsForItem(
         cursor,
         count: 500,
       })
+      pagesFetched++
       cursor = resp.data.next_cursor
+      plaidAdded += (resp.data.added ?? []).length
+      plaidModified += (resp.data.modified ?? []).length
+      plaidRemoved += (resp.data.removed ?? []).length
       for (const t of resp.data.added ?? []) {
         const accountUuid = plaidToUuid.get(t.account_id)
         if (!accountUuid) { skippedUnmapped++; continue }
@@ -344,5 +359,11 @@ export async function syncTransactionsForItem(
     modified: upsertErr ? 0 : modified,
     removed,
     ...(issues.length > 0 ? { error: issues.join('; ') } : {}),
+    accountsMapped: plaidToUuid.size,
+    plaidAdded,
+    plaidModified,
+    plaidRemoved,
+    skippedUnmapped,
+    pagesFetched,
   }
 }
