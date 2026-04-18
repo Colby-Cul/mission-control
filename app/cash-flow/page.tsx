@@ -47,11 +47,18 @@ export default async function CashFlowPage() {
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : null)))
 
   // Plaid sign convention: negative amount = money coming IN (income/deposits)
-  // positive amount = money going OUT (expenses/payments)
-  const inflow30 = (txns30d as any[])
+  // positive amount = money going OUT (expenses/payments).
+  // EXCLUDE TRANSFER_IN / TRANSFER_OUT so inter-account movement doesn't
+  // inflate both sides of the ledger (e.g. moving $10k from checking to
+  // savings would otherwise count as $10k income + $10k expense).
+  const TRANSFER_CATS = new Set(['TRANSFER_IN', 'TRANSFER_OUT'])
+  const realTxns = (txns30d as any[]).filter((t: any) =>
+    !TRANSFER_CATS.has(String(t.personal_finance_category ?? '').toUpperCase())
+  )
+  const inflow30 = realTxns
     .filter((t: any) => Number(t.amount) < 0)
     .reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
-  const outflow30 = (txns30d as any[])
+  const outflow30 = realTxns
     .filter((t: any) => Number(t.amount) > 0)
     .reduce((s, t) => s + Number(t.amount), 0)
   const netFlow = inflow30 - outflow30
@@ -65,9 +72,9 @@ export default async function CashFlowPage() {
 
   const xpEarned = DEFAULT_ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
 
-  // Group txns by entity for per-entity view
+  // Group txns by entity for per-entity view — same transfer filter applies.
   const entityMap: Record<string, { inflow: number; outflow: number }> = {}
-  ;(txns30d as any[]).forEach((t: any) => {
+  realTxns.forEach((t: any) => {
     const eid = t.entity_id ?? 'personal'
     if (!entityMap[eid]) entityMap[eid] = { inflow: 0, outflow: 0 }
     const amt = Number(t.amount)
@@ -293,8 +300,8 @@ export default async function CashFlowPage() {
         {/* Recurring Subscriptions — detected from transactions */}
         <SpecCard accent dataSource="financial_transactions.recurring">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Recurring Subscriptions</div>
-            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((recurring as any[]) ?? []).length} detected</span>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Recurring Charges</div>
+            <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{((recurring as any[]) ?? []).length} detected · includes mortgage/loan</span>
           </div>
           {((recurring as any[]) ?? []).length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
@@ -331,8 +338,22 @@ export default async function CashFlowPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {((recurring as any[]) ?? [])
                 .map((r: any) => {
-                  const nextDate = new Date(new Date(r.lastDate).getTime() + r.cadenceDays * 86400000)
-                  return { ...r, nextDate }
+                  // Roll the predicted next-charge date forward past today.
+                  // A stale lastDate (say 60 days ago) shouldn't read as
+                  // "60d overdue" — the next cycle is next month, not
+                  // yesterday. Only mark as overdue if the most recent
+                  // predicted date is >7 days ago (signal: actually late).
+                  let next = new Date(new Date(r.lastDate).getTime() + r.cadenceDays * 86400000)
+                  while (next.getTime() < Date.now() - 7 * 86400000) {
+                    next = new Date(next.getTime() + r.cadenceDays * 86400000)
+                  }
+                  return { ...r, nextDate: next }
+                })
+                .filter((r: any) => {
+                  // Hide subscriptions whose last-seen is >90 days ago;
+                  // likely canceled, just noise in the pipeline.
+                  const ageDays = (Date.now() - new Date(r.lastDate).getTime()) / 86400000
+                  return ageDays <= 90
                 })
                 .sort((a: any, b: any) => a.nextDate.getTime() - b.nextDate.getTime())
                 .slice(0, 6)
@@ -342,8 +363,8 @@ export default async function CashFlowPage() {
                     <div key={r.merchant} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 11, minWidth: 0 }}>
                         <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.merchant}</div>
-                        <div style={{ fontSize: 9, color: days < 7 ? 'var(--red)' : 'var(--dim)', fontFamily: 'var(--mo)' }}>
-                          {days > 0 ? `in ${days}d` : `${Math.abs(days)}d overdue`}
+                        <div style={{ fontSize: 9, color: days < 3 ? 'var(--red)' : days < 7 ? 'var(--amber)' : 'var(--dim)', fontFamily: 'var(--mo)' }}>
+                          {days >= 0 ? `in ${days}d` : `${Math.abs(days)}d late`}
                         </div>
                       </div>
                       <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--amber)' }}>{USD(r.amount)}</div>

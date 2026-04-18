@@ -14,6 +14,8 @@ import {
   getPortfolioAllocation,
   getEntityHeatMap,
   getTopRevenueEntities,
+  getEntityBalances,
+  getProperties,
 } from '../lib/queries'
 import HeroCanvas from './HeroCanvas'
 import Hero from '../_components/Hero'
@@ -25,6 +27,11 @@ import {
   TopRevenueEntities,
   RiskFlags,
 } from './_components/EmpireWidgets'
+import {
+  RealNetWorth,
+  RealBusinessEntities,
+  RealRealEstate,
+} from './_components/RealEmpireSections'
 import {
   getQbBalanceSheet,
   listQbConnections,
@@ -237,9 +244,13 @@ export default async function FinancePage() {
   let portfolio: Awaited<ReturnType<typeof getPortfolioAllocation>> = { buckets: [], totalAssets: 0, totalDebt: 0, netWorth: 0 }
   let heatMap: Awaited<ReturnType<typeof getEntityHeatMap>> = []
   let topRevenue: Awaited<ReturnType<typeof getTopRevenueEntities>> = []
-  try { portfolio  = await getPortfolioAllocation() } catch {}
-  try { heatMap    = await getEntityHeatMap() } catch {}
-  try { topRevenue = await getTopRevenueEntities(5, 90) } catch {}
+  let entityBalances: Awaited<ReturnType<typeof getEntityBalances>> = []
+  let properties: Awaited<ReturnType<typeof getProperties>> = []
+  try { portfolio      = await getPortfolioAllocation() } catch {}
+  try { heatMap        = await getEntityHeatMap() } catch {}
+  try { topRevenue     = await getTopRevenueEntities(5, 90) } catch {}
+  try { entityBalances = await getEntityBalances() } catch {}
+  try { properties     = await getProperties() } catch {}
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -2060,6 +2071,7 @@ export default async function FinancePage() {
     
 
 
+    <!-- ___STRIP_FAKE_SECTIONS_START___ -->
     <!-- NET WORTH SECTION -->
     <div class="section">
       <div class="section-title">TRUE NET WORTH</div>
@@ -3721,6 +3733,7 @@ ___TXN_LIST___
       </div>
     </div>
 
+    <!-- ___STRIP_FAKE_SECTIONS_END___ -->
     <!-- LINKED ACCOUNTS SECTION -->
     <div class="section">
       <div class="section-title">Connected Accounts</div>
@@ -4145,12 +4158,20 @@ ___ACCOUNTS_GRID___
     .replace('___ACCOUNTS_GRID___', accountsGridHtml)
     .replace('___TXN_LIST___', txnListHtml)
 
-  // Split bodyContent so we can inject the Crypto Holdings card right AFTER
-  // the Real Estate Portfolio section (per CEO directive — crypto sits with
-  // real-asset rollups, not standalone). Gamification stays adjacent to Hero.
-  const bodyParts = bodyContent.split('<!-- ___CRYPTO_SPLIT___ — Crypto Holdings JSX card is injected here -->')
-  const bodyBeforeCrypto = bodyParts[0] ?? bodyContent
-  const bodyAfterCrypto = bodyParts[1] ?? ''
+  // Split bodyContent around the stripped fake-data chunk. The original
+  // template ported-in a pixel-perfect mockup where TRUE NET WORTH /
+  // Business Entities / Real Estate Portfolio / Flow Dashboard / AI Ops /
+  // Spending / Credit & Debt were all hardcoded HTML with demo numbers —
+  // none of them read from the DB. We kill that entire block and render
+  // real React components in its place (see below).
+  //
+  // bodyBefore = Achievements (the gamification bar, directly under hero)
+  // bodyAfter  = Connected Accounts + Recent Transactions (both real,
+  //              wired via the ${accountsGridHtml} / ${txnListHtml} swaps)
+  const stripStart = bodyContent.indexOf('<!-- ___STRIP_FAKE_SECTIONS_START___ -->')
+  const stripEnd   = bodyContent.indexOf('<!-- ___STRIP_FAKE_SECTIONS_END___ -->')
+  const bodyBeforeCrypto = stripStart >= 0 ? bodyContent.slice(0, stripStart) : bodyContent
+  const bodyAfterCrypto  = stripEnd   >= 0 ? bodyContent.slice(stripEnd + '<!-- ___STRIP_FAKE_SECTIONS_END___ -->'.length) : ''
 
   // Compute net worth — prefer graph-cascaded, fall back to raw account sum
   const rawNetWorth = accounts.reduce((s: number, a: any) => {
@@ -4216,23 +4237,27 @@ ___ACCOUNTS_GRID___
         animationSlot={<HeroCanvas />}
       />
 
-      {/* bodyContent BEFORE Crypto split — Achievements (directly under hero,
-          per directive), TRUE NET WORTH, Business Entities, Real Estate
-          Portfolio. QuickBooks Balance Sheet moved to entity pages
-          (/companies/[slug]). */}
+      {/* Legacy bodyBeforeCrypto = just Achievements now (gamification
+          directly under the hero, per directive). The former TRUE NET
+          WORTH / Business Entities / Real Estate Portfolio / Flow
+          Dashboard / AI Ops / Spending / Credit & Debt / Operations
+          buckets were pixel-mockup demo HTML with hardcoded numbers —
+          none read from the DB. Stripped and replaced with real,
+          DB-backed React components below. */}
       <div dangerouslySetInnerHTML={{ __html: bodyBeforeCrypto }} />
 
-      {/* ═══ EMPIRE VIEW — macro widgets (additive, same design system) ═══
-          Portfolio Allocation, Entity Heat Map, Top Revenue, Risk Flags.
-          Rendered with SpecCard / section-header so they match the rest
-          of the page. Flow-of-funds isn't repeated here — legacy 'Flow
-          Dashboard' below already owns monthly inflow/outflow. */}
-      <PortfolioDonut
+      {/* ═══ REAL-DATA SECTIONS — every number traces to a live query ═══ */}
+      <RealNetWorth
         buckets={portfolio.buckets}
         totalAssets={portfolio.totalAssets}
         totalDebt={portfolio.totalDebt}
         netWorth={portfolio.netWorth}
+        propertyCount={properties.length}
+        accountCount={accounts.length}
       />
+      <RealBusinessEntities entities={entityBalances} />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <RealRealEstate properties={properties as any} />
       <EntityHeatMap entities={heatMap} />
       <TopRevenueEntities entities={topRevenue} />
       <RiskFlags entities={heatMap} />

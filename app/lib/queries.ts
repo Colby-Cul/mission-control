@@ -532,12 +532,16 @@ export async function getTransactions30d() {
 }
 
 export async function getTopExpenseCategories(limit = 5) {
-  // Returns aggregated expense categories from last 30 days
-  // We aggregate client-side from raw transactions since Supabase RPC isn't defined yet
+  // Returns aggregated expense categories from last 30 days. Excludes
+  // TRANSFER_IN / TRANSFER_OUT — those are inter-account movements, not
+  // real expenses, and lumping them into 'top expenses' misleads the user
+  // (e.g. a $30k checking→savings transfer showing as an expense line).
+  const TRANSFER_CATS = new Set(['TRANSFER_IN', 'TRANSFER_OUT'])
   const txns = await getTransactions30d()
   const catMap: Record<string, number> = {}
-  txns.forEach((t: any) => {
-    const cat = (t.personal_finance_category ?? 'OTHER') as string
+  txns.forEach((t: Record<string, unknown>) => {
+    const cat = String(t.personal_finance_category ?? 'OTHER').toUpperCase()
+    if (TRANSFER_CATS.has(cat)) return
     const amt = Number(t.amount ?? 0)
     if (amt > 0) catMap[cat] = (catMap[cat] ?? 0) + amt
   })
@@ -819,6 +823,33 @@ export async function getProjectRecentRuns(projectId: string, limit = 12) {
     tokens: number | null
     error: string | null
   }>
+}
+
+/** Entity balance rollup: one row per active entity with total assets
+ *  and credit-debt summed from financial_accounts. Only entities with
+ *  at least one linked account appear; all 12 are visible on the Entity
+ *  Map. Used by /finance → RealBusinessEntities. */
+export async function getEntityBalances() {
+  const [{ data: entities }, { data: accounts }] = await Promise.all([
+    supabase.from('entity_ownership').select('id, entity_name, entity_type, status').eq('status', 'active'),
+    supabase.from('financial_accounts').select('entity_id, balance_current, type'),
+  ])
+  const ents = (entities ?? []) as Array<{ id: string; entity_name: string; entity_type: string | null }>
+  const accts = (accounts ?? []) as Array<{ entity_id: string | null; balance_current: number | null; type: string | null }>
+
+  type Row = { id: string; entity_name: string; entity_type: string | null; assets: number; debt: number; account_count: number }
+  const rollup = new Map<string, Row>()
+  for (const e of ents) rollup.set(e.id, { id: e.id, entity_name: e.entity_name, entity_type: e.entity_type, assets: 0, debt: 0, account_count: 0 })
+  for (const a of accts) {
+    if (!a.entity_id) continue
+    const row = rollup.get(a.entity_id)
+    if (!row) continue
+    const bal = Number(a.balance_current ?? 0)
+    if (a.type === 'credit') row.debt += bal
+    else row.assets += bal
+    row.account_count += 1
+  }
+  return Array.from(rollup.values()).sort((a, b) => b.assets - a.assets)
 }
 
 // ═══ Empire View (macro financial dashboard) ═══════════════════════
