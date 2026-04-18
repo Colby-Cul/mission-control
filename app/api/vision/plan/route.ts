@@ -187,7 +187,7 @@ Guidelines:
 - Dyslexia-friendly: short sentences, concrete numbers.`
 
     const msg = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 900,
       system,
       messages: [{ role: 'user', content: `FINANCIAL CONTEXT:\n${JSON.stringify(contextJson, null, 2)}` }],

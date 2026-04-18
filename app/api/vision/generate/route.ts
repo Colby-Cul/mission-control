@@ -157,7 +157,7 @@ Rules:
     if (imageHint) userContent.push(`USER UPLOADED AN IMAGE (url):\n${imageHint}`)
 
     const msg = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-6',
       max_tokens: 600,
       system,
       messages: [{ role: 'user', content: userContent.join('\n\n') }],
