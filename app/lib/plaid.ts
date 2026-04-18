@@ -51,12 +51,21 @@ export function getPlaidClient(): PlaidApi {
 // Wire format written to bytea: iv (12) || tag (16) || ciphertext (N)
 
 function loadKey(): Buffer {
-  const raw = requireEnv('PLAID_TOKEN_ENCRYPTION_KEY').trim()
-  // Accept hex (64 chars) or base64 (44 chars including '=' padding)
+  // Env may contain literal \n / \r escape sequences from sloppy paste, or
+  // surrounding quotes. Normalize before validating.
+  const raw = requireEnv('PLAID_TOKEN_ENCRYPTION_KEY')
+    .replace(/\\[nrt]/g, '')    // literal backslash-n, backslash-r, backslash-t
+    .replace(/^["']|["']$/g, '') // surrounding quotes
+    .trim()
+  // Accept hex (64 chars) or base64 (22-44 chars decoding to 32 bytes)
   if (/^[0-9a-fA-F]{64}$/.test(raw)) return Buffer.from(raw, 'hex')
+  // Try URL-safe base64 first (handles - and _), padding agnostic
+  const padded = raw + '='.repeat((4 - raw.length % 4) % 4)
+  const b64 = Buffer.from(padded.replace(/-/g, '+').replace(/_/g, '/'), 'base64')
+  if (b64.length === 32) return b64
   const b = Buffer.from(raw, 'base64')
   if (b.length === 32) return b
-  throw new Error('PLAID_TOKEN_ENCRYPTION_KEY must be 32 bytes (hex-64 or base64-44)')
+  throw new Error(`PLAID_TOKEN_ENCRYPTION_KEY must be 32 bytes (got hex-len=${raw.length}, b64-bytes=${b.length})`)
 }
 
 export function encryptToken(plain: string): Buffer {
