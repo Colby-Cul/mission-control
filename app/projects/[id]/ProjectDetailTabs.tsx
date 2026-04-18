@@ -13,6 +13,10 @@ interface Task {
   title?: string
   status: string
   priority?: string
+  size?: string
+  acceptance_criteria?: string
+  blocks_reason?: string
+  labels?: string[]
   owner?: string
   agent?: string
   tags?: string[]
@@ -25,6 +29,8 @@ interface Task {
   created_at?: string
   sprint_id?: string
   is_milestone?: boolean
+  dispatch_count?: number
+  last_activity_at?: string
   [key: string]: unknown
 }
 
@@ -45,43 +51,70 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: 'table', label: 'Table', icon: Table2 },
 ]
 
-const TASK_STATUSES = ['backlog', 'planning', 'in_progress', 'review', 'done']
+// Sprint stages — matches tasks.status enum in the DB and the orchestrator's
+// stage → agent mapping. Order reflects left→right flow on the board.
+const TASK_STATUSES = ['backlog', 'ready', 'in_progress', 'in_review', 'blocked', 'done', 'cancelled']
 const STATUS_LABELS: Record<string, string> = {
   backlog: 'Backlog',
-  planning: 'Planning',
+  ready: 'Ready',
   in_progress: 'In Progress',
-  review: 'Review',
+  in_review: 'In Review',
+  blocked: 'Blocked',
   done: 'Done',
+  cancelled: 'Cancelled',
 }
 const STATUS_COLORS: Record<string, string> = {
   backlog: 'rgba(255,255,255,0.3)',
-  planning: 'var(--purple)',
+  ready: 'var(--purple)',
   in_progress: 'var(--orange)',
-  review: 'var(--amber)',
-  done: 'var(--green)',
-  completed: 'var(--green)',
-  cancelled: 'rgba(255,255,255,0.3)',
+  in_review: 'var(--amber)',
   blocked: 'var(--red)',
+  done: 'var(--green)',
+  cancelled: 'rgba(255,255,255,0.2)',
 }
 
+// p0=critical, p1=high, p2=medium, p3=low. Back-compat with legacy strings.
 const PRIORITY_COLORS: Record<string, string> = {
+  p0: 'var(--red)',
+  p1: 'var(--orange)',
+  p2: 'var(--amber)',
+  p3: 'var(--green)',
   critical: 'var(--red)',
   high: 'var(--orange)',
   medium: 'var(--amber)',
   low: 'var(--green)',
-  '1': 'var(--red)',
-  '2': 'var(--orange)',
-  '3': 'var(--amber)',
+  '0': 'var(--red)',
+  '1': 'var(--orange)',
+  '2': 'var(--amber)',
+  '3': 'var(--green)',
+}
+const PRIORITY_LABELS: Record<string, string> = {
+  p0: 'P0', p1: 'P1', p2: 'P2', p3: 'P3',
+  critical: 'P0', high: 'P1', medium: 'P2', low: 'P3',
+}
+function normalizePriority(p?: string): string {
+  const v = (p ?? '').toLowerCase().trim()
+  if (!v) return ''
+  if (['p0','critical','0'].includes(v)) return 'p0'
+  if (['p1','high','1'].includes(v)) return 'p1'
+  if (['p2','medium','med','2'].includes(v)) return 'p2'
+  if (['p3','low','3'].includes(v)) return 'p3'
+  return v
 }
 
 function normalizeTaskStatus(s: string): string {
-  const v = (s ?? '').toLowerCase()
-  if (['done', 'completed', 'complete'].includes(v)) return 'done'
-  if (['in_progress', 'in progress', 'active', 'running', 'working'].includes(v)) return 'in_progress'
-  if (v === 'review') return 'review'
-  if (v === 'planning') return 'planning'
-  if (v === 'blocked') return 'in_progress' // show blocked in in_progress with special indicator
+  const v = (s ?? '').toLowerCase().trim()
+  if (['done', 'completed', 'complete', 'shipped'].includes(v)) return 'done'
+  if (['cancelled', 'canceled', 'killed', 'abandoned'].includes(v)) return 'cancelled'
+  if (['blocked', 'stuck', 'waiting'].includes(v)) return 'blocked'
+  if (['in_review', 'review', 'qa', 'testing', 'validation'].includes(v)) return 'in_review'
+  if (['in_progress', 'in progress', 'active', 'running', 'working', 'wip', 'doing'].includes(v)) return 'in_progress'
+  if (['ready', 'todo', 'to_do', 'scheduled', 'queued', 'planning'].includes(v)) return 'ready'
   return 'backlog'
+}
+
+const SIZE_LABELS: Record<string, string> = {
+  xs: 'XS', s: 'S', m: 'M', l: 'L', xl: 'XL', xxl: 'XXL',
 }
 
 function taskLabel(t: Task) {
@@ -102,7 +135,8 @@ function fmtCurrency(n: number | null | undefined) {
 // ─── Task Chip (Sprint Board) ─────────────────────────────────────────────────
 
 function TaskChip({ task }: { task: Task }) {
-  const priColor = PRIORITY_COLORS[(task.priority ?? '').toLowerCase()] ?? 'rgba(255,255,255,0.2)'
+  const pri = normalizePriority(task.priority)
+  const priColor = PRIORITY_COLORS[pri] ?? 'rgba(255,255,255,0.2)'
   return (
     <div style={{
       background: 'rgba(255,255,255,0.04)',
@@ -268,33 +302,56 @@ function SprintBoardView({ tasks }: { tasks: Task[] }) {
 
 // ─── Kanban View ──────────────────────────────────────────────────────────────
 
-const KANBAN_COLS: KanbanColumn<Task>[] = [
-  { key: 'backlog',     label: 'Backlog',      color: 'rgba(255,255,255,0.3)' },
-  { key: 'planning',   label: 'Planning',     color: 'var(--purple)' },
-  { key: 'in_progress',label: 'In Progress',  color: 'var(--orange)' },
-  { key: 'review',     label: 'Review',       color: 'var(--amber)'  },
-  { key: 'done',       label: 'Done',         color: 'var(--green)'  },
-]
+const KANBAN_COLS: KanbanColumn<Task>[] = TASK_STATUSES.map((key) => ({
+  key,
+  label: STATUS_LABELS[key],
+  color: STATUS_COLORS[key],
+}))
 
 function KanbanTaskCard({ task }: { task: Task }) {
-  const priColor = PRIORITY_COLORS[(task.priority ?? '').toLowerCase()] ?? 'rgba(255,255,255,0.2)'
+  const pri = normalizePriority(task.priority)
+  const priColor = PRIORITY_COLORS[pri] ?? 'rgba(255,255,255,0.2)'
+  const priLabel = PRIORITY_LABELS[pri] ?? (pri ? pri.toUpperCase() : null)
+  const size = (task.size ?? '').toLowerCase()
+  const sizeLabel = SIZE_LABELS[size]
+  const ac = (task.acceptance_criteria ?? '').trim()
+  const acPreview = ac ? (ac.length > 120 ? ac.slice(0, 117) + '…' : ac) : null
+  const isBlocked = normalizeTaskStatus(task.status) === 'blocked'
+  const blockReason = (task.blocks_reason ?? '').trim()
+  const labels = Array.isArray(task.labels) ? task.labels : Array.isArray(task.tags) ? task.tags : []
   const cost = fmtCurrency(task.total_cost)
+
   return (
     <div style={{
       background: 'rgba(255,255,255,0.04)',
-      border: '1px solid rgba(255,255,255,0.08)',
+      border: isBlocked ? '1px solid rgba(255,80,80,0.35)' : '1px solid rgba(255,255,255,0.08)',
       borderRadius: 10,
       padding: '10px 12px',
       display: 'flex',
       flexDirection: 'column',
       gap: 6,
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-        <span style={{ width: 7, height: 7, borderRadius: '50%', background: priColor, flexShrink: 0, marginTop: 3 }} />
-        <span style={{ fontSize: 13, fontWeight: 500, color: '#f5f5f7', lineHeight: 1.4 }}>{taskLabel(task)}</span>
+      {/* Title row: priority badge + name */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        {priLabel && (
+          <span title={`Priority ${priLabel}`} style={{
+            fontSize: 10,
+            fontWeight: 700,
+            fontFamily: 'var(--mo)',
+            padding: '2px 6px',
+            borderRadius: 4,
+            background: 'rgba(0,0,0,0.35)',
+            border: `1px solid ${priColor}`,
+            color: priColor,
+            flexShrink: 0,
+            lineHeight: 1.2,
+          }}>{priLabel}</span>
+        )}
+        <span style={{ fontSize: 13, fontWeight: 500, color: '#f5f5f7', lineHeight: 1.4, flex: 1 }}>{taskLabel(task)}</span>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {task.owner && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{task.owner}</span>}
+
+      {/* Meta row: agent, size, due, cost */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         {task.agent && (
           <span style={{
             fontSize: 9,
@@ -308,19 +365,60 @@ function KanbanTaskCard({ task }: { task: Task }) {
             letterSpacing: '0.05em',
           }}>🤖 {task.agent}</span>
         )}
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {sizeLabel && (
+          <span title={`Size ${sizeLabel}`} style={{
+            fontSize: 10,
+            fontWeight: 600,
+            fontFamily: 'var(--mo)',
+            padding: '2px 6px',
+            borderRadius: 10,
+            background: 'rgba(255,255,255,0.06)',
+            color: 'rgba(255,255,255,0.6)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>{sizeLabel}</span>
+        )}
+        {task.owner && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{task.owner}</span>}
         {task.due_date && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--mo)' }}>{fmtDate(task.due_date)}</span>}
         {cost && <span style={{ fontSize: 11, color: 'var(--lime)', fontFamily: 'var(--mo)' }}>{cost}</span>}
-        {task.time_estimate != null && (
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
-            {task.time_logged ?? 0}h / {task.time_estimate}h
-          </span>
+        {typeof task.dispatch_count === 'number' && task.dispatch_count > 0 && (
+          <span title="Times dispatched to agent" style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--mo)' }}>↻{task.dispatch_count}</span>
         )}
       </div>
-      {Array.isArray(task.tags) && task.tags.length > 0 && (
+
+      {/* Acceptance criteria preview */}
+      {acPreview && (
+        <div style={{
+          fontSize: 11,
+          color: 'rgba(255,255,255,0.55)',
+          lineHeight: 1.35,
+          paddingTop: 4,
+          borderTop: '1px dashed rgba(255,255,255,0.06)',
+        }}>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontWeight: 600, marginRight: 4 }}>AC:</span>
+          {acPreview}
+        </div>
+      )}
+
+      {/* Blocker reason */}
+      {isBlocked && blockReason && (
+        <div style={{
+          fontSize: 11,
+          color: 'var(--red)',
+          lineHeight: 1.35,
+          padding: '4px 6px',
+          background: 'rgba(255,80,80,0.07)',
+          border: '1px solid rgba(255,80,80,0.18)',
+          borderRadius: 6,
+        }}>
+          <span style={{ fontWeight: 600, marginRight: 4 }}>Blocked:</span>
+          {blockReason.length > 100 ? blockReason.slice(0, 97) + '…' : blockReason}
+        </div>
+      )}
+
+      {/* Labels */}
+      {labels.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {(task.tags as string[]).map((tag) => (
+          {labels.map((tag) => (
             <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)' }}>{tag}</span>
           ))}
         </div>

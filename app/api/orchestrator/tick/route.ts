@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '../../../lib/supabase'
 
+// database.types.ts was generated before the lifecycle schema + RPCs landed,
+// and writes use `as never` to bypass the stale generated types. `sb` is the
+// same client typed loosely for RPC calls + inserts where TS has no schema.
+const sb = supabase as unknown as {
+  rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>
+}
+
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -46,24 +53,60 @@ export async function GET(req: NextRequest) {
     details: Array<Record<string, unknown>>
   } = { processed: 0, dispatched: 0, errored: 0, stalled_redispatched: 0, details: [] }
 
-  // 1) Process outbox events. Limit per tick is small (6) because the gateway
-  // can't handle >4 parallel Sonnet calls — we saw 42/42 timeouts when all 21
-  // events dispatched simultaneously. With */5 cron, 6 events × 12 ticks/hr
-  // = 72 tasks/hr capacity, which is way more than we'll produce.
-  // BATCH_SIZE = concurrent dispatches. INTER_BATCH_MS = stagger.
+  // 1) Process outbox events via atomic RPC claim. Before 2026-04-18 this was
+  // SELECT-then-UPDATE which raced across concurrent ticks: same row claimed
+  // twice, processed_at updated but the next tick still saw it as pending.
+  // Observed 2026-04-18: same 2 events "processed" across 4+ ticks.
+  // Fix: claim_lifecycle_events() RPC uses FOR UPDATE SKIP LOCKED + sets
+  // processed_at=now() in the same statement. If the downstream dispatch
+  // fails, release_lifecycle_event(id, error) puts it back on the queue.
   const BATCH_SIZE = 4
   const INTER_BATCH_MS = 3000
   const MAX_PER_TICK = 12
 
-  const { data: events, error: qErr } = await supabase
-    .from('task_lifecycle_events')
-    .select('*')
-    .is('processed_at', null)
-    .lt('retry_count', 5)
-    .order('created_at', { ascending: true })
-    .limit(MAX_PER_TICK)
-  if (qErr) {
-    return NextResponse.json({ ok: false, error: qErr.message }, { status: 500 })
+  // Bypass supabase-js for the claim — call the RPC via raw fetch so we know
+  // exactly what URL + key are used, and get a fresh connection every time.
+  // supabase-js with pooled connections produced stale reads: claimed events
+  // showed pre-update processed_at values despite the RPC's SET clause.
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  // Service-role key in Vercel env has literal \n suffix (known issue,
+  // shared with PLAID_TOKEN_ENCRYPTION_KEY). Normalize by stripping all
+  // non-JWT chars after trim.
+  const rawSrk = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  const srk = rawSrk.replace(/\\n/g, '').replace(/[^A-Za-z0-9._-]/g, '').trim()
+  const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
+  const supaKey = srk || anonKey
+
+  const claimResp = await fetch(`${supaUrl}/rest/v1/rpc/claim_lifecycle_events`, {
+    method: 'POST',
+    headers: {
+      'apikey': supaKey,
+      'Authorization': `Bearer ${supaKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      'Cache-Control': 'no-cache',
+    },
+    body: JSON.stringify({ p_limit: MAX_PER_TICK }),
+    cache: 'no-store',
+  })
+  if (!claimResp.ok) {
+    const txt = await claimResp.text()
+    return NextResponse.json({ ok: false, error: `claim failed: ${claimResp.status} ${txt}` }, { status: 500 })
+  }
+  const events = await claimResp.json() as Array<Record<string, unknown>>
+
+  // Diagnostic passthrough: ?debug=1 returns claim result + env fingerprint
+  // and skips dispatch. Useful when something regresses — hit the endpoint
+  // with debug=1 to confirm the RPC sees what we expect before burning agent
+  // invocations. Safe to keep in prod since it requires the CRON_SECRET.
+  if (new URL(req.url).searchParams.get('debug') === '1') {
+    return NextResponse.json({
+      tickVersion: 'v3-raw-fetch-2026-04-18',
+      supabaseUrl: supaUrl,
+      keyRole: supaKey.startsWith('eyJ') ? 'jwt' : 'publishable',
+      claimedEventCount: events.length,
+      claimedEvents: events,
+    })
   }
 
   // Batch the event list into groups of BATCH_SIZE. Within a batch, dispatch
@@ -128,17 +171,19 @@ export async function GET(req: NextRequest) {
         const body = await resp.json().catch(() => ({}))
 
         if (!ok) {
-          await supabase.from('task_lifecycle_events').update({
-            retry_count: ((ev.retry_count as number) ?? 0) + 1,
-            error: `HTTP ${resp.status}: ${JSON.stringify(body).slice(0, 200)}`,
-          } as never).eq('id', ev.id as string)
+          // Release the claim so the event can retry on next tick
+          await sb.rpc('release_lifecycle_event', {
+            p_id: ev.id as string,
+            p_error: `HTTP ${resp.status}: ${JSON.stringify(body).slice(0, 400)}`,
+          })
           results.errored++
           results.details.push({ task_id: taskId, to_stage: toStage, error: `HTTP ${resp.status}` })
           return
         }
 
+        // Finalize the claim with real dispatch_run_id (claim RPC used a
+        // placeholder). processed_at is already set by the RPC.
         await supabase.from('task_lifecycle_events').update({
-          processed_at: new Date().toISOString(),
           processed_by: 'orchestrator-tick',
           dispatch_run_id: runId,
         } as never).eq('id', ev.id as string)
@@ -162,10 +207,11 @@ export async function GET(req: NextRequest) {
         results.details.push({ task_id: taskId, to_stage: toStage, agent: targetAgent, run_id: runId })
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e)
-        await supabase.from('task_lifecycle_events').update({
-          retry_count: ((ev.retry_count as number) ?? 0) + 1,
-          error: msg.slice(0, 500),
-        } as never).eq('id', ev.id as string)
+        // Release the claim so it can retry (release RPC also bumps retry_count)
+        await sb.rpc('release_lifecycle_event', {
+          p_id: ev.id as string,
+          p_error: msg.slice(0, 500),
+        })
         results.errored++
         results.details.push({ task_id: taskId, error: msg.slice(0, 120) })
       }
@@ -196,22 +242,38 @@ export async function GET(req: NextRequest) {
       .lt('dispatch_count', 10)  // safety: stop after 10 dispatches
       .limit(10)
     for (const t of (stalled ?? []) as Array<Record<string, unknown>>) {
-      await supabase.from('task_lifecycle_events').insert({
-        task_id: t.id,
-        project_id: t.project_id,
-        from_stage: t.status,
-        to_stage: t.status,
-        assigned_agent: t.agent,
-        payload: { reason: rule.reason, task_name: t.name },
-      } as never)
-      await supabase.from('tasks').update({
-        last_activity_at: new Date().toISOString(),
-      } as never).eq('id', t.id as string)
-      results.stalled_redispatched++
+      // Dedup: a partial unique index on (task_id, to_stage) WHERE
+      // processed_at IS NULL prevents a duplicate pending row. If one exists
+      // we silently skip; otherwise insert a fresh stall event.
+      const { data: ins, error: insErr } = await (supabase
+        .from('task_lifecycle_events') as any)
+        .insert({
+          task_id: t.id,
+          project_id: t.project_id,
+          from_stage: t.status,
+          to_stage: t.status,
+          assigned_agent: t.agent,
+          payload: { reason: rule.reason, task_name: t.name },
+        })
+        .select('id')
+      if (!insErr && ins && ins.length > 0) {
+        await supabase.from('tasks').update({
+          last_activity_at: new Date().toISOString(),
+        } as never).eq('id', t.id as string)
+        results.stalled_redispatched++
+      }
+      // If insErr is a unique-violation (23505) we treat as already-queued
+      // and move on without bumping last_activity_at.
     }
   }
 
-  return NextResponse.json({ ok: true, ranAt: new Date().toISOString(), ...results })
+  return NextResponse.json({
+    ok: true,
+    tickVersion: 'v2-rpc-claim-2026-04-18',
+    ranAt: new Date().toISOString(),
+    pendingBefore: (events as unknown[] | null)?.length ?? 0,
+    ...results,
+  })
 
   async function markProcessed(eventId: string, extra: Record<string, unknown>) {
     await supabase.from('task_lifecycle_events').update({
