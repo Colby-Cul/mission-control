@@ -91,3 +91,144 @@ export function productsFor(product: 'bank' | 'brokerage'): Products[] {
 }
 
 export const PLAID_COUNTRIES: CountryCode[] = ['US' as CountryCode]
+
+// ── Webhook URL ──────────────────────────────────────────────────────────────
+// The URL Plaid POSTs to when transactions/items change. Prefer PLAID_WEBHOOK_URL
+// (set once in Vercel env), fall back to VERCEL_URL, final fallback to the
+// known prod alias. Must be HTTPS and publicly reachable.
+
+export function getWebhookUrl(): string {
+  const explicit = process.env.PLAID_WEBHOOK_URL?.trim()
+  if (explicit) return explicit
+  const vercel = process.env.VERCEL_URL?.trim()
+  if (vercel) return `https://${vercel.replace(/^https?:\/\//, '')}/api/plaid/webhook`
+  return 'https://mc-merge-v7.vercel.app/api/plaid/webhook'
+}
+
+// ── Shared transactions sync ─────────────────────────────────────────────────
+// Used by: initial exchange, webhook handler (SYNC_UPDATES_AVAILABLE), safety
+// cron. Pulls from /transactions/sync with the stored cursor, paginates until
+// has_more=false, upserts into financial_transactions, updates cursor +
+// last_synced_at. Returns { added, modified, removed } counts.
+
+export interface PlaidItemRow {
+  id: string
+  access_token_enc: Buffer
+  account_scope: string
+  entity_id: string | null
+  cursor: string | null
+}
+
+export interface SyncResult {
+  added: number
+  modified: number
+  removed: number
+  error?: string
+}
+
+export async function syncTransactionsForItem(
+  client: PlaidApi,
+  item: PlaidItemRow,
+  supa: {
+    from: (table: string) => {
+      upsert: (rows: unknown, opts?: unknown) => Promise<{ error: { message: string } | null }>
+      update: (row: unknown) => { eq: (col: string, val: string) => Promise<{ error: { message: string } | null }> }
+      delete: () => { in: (col: string, vals: string[]) => Promise<{ error: { message: string } | null }> }
+    }
+  },
+): Promise<SyncResult> {
+  let accessToken: string
+  try {
+    accessToken = decryptToken(item.access_token_enc)
+  } catch (e) {
+    return { added: 0, modified: 0, removed: 0, error: `decrypt failed: ${e instanceof Error ? e.message : String(e)}` }
+  }
+
+  let cursor = item.cursor ?? undefined
+  let added = 0
+  let modified = 0
+  let removed = 0
+  const upsertBatch: Array<Record<string, unknown>> = []
+  const modifyBatch: Array<Record<string, unknown>> = []
+  const removedIds: string[] = []
+
+  try {
+    for (let i = 0; i < 20; i++) {
+      const resp = await client.transactionsSync({
+        access_token: accessToken,
+        cursor,
+        count: 500,
+      })
+      cursor = resp.data.next_cursor
+      for (const t of resp.data.added ?? []) {
+        upsertBatch.push({
+          id: t.transaction_id,
+          account_id: t.account_id,
+          plaid_transaction_id: t.transaction_id,
+          date: t.date,
+          datetime: t.datetime ?? null,
+          name: t.name,
+          merchant_name: t.merchant_name ?? null,
+          amount: t.amount,
+          currency_code: t.iso_currency_code ?? 'USD',
+          category: t.category ?? null,
+          personal_finance_category: t.personal_finance_category?.primary ?? null,
+          pending: t.pending ?? false,
+          account_scope: item.account_scope,
+          entity_id: item.entity_id,
+        })
+      }
+      for (const t of resp.data.modified ?? []) {
+        modifyBatch.push({
+          id: t.transaction_id,
+          account_id: t.account_id,
+          plaid_transaction_id: t.transaction_id,
+          date: t.date,
+          datetime: t.datetime ?? null,
+          name: t.name,
+          merchant_name: t.merchant_name ?? null,
+          amount: t.amount,
+          currency_code: t.iso_currency_code ?? 'USD',
+          category: t.category ?? null,
+          personal_finance_category: t.personal_finance_category?.primary ?? null,
+          pending: t.pending ?? false,
+          account_scope: item.account_scope,
+          entity_id: item.entity_id,
+        })
+      }
+      for (const r of resp.data.removed ?? []) {
+        if (r.transaction_id) removedIds.push(r.transaction_id)
+      }
+      if (!resp.data.has_more) break
+    }
+  } catch (e) {
+    return { added, modified, removed, error: `transactionsSync failed: ${e instanceof Error ? e.message : String(e)}` }
+  }
+
+  added = upsertBatch.length
+  modified = modifyBatch.length
+  removed = removedIds.length
+
+  if (upsertBatch.length > 0) {
+    const { error } = await supa.from('financial_transactions').upsert(upsertBatch, { onConflict: 'id' })
+    if (error) console.warn('[syncTxns] upsert added failed', error.message)
+  }
+  if (modifyBatch.length > 0) {
+    const { error } = await supa.from('financial_transactions').upsert(modifyBatch, { onConflict: 'id' })
+    if (error) console.warn('[syncTxns] upsert modified failed', error.message)
+  }
+  if (removedIds.length > 0) {
+    const { error } = await supa.from('financial_transactions').delete().in('id', removedIds)
+    if (error) console.warn('[syncTxns] delete removed failed', error.message)
+  }
+
+  const { error: updErr } = await supa.from('plaid_items').update({
+    cursor: cursor ?? null,
+    last_synced_at: new Date().toISOString(),
+    error_code: null,
+    error_message: null,
+  }).eq('id', item.id)
+  if (updErr) console.warn('[syncTxns] plaid_items update failed', updErr.message)
+
+  return { added, modified, removed }
+}

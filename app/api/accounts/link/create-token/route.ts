@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPlaidClient, plaidConfigured, productsFor, PLAID_COUNTRIES } from '../../../../lib/plaid'
+import { getPlaidClient, plaidConfigured, productsFor, PLAID_COUNTRIES, getWebhookUrl } from '../../../../lib/plaid'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -45,6 +45,10 @@ export async function POST(req: NextRequest) {
       products,
       country_codes: PLAID_COUNTRIES,
       language: 'en',
+      // Webhook: Plaid POSTs here when transactions change, item errors, etc.
+      // Without this set, v6's items went 8+ days stale because Plaid had
+      // nowhere to push updates. See /api/plaid/webhook route.
+      webhook: getWebhookUrl(),
     })
     return NextResponse.json({
       ok: true,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
-import { getPlaidClient, plaidConfigured, encryptToken, productsFor } from '../../../../lib/plaid'
+import { getPlaidClient, plaidConfigured, encryptToken, productsFor, getWebhookUrl } from '../../../../lib/plaid'
 import { supabase } from '../../../../lib/supabase'
 import type { AccountBase, InstitutionsGetByIdResponse, Transaction } from 'plaid'
 
@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
   // 3) Insert plaid_items row (encrypted token)
   const itemsRowId = randomUUID()
   const enc = encryptToken(accessToken)
+  const webhookUrl = getWebhookUrl()
   const { error: insErr } = await supabase.from('plaid_items').insert({
     id: itemsRowId,
     institution_id: institutionId,
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     account_scope: scope,
     entity_id: entityId,
     products: productsFor(product) as unknown as string[],
+    webhook_url: webhookUrl,
     last_synced_at: new Date().toISOString(),
   } as never)
   if (insErr) {
