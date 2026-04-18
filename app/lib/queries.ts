@@ -851,19 +851,24 @@ export async function getPortfolioAllocation() {
 
 /** Monthly inflow/outflow totals for the last N months from
  *  financial_transactions. Plaid convention: positive = outflow, negative
- *  = inflow. We flip signs so the caller gets intuitive positives. */
+ *  = inflow. Excludes TRANSFER_IN / TRANSFER_OUT so inter-account
+ *  movement doesn't double-count against real revenue/expenses. */
 export async function getMonthlyCashFlow(months = 12) {
   const cutoff = new Date()
   cutoff.setMonth(cutoff.getMonth() - months)
   const cutoffStr = cutoff.toISOString().slice(0, 10)
   const { data } = await supabase
     .from('financial_transactions')
-    .select('date, amount')
+    .select('date, amount, personal_finance_category')
     .gte('date', cutoffStr)
-  const list = (data ?? []) as Array<{ date: string | null; amount: number | null }>
+  const list = (data ?? []) as Array<{ date: string | null; amount: number | null; personal_finance_category: string | null }>
+  const TRANSFER_CATS = new Set(['TRANSFER_IN', 'TRANSFER_OUT'])
   const byMonth = new Map<string, { inflow: number; outflow: number; net: number; count: number }>()
   for (const t of list) {
     if (!t.date) continue
+    // Skip internal transfers — they net to zero across accounts and
+    // falsely inflate both inflow + outflow totals.
+    if (t.personal_finance_category && TRANSFER_CATS.has(t.personal_finance_category)) continue
     const key = t.date.slice(0, 7)  // YYYY-MM
     const amt = Number(t.amount ?? 0)
     const cur = byMonth.get(key) || { inflow: 0, outflow: 0, net: 0, count: 0 }

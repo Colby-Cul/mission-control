@@ -12,7 +12,6 @@ import {
   getRecentTransactions,
   getNetWorthFromGraph,
   getPortfolioAllocation,
-  getMonthlyCashFlow,
   getEntityHeatMap,
   getTopRevenueEntities,
 } from '../lib/queries'
@@ -22,7 +21,6 @@ import { SpecCard } from '../_components/SpecCard'
 import ComingSoon from '../_components/ComingSoon'
 import {
   PortfolioDonut,
-  CashFlowStrip,
   EntityHeatMap,
   TopRevenueEntities,
   RiskFlags,
@@ -237,13 +235,11 @@ export default async function FinancePage() {
   // Each query is wrapped so a failure shows a graceful empty-state tile
   // instead of 500ing the whole dashboard.
   let portfolio: Awaited<ReturnType<typeof getPortfolioAllocation>> = { buckets: [], totalAssets: 0, totalDebt: 0, netWorth: 0 }
-  let cashFlow12mo: Awaited<ReturnType<typeof getMonthlyCashFlow>> = []
   let heatMap: Awaited<ReturnType<typeof getEntityHeatMap>> = []
   let topRevenue: Awaited<ReturnType<typeof getTopRevenueEntities>> = []
-  try { portfolio    = await getPortfolioAllocation() } catch {}
-  try { cashFlow12mo = await getMonthlyCashFlow(12) } catch {}
-  try { heatMap      = await getEntityHeatMap() } catch {}
-  try { topRevenue   = await getTopRevenueEntities(5, 90) } catch {}
+  try { portfolio  = await getPortfolioAllocation() } catch {}
+  try { heatMap    = await getEntityHeatMap() } catch {}
+  try { topRevenue = await getTopRevenueEntities(5, 90) } catch {}
 
   // TODO: wire achievements to achievements table with dashboard_key='finance'
   // let achievements: any[] = []
@@ -4220,34 +4216,26 @@ ___ACCOUNTS_GRID___
         animationSlot={<HeroCanvas />}
       />
 
-      {/* ═══ EMPIRE VIEW — macro widgets (new, additive) ═══════════════
-          Portfolio Donut, 12-mo Cash Flow Strip, Entity Heat Map, Top
-          Revenue, Risk Flags — slotted between the hero and the existing
-          detail sections. Everything below this block is the original
-          dashboard preserved intact. */}
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '28px 24px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <CashFlowStrip months={cashFlow12mo} />
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 380px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
-          <PortfolioDonut
-            buckets={portfolio.buckets}
-            totalAssets={portfolio.totalAssets}
-            totalDebt={portfolio.totalDebt}
-            netWorth={portfolio.netWorth}
-          />
-          <EntityHeatMap entities={heatMap} />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
-          <TopRevenueEntities entities={topRevenue} />
-          <RiskFlags entities={heatMap} />
-        </div>
-      </div>
-
-      {/* bodyContent BEFORE Crypto split — Achievements (directly under hero),
-          TRUE NET WORTH, Business Entities, Real Estate Portfolio.
-          QuickBooks Balance Sheet moved to entity pages (/companies/[slug]). */}
+      {/* bodyContent BEFORE Crypto split — Achievements (directly under hero,
+          per directive), TRUE NET WORTH, Business Entities, Real Estate
+          Portfolio. QuickBooks Balance Sheet moved to entity pages
+          (/companies/[slug]). */}
       <div dangerouslySetInnerHTML={{ __html: bodyBeforeCrypto }} />
+
+      {/* ═══ EMPIRE VIEW — macro widgets (additive, same design system) ═══
+          Portfolio Allocation, Entity Heat Map, Top Revenue, Risk Flags.
+          Rendered with SpecCard / section-header so they match the rest
+          of the page. Flow-of-funds isn't repeated here — legacy 'Flow
+          Dashboard' below already owns monthly inflow/outflow. */}
+      <PortfolioDonut
+        buckets={portfolio.buckets}
+        totalAssets={portfolio.totalAssets}
+        totalDebt={portfolio.totalDebt}
+        netWorth={portfolio.netWorth}
+      />
+      <EntityHeatMap entities={heatMap} />
+      <TopRevenueEntities entities={topRevenue} />
+      <RiskFlags entities={heatMap} />
 
       {/* Coinbase Crypto Holdings — sits with the real-asset rollup (after Real Estate) */}
       <section style={{ marginBottom: 28 }}>
