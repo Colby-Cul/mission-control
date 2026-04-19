@@ -160,7 +160,10 @@ function normalizeAcpSession(session, index) {
 }
 
 function normalizeProject(project, sessions) {
-  const matchedSessions = sessions.filter((session) => session.projectId === project.id);
+  // Match from global acpSessions first; fall back to sessions embedded in the project object
+  const globalMatches = sessions.filter((session) => session.projectId === project.id);
+  const embeddedSessions = Array.isArray(project?.sessions) ? project.sessions.map(normalizeAcpSession) : [];
+  const matchedSessions = globalMatches.length > 0 ? globalMatches : embeddedSessions;
   const derivedModels = Array.from(new Set(matchedSessions.flatMap((session) => session.modelsUsed || []))).filter(Boolean);
   const derivedAgents = Array.from(new Set(matchedSessions.map((session) => session.agent))).filter(Boolean);
   const totalCost = Number(project?.totalCost);
