@@ -20,6 +20,25 @@ const Layout = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [auditReport, setAuditReport] = useState(null);
+  const [auditOpen, setAuditOpen] = useState(false);
+
+  // Load audit report
+  useEffect(() => {
+    const loadAudit = async () => {
+      try {
+        const base = import.meta.env.BASE_URL || '/';
+        const res = await fetch(`${base}audit-report.json?t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAuditReport(data);
+        }
+      } catch (e) {
+        // audit report not available
+      }
+    };
+    loadAudit();
+  }, []);
 
   // Grouped sidebar state
   const [expandedGroups, setExpandedGroups] = useState(() => {
@@ -305,6 +324,128 @@ const Layout = () => {
             </kbd>
           </button>
           
+          {/* Audit Health Badge */}
+          {auditReport && (
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => setAuditOpen(o => !o)}
+                title={`System Health: ${auditReport.healthScore}%`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5px 10px",
+                  background: auditReport.hasIssues ? `${C.red}22` : `${C.green}22`,
+                  border: `1px solid ${auditReport.hasIssues ? C.red : C.green}44`,
+                  borderRadius: 8,
+                  color: auditReport.hasIssues ? C.red : C.green,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: auditReport.hasIssues ? C.red : C.green,
+                  flexShrink: 0,
+                }} />
+                {auditReport.healthScore}%
+              </button>
+              {auditOpen && (
+                <div
+                  onClick={() => setAuditOpen(false)}
+                  style={{
+                    position: "fixed",
+                    inset: 0,
+                    zIndex: 99,
+                  }}
+                />
+              )}
+              {auditOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: 42,
+                  right: 0,
+                  width: 360,
+                  background: C.card,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 12,
+                  padding: 16,
+                  zIndex: 100,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <span style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      background: auditReport.hasIssues ? C.red : C.green,
+                      flexShrink: 0,
+                    }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>System Audit</span>
+                    <span style={{
+                      marginLeft: "auto",
+                      fontSize: 18,
+                      fontWeight: 800,
+                      color: auditReport.hasIssues ? C.red : C.green,
+                    }}>
+                      {auditReport.healthScore}%
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { label: "Projects", value: auditReport.summary.totalProjects },
+                      { label: "Tasks", value: auditReport.summary.totalTasks },
+                      { label: "Valid Tasks", value: auditReport.summary.validTasks, ok: true },
+                      { label: "Issues", value: auditReport.summary.issueCount, warn: auditReport.summary.issueCount > 0 },
+                    ].map(item => (
+                      <div key={item.label} style={{
+                        background: C.surface,
+                        borderRadius: 8,
+                        padding: "8px 10px",
+                      }}>
+                        <div style={{ fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>{item.label}</div>
+                        <div style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: item.warn ? C.red : item.ok ? C.green : C.text,
+                        }}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {auditReport.staleProjects.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: C.amber, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>⚠ Stale Projects</div>
+                      {auditReport.staleProjects.map(p => (
+                        <div key={p.projectId} style={{ fontSize: 12, color: C.muted, padding: "3px 0" }}>
+                          {p.projectName} — {p.daysSinceActivity ? `${p.daysSinceActivity}d inactive` : "no activity"}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {auditReport.invalidBlockerTasks.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: C.red, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>✕ Blocker Issues ({auditReport.invalidBlockerTasks.length})</div>
+                      {auditReport.invalidBlockerTasks.slice(0, 3).map(t => (
+                        <div key={t.taskId} style={{ fontSize: 11, color: C.muted, padding: "2px 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          [{t.agent}] {t.task?.substring(0, 50) || "(no description)"}
+                        </div>
+                      ))}
+                      {auditReport.invalidBlockerTasks.length > 3 && (
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>+{auditReport.invalidBlockerTasks.length - 3} more</div>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 10, color: C.muted, marginTop: 8, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+                    Last run: {new Date(auditReport.timestamp).toLocaleString()}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Notifications */}
           <div style={{ position: "relative" }}>
             <button 
