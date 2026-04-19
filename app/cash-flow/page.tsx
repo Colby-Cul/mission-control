@@ -11,7 +11,7 @@ import HeroCanvas from './HeroCanvas'
 import {
   getAccounts,
   accountSignedBalance,
-  getTransactions30d,
+  getCashFlowTxns30d,
   getTopExpenseCategories,
   getNetWorthProjection,
   getRecurringCharges,
@@ -39,27 +39,25 @@ const DEFAULT_ACHIEVEMENTS = [
 export default async function CashFlowPage() {
   const [accounts, txns30d, topExpenses, projection, recurring, profile] = await Promise.allSettled([
     getAccounts(),
-    getTransactions30d(),
+    getCashFlowTxns30d(),  // already excludes transfers + CC autopay receipts
     getTopExpenseCategories(5),
     getNetWorthProjection().catch(() => ({ past: [], forecast: [] })),
     getRecurringCharges().catch(() => []),
     getUserProfile().catch(() => null),
   ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : null)))
 
-  // Plaid sign convention: negative amount = money coming IN (income/deposits)
-  // positive amount = money going OUT (expenses/payments).
-  // EXCLUDE TRANSFER_IN / TRANSFER_OUT so inter-account movement doesn't
-  // inflate both sides of the ledger (e.g. moving $10k from checking to
-  // savings would otherwise count as $10k income + $10k expense).
-  const TRANSFER_CATS = new Set(['TRANSFER_IN', 'TRANSFER_OUT'])
-  const realTxns = (txns30d as any[]).filter((t: any) =>
-    !TRANSFER_CATS.has(String(t.personal_finance_category ?? '').toUpperCase())
-  )
+  // Plaid sign convention: negative = money IN, positive = money OUT.
+  // getCashFlowTxns30d already strips:
+  //   - TRANSFER_IN / TRANSFER_OUT (inter-account + intercompany wires)
+  //   - Credit-account transactions with amount < 0 (receiving side of
+  //     a checking→CC autopay — otherwise the $20k Amex payment appears
+  //     as $20k outflow on checking AND $20k inflow on the card).
+  const realTxns = (Array.isArray(txns30d) ? txns30d : []) as Array<Record<string, unknown>>
   const inflow30 = realTxns
-    .filter((t: any) => Number(t.amount) < 0)
+    .filter(t => Number(t.amount) < 0)
     .reduce((s, t) => s + Math.abs(Number(t.amount)), 0)
   const outflow30 = realTxns
-    .filter((t: any) => Number(t.amount) > 0)
+    .filter(t => Number(t.amount) > 0)
     .reduce((s, t) => s + Number(t.amount), 0)
   const netFlow = inflow30 - outflow30
 

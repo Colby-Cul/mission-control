@@ -21,6 +21,7 @@ import {
   getEntityRevenue30d,
   getEntityExpenses30d,
   getEntityDocumentsByEntityId,
+  getEntityOwnershipPct,
 } from '../../lib/queries'
 import {
   getQbConnection,
@@ -68,6 +69,17 @@ export default async function CompanyPage({ params }: Props) {
   let entity: any = null
   try { entity = await getEntityBySlug(slug) } catch {}
 
+  // ── Derive real ownership % from edges (parent → this entity) ─
+  // entity_ownership.ownership_pct is often stale/wrong; edges are the source of truth.
+  let entityOwnershipPct: number | null = null
+  try { entityOwnershipPct = await getEntityOwnershipPct(entity?.id ?? '') } catch {}
+
+  const ownershipDisplay = entityOwnershipPct != null
+    ? entityOwnershipPct + '%'
+    : entity?.ownership_pct != null
+    ? entity.ownership_pct + '%'
+    : '—'
+
   // ── Render legal-only view ────────────────────────────────────
   if (entity && LEGAL_ONLY_NAMES.includes(entity.entity_name)) {
     const legalHtml = `<!DOCTYPE html>
@@ -106,7 +118,7 @@ export default async function CompanyPage({ params }: Props) {
       <div class="info-grid">
         <div class="info-item"><label>Entity Type</label><value>${entity.entity_type ?? '—'}</value></div>
         <div class="info-item"><label>State of Formation</label><value>${entity.state ?? '—'}</value></div>
-        <div class="info-item"><label>Ownership</label><value>${entity.ownership_pct != null ? entity.ownership_pct + '%' : '100%'}</value></div>
+        <div class="info-item"><label>Ownership</label><value>${ownershipDisplay}</value></div>
         <div class="info-item"><label>Status</label><value>${entity.status ?? 'Active'}</value></div>
         ${entity.formation_date ? `<div class="info-item"><label>Formed</label><value>${entity.formation_date}</value></div>` : ''}
         ${entity.owned_by ? `<div class="info-item"><label>Member(s)</label><value>${entity.owned_by}</value></div>` : ''}

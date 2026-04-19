@@ -34,8 +34,19 @@ export default async function CompaniesPage() {
   let entities: any[] = []
   try { entities = await getEntities() } catch {}
 
-  let edgeCount = 0
-  try { edgeCount = (await getOwnershipEdges()).length } catch {}
+  let allEdges: any[] = []
+  try { allEdges = await getOwnershipEdges() } catch {}
+  const edgeCount = allEdges.length
+
+  // Build map: childEntityId → total ownership % from parent edges
+  // Only count entity-type edges (not property edges)
+  const ownershipByChild: Record<string, number> = {}
+  for (const edge of allEdges) {
+    if (edge.child_type === 'property') continue
+    const childId = edge.child_entity_id
+    const pct = Number(edge.ownership_pct) || 0
+    ownershipByChild[childId] = (ownershipByChild[childId] ?? 0) + pct
+  }
 
   // Combined revenue from last 30d transactions (for KPI card)
   let txns: any[] = []
@@ -314,7 +325,12 @@ export default async function CompaniesPage() {
                 </div>` : ''}
                 ${e.filing_deadlines_next ? `<div style="font-size:10px;color:#f59e0b;margin-bottom:8px;">📅 Next filing: ${e.filing_deadlines_next}</div>` : ''}
                 <div class="entity-footer">
-                  <span class="entity-ownership">${e.ownership_pct != null ? e.ownership_pct + '% owned' : '100% owned'}</span>
+                  <span class="entity-ownership">${(() => {
+                    const edgePct = ownershipByChild[e.id]
+                    if (edgePct != null) return edgePct + '% owned'
+                    if (e.ownership_pct != null) return e.ownership_pct + '% owned'
+                    return '—'
+                  })()}</span>
                   <span class="entity-arrow">→</span>
                 </div>
               </a>`
@@ -354,7 +370,12 @@ export default async function CompaniesPage() {
               <div class="entity-type-state">${lSub || ((e.entity_type ?? '—') + ' · ' + (e.state ?? '—'))}</div>
               ${e.notes ? `<div class="entity-notes">${e.notes}</div>` : ''}
               <div class="entity-footer">
-                <span class="entity-ownership">${e.ownership_pct != null ? e.ownership_pct + '% owned' : '100% owned'}</span>
+                <span class="entity-ownership">${(() => {
+                  const edgePct = ownershipByChild[e.id]
+                  if (edgePct != null) return edgePct + '% owned'
+                  if (e.ownership_pct != null) return e.ownership_pct + '% owned'
+                  return '—'
+                })()}</span>
                 <a href="/companies/${e.slug ?? ''}" style="font-size:10px;color:var(--dim);text-decoration:none;">View entity info →</a>
               </div>
             </div>`

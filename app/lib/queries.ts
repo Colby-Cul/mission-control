@@ -539,17 +539,78 @@ export async function getTransactions30d() {
   return data ?? []
 }
 
-export async function getTopExpenseCategories(limit = 5) {
-  // Returns aggregated expense categories from last 30 days. Excludes
-  // TRANSFER_IN / TRANSFER_OUT — those are inter-account movements, not
-  // real expenses, and lumping them into 'top expenses' misleads the user
-  // (e.g. a $30k checking→savings transfer showing as an expense line).
+/**
+ * getCashFlowTxns30d — 30-day transactions cleaned of the noise that
+ * distorts household cash-flow math. Removes THREE flavors of double-
+ * counting the raw Plaid feed produces:
+ *
+ *   1. TRANSFER_IN / TRANSFER_OUT — inter-account moves + intercompany
+ *      wires ("XOME LOAN REPAYMENT TO CULBERTSON").
+ *
+ *   2. Credit-account transactions with amount < 0 — the receiving side
+ *      of a checking→CC autopay. Otherwise a $20k Amex payment shows as
+ *      $20k outflow on checking AND $20k inflow on the card.
+ *
+ *   3. Depository-side CC autopays — when checking pays Amex/Citi/etc,
+ *      Plaid categorizes it as LOAN_PAYMENTS. But the underlying card
+ *      purchases (groceries, office supplies, travel) already show as
+ *      their own categorized positive amounts on the card. Counting
+ *      both doubles the outflow. Heuristic: LOAN_PAYMENTS + positive
+ *      amount + the name/merchant matches a CC issuer → drop.
+ *      Real debt payments (mortgage servicer, auto loan) stay.
+ *
+ * Use this for all cash-flow KPIs. getTransactions30d is still
+ * available for ledger views that need every raw row.
+ */
+const CC_AUTOPAY_PATTERNS = [
+  /AMERICAN\s*EXPRESS/i,
+  /AMEX/i,
+  /\bCHASE\b/i,
+  /\bCITI\b/i,
+  /CAPITAL\s*ONE/i,
+  /DISCOVER\s*(CARD|BANK)/i,
+  /CREDIT\s*CARD\s*(AUTOPAY|PAYMENT|PMT)/i,
+  /AUTOPAY\s*PAYMENT/i,
+  /BANK\s*OF\s*AMERICA\s*CREDIT/i,
+]
+function isCreditCardAutopay(name: string | null | undefined, merchant: string | null | undefined): boolean {
+  const s = `${name ?? ''} ${merchant ?? ''}`.trim()
+  if (!s) return false
+  return CC_AUTOPAY_PATTERNS.some(re => re.test(s))
+}
+
+export async function getCashFlowTxns30d() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const [{ data: txns }, { data: accts }] = await Promise.all([
+    supabase.from('financial_transactions').select('*').gte('date', since),
+    supabase.from('financial_accounts').select('id, type'),
+  ])
+  const acctType = new Map<string, string>()
+  ;(accts ?? []).forEach((a: { id: string; type: string | null }) => { if (a.type) acctType.set(a.id, a.type) })
   const TRANSFER_CATS = new Set(['TRANSFER_IN', 'TRANSFER_OUT'])
-  const txns = await getTransactions30d()
+  return ((txns ?? []) as Array<Record<string, unknown>>).filter(t => {
+    const cat = String(t.personal_finance_category ?? '').toUpperCase()
+    if (TRANSFER_CATS.has(cat)) return false
+    const type = acctType.get(String(t.account_id ?? ''))
+    const amt = Number(t.amount ?? 0)
+    // Drop the receiving side of a CC autopay / refund on a credit acct.
+    if (type === 'credit' && amt < 0) return false
+    // Drop the paying side of a CC autopay on a depository acct — the
+    // underlying purchases already show on the card side categorized.
+    if (type !== 'credit' && cat === 'LOAN_PAYMENTS' && amt > 0) {
+      if (isCreditCardAutopay(t.name as string | null, t.merchant_name as string | null)) return false
+    }
+    return true
+  })
+}
+
+export async function getTopExpenseCategories(limit = 5) {
+  // Uses getCashFlowTxns30d so transfers + CC autopay receipts don't show
+  // up as expense categories (was putting "TRANSFER OUT" in the top 5).
+  const txns = await getCashFlowTxns30d()
   const catMap: Record<string, number> = {}
   txns.forEach((t: Record<string, unknown>) => {
     const cat = String(t.personal_finance_category ?? 'OTHER').toUpperCase()
-    if (TRANSFER_CATS.has(cat)) return
     const amt = Number(t.amount ?? 0)
     if (amt > 0) catMap[cat] = (catMap[cat] ?? 0) + amt
   })
@@ -1135,6 +1196,21 @@ export async function getOwnershipEdges() {
     .order('created_at', { ascending: true })
   if (error) return []
   return data ?? []
+}
+
+/**
+ * Sum of parent ownership_pct for a given entity (from edges where it is the child).
+ * Returns null if no edges exist so callers can fall back to entity_ownership.ownership_pct.
+ */
+export async function getEntityOwnershipPct(entityId: string): Promise<number | null> {
+  if (!entityId) return null
+  const { data, error } = await supabase
+    .from('entity_ownership_edges')
+    .select('ownership_pct')
+    .eq('child_entity_id', entityId)
+    .neq('child_type', 'property')
+  if (error || !data || data.length === 0) return null
+  return data.reduce((sum: number, e: any) => sum + Number(e.ownership_pct), 0)
 }
 
 /** Ownership edges for a specific property (parents only) */
