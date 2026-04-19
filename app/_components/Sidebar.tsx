@@ -70,10 +70,13 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Xome Home is intentionally NOT a pinned shortcut — it's meant to be the
+    // template for every operating-entity dashboard, not the flagship. All
+    // companies live under /companies and each gets its own /companies/[slug]
+    // using the same Xome-style layout.
     id: 'companies', label: 'Companies', icon: <Building2 size={18} />,
     children: [
-      { label: 'All Companies', icon: <Building2 size={15} />,  href: '/companies' },
-      { label: 'Xome Home',     icon: <Building2 size={15} />,  href: '/companies/xome-home' },
+      { label: 'All Companies', icon: <Building2 size={15} />, href: '/companies' },
     ],
   },
   {

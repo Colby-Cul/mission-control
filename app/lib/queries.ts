@@ -72,14 +72,22 @@ export async function getAccounts() {
   return data ?? []
 }
 
+/** Accounts linked to an entity. Tolerates both id conventions in the DB:
+ *  financial_accounts.entity_id is usually "ent-<slug>" while the page
+ *  often passes the bare slug. Try both. */
 export async function getAccountsByEntityId(entityId: string) {
-  const { data, error } = await supabase
-    .from('financial_accounts')
-    .select('*')
-    .eq('entity_id', entityId)
-    .order('balance_current', { ascending: false })
-  if (error) throw error
-  return data ?? []
+  const candidates = entityId.startsWith('ent-')
+    ? [entityId, entityId.replace(/^ent-/, '')]
+    : [entityId, `ent-${entityId}`]
+  for (const id of candidates) {
+    const { data } = await supabase
+      .from('financial_accounts')
+      .select('*')
+      .eq('entity_id', id)
+      .order('balance_current', { ascending: false })
+    if (data && data.length > 0) return data
+  }
+  return []
 }
 
 /** Slim account rows for the Entity Org Chart leaf layer. */
@@ -611,28 +619,48 @@ export async function getDoneTasksCount(): Promise<number> {
 }
 
 // ═══ Per-entity revenue / expense (last 30 days) ════════════════
+/** Routes through financial_accounts → transactions because
+ *  financial_transactions.entity_id is ~98% null. Accounts know their
+ *  entity_id reliably. Excludes TRANSFER_IN/OUT so inter-account moves
+ *  don't inflate either side. */
 export async function getEntityRevenue30d(entityId: string): Promise<number> {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data, error } = await supabase
-    .from('financial_transactions')
-    .select('amount')
-    .eq('entity_id', entityId)
-    .lt('amount', 0)                // negative = money in (Plaid convention)
-    .gte('date', since)
-  if (error) return 0
-  return (data ?? []).reduce((sum: number, t: any) => sum + Math.abs(Number(t.amount ?? 0)), 0)
+  return sumEntityTxns30d(entityId, 'inflow')
+}
+export async function getEntityExpenses30d(entityId: string): Promise<number> {
+  return sumEntityTxns30d(entityId, 'outflow')
 }
 
-export async function getEntityExpenses30d(entityId: string): Promise<number> {
+const _TRANSFER_CATS = ['TRANSFER_IN', 'TRANSFER_OUT']
+
+async function sumEntityTxns30d(entityId: string, dir: 'inflow' | 'outflow'): Promise<number> {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data, error } = await supabase
-    .from('financial_transactions')
-    .select('amount')
-    .eq('entity_id', entityId)
-    .gt('amount', 0)                // positive = money out (Plaid convention)
-    .gte('date', since)
-  if (error) return 0
-  return (data ?? []).reduce((sum: number, t: any) => sum + Number(t.amount ?? 0), 0)
+  const accounts = await getAccountsByEntityId(entityId)
+  const accountIds = (accounts as Array<{ id?: string }>).map(a => a.id).filter((x): x is string => !!x)
+
+  let rows: Array<{ amount: number | null; personal_finance_category: string | null }> = []
+  if (accountIds.length > 0) {
+    const { data } = await supabase
+      .from('financial_transactions')
+      .select('amount, personal_finance_category')
+      .in('account_id', accountIds)
+      .gte('date', since)
+    rows = (data ?? []) as typeof rows
+  } else {
+    const { data } = await supabase
+      .from('financial_transactions')
+      .select('amount, personal_finance_category')
+      .eq('entity_id', entityId)
+      .gte('date', since)
+    rows = (data ?? []) as typeof rows
+  }
+
+  return rows.reduce((sum, t) => {
+    if (t.personal_finance_category && _TRANSFER_CATS.includes(t.personal_finance_category)) return sum
+    const amt = Number(t.amount ?? 0)
+    if (dir === 'inflow'  && amt < 0) return sum + Math.abs(amt)
+    if (dir === 'outflow' && amt > 0) return sum + amt
+    return sum
+  }, 0)
 }
 
 export async function getEntityDocumentsByEntityId(entityId: string) {
