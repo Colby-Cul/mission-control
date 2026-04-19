@@ -66,10 +66,15 @@ export function accountSignedBalance(a: any): number {
 export async function getAccounts() {
   const { data, error } = await supabase
     .from('financial_accounts')
-    .select('*')
+    .select('*, plaid_item:plaid_items(institution_name, institution_id)')
     .order('balance_current', { ascending: false })
   if (error) throw error
-  return data ?? []
+  return (data ?? []).map((a: any) => ({
+    ...a,
+    institution_name: a.plaid_item?.institution_name ?? a.institution_name ?? null,
+    institution_id: a.plaid_item?.institution_id ?? a.institution_id ?? null,
+    plaid_item: undefined,
+  }))
 }
 
 /** Accounts linked to an entity. Tolerates both id conventions in the DB:

@@ -27,6 +27,9 @@ import {
   getQbConnection,
   getQbProfitLoss,
   getQbBalanceSheet,
+  getQbMonthlyProfitLoss,
+  parseMonthlyProfitLoss,
+  parseExpenseBreakdown,
   parseProfitLoss,
   parseBalanceSheet,
   type ParsedPL,
@@ -34,6 +37,11 @@ import {
 } from '../../lib/quickbooks'
 import ComingSoon from '../../_components/ComingSoon'
 import { SpecCard } from '../../_components/SpecCard'
+import KPIMetricCard from '../../_components/widgets/KPIMetricCard'
+import RevenueTrendChart from '../../_components/widgets/RevenueTrendChart'
+import ExpenseDonut from '../../_components/widgets/ExpenseDonut'
+import TimeRangeSelector, { resolveRange } from '../../_components/widgets/TimeRangeSelector'
+import type { MonthlyPLRow, ExpenseCategory } from '../../lib/quickbooks'
 import {
   getMondayData,
   type LoanPipelineView,
@@ -60,9 +68,10 @@ const XOME_SLUG = 'xome-home'
 
 interface Props {
   params: { slug: string }
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export default async function CompanyPage({ params }: Props) {
+export default async function CompanyPage({ params, searchParams }: Props) {
   const { slug } = params
 
   // ── Fetch entity ──────────────────────────────────────────────
@@ -183,17 +192,39 @@ export default async function CompanyPage({ params }: Props) {
   // hasn't been connected yet. We show a ComingSoon + Connect CTA for that case.
   let qbPL: ParsedPL | null = null
   let qbBS: ParsedBS | null = null
+  let qbMonthlyPL: MonthlyPLRow[] = []
+  let qbExpenseBreakdown: ExpenseCategory[] = []
+  let qbPriorPL: ParsedPL | null = null
   let qbConnected = false
   try {
     const conn = await getQbConnection(slug)
     if (conn?.realm_id) {
       qbConnected = true
-      const [rawPL, rawBS] = await Promise.all([
-        getQbProfitLoss(slug),
-        getQbBalanceSheet(slug),
+      // Resolve time range from URL (?range=ytd|month|3mo|6mo|year|all…)
+      const range = resolveRange(searchParams?.range as string | undefined)
+      const start = range?.start
+      const end = range?.end
+      // Prior-period for delta comparisons — same length, immediately before.
+      let priorStart: string | undefined
+      let priorEnd: string | undefined
+      if (start && end) {
+        const s = new Date(start).getTime()
+        const e = new Date(end).getTime()
+        const span = e - s
+        priorEnd = new Date(s - 86400000).toISOString().slice(0, 10)
+        priorStart = new Date(s - 86400000 - span).toISOString().slice(0, 10)
+      }
+      const [rawPL, rawBS, rawMonthly, rawPrior] = await Promise.all([
+        getQbProfitLoss(slug, start, end),
+        getQbBalanceSheet(slug, end),
+        getQbMonthlyProfitLoss(slug, start, end),
+        priorStart && priorEnd ? getQbProfitLoss(slug, priorStart, priorEnd) : Promise.resolve(null),
       ])
       qbPL = parseProfitLoss(rawPL)
       qbBS = parseBalanceSheet(rawBS)
+      qbMonthlyPL = parseMonthlyProfitLoss(rawMonthly)
+      qbExpenseBreakdown = parseExpenseBreakdown(rawPL)
+      qbPriorPL = parseProfitLoss(rawPrior)
     }
   } catch {
     // swallow — show ComingSoon fallback below

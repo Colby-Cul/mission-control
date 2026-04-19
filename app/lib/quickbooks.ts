@@ -488,6 +488,28 @@ export async function getQbProfitLoss(
   return qbFetch<any>(companyKey, `reports/ProfitAndLoss?${qs.toString()}`)
 }
 
+/**
+ * Monthly P&L breakdown — one column per month across the date range.
+ * Used for sparklines + the RevenueTrendChart widget on the CEO dashboard.
+ */
+export async function getQbMonthlyProfitLoss(
+  companyKey: string,
+  startDate?: string,
+  endDate?: string,
+): Promise<any> {
+  if (!companyKey) return null
+  const r = ytdRange()
+  const start = startDate ?? r.start
+  const end = endDate ?? r.end
+  const qs = new URLSearchParams({
+    start_date: start,
+    end_date: end,
+    summarize_column_by: 'Month',
+    minorversion: '70',
+  })
+  return qbFetch<any>(companyKey, `reports/ProfitAndLoss?${qs.toString()}`)
+}
+
 export async function getQbBalanceSheet(companyKey: string, asOf?: string): Promise<any> {
   if (!companyKey) return null
   const end = asOf ?? new Date().toISOString().slice(0, 10)
@@ -586,6 +608,104 @@ export interface ParsedBS {
   totalEquity: number
   asOf: string
   currency: string
+}
+
+/**
+ * Monthly P&L series — extracts totalIncome / totalExpenses / netIncome
+ * per month column from a summarize_column_by=Month report.
+ * Columns header describes which period each column represents.
+ */
+export interface MonthlyPLRow {
+  label: string        // e.g. "Jan 2026"
+  income: number
+  expenses: number
+  net: number
+}
+
+export function parseMonthlyProfitLoss(raw: any): MonthlyPLRow[] {
+  if (!raw) return []
+  const columns = raw?.Columns?.Column
+  const rows = raw?.Rows?.Row
+  if (!Array.isArray(columns) || !Array.isArray(rows)) return []
+
+  // Columns[0] is label ("Account"), last column is "Total" — the ones we want
+  // are indices 1 … (len-2).
+  const monthCols = columns.slice(1, -1)
+  const monthLabels = monthCols.map((c: any) => String(c?.ColTitle ?? c?.ColType ?? ''))
+
+  // Walk the rows tree collecting per-section totals by column index.
+  const sectionTotal = (needle: string): number[] => {
+    const out = new Array<number>(monthCols.length).fill(0)
+    const walk = (rs: any[]) => {
+      for (const r of rs) {
+        const name = String(r?.group ?? r?.Header?.ColData?.[0]?.value ?? '').toLowerCase()
+        if (name.includes(needle.toLowerCase())) {
+          const sum = r?.Summary?.ColData
+          if (Array.isArray(sum)) {
+            for (let i = 0; i < monthCols.length; i++) {
+              const v = Number(sum[i + 1]?.value ?? 0)
+              if (!Number.isNaN(v)) out[i] += v
+            }
+          }
+        }
+        if (Array.isArray(r?.Rows?.Row)) walk(r.Rows.Row)
+      }
+    }
+    walk(rows)
+    return out
+  }
+
+  const income = sectionTotal('income')
+  const expenses = sectionTotal('expenses')
+
+  return monthLabels.map((label, i) => ({
+    label,
+    income: income[i] ?? 0,
+    expenses: expenses[i] ?? 0,
+    net: (income[i] ?? 0) - (expenses[i] ?? 0),
+  }))
+}
+
+/**
+ * Expense category breakdown — walks the Expenses section and returns
+ * leaf-account totals for the donut chart.
+ */
+export interface ExpenseCategory {
+  label: string
+  value: number
+}
+
+export function parseExpenseBreakdown(raw: any): ExpenseCategory[] {
+  if (!raw) return []
+  const rows = raw?.Rows?.Row
+  if (!Array.isArray(rows)) return []
+
+  // Find the Expenses section
+  const expensesSection = rows.find((r: any) => {
+    const name = String(r?.group ?? r?.Header?.ColData?.[0]?.value ?? '').toLowerCase()
+    return name.includes('expense')
+  })
+  if (!expensesSection?.Rows?.Row) return []
+
+  const cats: ExpenseCategory[] = []
+  const collect = (nodes: any[]) => {
+    for (const n of nodes) {
+      // Summary row of a subsection — add as the category total, don't recurse
+      if (Array.isArray(n?.Rows?.Row) && n?.Summary?.ColData) {
+        const label = String(n?.Header?.ColData?.[0]?.value ?? n?.group ?? 'Other')
+        const v = Number(n.Summary.ColData[n.Summary.ColData.length - 1]?.value ?? 0)
+        if (!Number.isNaN(v) && v !== 0) cats.push({ label, value: v })
+      } else if (Array.isArray(n?.ColData)) {
+        // Leaf account row
+        const label = String(n.ColData[0]?.value ?? 'Other')
+        const v = Number(n.ColData[n.ColData.length - 1]?.value ?? 0)
+        if (!Number.isNaN(v) && v !== 0) cats.push({ label, value: v })
+      }
+    }
+  }
+  collect(expensesSection.Rows.Row)
+
+  return cats.sort((a, b) => b.value - a.value)
 }
 
 export function parseBalanceSheet(raw: any): ParsedBS | null {
