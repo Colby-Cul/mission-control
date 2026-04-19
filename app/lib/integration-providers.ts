@@ -180,10 +180,11 @@ export const PROVIDERS: Record<string, IntegrationProvider> = {
     docsUrl: 'https://developer.intuit.com/app/developer/dashboard',
     rotateInstructions:
       '1. Log into developer.intuit.com\n' +
-      '2. Create a new app (or use existing)\n' +
-      '3. Under Keys & OAuth, copy Client ID and Client Secret\n' +
-      '4. Add https://mc-merge-v7-latest.vercel.app/api/qb/callback to redirect URIs\n' +
-      '5. Paste below',
+      '2. Open the Mission Control app\n' +
+      '3. Under Keys & credentials (Production), copy Client ID and Client Secret\n' +
+      '4. Add https://mc-merge-v7.vercel.app/api/qb/callback to Redirect URIs\n' +
+      '5. Under App profile → set Host domain to mc-merge-v7.vercel.app, Launch URL to https://mc-merge-v7.vercel.app, Disconnect URL to https://mc-merge-v7.vercel.app/api/qb/disconnect, Connect/Reconnect URL to https://mc-merge-v7.vercel.app/api/qb/connect\n' +
+      '6. Paste Client ID + Secret below',
   },
   'plaid': {
     provider: 'plaid',

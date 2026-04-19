@@ -55,11 +55,23 @@ export function isQbStorageWritable(): boolean {
  * client because the `quickbooks_connections` RLS policy permits SELECT for
  * everyone today.
  */
+// Vercel sometimes stores SUPABASE_SERVICE_ROLE_KEY with a trailing literal
+// `\n` (same issue we saw on PLAID_TOKEN_ENCRYPTION_KEY + the orchestrator).
+// Supabase then rejects every request with "Invalid API key". Strip stray
+// whitespace and non-JWT characters so the createClient call lands clean.
+function normalizeJwt(raw: string | undefined | null): string {
+  if (!raw) return ''
+  return raw
+    .replace(/\\n/g, '')          // literal backslash-n suffix
+    .replace(/[^A-Za-z0-9._-]/g, '')  // drop any other non-JWT noise
+    .trim()
+}
+
 export function supabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    normalizeJwt(process.env.SUPABASE_SERVICE_ROLE_KEY) ||
+    normalizeJwt(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   return createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
@@ -70,13 +82,14 @@ export function supabaseAdmin() {
  * Use for writes — protects against silent insert-under-RLS failures.
  */
 export function supabaseAdminStrict() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const key = normalizeJwt(process.env.SUPABASE_SERVICE_ROLE_KEY)
+  if (!key) {
     throw new Error(
       'SUPABASE_SERVICE_ROLE_KEY not configured — admin must set this in Vercel env to enable QB token storage',
     )
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  return createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 }
