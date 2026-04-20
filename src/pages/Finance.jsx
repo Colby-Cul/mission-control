@@ -177,6 +177,15 @@ const Finance = () => {
       .catch(() => {});
   }, []);
 
+  // Property-level equity detail
+  const [propertySummary, setPropertySummary] = useState(null);
+  useEffect(() => {
+    fetchWithMockFallback("/api/properties/summary")
+      .then(r => r.json())
+      .then(data => { if (data && !data.error) setPropertySummary(data); })
+      .catch(() => {});
+  }, []);
+
   // QB connection status
   const qbConnected = !pnlReport.error || pnlReport.loading;
   const hasQBData = pnlRows.length > 0;
@@ -266,7 +275,7 @@ const Finance = () => {
           {finSummary && finSummary.linked_institutions > 0 && (
             <Card>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                <div style={{fontSize:14,fontWeight:600,color:C.text}}>Financial Accounts</div>
+                <div style={{fontSize:14,fontWeight:600,color:C.text}}>Net Worth Breakdown</div>
                 <button onClick={() => navigate("/accounts")} style={{color:C.accent,fontSize:13,textDecoration:"none",background:"none",border:"none",cursor:"pointer",padding:0}}>View All \u2192</button>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",gap:10}}>
@@ -274,7 +283,47 @@ const Finance = () => {
                 <KPI label="Banking" value={fmtBigMoney(finSummary.banking?.total)} sub={`${finSummary.banking?.accounts?.length || 0} accounts`} color={C.cyan} />
                 <KPI label="Investments" value={fmtBigMoney(finSummary.investments?.total)} sub={`${finSummary.investments?.accounts?.length || 0} accounts`} color={C.purple} />
                 <KPI label="Crypto" value={fmtBigMoney(finSummary.crypto?.total || 0)} sub="Coinbase" color={C.amber} />
+                <KPI label="Real Estate Equity" value={fmtBigMoney(finSummary.real_estate?.owned_equity || 0)} sub={`${finSummary.real_estate?.property_count || 0} properties (owned %)`} color="#10b981" />
               </div>
+
+              {/* Real Estate Property Equity Breakdown */}
+              {propertySummary && propertySummary.properties?.length > 0 && (
+                <div style={{marginTop:16}}>
+                  <div style={{fontSize:13,fontWeight:600,color:C.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:"0.05em"}}>Real Estate Equity by Property</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {propertySummary.properties.map((prop) => {
+                      const hasMortgage = prop.mortgage_balance > 0;
+                      const isPending = !hasMortgage && prop.is_rental;
+                      return (
+                        <div key={prop.id} style={{
+                          display:"flex",justifyContent:"space-between",alignItems:"center",
+                          padding:"10px 12px",borderRadius:8,
+                          background: C.bg,border:`1px solid ${C.border}`
+                        }}>
+                          <div style={{flex:1}}>
+                            <div style={{fontSize:13,fontWeight:600,color:C.text}}>{prop.address}</div>
+                            <div style={{fontSize:12,color:C.muted,marginTop:2}}>
+                              {prop.entity_name} · {prop.ownership_pct}% owned
+                              {hasMortgage && <span style={{color:C.amber}}> · ${prop.mortgage_balance?.toLocaleString()} mortgage</span>}
+                              {isPending && <span style={{color:C.amber}}> · ⚠ Mortgage data pending</span>}
+                            </div>
+                          </div>
+                          <div style={{textAlign:"right",minWidth:120}}>
+                            <div style={{fontSize:14,fontWeight:700,color: prop.equity > 0 ? C.green : C.red}}>
+                              {fmtBigMoney(prop.owned_equity)}
+                            </div>
+                            <div style={{fontSize:11,color:C.muted}}>of {fmtBigMoney(prop.market_value)}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",padding:"10px 12px",marginTop:4,borderTop:`1px solid ${C.border}`}}>
+                    <div style={{fontSize:13,fontWeight:700,color:C.text}}>Total Portfolio Equity (Owned %)</div>
+                    <div style={{fontSize:14,fontWeight:700,color:C.green}}>{fmtBigMoney(propertySummary.total_owned_equity)}</div>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
