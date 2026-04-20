@@ -112,12 +112,16 @@ const Projects = () => {
   const selectedView = searchParams.get("view") || "kanban";
   const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
 
-  const totalTasks = projects.reduce((sum, p) => sum + (p.taskCount || 0), 0);
-  const totalDone = projects.reduce((sum, p) => sum + (p.doneCount || 0), 0);
-  const totalActive = projects.reduce((sum, p) => sum + (p.activeCount || 0), 0);
-  const totalCost = projects.reduce((sum, p) => sum + (p.totalCost || 0), 0);
-  const totalEstCost = projects.reduce((sum, p) => sum + (p.estimatedCostToCompletion || 0), 0);
-  const activeProjects = projects.filter((p) => p.status === "active").length;
+  const activeProjects = projects.filter((p) => p.status !== "archived");
+  const archivedProjects = projects.filter((p) => p.status === "archived");
+  const [showArchived, setShowArchived] = useState(false);
+
+  const totalTasks = activeProjects.reduce((sum, p) => sum + (p.taskCount || 0), 0);
+  const totalDone = activeProjects.reduce((sum, p) => sum + (p.doneCount || 0), 0);
+  const totalActive = activeProjects.reduce((sum, p) => sum + (p.activeCount || 0), 0);
+  const totalCost = activeProjects.reduce((sum, p) => sum + (p.totalCost || 0), 0);
+  const totalEstCost = activeProjects.reduce((sum, p) => sum + (p.estimatedCostToCompletion || 0), 0);
+  const activeProjectCount = activeProjects.filter((p) => p.status === "active").length;
 
   const handleSelectProject = (projectId, view = "kanban") => {
     const next = new URLSearchParams(searchParams);
@@ -189,7 +193,7 @@ const Projects = () => {
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }}>Projects</h1>
           <div style={{ fontSize: 13, color: C.muted, marginTop: 6 }}>
-            Real project data derived from OpenClaw runtime — {projects.length} active projects.
+            Real project data derived from OpenClaw runtime — {activeProjects.length} active projects{archivedProjects.length > 0 ? `, ${archivedProjects.length} archived` : ""}.
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -268,7 +272,7 @@ const Projects = () => {
         <KPI label="Total Tasks" value={totalTasks || "—"} sub={`${totalDone} completed`} color={C.cyan} />
         <KPI label="Active Work" value={totalActive || "—"} sub="In-progress delegations" color={C.amber} />
         <KPI label="Project Spend" value={formatUsd(totalCost)} sub={activeProjects ? `${formatUsd(totalEstCost)} to complete active work` : "No active completion estimate"} color={C.green} />
-        <KPI label="Critical Items" value={projects.filter((p) => p.status === "blocked").length || "0"} sub="Blocked projects" color={C.red} />
+        <KPI label="Critical Items" value={activeProjects.filter((p) => p.status === "blocked").length || "0"} sub="Blocked projects" color={C.red} />
       </div>
 
       {selectedProject && detail ? (
@@ -442,9 +446,9 @@ const Projects = () => {
         </>
       ) : (
         <Card>
-          {projects.length ? (
+          {activeProjects.length ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
-              {projects.map((project) => {
+              {activeProjects.map((project) => {
                 const progress = project.taskCount > 0 ? Math.round((project.doneCount / project.taskCount) * 100) : 0;
                 const workedAgents = (project.agentsWorkedOn || project.agents || []).map((agentId) => (
                   AGENTS.find((agent) => agent.id === agentId) || avatarFallback(agentId)
@@ -548,6 +552,48 @@ const Projects = () => {
           ) : (
             <div style={{ padding: 40, textAlign: "center", color: C.muted }}>
               No projects found. Run generate-live-data.sh to scan OpenClaw runtime state.
+            </div>
+          )}
+
+          {archivedProjects.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 14px", color: C.muted, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+              >
+                {showArchived ? "▼" : "▶"} Archived ({archivedProjects.length})
+              </button>
+              {showArchived && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginTop: 12, opacity: 0.6 }}>
+                  {archivedProjects.map((project) => {
+                    const progress = project.taskCount > 0 ? Math.round((project.doneCount / project.taskCount) * 100) : 0;
+                    const workedAgents = (project.agentsWorkedOn || project.agents || []).map((agentId) => (
+                      AGENTS.find((agent) => agent.id === agentId) || avatarFallback(agentId)
+                    ));
+                    return (
+                      <button
+                        key={project.id}
+                        onClick={() => handleSelectProject(project.id)}
+                        style={{ padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}
+                      >
+                        <div style={{ padding: 16, borderRadius: 12, background: C.surface, border: `1px solid ${C.border}`, height: "100%" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: C.muted }}>{project.name}</div>
+                              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Archived</div>
+                            </div>
+                            <Badge color={C.muted}>archived</Badge>
+                          </div>
+                          <div style={{ marginTop: 12 }}>
+                            <ProgressBar value={progress} color={C.muted} height={8} />
+                          </div>
+                          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>{progress}% complete · {formatUsd(project.totalCost)} spent</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </Card>
