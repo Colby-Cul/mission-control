@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Avatar, Badge, Card, KPI, ProgressBar } from "../components/shared";
 import { AGENTS, C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 import { getApiUrl } from "../utils/api";
+import { supabase } from "../lib/supabase";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -97,9 +98,45 @@ function buildGanttRows(sessions) {
   return { rows, span };
 }
 
+function buildTaskGanttRows(tasks) {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const dated = tasks
+    .map((task) => {
+      const start = task.start_date ? new Date(task.start_date).getTime() : null;
+      const end = task.due_date ? new Date(task.due_date).getTime() : null;
+      return { ...task, start, end };
+    })
+    .filter((t) => t.start && t.end && t.end >= t.start)
+    .sort((a, b) => a.start - b.start);
+
+  if (!dated.length) return { rows: [], span: 1 };
+
+  const minStart = Math.min(...dated.map((t) => t.start));
+  const maxEnd = Math.max(...dated.map((t) => t.end));
+  const span = Math.max(maxEnd - minStart, DAY_MS);
+  const rows = dated.map((t) => ({
+    ...t,
+    offset: ((t.start - minStart) / span) * 100,
+    width: Math.max(((t.end - t.start) / span) * 100, 2),
+  }));
+
+  return { rows, span, minStart, maxEnd };
+}
+
 const Projects = () => {
   const { projects, refresh } = useMissionControlData();
+  const [supabaseTasks, setSupabaseTasks] = useState([]);
   const [showNewProject, setShowNewProject] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("tasks")
+      .select("id, project_id, name, status, priority, agent, start_date, due_date, phase")
+      .order("start_date", { ascending: true })
+      .then(({ data, error }) => {
+        if (!error && data) setSupabaseTasks(data);
+      });
+  }, []);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDesc, setNewProjectDesc] = useState("");
   const [newProjectAgent, setNewProjectAgent] = useState("main");
@@ -184,8 +221,10 @@ const Projects = () => {
       return acc;
     }, {});
     const gantt = buildGanttRows(sessions);
-    return { sessions, grouped, gantt };
-  }, [selectedProject]);
+    const projectTasks = supabaseTasks.filter((t) => t.project_id === selectedProject.id);
+    const taskGantt = buildTaskGanttRows(projectTasks);
+    return { sessions, grouped, gantt, projectTasks, taskGantt };
+  }, [selectedProject, supabaseTasks]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -372,7 +411,52 @@ const Projects = () => {
 
           {selectedView === "gantt" && (
             <Card>
-              {detail.gantt.rows.length ? (
+              {detail.taskGantt.rows.length ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>
+                    {new Date(detail.taskGantt.minStart).toLocaleDateString("en-US", { month: "short", day: "numeric" })} →{" "}
+                    {new Date(detail.taskGantt.maxEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </div>
+                  {detail.taskGantt.rows.map((task) => (
+                    <div key={task.id} style={{ display: "grid", gridTemplateColumns: "260px minmax(0, 1fr)", gap: 12, alignItems: "center" }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: C.text, fontWeight: 600, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{task.name}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                          {task.start_date} → {task.due_date} · {task.agent}
+                        </div>
+                      </div>
+                      <div style={{ position: "relative", height: 28, borderRadius: 999, background: C.surface, border: `1px solid ${C.border}` }}>
+                        <div
+                          title={`${task.name} (${task.status})`}
+                          style={{
+                            position: "absolute",
+                            left: `${task.offset}%`,
+                            width: `${task.width}%`,
+                            top: 4,
+                            bottom: 4,
+                            minWidth: 8,
+                            borderRadius: 999,
+                            background:
+                              normalizeLane(task.status) === "done" ? C.green :
+                              normalizeLane(task.status) === "blocked" ? C.red :
+                              normalizeLane(task.status) === "inprogress" ? C.accent :
+                              "#6366f1",
+                            opacity: normalizeLane(task.status) === "todo" ? 0.5 : 1,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 16, marginTop: 8, fontSize: 11, color: C.muted }}>
+                    {[{color: C.green, label: "Done"}, {color: C.accent, label: "In Progress"}, {color: "#6366f1", label: "Planned", opacity: 0.5}, {color: C.red, label: "Blocked"}].map(({color, label, opacity}) => (
+                      <span key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: "50%", background: color, opacity: opacity || 1, display: "inline-block" }} />
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : detail.gantt.rows.length ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {detail.gantt.rows.map((session) => (
                     <div key={session.id} style={{ display: "grid", gridTemplateColumns: "280px minmax(0, 1fr)", gap: 12, alignItems: "center" }}>
@@ -400,7 +484,7 @@ const Projects = () => {
                   ))}
                 </div>
               ) : (
-                <div style={{ color: C.muted, fontSize: 13 }}>Not enough timing data is available to render a Gantt view for this project.</div>
+                <div style={{ color: C.muted, fontSize: 13 }}>No task timeline data available. Tasks need start_date and due_date to render the Gantt.</div>
               )}
             </Card>
           )}
