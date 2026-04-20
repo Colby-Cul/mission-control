@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { DataSet, Network } from "vis-network/standalone";
 import { Card, Badge } from "../components/shared";
 import { C } from "../data/constants";
 import entityData from "../data/entity-data.json";
@@ -196,6 +197,23 @@ const StatBox = ({ label, value, color }) => (
 
 // ── Main Page ──
 const EntityMap = () => {
+  useEffect(() => {
+    const container = document.getElementById('network');
+    const nodes = new DataSet([
+      { id: root.id, label: root.shortName || root.name },
+      ...entities.map(e =>({ id: e.id, label: e.shortName || e.name }))
+    ]);
+
+    const edges = [];
+    entities.forEach(entity => {
+      if (entity.parent) {
+        edges.push({ from: entity.parent, to: entity.id });
+      }
+    });
+    const data = { nodes, edges };
+    const options = {};
+    new Network(container, data, options);
+  }, [entities, root.id]);
   const [expanded, setExpanded] = useState({});
 
   const onToggle = (id) => {
@@ -219,6 +237,8 @@ const EntityMap = () => {
         Business structure &middot; Entity hierarchy &middot; Property holdings
       </div>
 
+      {/* Network Graph */}
+      <div id="network" style={{ height: '500px', marginBottom: '20px' }}></div>
       {/* KPI Row */}
       <div style={{ display: "flex", gap: 10 }}>
         <StatBox label="Total Entities" value={totalEntities} color={C.accent} />

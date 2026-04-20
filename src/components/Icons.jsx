@@ -41,6 +41,18 @@ export const icons = {
 
 // ── Navigation groups (nested sidebar) ──
 export const NAV_GROUPS = [
+  { id: "overview", label: "Overview", icon: icons.home, children: [
+    { id: "executive", label: "Executive Overview" },
+    { id: "entity-map", label: "Entity Map" },
+  ]},
+  { id: "financials", label: "Financials", icon: icons.dollarSign, children: [
+    { id: "finance-dashboard", label: "Finance Dashboard" },
+    { id: "cash-flow", label: "Cash Flow" },
+  ]},
+  { id: "operations", label: "Operations", icon: icons.briefcase, children: [
+    { id: "tasks", label: "Tasks" },
+    { id: "projects", label: "Projects" },
+  ]},
   { id: "ceo", label: "CEO", icon: icons.star, children: [
     { id: "north-star", label: "North Star", icon: icons.star },
     { id: "vision-board", label: "Vision Board", icon: icons.target },

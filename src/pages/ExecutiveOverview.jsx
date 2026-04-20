@@ -1,4 +1,5 @@
 import { Card, KPI, Badge } from "../components/shared";
+import { mockSummary } from "../data/mockFinancialData.js";
 import { C } from "../data/constants";
 import { useMissionControlData } from "../context/MissionControlDataContext";
 
@@ -38,8 +39,14 @@ function statusBadgeColor(status) {
 const ExecutiveOverview = () => {
   const { agents, acpSessions, projects, skills } = useMissionControlData();
 
+  const financialData = mockSummary;
+
   const METRICS = [
-    { label: "Active Agents", value: agents.filter(a => a.status === "active").length, sub: `${agents.length} total`, color: C.accent },
+    { label: "Net Worth", value: `$${financialData.net_worth.toLocaleString()}`, sub: "Total net worth", color: C.purple },
+    { label: "Banking Total", value: `$${financialData.banking.total.toLocaleString()}`, sub: "Total bank balances", color: C.green },
+    { label: "Investments", value: `$${financialData.investments.total.toLocaleString()}`, sub: "Current investments value", color: C.amber },
+    { label: "Real Estate Equity", value: `$${financialData.real_estate.owned_equity.toLocaleString()}`, sub: "Equity in properties", color: C.cyan },
+    { label: "Crypto Holdings", value: `$${financialData.crypto.total.toLocaleString()}`, sub: "Cryptocurrency value", color: C.blue },
     { label: "Active Sessions", value: acpSessions.filter(s => s.status !== "done").length, sub: "In-progress tasks", color: C.green },
     { label: "Total Cost", value: "$" + acpSessions.reduce((s, t) => s + (t.totalCost || 0), 0).toFixed(2), sub: "Across all sessions", color: C.purple },
     { label: "Projects", value: projects.length, sub: "Tracked projects", color: C.cyan },
