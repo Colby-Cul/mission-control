@@ -3,14 +3,15 @@
     "id": "coding",
     "name": "ACP Coding Delegations",
     "status": "active",
-    "taskCount": 27,
-    "doneCount": 18,
-    "activeCount": 9,
-    "totalCost": 1561.0053,
+    "taskCount": 29,
+    "doneCount": 19,
+    "activeCount": 10,
+    "totalCost": 1605.2268,
     "apiModelsUsed": [
       "claude-haiku-4-5-20251001",
       "claude-opus-4-6",
       "claude-sonnet-4-6",
+      "deepseek-reasoner",
       "delivery-mirror",
       "gpt-4o",
       "gpt-4o-mini",
@@ -21,6 +22,7 @@
       "claude-haiku-4-5-20251001",
       "claude-opus-4-6",
       "claude-sonnet-4-6",
+      "deepseek-reasoner",
       "delivery-mirror",
       "gpt-4o",
       "gpt-4o-mini",
@@ -62,23 +64,23 @@
       "validation"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~135 min",
+    "estimatedTimeToCompletion": "~150 min",
     "sessions": [
       {
         "id": "18ff3ad4-e88a-411e-9",
         "sessionId": "18ff3ad4-e88a-411e-98f1-84681d8d2062",
         "agent": "main",
-        "task": "<<<BEGIN_OPENCLAW_INTERNAL_CONTEXT>>>\nOpenClaw runtime context (internal):",
+        "task": "Main Session",
         "status": "blocked",
         "lane": "blocked",
         "dateCreated": "2026-04-15T08:36:47.540Z",
         "dateFinished": null,
         "startTime": "2026-04-15T08:36:47.540Z",
         "endTime": null,
-        "inputTokens": 1566509,
-        "outputTokens": 22184,
-        "cachedInputTokens": 3106506,
-        "tokens": 6999825,
+        "inputTokens": 1566520,
+        "outputTokens": 23237,
+        "cachedInputTokens": 3407241,
+        "tokens": 7477991,
         "model": "claude-sonnet-4-6",
         "apiModelUsed": "claude-sonnet-4-6, delivery-mirror, gpt-4o-mini",
         "modelsUsed": [
@@ -86,15 +88,47 @@
           "delivery-mirror",
           "gpt-4o-mini"
         ],
-        "totalCost": 5.9642,
+        "totalCost": 6.0703,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/18ff3ad4-e88a-411e-98f1-84681d8d2062.jsonl",
-        "sizeBytes": 882308,
+        "sizeBytes": 955588,
         "isCron": false,
-        "spawns": 24,
+        "spawns": 25,
         "parentSession": "telegram:7923187109",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
         "estimatedTimeToCompletion": "~39.7 hr"
+      },
+      {
+        "id": "56a7ee09-b126-42d3-a",
+        "sessionId": "56a7ee09-b126-42d3-a0ea-0f7ab08fe6db",
+        "agent": "main",
+        "task": "=== TASK CONTEXT ===Task: Wire SMS delivery (welcome book)Description: SMS with welcome book URL 30 min before check-...",
+        "status": "blocked",
+        "lane": "blocked",
+        "dateCreated": "2026-04-10T04:34:10.370Z",
+        "dateFinished": null,
+        "startTime": "2026-04-10T04:34:10.370Z",
+        "endTime": null,
+        "inputTokens": 3438672,
+        "outputTokens": 30452,
+        "cachedInputTokens": 28044160,
+        "tokens": 31513284,
+        "model": "gpt-4o",
+        "apiModelUsed": "deepseek-reasoner, gpt-4o, gpt-4o-mini",
+        "modelsUsed": [
+          "deepseek-reasoner",
+          "gpt-4o",
+          "gpt-4o-mini"
+        ],
+        "totalCost": 43.9564,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/56a7ee09-b126-42d3-a0ea-0f7ab08fe6db.jsonl",
+        "sizeBytes": 1193686,
+        "isCron": false,
+        "spawns": 2,
+        "parentSession": "heartbeat",
+        "projectId": "coding",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~83.1 hr"
       },
       {
         "id": "d00d171f-fc17-439d-b",
@@ -279,6 +313,34 @@
         "projectId": "coding"
       },
       {
+        "id": "271f7180-013a-4d92-b",
+        "sessionId": "271f7180-013a-4d92-b5e7-db87178b8ce4",
+        "agent": "main",
+        "task": "<<<BEGIN_OPENCLAW_INTERNAL_CONTEXT>>>\nOpenClaw runtime context (internal):",
+        "status": "done",
+        "lane": "done",
+        "dateCreated": "2026-04-07T22:34:35.708Z",
+        "dateFinished": "2026-04-07T22:35:51Z",
+        "startTime": "2026-04-07T22:34:35.708Z",
+        "endTime": "2026-04-07T22:35:51Z",
+        "inputTokens": 52890,
+        "outputTokens": 513,
+        "cachedInputTokens": 17280,
+        "tokens": 70683,
+        "model": "gpt-4o-mini",
+        "apiModelUsed": "gpt-4o-mini",
+        "modelsUsed": [
+          "gpt-4o-mini"
+        ],
+        "totalCost": 0.159,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/271f7180-013a-4d92-b5e7-db87178b8ce4.jsonl",
+        "sizeBytes": 12295,
+        "isCron": false,
+        "spawns": 2,
+        "parentSession": "",
+        "projectId": "coding"
+      },
+      {
         "id": "mc-claude-opus-4-6-1",
         "sessionId": "mc-claude-opus-4-6-1775589548284",
         "agent": "main",
@@ -336,7 +398,7 @@
         "parentSession": "",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~107.0 hr"
+        "estimatedTimeToCompletion": "~107.1 hr"
       },
       {
         "id": "fe36b8d9-5195-4ab7-9",
@@ -668,7 +730,7 @@
         "parentSession": "",
         "projectId": "coding",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~143.4 hr"
+        "estimatedTimeToCompletion": "~143.5 hr"
       },
       {
         "id": "bdc4ba6a-413e-4490-8",
@@ -991,7 +1053,7 @@
         "priority": "medium",
         "projectId": "guest-welcome-book",
         "projectName": "Guest Welcome Book & Checkout Guide System",
-        "description": "Build a content management layer so welcome book pages pull property-specific data (WiFi passwords, appliance instructions, local recommendations, emergency contacts) from a config or CMS. Support easy updates without code changes. Extract reusable content from existing 11-page Canva welcome package (DAFp8xMs0bo) as source material. BLOCKED: Waiting on CaliforniaLuxuryStays website build.",
+        "description": "Build a content management layer so welcome book pages pull property-specific data (WiFi passwords, appliance instructions, local recommendations, emergency contacts) from a config or CMS. Support easy updates without code changes. Extract reusable content from existing 11-page Canva welcome package (DAFp8xMs0bo) as source material. Site is LIVE at https://colby-cul.github.io/california-luxury-stays/ (CaliforniaLuxuryStays.com).",
         "dateCreated": "2026-04-06T00:00:00Z",
         "dateFinished": null,
         "startTime": null,
@@ -1020,7 +1082,7 @@
         "priority": "medium",
         "projectId": "guest-welcome-book",
         "projectName": "Guest Welcome Book & Checkout Guide System",
-        "description": "Set up guest-facing routes on CaliforniaLuxuryStays (e.g. /welcome/graeagle, /welcome/northstar, /checkout/graeagle). Ensure fully responsive design for guests accessing on phones/tablets during their stay. Include QR code generation for property placement. BLOCKED: Waiting on CaliforniaLuxuryStays website build.",
+        "description": "Set up guest-facing routes on CaliforniaLuxuryStays (e.g. /welcome/graeagle, /welcome/northstar, /checkout/graeagle). Ensure fully responsive design for guests accessing on phones/tablets during their stay. Include QR code generation for property placement. Site is LIVE at https://colby-cul.github.io/california-luxury-stays/ (CaliforniaLuxuryStays.com).",
         "dateCreated": "2026-04-06T00:00:00Z",
         "dateFinished": null,
         "startTime": null,
@@ -1049,7 +1111,7 @@
         "priority": "medium",
         "projectId": "guest-welcome-book",
         "projectName": "Guest Welcome Book & Checkout Guide System",
-        "description": "Connect welcome book pages to Lodgify API to pull upcoming booking details \u2014 guest name, check-in/checkout dates, property-specific access codes. Generate personalized welcome pages per reservation. BLOCKED: Waiting on CaliforniaLuxuryStays website build.",
+        "description": "Connect welcome book pages to Lodgify API to pull upcoming booking details \u2014 guest name, check-in/checkout dates, property-specific access codes. Generate personalized welcome pages per reservation. Site is LIVE at https://colby-cul.github.io/california-luxury-stays/ (CaliforniaLuxuryStays.com).",
         "dateCreated": "2026-04-06T00:00:00Z",
         "dateFinished": null,
         "startTime": null,
@@ -1069,7 +1131,7 @@
         "parentSession": ""
       }
     ],
-    "description": "Dynamic web-based welcome books and checkout guides for Graeagle and Northstar STR properties. Canva design work started 2026-04-06. Existing 11-page welcome package for 47 Shasta Trail (Canva ID: DAFp8xMs0bo) being used as baseline. New mountain retreat cover design generated.",
+    "description": "Dynamic web-based welcome books and checkout guides for Graeagle and Northstar STR properties. Canva design work started 2026-04-06. Existing 11-page welcome package for 47 Shasta Trail (Canva ID: DAFp8xMs0bo) being used as baseline. CaliforniaLuxuryStays.com is LIVE at https://colby-cul.github.io/california-luxury-stays/ \u2014 all tasks are unblocked.",
     "priority": "high",
     "tags": [
       "STR",
@@ -1077,7 +1139,6 @@
       "Automation",
       "Canva"
     ],
-    "dependency": "Partially unblocked: Canva design track active, web integration pending STR Website Build",
     "createdAt": "2026-04-02T00:00:00Z"
   },
   {
@@ -2007,10 +2068,10 @@
         "dateFinished": null,
         "startTime": "2026-04-20T02:00:56.275Z",
         "endTime": null,
-        "inputTokens": 261,
-        "outputTokens": 120,
-        "cachedInputTokens": 49152,
-        "tokens": 49533,
+        "inputTokens": 2334,
+        "outputTokens": 294,
+        "cachedInputTokens": 100736,
+        "tokens": 103364,
         "model": "deepseek-chat",
         "apiModelUsed": "deepseek-chat",
         "modelsUsed": [
@@ -2018,13 +2079,13 @@
         ],
         "totalCost": 0.0,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/38b7ca35-1c1f-4f6e-bf07-22b436ebda54.jsonl",
-        "sizeBytes": 3973,
+        "sizeBytes": 18852,
         "isCron": false,
         "spawns": 0,
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1 min"
+        "estimatedTimeToCompletion": "~2 min"
       },
       {
         "id": "0ae1b289-6ac2-4c18-a",
@@ -2054,7 +2115,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1 min"
+        "estimatedTimeToCompletion": "~2 min"
       },
       {
         "id": "6ba13fdc-be05-4b7f-b",
@@ -2084,7 +2145,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~11 min"
+        "estimatedTimeToCompletion": "~12 min"
       },
       {
         "id": "5b23fd41-0d30-4477-a",
@@ -2795,31 +2856,25 @@
   {
     "id": "str-website",
     "name": "STR Website - Pineside Cabins",
-    "status": "active",
-    "taskCount": 4,
+    "status": "done",
+    "taskCount": 3,
     "doneCount": 3,
-    "activeCount": 1,
-    "totalCost": 43.9314,
+    "activeCount": 0,
+    "totalCost": 0.9693,
     "apiModelsUsed": [
-      "deepseek-reasoner",
-      "gpt-4o",
       "gpt-4o-mini"
     ],
     "modelsUsed": [
-      "deepseek-reasoner",
-      "gpt-4o",
       "gpt-4o-mini"
     ],
     "agentsWorkedOn": [
-      "main",
       "short-term-rental"
     ],
     "agents": [
-      "main",
       "short-term-rental"
     ],
-    "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~15 min",
+    "estimatedCostToCompletion": null,
+    "estimatedTimeToCompletion": null,
     "sessions": [
       {
         "id": "ffa0fbe3-28f5-4074-8",
@@ -2904,38 +2959,6 @@
         "spawns": 0,
         "parentSession": "",
         "projectId": "str-website"
-      },
-      {
-        "id": "56a7ee09-b126-42d3-a",
-        "sessionId": "56a7ee09-b126-42d3-a0ea-0f7ab08fe6db",
-        "agent": "main",
-        "task": "=== TASK CONTEXT ===Task: Compile local dining & activities \u2014 NorthstarDescription: Same but for Northstar area.Statu...",
-        "status": "blocked",
-        "lane": "blocked",
-        "dateCreated": "2026-04-10T04:34:10.370Z",
-        "dateFinished": null,
-        "startTime": "2026-04-10T04:34:10.370Z",
-        "endTime": null,
-        "inputTokens": 3432901,
-        "outputTokens": 30085,
-        "cachedInputTokens": 27263232,
-        "tokens": 30726218,
-        "model": "gpt-4o",
-        "apiModelUsed": "deepseek-reasoner, gpt-4o, gpt-4o-mini",
-        "modelsUsed": [
-          "deepseek-reasoner",
-          "gpt-4o",
-          "gpt-4o-mini"
-        ],
-        "totalCost": 42.9621,
-        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/56a7ee09-b126-42d3-a0ea-0f7ab08fe6db.jsonl",
-        "sizeBytes": 1166487,
-        "isCron": false,
-        "spawns": 2,
-        "parentSession": "heartbeat",
-        "projectId": "str-website",
-        "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~83.1 hr"
       }
     ],
     "description": "Next.js website for luxury short-term rental properties (Graeagle Cabin + Northstar Luxury)",
