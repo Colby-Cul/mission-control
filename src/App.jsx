@@ -37,6 +37,7 @@ const PhotoManager = lazy(() => import('./pages/PhotoManager'));
 const FinanceDashboard = lazy(() => import('./pages/FinanceDashboard'));
 const XomeDashboard = lazy(() => import('./pages/XomeDashboard'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
+const MarketingDashboard = lazy(() => import('./pages/MarketingDashboard'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -77,6 +78,7 @@ function App() {
                   <Route path="finance-legacy" element={<Finance />} />
                   <Route path="xome" element={<XomeDashboard />} />
                   <Route path="company" element={<CompanyDashboard />} />
+                  <Route path="marketing" element={<MarketingDashboard />} />
                   <Route path="forge" element={<TheForge />} />
                   <Route path="skills" element={<SkillLab />} />
                   <Route path="api-skills" element={<ApiSkills />} />

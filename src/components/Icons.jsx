@@ -84,6 +84,9 @@ export const NAV_GROUPS = [
     { id: "legal-docs", label: "Legal Docs", icon: icons.docs },
     { id: "memory", label: "Memory & Knowledge", icon: icons.memory },
   ]},
+  { id: "marketing-group", label: "Marketing", icon: icons.target, children: [
+    { id: "marketing", label: "Performance Dashboard", icon: icons.target },
+  ]},
   { id: "engineering", label: "Engineering", icon: icons.forge, children: [
     { id: "forge", label: "The Forge", icon: icons.forge },
     { id: "skills", label: "Skill Lab", icon: icons.skills },
