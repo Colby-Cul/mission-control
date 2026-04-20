@@ -1,0 +1,163 @@
+{
+  "entities": [
+    {
+      "id": "cabo-tropic",
+      "name": "Cabo Tropic Horizon Enterprises, LP",
+      "shortName": "Cabo Tropic",
+      "type": "LP",
+      "ownership": 100,
+      "status": "active",
+      "state": "Nevada",
+      "description": "Master holding entity for all of Colby's business interests",
+      "revenue": null,
+      "role": "Holding Company",
+      "logo": "/logos/cabo-tropic.png",
+      "parent": null,
+      "children": ["culbertson-culbertson", "xome-home", "lincoln-hodl", "black-lab-capital", "ca-stays", "alabama-shores", "family-trust"],
+      "properties": []
+    },
+    {
+      "id": "culbertson-culbertson",
+      "name": "Culbertson and Culbertson, Inc.",
+      "shortName": "C&C",
+      "type": "S-Corp",
+      "ownership": 50,
+      "status": "active",
+      "state": "California",
+      "description": "Real estate team — brokerage operations",
+      "revenue": 2300000,
+      "revenueLabel": "$2.3M+",
+      "role": "Real Estate Team",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": []
+    },
+    {
+      "id": "xome-home",
+      "name": "Xome Home Loans, Inc.",
+      "shortName": "Xome Home",
+      "type": "C-Corp",
+      "ownership": 40,
+      "status": "startup",
+      "state": "California",
+      "description": "Mortgage brokerage — startup phase",
+      "revenue": 480000,
+      "revenueLabel": "~$40K/mo",
+      "role": "Mortgage Brokerage",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": []
+    },
+    {
+      "id": "lincoln-hodl",
+      "name": "Lincoln Hodl, LLC",
+      "shortName": "Lincoln Hodl",
+      "type": "LLC",
+      "ownership": 50,
+      "status": "active",
+      "state": "California",
+      "description": "Investment holdings for Culbertson and Culbertson",
+      "revenue": null,
+      "role": "Investment Arm of C&C",
+      "logo": "/logos/lincoln-hodl.png",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": []
+    },
+    {
+      "id": "alabama-shores",
+      "name": "Alabama Shores Management, LLC",
+      "shortName": "Alabama Shores",
+      "type": "LLC",
+      "ownership": 50,
+      "status": "active",
+      "state": "Alabama",
+      "description": "Property management entity",
+      "revenue": null,
+      "role": "Property Management",
+      "logo": "/logos/alabama-shores.png",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": []
+    },
+    {
+      "id": "black-lab-capital",
+      "name": "Black Lab Capital, LLC",
+      "shortName": "Black Lab Capital",
+      "type": "LLC",
+      "ownership": 50,
+      "status": "active",
+      "state": "California",
+      "description": "Parent entity for real property holdings",
+      "revenue": null,
+      "role": "Parent Entity",
+      "parent": "cabo-tropic",
+      "children": ["black-lab-ca-props"],
+      "properties": []
+    },
+    {
+      "id": "black-lab-ca-props",
+      "name": "Black Lab Capital California Properties, LLC",
+      "shortName": "BLC CA Properties",
+      "type": "LLC",
+      "ownership": 50,
+      "status": "active",
+      "state": "California",
+      "description": "Subsidiary of Black Lab Capital — holds California real property",
+      "revenue": null,
+      "role": "Property Holding",
+      "parent": "black-lab-capital",
+      "children": [],
+      "properties": [
+        {
+          "address": "47 Shasta Trl",
+          "city": "Graeagle",
+          "state": "CA",
+          "type": "Residential"
+        }
+      ]
+    },
+    {
+      "id": "ca-stays",
+      "name": "California Stays Holdings, LP",
+      "shortName": "CA Stays",
+      "type": "LP",
+      "ownership": 50,
+      "status": "active",
+      "state": "California",
+      "description": "Holds vacation rental property",
+      "revenue": null,
+      "role": "Property Holding",
+      "logo": "/logos/ca-stays.png",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": [
+        {
+          "address": "210 Bitter Brush Way",
+          "city": "Truckee",
+          "state": "CA",
+          "type": "Vacation Rental"
+        }
+      ]
+    },
+    {
+      "id": "family-trust",
+      "name": "Colby Culbertson Family Living Trust",
+      "shortName": "Family Trust",
+      "type": "Trust",
+      "ownership": null,
+      "status": "active",
+      "state": "California",
+      "description": "Family living trust",
+      "revenue": null,
+      "role": "Estate Planning",
+      "parent": "cabo-tropic",
+      "children": [],
+      "properties": []
+    }
+  ],
+  "owner": {
+    "name": "Colby Culbertson",
+    "holdingEntity": "cabo-tropic"
+  }
+}

@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control - Professional Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f23;
+            color: #e2e8f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .mission-control {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: 100vh;
+            background: #0f0f23;
+        }
+
+        /* LEFT SIDEBAR */
+        .sidebar {
+            background: #1a1a2e;
+            border-right: 1px solid #2d2d44;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #8b5cf6;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .nav-section {
+            padding: 1rem 0;
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        .nav-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: #9ca3af;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .nav-item:hover {
+            background: #2d2d44;
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: #3730a3;
+            color: #a78bfa;
+            border-right: 3px solid #8b5cf6;
+        }
+
+        .nav-item i {
+            width: 20px;
+            font-size: 1rem;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            background: #8b5cf6;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .nav-badge.urgent {
+            background: #ef4444;
+        }
+
+        .nav-badge.success {
+            background: #10b981;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            background: #16213e;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .main-header {
+            background: #1e293b;
+            border-bottom: 1px solid #2d2d44;
+            padding: 1.5rem 2rem;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #f1f5f9;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #374151;
+            color: #e2e8f0;
+            border: 1px solid #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        /* CONTENT SECTIONS */
+        .content-section {
+            flex: 1;
+            padding: 2rem;
+            overflow: auto;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .task-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #8b5cf6;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .completion-bar {
+            margin-top: 1rem;
+            background: #2d2d44;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .completion-fill {
+            background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+            height: 100%;
+            width: 68%;
+            transition: width 1s ease;
+        }
+
+        /* TASK BOARD */
+        .board-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .filter-select {
+            background: #2d2d44;
+            color: #e2e8f0;
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-family: inherit;
+        }
+
+        .search-box {
+            background: #2d2d44;
+            color: #e2e8f0;
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            font-family: inherit;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            height: calc(100% - 200px);
+            overflow: hidden;
+        }
+
+        .kanban-column {
+            background: #1e293b;
+            border: 1px solid #2d2d44;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .column-header {
+            padding: 1rem 1.5rem;
+            background: #2d2d44;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #f1f5f9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .column-count {
+            background: #4b5563;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .recurring .column-count { background: #0891b2; }
+        .backlog .column-count { background: #dc2626; }
+        .progress .column-count { background: #ea580c; }
+        .review .column-count { background: #16a34a; }
+
+        .task-list {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-card {
+            background: #0f172a;
+            border: 1px solid #2d2d44;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: move;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #f1f5f9;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-description {
+            color: #9ca3af;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            margin-bottom: 0.75rem;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.75rem;
+        }
+
+        .task-assignee {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .assignee-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #8b5cf6, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .assignee-name {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .task-priority {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.625rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high { 
+            background: rgba(239, 68, 68, 0.2); 
+            color: #fca5a5; 
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .priority-medium { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: #fcd34d; 
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .priority-low { 
+            background: rgba(34, 197, 94, 0.2); 
+            color: #86efac; 
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        /* PLACEHOLDER SECTIONS */
+        .placeholder-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .placeholder-content i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #8b5cf6;
+        }
+
+        .placeholder-content h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #e2e8f0;
+        }
+
+        .placeholder-content p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            max-width: 500px;
+        }
+
+        /* RIGHT SIDEBAR - ACTIVITY FEED */
+        .activity-sidebar {
+            background: #1a1a2e;
+            border-left: 1px solid #2d2d44;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #2d2d44;
+        }
+
+        .activity-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 0.5rem;
+        }
+
+        .activity-subtitle {
+            font-size: 0.875rem;
+            color: #9ca3af;
+        }
+
+        .activity-feed {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .activity-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -24px;
+            width: 1px;
+            background: #2d2d44;
+        }
+
+        .activity-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #8b5cf6, #06b6d4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-agent {
+            color: #8b5cf6;
+            font-weight: 600;
+        }
+
+        .activity-time {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+
+        .activity-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-working {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        .status-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .status-waiting {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+        }
+
+        /* SCROLLBARS */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2d2d44;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="mission-control">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i>
+                    Mission Control
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Core</div>
+                <button class="nav-item active" data-section="tasks">
+                    <i class="fas fa-tasks"></i>
+                    Tasks
+                    <span class="nav-badge">19</span>
+                </button>
+                <button class="nav-item" data-section="agents">
+                    <i class="fas fa-robot"></i>
+                    Agents
+                    <span class="nav-badge success">5</span>
+                </button>
+                <button class="nav-item" data-section="context">
+                    <i class="fas fa-brain"></i>
+                    Context
+                    <span class="nav-badge">245</span>
+                </button>
+                <button class="nav-item" data-section="approvals">
+                    <i class="fas fa-check-circle"></i>
+                    Approvals
+                    <span class="nav-badge urgent">2</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <button class="nav-item" data-section="council">
+                    <i class="fas fa-users"></i>
+                    Council
+                </button>
+                <button class="nav-item" data-section="calendar">
+                    <i class="fas fa-calendar"></i>
+                    Calendar
+                    <span class="nav-badge">5</span>
+                </button>
+                <button class="nav-item" data-section="projects">
+                    <i class="fas fa-folder"></i>
+                    Projects
+                    <span class="nav-badge">3</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Intelligence</div>
+                <button class="nav-item" data-section="memory">
+                    <i class="fas fa-database"></i>
+                    Memory
+                </button>
+                <button class="nav-item" data-section="docs">
+                    <i class="fas fa-file-alt"></i>
+                    Docs
+                    <span class="nav-badge">127</span>
+                </button>
+                <button class="nav-item" data-section="people">
+                    <i class="fas fa-address-book"></i>
+                    People
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Operations</div>
+                <button class="nav-item" data-section="office">
+                    <i class="fas fa-building"></i>
+                    Office
+                </button>
+                <button class="nav-item" data-section="team">
+                    <i class="fas fa-users-cog"></i>
+                    Team
+                    <span class="nav-badge success">5</span>
+                </button>
+                <button class="nav-item" data-section="system">
+                    <i class="fas fa-cogs"></i>
+                    System
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Advanced</div>
+                <button class="nav-item" data-section="ai">
+                    <i class="fas fa-microchip"></i>
+                    AI
+                </button>
+                <button class="nav-item" data-section="factory">
+                    <i class="fas fa-industry"></i>
+                    Factory
+                </button>
+                <button class="nav-item" data-section="pipeline">
+                    <i class="fas fa-stream"></i>
+                    Pipeline
+                    <span class="nav-badge">15</span>
+                </button>
+                <button class="nav-item" data-section="feedback">
+                    <i class="fas fa-comments"></i>
+                    Feedback
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="main-header">
+                <div class="header-top">
+                    <h1 class="page-title">Tasks</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i>
+                            Filter
+                        </button>
+                        <button class="btn btn-primary" id="new-task-btn">
+                            <i class="fas fa-plus"></i>
+                            New Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TASKS SECTION -->
+            <div class="content-section active" id="tasks-section">
+                <div class="task-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">19</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">42</div>
+                        <div class="stat-label">Done</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">68%</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+                <div class="completion-bar">
+                    <div class="completion-fill"></div>
+                </div>
+
+                <div class="board-filters">
+                    <div class="filter-group">
+                        <span class="filter-label">Show:</span>
+                        <select class="filter-select">
+                            <option>All Tasks</option>
+                            <option>My Tasks</option>
+                            <option>High Priority</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Agent:</span>
+                        <select class="filter-select">
+                            <option>All Agents</option>
+                            <option>Jarvis</option>
+                            <option>Executive Assistant</option>
+                            <option>TaskMaster</option>
+                        </select>
+                    </div>
+                    <input type="text" class="search-box" placeholder="Search tasks...">
+                </div>
+
+                <div class="kanban-board">
+                    <div class="kanban-column recurring">
+                        <div class="column-header">
+                            <span class="column-title">Recurring</span>
+                            <span class="column-count">4</span>
+                        </div>
+                        <div class="task-list">
+                            <div class="task-card">
+                                <div class="task-title">Daily System Health Check</div>
+                                <div class="task-description">Automated monitoring of all bot systems, API health, and performance metrics</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">SM</div>
+                                        <span class="assignee-name">System Monitor</span>
+                                    </div>
+                                    <div class="task-priority priority-low">Low</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column backlog">
+                        <div class="column-header">
+                            <span class="column-title">Backlog</span>
+                            <span class="column-count">8</span>
+                        </div>
+                        <div class="task-list">
+                            <div class="task-card">
+                                <div class="task-title">Deploy Phase 2 Marketing Bots</div>
+                                <div class="task-description">Launch 6 specialized marketing bots for content creation, social media management, and campaign optimization</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">J</div>
+                                        <span class="assignee-name">Jarvis</span>
+                                    </div>
+                                    <div class="task-priority priority-high">High</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column progress">
+                        <div class="column-header">
+                            <span class="column-title">In Progress</span>
+                            <span class="column-count">3</span>
+                        </div>
+                        <div class="task-list">
+                            <div class="task-card">
+                                <div class="task-title">Mission Control Navigation Fix</div>
+                                <div class="task-description">Fix sidebar navigation to properly switch between different sections</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">J</div>
+                                        <span class="assignee-name">Jarvis</span>
+                                    </div>
+                                    <div class="task-priority priority-high">High</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-column review">
+                        <div class="column-header">
+                            <span class="column-title">Review</span>
+                            <span class="column-count">4</span>
+                        </div>
+                        <div class="task-list">
+                            <div class="task-card">
+                                <div class="task-title">Security Authentication</div>
+                                <div class="task-description">Complete authentication system with secure login and session management</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">J</div>
+                                        <span class="assignee-name">Jarvis</span>
+                                    </div>
+                                    <div class="task-priority priority-high">High</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AGENTS SECTION -->
+            <div class="content-section" id="agents-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-robot"></i>
+                    <h2>Agent Management</h2>
+                    <p>Monitor and control your AI agent team. View status, assign tasks, and track performance across all active bots.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Deploy New Agent
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTEXT SECTION -->
+            <div class="content-section" id="context-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-brain"></i>
+                    <h2>Context & Memory</h2>
+                    <p>Search through 245 indexed memory items, conversation history, and knowledge base entries. Advanced semantic search with cross-references.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Search Memory
+                    </button>
+                </div>
+            </div>
+
+            <!-- APPROVALS SECTION -->
+            <div class="content-section" id="approvals-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-check-circle"></i>
+                    <h2>Pending Approvals</h2>
+                    <p>2 items require your approval before agents can proceed. Review elevated permissions, sensitive operations, and strategic decisions.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        Review Approvals
+                    </button>
+                </div>
+            </div>
+
+            <!-- COUNCIL SECTION -->
+            <div class="content-section" id="council-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-users"></i>
+                    <h2>Agent Council</h2>
+                    <p>High-level strategic coordination between department heads and senior agents. Multi-agent decision making and resource allocation.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-comments"></i>
+                        Join Council Session
+                    </button>
+                </div>
+            </div>
+
+            <!-- CALENDAR SECTION -->
+            <div class="content-section" id="calendar-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-calendar"></i>
+                    <h2>Scheduled Operations</h2>
+                    <p>5 scheduled runs today. Manage automated tasks, agent deployments, and system maintenance windows.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Schedule Task
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROJECTS SECTION -->
+            <div class="content-section" id="projects-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-folder"></i>
+                    <h2>Active Projects</h2>
+                    <p>3 major projects in progress: Phase 2 Deployment, Cost Optimization, and Security Enhancement. Track progress and deliverables.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        New Project
+                    </button>
+                </div>
+            </div>
+
+            <!-- MEMORY SECTION -->
+            <div class="content-section" id="memory-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-database"></i>
+                    <h2>Memory Database</h2>
+                    <p>Full-text search across all conversations, documents, and stored knowledge. Advanced indexing with semantic relationships.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                        Search Memory
+                    </button>
+                </div>
+            </div>
+
+            <!-- DOCS SECTION -->
+            <div class="content-section" id="docs-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-file-alt"></i>
+                    <h2>Documentation</h2>
+                    <p>127 documents including setup guides, API documentation, and operational procedures. Searchable knowledge base.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        New Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- PEOPLE SECTION -->
+            <div class="content-section" id="people-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-address-book"></i>
+                    <h2>People & Contacts</h2>
+                    <p>Manage contacts, team members, and external stakeholders. Integration with communication channels and project assignments.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Contact
+                    </button>
+                </div>
+            </div>
+
+            <!-- OFFICE SECTION -->
+            <div class="content-section" id="office-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-building"></i>
+                    <h2>Office Dashboard</h2>
+                    <p>Physical and virtual office management. Monitor workspace utilization, resources, and environmental systems.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        View Office Status
+                    </button>
+                </div>
+            </div>
+
+            <!-- TEAM SECTION -->
+            <div class="content-section" id="team-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-users-cog"></i>
+                    <h2>Team Management</h2>
+                    <p>5 active team members across all departments. Monitor performance, assign roles, and coordinate collaboration.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Team Member
+                    </button>
+                </div>
+            </div>
+
+            <!-- SYSTEM SECTION -->
+            <div class="content-section" id="system-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-cogs"></i>
+                    <h2>System Administration</h2>
+                    <p>Monitor system health, manage configurations, and control security settings. Advanced diagnostics and maintenance tools.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-wrench"></i>
+                        System Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI SECTION -->
+            <div class="content-section" id="ai-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-microchip"></i>
+                    <h2>AI Model Management</h2>
+                    <p>Configure AI models, monitor API usage, and optimize costs across Claude, OpenAI, and local Ollama instances.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        View Metrics
+                    </button>
+                </div>
+            </div>
+
+            <!-- FACTORY SECTION -->
+            <div class="content-section" id="factory-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-industry"></i>
+                    <h2>Agent Factory</h2>
+                    <p>Mass deploy and configure agents. Templates, bulk operations, and automated provisioning for scale operations.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Create Agent
+                    </button>
+                </div>
+            </div>
+
+            <!-- PIPELINE SECTION -->
+            <div class="content-section" id="pipeline-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-stream"></i>
+                    <h2>Content Pipeline</h2>
+                    <p>15 items in production pipeline. Manage content workflows from ideation to distribution across all channels.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        New Content
+                    </button>
+                </div>
+            </div>
+
+            <!-- FEEDBACK SECTION -->
+            <div class="content-section" id="feedback-section">
+                <div class="placeholder-content">
+                    <i class="fas fa-comments"></i>
+                    <h2>Feedback & Analytics</h2>
+                    <p>Performance metrics, user feedback, and system analytics. Insights for continuous improvement and optimization.</p>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-chart-bar"></i>
+                        View Analytics
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR - ACTIVITY FEED -->
+        <div class="activity-sidebar">
+            <div class="activity-header">
+                <div class="activity-title">Live Activity</div>
+                <div class="activity-subtitle">Real-time agent updates</div>
+            </div>
+            <div class="activity-feed" id="activity-feed">
+                <div class="activity-item">
+                    <div class="activity-avatar">J</div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            <span class="activity-agent">Jarvis</span> fixing Mission Control navigation
+                        </div>
+                        <div class="activity-time">now</div>
+                        <div class="activity-status status-working">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Working
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar">EA</div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            <span class="activity-agent">Executive Assistant</span> optimizing calendar workflows
+                        </div>
+                        <div class="activity-time">5 minutes ago</div>
+                        <div class="activity-status status-working">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Working
+                        </div>
+                    </div>
+                </div>
+
+                <div class="activity-item">
+                    <div class="activity-avatar">TM</div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            <span class="activity-agent">TaskMaster</span> routed 3 new tasks to appropriate agents
+                        </div>
+                        <div class="activity-time">8 minutes ago</div>
+                        <div class="activity-status status-completed">
+                            <i class="fas fa-check"></i>
+                            Completed
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mission Control Professional Dashboard Controller
+        class MissionControlProfessional {
+            constructor() {
+                this.ws = null;
+                this.currentSection = 'tasks';
+                this.initializeComponents();
+                this.connectWebSocket();
+                this.startActivityUpdates();
+            }
+
+            initializeComponents() {
+                this.initializeNavigation();
+                this.initializeDragAndDrop();
+                this.initializeFilters();
+                this.initializeNewTaskButton();
+                this.updateTaskCounts();
+            }
+
+            initializeNavigation() {
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const section = item.dataset.section;
+                        this.switchSection(section);
+                    });
+                });
+            }
+
+            switchSection(section) {
+                console.log(`🔄 Switching to ${section} section`);
+
+                // Update navigation
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+                // Update page title
+                const pageTitle = document.querySelector('.page-title');
+                pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1);
+
+                // Hide all content sections
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+
+                // Show selected section
+                const targetSection = document.getElementById(`${section}-section`);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    console.log(`✅ Switched to ${section} section successfully`);
+                } else {
+                    console.error(`❌ Section ${section}-section not found`);
+                }
+
+                this.currentSection = section;
+
+                // Add activity log
+                this.addActivityItem('System', `Switched to ${section} section`, 'now');
+            }
+
+            initializeDragAndDrop() {
+                // Only initialize for tasks section
+                ['recurring', 'backlog', 'progress', 'review'].forEach(column => {
+                    const taskList = document.querySelector(`.${column} .task-list`);
+                    if (taskList) {
+                        new Sortable(taskList, {
+                            group: 'kanban',
+                            animation: 200,
+                            onEnd: (evt) => {
+                                this.handleTaskMove(evt);
+                            }
+                        });
+                    }
+                });
+            }
+
+            handleTaskMove(evt) {
+                const taskCard = evt.item;
+                const taskTitle = taskCard.querySelector('.task-title').textContent;
+                
+                console.log(`📋 Task "${taskTitle}" moved`);
+                this.addActivityItem('System', `Task "${taskTitle}" moved to new column`, 'now');
+            }
+
+            initializeFilters() {
+                const filters = document.querySelectorAll('.filter-select');
+                filters.forEach(filter => {
+                    filter.addEventListener('change', (e) => {
+                        console.log('🔍 Filter changed:', e.target.value);
+                    });
+                });
+
+                const searchBox = document.querySelector('.search-box');
+                if (searchBox) {
+                    searchBox.addEventListener('input', (e) => {
+                        console.log('🔍 Search:', e.target.value);
+                    });
+                }
+            }
+
+            initializeNewTaskButton() {
+                const newTaskBtn = document.getElementById('new-task-btn');
+                if (newTaskBtn) {
+                    newTaskBtn.addEventListener('click', () => {
+                        console.log('➕ New task requested');
+                        this.addActivityItem('System', 'New task creation requested', 'now');
+                    });
+                }
+            }
+
+            updateTaskCounts() {
+                // Update any dynamic counters here
+            }
+
+            connectWebSocket() {
+                try {
+                    // Use current host and port for WebSocket connection
+                    const wsUrl = `ws://${window.location.host}`;
+                    this.ws = new WebSocket(wsUrl);
+                    
+                    this.ws.onopen = () => {
+                        console.log('🔗 Connected to Mission Control backend');
+                        this.addActivityItem('System', 'Connected to Mission Control backend', 'now');
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        const message = JSON.parse(event.data);
+                        this.handleWebSocketMessage(message);
+                    };
+                    
+                    this.ws.onerror = () => {
+                        console.log('🔴 WebSocket connection failed - running in demo mode');
+                    };
+                    
+                    this.ws.onclose = () => {
+                        console.log('🔌 WebSocket disconnected - attempting reconnect...');
+                        setTimeout(() => this.connectWebSocket(), 3000);
+                    };
+                } catch (error) {
+                    console.log('🔴 WebSocket unavailable - running in demo mode');
+                }
+            }
+
+            handleWebSocketMessage(message) {
+                switch (message.type) {
+                    case 'task_updated':
+                        this.updateTaskCounts();
+                        break;
+                    case 'agent_activity':
+                        this.addActivityItem(
+                            message.data.agent, 
+                            message.data.activity, 
+                            message.data.time || 'now'
+                        );
+                        break;
+                    case 'system_notification':
+                        this.addActivityItem('System', message.data.message, 'now');
+                        break;
+                }
+            }
+
+            addActivityItem(agent, activity, time) {
+                const feed = document.getElementById('activity-feed');
+                const avatar = agent.split(' ').map(word => word[0]).join('').toUpperCase();
+                
+                const activityItem = document.createElement('div');
+                activityItem.className = 'activity-item';
+                activityItem.innerHTML = `
+                    <div class="activity-avatar">${avatar}</div>
+                    <div class="activity-content">
+                        <div class="activity-text">
+                            <span class="activity-agent">${agent}</span> ${activity}
+                        </div>
+                        <div class="activity-time">${time}</div>
+                        <div class="activity-status status-completed">
+                            <i class="fas fa-check"></i>
+                            New
+                        </div>
+                    </div>
+                `;
+                
+                feed.insertBefore(activityItem, feed.firstChild);
+                
+                // Remove old items to keep feed manageable
+                const items = feed.querySelectorAll('.activity-item');
+                if (items.length > 20) {
+                    feed.removeChild(feed.lastChild);
+                }
+            }
+
+            startActivityUpdates() {
+                // Simulate periodic activity updates
+                setInterval(() => {
+                    const agents = ['Jarvis', 'Executive Assistant', 'TaskMaster', 'Research Bot', 'Scheduler'];
+                    const activities = [
+                        'completed routine system check',
+                        'processed new incoming requests',
+                        'optimized workflow parameters',
+                        'updated knowledge base',
+                        'analyzed performance metrics'
+                    ];
+                    
+                    const randomAgent = agents[Math.floor(Math.random() * agents.length)];
+                    const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+                    
+                    this.addActivityItem(randomAgent, randomActivity, 'just now');
+                }, 45000); // Every 45 seconds
+            }
+        }
+
+        // Initialize Mission Control when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MissionControlProfessional();
+            console.log('🚀 Mission Control Professional Interface Loaded');
+        });
+    </script>
+</body>
+</html>

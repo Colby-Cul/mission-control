@@ -1,0 +1,213 @@
+const MOCK_TIMESTAMP = "2026-04-09T13:11:00-07:00";
+
+export const mockAccounts = [
+  {
+    id: "mock-checking-1",
+    name: "Operating Checking",
+    type: "depository",
+    subtype: "checking",
+    balance_current: 24850.42,
+    balance_available: 24610.11,
+    balance_limit: null,
+    mask: "2841",
+    account_scope: "business",
+    entity_id: "mc-ops-llc",
+    plaid_items: { institution_name: "Mercury" },
+  },
+  {
+    id: "mock-savings-1",
+    name: "Reserve Savings",
+    type: "depository",
+    subtype: "savings",
+    balance_current: 91200.0,
+    balance_available: 91200.0,
+    balance_limit: null,
+    mask: "9932",
+    account_scope: "personal",
+    entity_id: null,
+    plaid_items: { institution_name: "Ally Bank" },
+  },
+  {
+    id: "mock-brokerage-1",
+    name: "Long-Term Brokerage",
+    type: "investment",
+    subtype: "brokerage",
+    balance_current: 186400.35,
+    balance_available: null,
+    balance_limit: null,
+    mask: "4412",
+    account_scope: "personal",
+    entity_id: null,
+    plaid_items: { institution_name: "Charles Schwab" },
+  },
+  {
+    id: "mock-credit-1",
+    name: "Business Rewards Card",
+    type: "credit",
+    subtype: "credit card",
+    balance_current: 6840.22,
+    balance_available: 19159.78,
+    balance_limit: 26000.0,
+    mask: "1109",
+    account_scope: "business",
+    entity_id: "mc-ops-llc",
+    plaid_items: { institution_name: "Chase" },
+  },
+];
+
+export const mockTransactions = [
+  {
+    id: "txn-001",
+    account_id: "mock-checking-1",
+    date: "2026-04-08",
+    name: "AWS",
+    merchant_name: "Amazon Web Services",
+    amount: 412.88,
+    personal_finance_category: "GENERAL_MERCHANDISE",
+  },
+  {
+    id: "txn-002",
+    account_id: "mock-checking-1",
+    date: "2026-04-07",
+    name: "Notion",
+    merchant_name: "Notion",
+    amount: 48.0,
+    personal_finance_category: "GENERAL_MERCHANDISE",
+  },
+  {
+    id: "txn-003",
+    account_id: "mock-checking-1",
+    date: "2026-04-06",
+    name: "Client Payment",
+    merchant_name: "Stripe Payout",
+    amount: -4800.0,
+    personal_finance_category: "INCOME",
+  },
+  {
+    id: "txn-004",
+    account_id: "mock-savings-1",
+    date: "2026-04-05",
+    name: "Transfer to Savings",
+    merchant_name: "Internal Transfer",
+    amount: -1500.0,
+    personal_finance_category: "INCOME",
+  },
+  {
+    id: "txn-005",
+    account_id: "mock-credit-1",
+    date: "2026-04-04",
+    name: "United Airlines",
+    merchant_name: "United Airlines",
+    amount: 622.14,
+    personal_finance_category: "TRAVEL",
+  },
+  {
+    id: "txn-006",
+    account_id: "mock-credit-1",
+    date: "2026-04-03",
+    name: "Blue Bottle Coffee",
+    merchant_name: "Blue Bottle Coffee",
+    amount: 18.64,
+    personal_finance_category: "FOOD_AND_DRINK",
+  },
+];
+
+export const mockHoldings = [
+  {
+    id: "holding-1",
+    account_id: "mock-brokerage-1",
+    quantity: 120,
+    institution_price: 412.35,
+    institution_value: 49482.0,
+    cost_basis: 43800.0,
+    securities: {
+      ticker_symbol: "VOO",
+      name: "Vanguard S&P 500 ETF",
+      type: "etf",
+    },
+  },
+  {
+    id: "holding-2",
+    account_id: "mock-brokerage-1",
+    quantity: 55,
+    institution_price: 318.1,
+    institution_value: 17495.5,
+    cost_basis: 16240.0,
+    securities: {
+      ticker_symbol: "QQQ",
+      name: "Invesco QQQ Trust",
+      type: "etf",
+    },
+  },
+];
+
+export const mockCryptoHoldings = [
+  {
+    id: "crypto-1",
+    currency: "BTC",
+    balance: 0.42,
+    balance_usd: 29750.0,
+    cost_basis: 24000.0,
+  },
+  {
+    id: "crypto-2",
+    currency: "ETH",
+    balance: 4.8,
+    balance_usd: 16240.0,
+    cost_basis: 14900.0,
+  },
+];
+
+export const mockProperties = [
+  {
+    id: "property-1",
+    address: "1234 Valencia St",
+    city: "San Francisco",
+    state: "CA",
+    zip: "94110",
+    entity_id: "mc-holdings-llc",
+    entity_name: "MC Holdings LLC",
+    ownership_pct: 100,
+    purchase_price: 1180000,
+    purchase_date: "2022-06-15",
+    current_value: 1345000,
+    mortgage_balance: 842000,
+    mortgage_rate: 5.4,
+    mortgage_payment: 4860,
+    valuation_source: "manual",
+    is_rental: true,
+    monthly_expenses: 980,
+    notes: "Mock property for local dashboard fallback.",
+  },
+];
+
+export const mockSummary = {
+  net_worth: 494200.05,
+  banking: {
+    total: 116050.42,
+    checking: 24850.42,
+    savings: 91200.0,
+    accounts: mockAccounts.filter((account) => account.type === "depository"),
+  },
+  investments: {
+    total: 186400.35,
+    accounts: mockAccounts.filter((account) => account.type === "investment"),
+  },
+  credit: {
+    total_balance: 6840.22,
+    total_limit: 26000.0,
+    accounts: mockAccounts.filter((account) => account.type === "credit"),
+  },
+  crypto: {
+    total: mockCryptoHoldings.reduce((sum, holding) => sum + holding.balance_usd, 0),
+  },
+  real_estate: {
+    total_value: 1345000,
+    total_mortgage: 842000,
+    owned_equity: 503000,
+    property_count: mockProperties.length,
+  },
+  linked_institutions: 4,
+  last_sync: MOCK_TIMESTAMP,
+  isMock: true,
+};

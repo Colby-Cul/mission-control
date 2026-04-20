@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control - Agent Operations Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            background: #0a0a0a;
+            color: #e1e8ed;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .mission-control {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER - Mission Control Command */
+        .header {
+            background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            height: 70px;
+            border-bottom: 2px solid #00ff41;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(0, 255, 65, 0.1) 50%, transparent 100%);
+            animation: scan 4s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.8);
+            z-index: 1;
+        }
+
+        .header .mission-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            z-index: 1;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 1);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .mission-time {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: #00ff41;
+        }
+
+        /* TAB NAVIGATION */
+        .tab-navigation {
+            background: #111;
+            border-bottom: 1px solid #333;
+            display: flex;
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            background: #1a1a1a;
+            border: none;
+            color: #888;
+            padding: 1rem 2rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            background: #2a2a2a;
+            color: #ccc;
+        }
+
+        .tab-button.active {
+            background: #222;
+            color: #00ff41;
+            border-bottom-color: #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .tab-button .tab-icon {
+            margin-right: 0.5rem;
+        }
+
+        .tab-button .notification-badge {
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 1s infinite;
+        }
+
+        /* TAB CONTENT */
+        .tab-content {
+            flex: 1;
+            display: none;
+            background: #111;
+            overflow: hidden;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-header {
+            background: #1a1a1a;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .tab-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff41;
+        }
+
+        .tab-stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .stat-badge {
+            background: #333;
+            color: #00ff41;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .tab-body {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background: #0f0f0f;
+        }
+
+        /* TASKS TAB - KANBAN */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            height: 100%;
+        }
+
+        .kanban-column {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-header {
+            padding: 1rem;
+            background: #2a2a2a;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .todo { border-top: 4px solid #ff6b6b; }
+        .progress { border-top: 4px solid #ffd93d; }
+        .review { border-top: 4px solid #6bcf7f; }
+        .done { border-top: 4px solid #4ecdc4; }
+
+        .task-list {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            min-height: 200px;
+        }
+
+        .task-card {
+            background: #222;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #444;
+            cursor: move;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .task-card:hover {
+            border-color: #00ff41;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .task-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .task-description {
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .task-priority {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .priority-high { background: #ff4757; color: white; }
+        .priority-medium { background: #ffa726; color: white; }
+        .priority-low { background: #66bb6a; color: white; }
+
+        .task-assignee {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .assignee-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        /* CONTENT PIPELINE TAB */
+        .pipeline-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .pipeline-stage {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            border-left: 6px solid #00ff41;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .pipeline-stage:hover {
+            background: #222;
+            border-left-width: 8px;
+            transform: translateX(4px);
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stage-title {
+            font-weight: bold;
+            color: #00ff41;
+            font-size: 1.1rem;
+        }
+
+        .stage-count {
+            background: #333;
+            color: #00ff41;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .stage-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .content-item {
+            background: #2a2a2a;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid #444;
+            transition: all 0.2s ease;
+        }
+
+        .content-item:hover {
+            border-color: #00ff41;
+        }
+
+        .content-title {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 0.3rem;
+        }
+
+        .content-status {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .stage-progress {
+            margin-top: 1rem;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #4ecdc4 100%);
+            transition: width 0.5s ease;
+        }
+
+        /* MEMORY SEARCH TAB */
+        .memory-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-section {
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            width: 100%;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .search-filters {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .filter-tag {
+            background: #2a2a2a;
+            color: #ccc;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tag:hover,
+        .filter-tag.active {
+            background: #00ff41;
+            color: #000;
+        }
+
+        .memory-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .memory-item {
+            background: #1a1a1a;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+            transition: all 0.2s ease;
+        }
+
+        .memory-item:hover {
+            background: #222;
+            border-left-width: 6px;
+        }
+
+        .memory-title {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .memory-snippet {
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .memory-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .memory-source {
+            font-family: 'Courier New', monospace;
+        }
+
+        .memory-score {
+            background: #333;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            color: #00ff41;
+        }
+
+        /* CALENDAR TAB */
+        .calendar-container {
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .calendar-view {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar-title {
+            font-weight: bold;
+            color: #00ff41;
+            font-size: 1.1rem;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-button {
+            background: #333;
+            border: none;
+            color: #ccc;
+            padding: 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .nav-button:hover {
+            background: #00ff41;
+            color: #000;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 2rem;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #2a2a2a;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day:hover {
+            background: #333;
+        }
+
+        .calendar-day.today {
+            background: #00ff41;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .calendar-day.has-events {
+            border: 2px solid #ffd93d;
+        }
+
+        .scheduled-runs {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .scheduled-run {
+            background: #2a2a2a;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #ffd93d;
+            transition: all 0.2s ease;
+        }
+
+        .scheduled-run:hover {
+            background: #333;
+            border-left-width: 6px;
+        }
+
+        .run-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .run-time {
+            font-weight: bold;
+            color: #ffd93d;
+            font-size: 0.9rem;
+        }
+
+        .run-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            background: #333;
+            color: #ccc;
+        }
+
+        .run-task {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .run-details {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* TEAM STATUS TAB */
+        .team-container {
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            align-content: start;
+        }
+
+        .team-member {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .team-member.online {
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+        }
+
+        .team-member.busy {
+            border-color: #ffd93d;
+            box-shadow: 0 0 15px rgba(255, 217, 61, 0.2);
+        }
+
+        .team-member.offline {
+            border-color: #666;
+            opacity: 0.6;
+        }
+
+        .member-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #333, #555);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+        }
+
+        .status-dot {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #1a1a1a;
+        }
+
+        .online .status-dot { background: #00ff41; }
+        .busy .status-dot { background: #ffd93d; }
+        .offline .status-dot { background: #666; }
+
+        .member-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .member-role {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .member-status {
+            background: #2a2a2a;
+            padding: 0.8rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .member-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #00ff41;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        /* METRICS TAB */
+        .metrics-container {
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            align-content: start;
+        }
+
+        .metric-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            border-top: 4px solid #00ff41;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00ff41;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ff41;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 1rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .metric-change {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .change-up { color: #00ff41; }
+        .change-down { color: #ff4757; }
+        .change-neutral { color: #ffd93d; }
+
+        .metric-chart {
+            height: 60px;
+            margin-top: 1rem;
+            background: #2a2a2a;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #4ecdc4 100%);
+            transition: width 1s ease;
+            border-radius: 4px;
+        }
+
+        /* SCROLLBARS */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* LOADING STATES */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: '';
+            width: 30px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top: 3px solid #00ff41;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .kanban-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .calendar-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .team-container {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tab-navigation {
+                overflow-x: auto;
+            }
+            
+            .tab-button {
+                padding: 0.8rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mission-control">
+        <!-- HEADER -->
+        <header class="header">
+            <h1>🎯 MISSION CONTROL</h1>
+            <div class="mission-status">
+                <div class="status-indicator"></div>
+                <span>OPERATIONAL</span>
+                <div class="mission-time" id="mission-time"></div>
+            </div>
+        </header>
+
+        <!-- TAB NAVIGATION -->
+        <nav class="tab-navigation">
+            <button class="tab-button active" data-tab="tasks">
+                <span class="tab-icon">📋</span>Tasks
+                <span class="notification-badge">12</span>
+            </button>
+            <button class="tab-button" data-tab="pipeline">
+                <span class="tab-icon">🎨</span>Pipeline
+                <span class="notification-badge">3</span>
+            </button>
+            <button class="tab-button" data-tab="memory">
+                <span class="tab-icon">🧠</span>Memory
+            </button>
+            <button class="tab-button" data-tab="calendar">
+                <span class="tab-icon">📅</span>Calendar
+                <span class="notification-badge">5</span>
+            </button>
+            <button class="tab-button" data-tab="team">
+                <span class="tab-icon">👥</span>Team
+            </button>
+            <button class="tab-button" data-tab="metrics">
+                <span class="tab-icon">📊</span>Metrics
+            </button>
+        </nav>
+
+        <!-- TASKS TAB -->
+        <div class="tab-content active" id="tasks-tab">
+            <div class="tab-header">
+                <div class="tab-title">📋 TASK OPERATIONS</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">12 Active Tasks</div>
+                    <div class="stat-badge">3 In Progress</div>
+                    <div class="stat-badge">5 Done Today</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="kanban-board">
+                    <div class="kanban-column todo">
+                        <div class="column-header">📝 TODO (4)</div>
+                        <div class="task-list" id="todo-list">
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Deploy Marketing Bots</div>
+                                <div class="task-description">Set up Phase 2 marketing department with 6 specialized bots for content, social media, and campaign management.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🤖</div>
+                                        <span>Marketing Dept</span>
+                                    </div>
+                                    <div class="task-priority priority-high">HIGH</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Content Pipeline Setup</div>
+                                <div class="task-description">Configure automated content workflow from ideation to distribution across all channels.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🎨</div>
+                                        <span>Content Team</span>
+                                    </div>
+                                    <div class="task-priority priority-medium">MED</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">OpenAI Cost Optimization</div>
+                                <div class="task-description">Implement GPT-4 integration with smart routing to achieve 40% cost reduction target.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">💰</div>
+                                        <span>Technical</span>
+                                    </div>
+                                    <div class="task-priority priority-high">HIGH</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Memory Search Enhancement</div>
+                                <div class="task-description">Upgrade memory search with semantic indexing and cross-reference capabilities.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🧠</div>
+                                        <span>Research</span>
+                                    </div>
+                                    <div class="task-priority priority-low">LOW</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-column progress">
+                        <div class="column-header">⚡ IN PROGRESS (3)</div>
+                        <div class="task-list" id="progress-list">
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Mission Control UI Redesign</div>
+                                <div class="task-description">Transform dashboard into NASA-style operational center with tabbed interface.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🎯</div>
+                                        <span>Design</span>
+                                    </div>
+                                    <div class="task-priority priority-high">HIGH</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Agent Team Status Monitor</div>
+                                <div class="task-description">Real-time status tracking and health monitoring for all active bots.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">👥</div>
+                                        <span>Operations</span>
+                                    </div>
+                                    <div class="task-priority priority-medium">MED</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Calendar Integration</div>
+                                <div class="task-description">Connect Google Calendar for automated scheduling and reminder system.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">📅</div>
+                                        <span>Integration</span>
+                                    </div>
+                                    <div class="task-priority priority-medium">MED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-column review">
+                        <div class="column-header">👀 REVIEW (2)</div>
+                        <div class="task-list" id="review-list">
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Claude API Integration</div>
+                                <div class="task-description">Production deployment with real Claude Sonnet API calls and cost tracking.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🤖</div>
+                                        <span>Technical</span>
+                                    </div>
+                                    <div class="task-priority priority-high">HIGH</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Security Audit</div>
+                                <div class="task-description">Comprehensive security review of Docker containers and API access controls.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🔒</div>
+                                        <span>Security</span>
+                                    </div>
+                                    <div class="task-priority priority-medium">MED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kanban-column done">
+                        <div class="column-header">✅ DONE (3)</div>
+                        <div class="task-list" id="done-list">
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Google Tasks Setup</div>
+                                <div class="task-description">Successfully integrated Google Tasks with keyring authentication and workflow automation.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">✅</div>
+                                        <span>Integration</span>
+                                    </div>
+                                    <div class="task-priority priority-low">LOW</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Phase 1 Bot Deployment</div>
+                                <div class="task-description">Launched Executive Assistant, Jarvis, TaskMaster, Scheduler, and Research Bot.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🚀</div>
+                                        <span>Operations</span>
+                                    </div>
+                                    <div class="task-priority priority-high">HIGH</div>
+                                </div>
+                            </div>
+                            <div class="task-card" draggable="true">
+                                <div class="task-title">Docker Security Container</div>
+                                <div class="task-description">Implemented secure Docker isolation for all bot tool executions.</div>
+                                <div class="task-meta">
+                                    <div class="task-assignee">
+                                        <div class="assignee-avatar">🐳</div>
+                                        <span>DevOps</span>
+                                    </div>
+                                    <div class="task-priority priority-medium">MED</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PIPELINE TAB -->
+        <div class="tab-content" id="pipeline-tab">
+            <div class="tab-header">
+                <div class="tab-title">🎨 CONTENT PIPELINE</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">15 Items in Pipeline</div>
+                    <div class="stat-badge">3 Ready to Publish</div>
+                    <div class="stat-badge">68% Completion Rate</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="pipeline-container">
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <div class="stage-title">📝 IDEATION</div>
+                            <div class="stage-count">6 items</div>
+                        </div>
+                        <div class="stage-items">
+                            <div class="content-item">
+                                <div class="content-title">Mission Control Demo Video</div>
+                                <div class="content-status">Concept approved • Scripting needed</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">AI Agent Best Practices Guide</div>
+                                <div class="content-status">Research phase • 30% complete</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">Cost Optimization Case Study</div>
+                                <div class="content-status">Data collection • 60% complete</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">Docker Security Whitepaper</div>
+                                <div class="content-status">Outline ready • Writing started</div>
+                            </div>
+                        </div>
+                        <div class="stage-progress">
+                            <div class="progress-bar" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <div class="stage-title">✍️ CREATION</div>
+                            <div class="stage-count">4 items</div>
+                        </div>
+                        <div class="stage-items">
+                            <div class="content-item">
+                                <div class="content-title">OpenClaw Setup Tutorial</div>
+                                <div class="content-status">First draft complete • Review needed</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">Agent Workflow Automation</div>
+                                <div class="content-status">Writing in progress • 45% done</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">Mission Control Architecture</div>
+                                <div class="content-status">Technical review • 80% complete</div>
+                            </div>
+                        </div>
+                        <div class="stage-progress">
+                            <div class="progress-bar" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <div class="stage-title">🎬 PRODUCTION</div>
+                            <div class="stage-count">3 items</div>
+                        </div>
+                        <div class="stage-items">
+                            <div class="content-item">
+                                <div class="content-title">Bot Personality System</div>
+                                <div class="content-status">Video editing • 70% complete</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">API Integration Demo</div>
+                                <div class="content-status">Screen recording done • Audio pending</div>
+                            </div>
+                        </div>
+                        <div class="stage-progress">
+                            <div class="progress-bar" style="width: 20%"></div>
+                        </div>
+                    </div>
+                    <div class="pipeline-stage">
+                        <div class="stage-header">
+                            <div class="stage-title">🚀 DISTRIBUTION</div>
+                            <div class="stage-count">2 items</div>
+                        </div>
+                        <div class="stage-items">
+                            <div class="content-item">
+                                <div class="content-title">Phase 1 Success Story</div>
+                                <div class="content-status">Ready to publish • Scheduled for tomorrow</div>
+                            </div>
+                            <div class="content-item">
+                                <div class="content-title">Technical Implementation Guide</div>
+                                <div class="content-status">Published • Performance tracking active</div>
+                            </div>
+                        </div>
+                        <div class="stage-progress">
+                            <div class="progress-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEMORY TAB -->
+        <div class="tab-content" id="memory-tab">
+            <div class="tab-header">
+                <div class="tab-title">🧠 MEMORY SEARCH</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">245 Items Indexed</div>
+                    <div class="stat-badge">18 Updated Today</div>
+                    <div class="stat-badge">3.2s Avg Search</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="memory-container">
+                    <div class="search-section">
+                        <input type="text" class="search-box" placeholder="Search conversations, documents, memory files..." id="memory-search">
+                        <div class="search-filters">
+                            <div class="filter-tag active">All</div>
+                            <div class="filter-tag">Conversations</div>
+                            <div class="filter-tag">Documents</div>
+                            <div class="filter-tag">Tasks</div>
+                            <div class="filter-tag">Code</div>
+                            <div class="filter-tag">Decisions</div>
+                        </div>
+                    </div>
+                    <div class="memory-results" id="memory-results">
+                        <div class="memory-item">
+                            <div class="memory-title">Mission Control UI Redesign Decision</div>
+                            <div class="memory-snippet">User requested tabbed interface for Mission Control dashboard based on Instagram post vision. Each section (Kanban, Pipeline, Memory, Calendar, Team, Metrics) should be in its own tab for full-window viewing. Implementation includes NASA-style operational aesthetics with drag-and-drop functionality.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">memory/2026-03-16.md • Line 45</div>
+                                <div class="memory-score">98%</div>
+                            </div>
+                        </div>
+                        <div class="memory-item">
+                            <div class="memory-title">Claude API Integration Success</div>
+                            <div class="memory-snippet">Successfully integrated Claude Sonnet API with Mission Control. API key configured, cost tracking implemented, smart failover to OpenClaw models when Claude models unavailable. Real API calls working with proper error handling and token usage monitoring.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">memory/2026-03-16.md • Line 32</div>
+                                <div class="memory-score">95%</div>
+                            </div>
+                        </div>
+                        <div class="memory-item">
+                            <div class="memory-title">Google Tasks Workflow Setup</div>
+                            <div class="memory-snippet">Implemented Google Tasks integration with keyring authentication. Created "Jarvis Task List" for tracking assistant tasks and automated task completion workflow. Password: OpenClawTasksSetup2026. All tasks now automatically tracked and marked complete.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">memory/2026-03-16.md • Line 18</div>
+                                <div class="memory-score">92%</div>
+                            </div>
+                        </div>
+                        <div class="memory-item">
+                            <div class="memory-title">Phase 1 Bot Deployment Complete</div>
+                            <div class="memory-snippet">Successfully deployed 5 Phase 1 bots: Executive Assistant (Claude Opus), Jarvis Chief of Staff, TaskMaster, Scheduler, and Research Bot. All operational with specialized personalities and capabilities. Ready for Phase 2 Marketing Department expansion.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">MEMORY.md • Line 78</div>
+                                <div class="memory-score">90%</div>
+                            </div>
+                        </div>
+                        <div class="memory-item">
+                            <div class="memory-title">Docker Security Container Implementation</div>
+                            <div class="memory-snippet">Configured Docker-based secure container isolation for all bot tool executions. Using openclaw-sandbox:bookworm-slim image with restricted permissions. Prevents security vulnerabilities while maintaining full functionality for file operations and command execution.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">technical-notes.md • Line 156</div>
+                                <div class="memory-score">87%</div>
+                            </div>
+                        </div>
+                        <div class="memory-item">
+                            <div class="memory-title">Cost Optimization Strategy</div>
+                            <div class="memory-snippet">Target: 40% cost reduction ($702/month → $420/month). Strategy: Claude for strategic decisions, OpenAI for operational tasks, Ollama for local processing. Executive Assistant Bot maintained on Claude Opus for premium service quality.</div>
+                            <div class="memory-meta">
+                                <div class="memory-source">MISSION_CONTROL_COST_OPTIMIZATION.md • Line 23</div>
+                                <div class="memory-score">85%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CALENDAR TAB -->
+        <div class="tab-content" id="calendar-tab">
+            <div class="tab-header">
+                <div class="tab-title">📅 SCHEDULED OPERATIONS</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">5 Scheduled Today</div>
+                    <div class="stat-badge">12 This Week</div>
+                    <div class="stat-badge">2 Overdue</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="calendar-container">
+                    <div class="calendar-view">
+                        <div class="calendar-header">
+                            <div class="calendar-title">March 2026</div>
+                            <div class="calendar-nav">
+                                <button class="nav-button">‹</button>
+                                <button class="nav-button">›</button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid" id="calendar-grid">
+                            <!-- Calendar will be generated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="calendar-view">
+                        <div class="calendar-header">
+                            <div class="calendar-title">Upcoming Runs</div>
+                        </div>
+                        <div class="scheduled-runs">
+                            <div class="scheduled-run">
+                                <div class="run-header">
+                                    <div class="run-time">18:00 PST Today</div>
+                                    <div class="run-status">SCHEDULED</div>
+                                </div>
+                                <div class="run-task">Deploy Phase 2 Marketing Bots</div>
+                                <div class="run-details">6 bots • Content, Social Media, Campaign teams</div>
+                            </div>
+                            <div class="scheduled-run">
+                                <div class="run-header">
+                                    <div class="run-time">20:00 PST Today</div>
+                                    <div class="run-status">READY</div>
+                                </div>
+                                <div class="run-task">Content Pipeline Automation</div>
+                                <div class="run-details">Setup automated workflow triggers</div>
+                            </div>
+                            <div class="scheduled-run">
+                                <div class="run-header">
+                                    <div class="run-time">22:00 PST Today</div>
+                                    <div class="run-status">QUEUED</div>
+                                </div>
+                                <div class="run-task">System Backup & Optimization</div>
+                                <div class="run-details">Memory cleanup • Performance analysis</div>
+                            </div>
+                            <div class="scheduled-run">
+                                <div class="run-header">
+                                    <div class="run-time">09:00 PST Tomorrow</div>
+                                    <div class="run-status">PENDING</div>
+                                </div>
+                                <div class="run-task">Weekly Team Status Review</div>
+                                <div class="run-details">All departments • Performance metrics</div>
+                            </div>
+                            <div class="scheduled-run">
+                                <div class="run-header">
+                                    <div class="run-time">14:00 PST Tomorrow</div>
+                                    <div class="run-status">SCHEDULED</div>
+                                </div>
+                                <div class="run-task">OpenAI Cost Optimization Deploy</div>
+                                <div class="run-details">Phase A implementation • GPT-4 integration</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM TAB -->
+        <div class="tab-content" id="team-tab">
+            <div class="tab-header">
+                <div class="tab-title">👥 AGENT TEAM STATUS</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">5 Online</div>
+                    <div class="stat-badge">0 Offline</div>
+                    <div class="stat-badge">94% Efficiency</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="team-container">
+                    <div class="team-member online">
+                        <div class="member-avatar">
+                            👤
+                            <div class="status-dot"></div>
+                        </div>
+                        <div class="member-name">Executive Assistant</div>
+                        <div class="member-role">Executive Department</div>
+                        <div class="member-status">🗓️ Optimizing calendar workflows and managing executive priorities</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">Tasks Today</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">97%</div>
+                                <div class="stat-label">Uptime</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member busy">
+                        <div class="member-avatar">
+                            🎩
+                            <div class="status-dot"></div>
+                        </div>
+                        <div class="member-name">Jarvis (Chief of Staff)</div>
+                        <div class="member-role">Executive Department</div>
+                        <div class="member-status">⚡ Coordinating Phase 2 deployment and resource allocation</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">Active Tasks</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">100%</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member online">
+                        <div class="member-avatar">
+                            🤖
+                            <div class="status-dot"></div>
+                        </div>
+                        <div class="member-name">TaskMaster</div>
+                        <div class="member-role">Operations Department</div>
+                        <div class="member-status">📋 Managing task routing and workflow optimization</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">24</div>
+                                <div class="stat-label">Tasks Routed</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">89%</div>
+                                <div class="stat-label">Efficiency</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member online">
+                        <div class="member-avatar">
+                            📅
+                            <div class="status-dot"></div>
+                        </div>
+                        <div class="member-name">Scheduler</div>
+                        <div class="member-role">Operations Department</div>
+                        <div class="member-status">🕐 Available for scheduling and time management tasks</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Events Today</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">95%</div>
+                                <div class="stat-label">Accuracy</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member online">
+                        <div class="member-avatar">
+                            🔍
+                            <div class="status-dot"></div>
+                        </div>
+                        <div class="member-name">Research Bot</div>
+                        <div class="member-role">Intelligence Department</div>
+                        <div class="member-status">📊 Conducting market analysis and competitive intelligence</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Reports</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">92%</div>
+                                <div class="stat-label">Accuracy</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="team-member" style="border: 2px dashed #444; opacity: 0.6;">
+                        <div class="member-avatar">➕</div>
+                        <div class="member-name">Phase 2 Deployment</div>
+                        <div class="member-role">Marketing Department</div>
+                        <div class="member-status">🚀 6 marketing bots ready for deployment</div>
+                        <div class="member-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Bots Ready</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">18:00</div>
+                                <div class="stat-label">Deploy Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- METRICS TAB -->
+        <div class="tab-content" id="metrics-tab">
+            <div class="tab-header">
+                <div class="tab-title">📊 OPERATIONAL METRICS</div>
+                <div class="tab-stats">
+                    <div class="stat-badge">94% Efficiency</div>
+                    <div class="stat-badge">$2.47 Daily Cost</div>
+                    <div class="stat-badge">47 Tasks Completed</div>
+                </div>
+            </div>
+            <div class="tab-body">
+                <div class="metrics-container">
+                    <div class="metric-card">
+                        <div class="metric-icon">📝</div>
+                        <div class="metric-value" id="tasks-completed">47</div>
+                        <div class="metric-label">Tasks Completed</div>
+                        <div class="metric-change change-up">
+                            <span>↗</span>
+                            <span>+12 today (+34%)</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 78%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🤖</div>
+                        <div class="metric-value" id="active-bots">5</div>
+                        <div class="metric-label">Active Bots</div>
+                        <div class="metric-change change-up">
+                            <span>↗</span>
+                            <span>All systems operational</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 100%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">💰</div>
+                        <div class="metric-value" id="daily-cost">$2.47</div>
+                        <div class="metric-label">Daily Cost</div>
+                        <div class="metric-change change-down">
+                            <span>↘</span>
+                            <span>-$0.83 (-25%)</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 45%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-value" id="efficiency">94%</div>
+                        <div class="metric-label">System Efficiency</div>
+                        <div class="metric-change change-up">
+                            <span>↗</span>
+                            <span>+7% improvement</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 94%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-value" id="api-calls">1,247</div>
+                        <div class="metric-label">API Calls Today</div>
+                        <div class="metric-change change-up">
+                            <span>↗</span>
+                            <span>+156 since yesterday</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 67%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">🎯</div>
+                        <div class="metric-value" id="success-rate">97%</div>
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-change change-neutral">
+                            <span>=</span>
+                            <span>Consistent performance</span>
+                        </div>
+                        <div class="metric-chart">
+                            <div class="chart-bar" style="width: 97%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mission Control Tabbed UI Controller
+        class MissionControlTabbedUI {
+            constructor() {
+                this.ws = null;
+                this.currentTab = 'tasks';
+                this.initializeComponents();
+                this.connectWebSocket();
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000);
+            }
+
+            initializeComponents() {
+                this.initializeTabs();
+                this.initializeDragAndDrop();
+                this.initializeSearch();
+                this.initializeCalendar();
+                this.loadData();
+            }
+
+            initializeTabs() {
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const tabName = button.dataset.tab;
+                        this.switchTab(tabName);
+                    });
+                });
+            }
+
+            switchTab(tabName) {
+                // Update buttons
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+
+                this.currentTab = tabName;
+
+                // Load tab-specific data
+                this.loadTabData(tabName);
+            }
+
+            loadTabData(tabName) {
+                switch(tabName) {
+                    case 'tasks':
+                        this.updateTaskCounts();
+                        break;
+                    case 'memory':
+                        this.loadDefaultMemoryItems();
+                        break;
+                    case 'calendar':
+                        this.updateCalendar();
+                        break;
+                    case 'metrics':
+                        this.updateMetrics();
+                        break;
+                }
+            }
+
+            initializeDragAndDrop() {
+                // Enable drag and drop for Kanban columns
+                ['todo-list', 'progress-list', 'review-list', 'done-list'].forEach(listId => {
+                    const list = document.getElementById(listId);
+                    if (list) {
+                        new Sortable(list, {
+                            group: 'tasks',
+                            animation: 200,
+                            ghostClass: 'dragging',
+                            onEnd: (evt) => {
+                                this.handleTaskMove(evt);
+                            }
+                        });
+                    }
+                });
+            }
+
+            handleTaskMove(evt) {
+                const taskCard = evt.item;
+                const newColumn = evt.to.id.replace('-list', '');
+                const taskTitle = taskCard.querySelector('.task-title').textContent;
+                
+                console.log(`Task "${taskTitle}" moved to ${newColumn}`);
+                
+                // Update backend via WebSocket
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({
+                        type: 'task_moved',
+                        data: {
+                            task: taskTitle,
+                            column: newColumn,
+                            position: evt.newIndex
+                        }
+                    }));
+                }
+
+                // Update UI counters
+                this.updateTaskCounts();
+            }
+
+            initializeSearch() {
+                const searchBox = document.getElementById('memory-search');
+                if (searchBox) {
+                    searchBox.addEventListener('input', (e) => {
+                        this.searchMemory(e.target.value);
+                    });
+                }
+
+                // Filter tags
+                document.querySelectorAll('.filter-tag').forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+                        tag.classList.add('active');
+                        this.filterMemory(tag.textContent);
+                    });
+                });
+            }
+
+            searchMemory(query) {
+                const results = document.getElementById('memory-results');
+                if (!query.trim()) {
+                    this.loadDefaultMemoryItems();
+                    return;
+                }
+
+                // Simulate search results
+                const mockResults = [
+                    {
+                        title: `Search Results: "${query}"`,
+                        snippet: `Found 3 relevant items for "${query}" in memory database. Showing most relevant matches based on semantic similarity and recency.`,
+                        meta: 'Live Search Results',
+                        score: '99%'
+                    }
+                ];
+
+                results.innerHTML = mockResults.map(item => `
+                    <div class="memory-item">
+                        <div class="memory-title">${item.title}</div>
+                        <div class="memory-snippet">${item.snippet}</div>
+                        <div class="memory-meta">
+                            <div class="memory-source">${item.meta}</div>
+                            <div class="memory-score">${item.score}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            filterMemory(filterType) {
+                // Simulate filtering
+                console.log(`Filtering by: ${filterType}`);
+                this.loadDefaultMemoryItems();
+            }
+
+            loadDefaultMemoryItems() {
+                // This would connect to actual memory search
+                const defaultItems = [
+                    {
+                        title: "Mission Control UI Redesign Decision",
+                        snippet: "User requested tabbed interface for Mission Control dashboard based on Instagram post vision. Each section (Kanban, Pipeline, Memory, Calendar, Team, Metrics) should be in its own tab for full-window viewing. Implementation includes NASA-style operational aesthetics with drag-and-drop functionality.",
+                        source: "memory/2026-03-16.md • Line 45",
+                        score: "98%"
+                    },
+                    {
+                        title: "Claude API Integration Success",
+                        snippet: "Successfully integrated Claude Sonnet API with Mission Control. API key configured, cost tracking implemented, smart failover to OpenClaw models when Claude models unavailable. Real API calls working with proper error handling and token usage monitoring.",
+                        source: "memory/2026-03-16.md • Line 32",
+                        score: "95%"
+                    },
+                    {
+                        title: "Google Tasks Workflow Setup",
+                        snippet: "Implemented Google Tasks integration with keyring authentication. Created 'Jarvis Task List' for tracking assistant tasks and automated task completion workflow. Password: OpenClawTasksSetup2026. All tasks now automatically tracked and marked complete.",
+                        source: "memory/2026-03-16.md • Line 18",
+                        score: "92%"
+                    },
+                    {
+                        title: "Phase 1 Bot Deployment Complete",
+                        snippet: "Successfully deployed 5 Phase 1 bots: Executive Assistant (Claude Opus), Jarvis Chief of Staff, TaskMaster, Scheduler, and Research Bot. All operational with specialized personalities and capabilities. Ready for Phase 2 Marketing Department expansion.",
+                        source: "MEMORY.md • Line 78",
+                        score: "90%"
+                    },
+                    {
+                        title: "Docker Security Container Implementation",
+                        snippet: "Configured Docker-based secure container isolation for all bot tool executions. Using openclaw-sandbox:bookworm-slim image with restricted permissions. Prevents security vulnerabilities while maintaining full functionality for file operations and command execution.",
+                        source: "technical-notes.md • Line 156",
+                        score: "87%"
+                    },
+                    {
+                        title: "Cost Optimization Strategy",
+                        snippet: "Target: 40% cost reduction ($702/month → $420/month). Strategy: Claude for strategic decisions, OpenAI for operational tasks, Ollama for local processing. Executive Assistant Bot maintained on Claude Opus for premium service quality.",
+                        source: "MISSION_CONTROL_COST_OPTIMIZATION.md • Line 23",
+                        score: "85%"
+                    }
+                ];
+
+                document.getElementById('memory-results').innerHTML = defaultItems.map(item => `
+                    <div class="memory-item">
+                        <div class="memory-title">${item.title}</div>
+                        <div class="memory-snippet">${item.snippet}</div>
+                        <div class="memory-meta">
+                            <div class="memory-source">${item.source}</div>
+                            <div class="memory-score">${item.score}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            initializeCalendar() {
+                const calendar = document.getElementById('calendar-grid');
+                if (!calendar) return;
+
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                
+                // Generate mini calendar
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                
+                calendar.innerHTML = '';
+                
+                // Add day headers
+                ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'calendar-day';
+                    dayHeader.style.color = '#666';
+                    dayHeader.style.fontWeight = 'bold';
+                    dayHeader.textContent = day;
+                    calendar.appendChild(dayHeader);
+                });
+                
+                // Add empty cells for first week
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day';
+                    calendar.appendChild(emptyDay);
+                }
+                
+                // Add days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = day;
+                    
+                    if (day === today.getDate()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // Add events indicator for some days
+                    if ([16, 17, 18, 22, 25].includes(day)) {
+                        dayElement.classList.add('has-events');
+                    }
+                    
+                    calendar.appendChild(dayElement);
+                }
+            }
+
+            updateCalendar() {
+                // Refresh calendar with current data
+                this.initializeCalendar();
+            }
+
+            connectWebSocket() {
+                try {
+                    this.ws = new WebSocket(`ws://localhost:8091`);
+                    
+                    this.ws.onopen = () => {
+                        console.log('🔗 Connected to Mission Control backend');
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        const message = JSON.parse(event.data);
+                        this.handleWebSocketMessage(message);
+                    };
+                    
+                    this.ws.onerror = () => {
+                        console.log('🔴 WebSocket connection failed - running in demo mode');
+                    };
+                    
+                    this.ws.onclose = () => {
+                        console.log('🔌 WebSocket disconnected - attempting reconnect...');
+                        setTimeout(() => this.connectWebSocket(), 3000);
+                    };
+                } catch (error) {
+                    console.log('🔴 WebSocket unavailable - running in demo mode');
+                }
+            }
+
+            handleWebSocketMessage(message) {
+                switch (message.type) {
+                    case 'task_updated':
+                        this.updateTaskCounts();
+                        break;
+                    case 'bot_status_changed':
+                        this.updateTeamStatus(message.data);
+                        break;
+                    case 'metrics_updated':
+                        this.updateMetrics(message.data);
+                        break;
+                }
+            }
+
+            updateTime() {
+                const now = new Date();
+                const timeElement = document.getElementById('mission-time');
+                if (timeElement) {
+                    timeElement.textContent = 
+                        now.toLocaleString('en-US', { 
+                            hour12: false,
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            timeZoneName: 'short'
+                        });
+                }
+            }
+
+            updateTaskCounts() {
+                // Update task counters dynamically
+                const todoCount = document.querySelectorAll('#todo-list .task-card').length;
+                const progressCount = document.querySelectorAll('#progress-list .task-card').length;
+                const reviewCount = document.querySelectorAll('#review-list .task-card').length;
+                const doneCount = document.querySelectorAll('#done-list .task-card').length;
+
+                // Update column headers
+                const todoHeader = document.querySelector('.todo .column-header');
+                const progressHeader = document.querySelector('.progress .column-header');
+                const reviewHeader = document.querySelector('.review .column-header');
+                const doneHeader = document.querySelector('.done .column-header');
+
+                if (todoHeader) todoHeader.textContent = `📝 TODO (${todoCount})`;
+                if (progressHeader) progressHeader.textContent = `⚡ IN PROGRESS (${progressCount})`;
+                if (reviewHeader) reviewHeader.textContent = `👀 REVIEW (${reviewCount})`;
+                if (doneHeader) doneHeader.textContent = `✅ DONE (${doneCount})`;
+
+                // Update notification badges
+                const tasksBadge = document.querySelector('[data-tab="tasks"] .notification-badge');
+                if (tasksBadge) {
+                    tasksBadge.textContent = todoCount + progressCount + reviewCount;
+                }
+            }
+
+            updateTeamStatus(data) {
+                // Update team member statuses
+                // This would integrate with actual bot status from backend
+                console.log('Team status updated:', data);
+            }
+
+            updateMetrics(data) {
+                // Update operational metrics
+                if (data?.tasksCompleted) {
+                    const element = document.getElementById('tasks-completed');
+                    if (element) element.textContent = data.tasksCompleted;
+                }
+                if (data?.activeBots) {
+                    const element = document.getElementById('active-bots');
+                    if (element) element.textContent = data.activeBots;
+                }
+                if (data?.dailyCost) {
+                    const element = document.getElementById('daily-cost');
+                    if (element) element.textContent = `$${data.dailyCost.toFixed(2)}`;
+                }
+                if (data?.efficiency) {
+                    const element = document.getElementById('efficiency');
+                    if (element) element.textContent = `${data.efficiency}%`;
+                }
+            }
+
+            loadData() {
+                // Load initial data from backend
+                this.updateTaskCounts();
+                this.loadDefaultMemoryItems();
+                this.initializeCalendar();
+            }
+        }
+
+        // Initialize Mission Control when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new MissionControlTabbedUI();
+        });
+    </script>
+</body>
+</html>
