@@ -38,6 +38,7 @@ const FinanceDashboard = lazy(() => import('./pages/FinanceDashboard'));
 const XomeDashboard = lazy(() => import('./pages/XomeDashboard'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const MarketingDashboard = lazy(() => import('./pages/MarketingDashboard'));
+const InvestingCommand = lazy(() => import('./pages/InvestingCommand'));
 
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
@@ -94,6 +95,7 @@ function App() {
                   <Route path="integrations" element={<IntegrationsHub />} />
                   <Route path="accounts" element={<Accounts />} />
                   <Route path="legal-docs" element={<LegalDocs />} />
+                  <Route path="investing" element={<InvestingCommand />} />
               <Route path="entity-map" element={<EntityMap />} />
                   <Route path="settings" element={<Settings />} />
                 </Route>

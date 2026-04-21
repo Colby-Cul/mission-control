@@ -77,6 +77,7 @@ export const NAV_GROUPS = [
     { id: "xome", label: "Xome Home", icon: icons.dollarSign },
     { id: "company", label: "Company", icon: icons.entityMap },
     { id: "accounts", label: "Accounts", icon: icons.accounts },
+    { id: "investing", label: "Investing (CMD-6)", icon: icons.finance },
   ]},
   { id: "documents", label: "Documents", icon: icons.docs, children: [
     { id: "docs", label: "Docs Hub", icon: icons.docs },
