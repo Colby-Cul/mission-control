@@ -1993,9 +1993,9 @@
     "id": "mission-control",
     "name": "Mission Control Dashboard",
     "status": "active",
-    "taskCount": 7,
+    "taskCount": 8,
     "doneCount": 4,
-    "activeCount": 3,
+    "activeCount": 4,
     "totalCost": 7.9844,
     "apiModelsUsed": [
       "deepseek-chat",
@@ -2022,8 +2022,38 @@
       "ops-runner"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~45 min",
+    "estimatedTimeToCompletion": "~60 min",
     "sessions": [
+      {
+        "id": "80a2f90c-4ee9-4bff-b",
+        "sessionId": "80a2f90c-4ee9-4bff-bf69-5ef13c8fe9d2",
+        "agent": "ops-runner",
+        "task": "Mission Control Build Task",
+        "status": "in_progress",
+        "lane": "inprogress",
+        "dateCreated": "2026-04-22T16:22:12.198Z",
+        "dateFinished": null,
+        "startTime": "2026-04-22T16:22:12.198Z",
+        "endTime": null,
+        "inputTokens": 487,
+        "outputTokens": 120,
+        "cachedInputTokens": 28352,
+        "tokens": 28959,
+        "model": "deepseek-chat",
+        "apiModelUsed": "deepseek-chat",
+        "modelsUsed": [
+          "deepseek-chat"
+        ],
+        "totalCost": 0.0,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/80a2f90c-4ee9-4bff-bf69-5ef13c8fe9d2.jsonl",
+        "sizeBytes": 4331,
+        "isCron": false,
+        "spawns": 0,
+        "parentSession": "heartbeat",
+        "projectId": "mission-control",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~1 min"
+      },
       {
         "id": "55ef58ba-29cf-4701-8",
         "sessionId": "55ef58ba-29cf-4701-8c7f-4634995b1820",
@@ -2035,10 +2065,10 @@
         "dateFinished": null,
         "startTime": "2026-04-22T16:17:45.825Z",
         "endTime": null,
-        "inputTokens": 281,
-        "outputTokens": 120,
-        "cachedInputTokens": 28416,
-        "tokens": 28817,
+        "inputTokens": 2766,
+        "outputTokens": 378,
+        "cachedInputTokens": 93056,
+        "tokens": 96200,
         "model": "deepseek-chat",
         "apiModelUsed": "deepseek-chat",
         "modelsUsed": [
@@ -2046,13 +2076,13 @@
         ],
         "totalCost": 0.0,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/55ef58ba-29cf-4701-8c7f-4634995b1820.jsonl",
-        "sizeBytes": 3977,
+        "sizeBytes": 22901,
         "isCron": false,
         "spawns": 0,
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1 min"
+        "estimatedTimeToCompletion": "~2 min"
       },
       {
         "id": "91a25b9f-4131-4bf9-8",
@@ -2082,7 +2112,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~11 min"
+        "estimatedTimeToCompletion": "~12 min"
       },
       {
         "id": "f6309753-5aad-485f-a",
@@ -2234,11 +2264,11 @@
   {
     "id": "str-website",
     "name": "STR Website - Pineside Cabins",
-    "status": "active",
-    "taskCount": 5,
+    "status": "done",
+    "taskCount": 4,
     "doneCount": 4,
-    "activeCount": 1,
-    "totalCost": 192.9472,
+    "activeCount": 0,
+    "totalCost": 96.1202,
     "apiModelsUsed": [
       "gpt-4o-mini"
     ],
@@ -2253,8 +2283,8 @@
       "executive-assistant",
       "short-term-rental"
     ],
-    "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~15 min",
+    "estimatedCostToCompletion": null,
+    "estimatedTimeToCompletion": null,
     "sessions": [
       {
         "id": "9cd9bd71-14ea-4d0c-a",
@@ -2311,36 +2341,6 @@
         "spawns": 0,
         "parentSession": "",
         "projectId": "str-website"
-      },
-      {
-        "id": "3218b16a-e10c-4a40-9",
-        "sessionId": "3218b16a-e10c-4a40-9642-bd2d40ce41d8",
-        "agent": "executive-assistant",
-        "task": "New standing directive for the STR specialist role.",
-        "status": "in_progress",
-        "lane": "inprogress",
-        "dateCreated": "2026-04-20T08:13:48.012Z",
-        "dateFinished": null,
-        "startTime": "2026-04-20T08:13:48.012Z",
-        "endTime": null,
-        "inputTokens": 27020460,
-        "outputTokens": 37042,
-        "cachedInputTokens": 23124352,
-        "tokens": 50181854,
-        "model": "gpt-4o-mini",
-        "apiModelUsed": "gpt-4o-mini",
-        "modelsUsed": [
-          "gpt-4o-mini"
-        ],
-        "totalCost": 96.827,
-        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/3218b16a-e10c-4a40-9642-bd2d40ce41d8.jsonl",
-        "sizeBytes": 5730437,
-        "isCron": false,
-        "spawns": 0,
-        "parentSession": "heartbeat",
-        "projectId": "str-website",
-        "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~19.6 hr"
       },
       {
         "id": "ffa0fbe3-28f5-4074-8",
