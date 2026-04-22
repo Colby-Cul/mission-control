@@ -1993,9 +1993,9 @@
     "id": "mission-control",
     "name": "Mission Control Dashboard",
     "status": "active",
-    "taskCount": 7,
+    "taskCount": 8,
     "doneCount": 4,
-    "activeCount": 3,
+    "activeCount": 4,
     "totalCost": 7.9844,
     "apiModelsUsed": [
       "deepseek-chat",
@@ -2022,8 +2022,38 @@
       "ops-runner"
     ],
     "estimatedCostToCompletion": 0.0,
-    "estimatedTimeToCompletion": "~45 min",
+    "estimatedTimeToCompletion": "~60 min",
     "sessions": [
+      {
+        "id": "c684fdae-7485-49ff-a",
+        "sessionId": "c684fdae-7485-49ff-ae00-92275bce2db8",
+        "agent": "ops-runner",
+        "task": "Mission Control Build Task",
+        "status": "in_progress",
+        "lane": "inprogress",
+        "dateCreated": "2026-04-22T08:22:12.195Z",
+        "dateFinished": null,
+        "startTime": "2026-04-22T08:22:12.195Z",
+        "endTime": null,
+        "inputTokens": 14608,
+        "outputTokens": 174,
+        "cachedInputTokens": 14208,
+        "tokens": 28990,
+        "model": "deepseek-chat",
+        "apiModelUsed": "deepseek-chat",
+        "modelsUsed": [
+          "deepseek-chat"
+        ],
+        "totalCost": 0.0,
+        "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/c684fdae-7485-49ff-ae00-92275bce2db8.jsonl",
+        "sizeBytes": 4442,
+        "isCron": false,
+        "spawns": 0,
+        "parentSession": "heartbeat",
+        "projectId": "mission-control",
+        "estimatedCostToCompletion": 0.0,
+        "estimatedTimeToCompletion": "~1 min"
+      },
       {
         "id": "98f62806-3711-4529-9",
         "sessionId": "98f62806-3711-4529-9621-a17d80e9d795",
@@ -2035,10 +2065,10 @@
         "dateFinished": null,
         "startTime": "2026-04-22T08:17:23.683Z",
         "endTime": null,
-        "inputTokens": 14473,
-        "outputTokens": 181,
-        "cachedInputTokens": 14208,
-        "tokens": 28862,
+        "inputTokens": 16912,
+        "outputTokens": 450,
+        "cachedInputTokens": 61824,
+        "tokens": 79186,
         "model": "deepseek-chat",
         "apiModelUsed": "deepseek-chat",
         "modelsUsed": [
@@ -2046,13 +2076,13 @@
         ],
         "totalCost": 0.0,
         "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/98f62806-3711-4529-9621-a17d80e9d795.jsonl",
-        "sizeBytes": 4158,
+        "sizeBytes": 21576,
         "isCron": false,
         "spawns": 0,
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~1 min"
+        "estimatedTimeToCompletion": "~2 min"
       },
       {
         "id": "c68556de-14cf-4aeb-9",
@@ -2082,7 +2112,7 @@
         "parentSession": "",
         "projectId": "mission-control",
         "estimatedCostToCompletion": 0.0,
-        "estimatedTimeToCompletion": "~11 min"
+        "estimatedTimeToCompletion": "~12 min"
       },
       {
         "id": "4626a4b6-d78c-4339-a",
