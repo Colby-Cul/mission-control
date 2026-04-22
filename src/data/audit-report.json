@@ -1,218 +1,136 @@
 {
-  "timestamp": "2026-04-22T10:00:00Z",
-  "auditId": "ea-2026-04-22",
-  "auditor": "ops-runner",
-  "overallScore": 6.2,
-  "domains": {
-    "security": {
-      "score": 5,
-      "findings": [
-        {
-          "severity": "CRITICAL",
-          "id": "SEC-001",
-          "title": "API Keys stored in plaintext in config file",
-          "detail": "6 API keys/tokens found in plaintext in ~/.openclaw/openclaw.json, including DeepSeek (sk-...), Google AI, Ollama worker token, Discord bot token, and a Monday.com token. File permissions are 600 (user-only), which is good, but any process running as jarvisculbertson has access.",
-          "risk": "If the Mac mini is compromised, all API credentials are immediately exposed. Discord bot token MTQ4... gives full access to the Discord server.",
-          "recommendation": "Migrate all secrets to macOS Keychain. Use openclaw keyring (GOG_KEYRING_PASSWORD already exists). Reference secrets by key name instead of inline values."
-        },
-        {
-          "severity": "CRITICAL",
-          "id": "SEC-002",
-          "title": "SSH access to worker node disabled",
-          "detail": "SSH to jarvisculbertson@192.168.100.2 fails with 'Permission denied (publickey,password,keyboard-interactive)'. The worker node (Jarvis-Worker.local) is reachable via ping and HTTP (ollama API on port 11434), but no SSH access is configured.",
-          "risk": "No secure administrative access to the worker machine. Cannot remotely manage, update, or debug the worker node. The worker runs qwen2.5-coder:32b (~20GB model) with no backup access path.",
-          "recommendation": "Set up SSH key-based authentication to the worker node. Generate a dedicated SSH key pair, add to worker's authorized_keys, and verify connectivity."
-        },
-        {
-          "severity": "HIGH",
-          "id": "SEC-003",
-          "title": "Discord bot token exposed in .env file",
-          "detail": "DISCORD_BOT_TOKEN=***REDACTED*** found in ~/.openclaw/.env with 600 permissions. The .env file is not tracked in git, but the token is still in plaintext on disk.",
-          "risk": "Discord bot compromise could allow message reading, channel manipulation, and impersonation of the bot.",
-          "recommendation": "Move Discord token to macOS Keychain or openclaw's native keyring. Remove from .env file entirely."
-        },
-        {
-          "severity": "HIGH",
-          "id": "SEC-004",
-          "title": "No encryption at rest for session data",
-          "detail": "All agent session data (1.5GB across 23 agents, 1395 files) is stored in plaintext JSON/JSONL files. Session data contains prompts, API responses, and potentially sensitive business information.",
-          "risk": "Any local compromise exposes the full conversation history of all agents.",
-          "recommendation": "Evaluate session data retention policies. Implement session archiving with encryption for stale sessions (>30 days)."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "SEC-005",
-          "title": "No network segmentation between local and worker",
-          "detail": "Worker node is accessible on local LAN (192.168.100.2) with no firewall rules. ollama API on port 11434 is open and unauthenticated on both machines.",
-          "risk": "Any device on the local network can query ollama APIs directly.",
-          "recommendation": "Bind ollama to localhost only (127.0.0.1). Use the socat tunnel that's already set up on port 11434 rather than exposing the API directly."
-        }
-      ]
-    },
-    "scalability": {
-      "score": 6,
-      "findings": [
-        {
-          "severity": "HIGH",
-          "id": "SCL-001",
-          "title": "Memory pressure on Mac mini - 87% swap usage",
-          "detail": "Memory: 24GB total with 11.2GB swap used out of 12GB allocated. Active pages: 485K, Inactive: 484K. Only 28K free pages. Total swap operations: 325M+ (154M swapins, 171M swapouts). This indicates significant memory pressure.",
-          "risk": "System is thrashing swap. Adding more agents or running larger models will cause severe performance degradation. Agent response times will increase non-linearly under memory pressure.",
-          "recommendation": "Immediate: Reduce local model footprint (95.8GB of models loaded). Unload unused models from ollama. Consider moving more workloads to cloud API providers instead of local inference. Medium-term: Upgrade to 64GB+ RAM Mac mini."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "SCL-002",
-          "title": "Single-machine deployment - no redundancy",
-          "detail": "All agent infrastructure runs on a single Mac mini. The worker node provides additional compute but is also a single point of failure. No load balancing, failover, or HA configuration exists.",
-          "risk": "Any hardware failure, OS issue, or network outage takes down the entire agent ecosystem.",
-          "recommendation": "Document recovery procedures. Consider adding a third node for critical-path agents. Implement health-check-based failover for cron jobs."
-        },
-        {
-          "severity": "LOW",
-          "id": "SCL-003",
-          "title": "Model storage sprawl - 115.7GB total across nodes",
-          "detail": "Local machine: 95.8GB across 8 models (including 65.4GB gpt-oss:120b). Worker: 19.9GB for qwen2.5-coder:32b. Total model storage is 115.7GB.",
-          "risk": "Wasted disk space from unused models. Some models (codellama:7b-code, llama3.2:3b, glm4:9b) may not be actively used.",
-          "recommendation": "Audit which models are actually used by agent configurations. Remove unused models. gpt-oss:120b at 65.4GB is likely overkill for current workloads - consider a smaller quantized version."
-        }
-      ]
-    },
-    "maintainability": {
-      "score": 6,
-      "findings": [
-        {
-          "severity": "HIGH",
-          "id": "MNT-001",
-          "title": "Session data bloat - 1.5GB across 23 agents",
-          "detail": "Session files total 1.5GB. Largest: main (114MB), executive-assistant (114MB), coding-agent (63MB), stock-analyst (58MB), ops-runner (55MB). No retention policy or archival process.",
-          "risk": "Session data grows unbounded. At current rate, 1.5GB/month could hit disk capacity within 12-18 months. Session loading times degrade with file size.",
-          "recommendation": "Implement 30-day session retention. Archive sessions older than 30 days to compressed storage. Add session pruning to the weekly maintenance cycle."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "MNT-002",
-          "title": "Backup bloat - 1.2GB of agent backups",
-          "detail": "~/.openclaw/_backups/ contains 1.2GB of old agent configs and sessions. These appear to be from an automated backup process with no cleanup.",
-          "risk": "Wasted disk space. Old backups may contain stale/invalid configuration data.",
-          "recommendation": "Implement backup rotation (keep last 7 daily backups). Compress backups older than 30 days."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "MNT-003",
-          "title": "Deprecated plugin config (acpx)",
-          "detail": "OpenClaw config has 'plugins.entries.acpx: plugin disabled but config is present' warning. Dead config accumulates over time.",
-          "risk": "Minor - config noise, but indicates incomplete cleanup when disabling plugins.",
-          "recommendation": "Remove acpx plugin config entirely from openclaw.json if it's intentionally disabled."
-        },
-        {
-          "severity": "LOW",
-          "id": "MNT-004",
-          "title": "Archived agents with stale configs",
-          "detail": "6 archived agents found: quentin, openai-codex, acp-codex, discord, agentmail, codex, claude-opus. Some have sessions.json files (quentin: 7 lines, agentmail: 1501 lines, codex: 10301 lines).",
-          "risk": "Minor - stale files consuming minimal disk. The codex sessions (10301 lines) could be cleaned up.",
-          "recommendation": "Remove archived agent session data that's no longer needed. Keep configs for potential reactivation."
-        }
-      ]
-    },
-    "costEfficiency": {
-      "score": 7,
-      "findings": [
-        {
-          "severity": "HIGH",
-          "id": "CST-001",
-          "title": "Multiple Claude Sonnet agents running on expensive API",
-          "detail": "9 agents use anthropic/claude-sonnet-4-6 ($3/M input, $15/M output estimated) as primary model: main, coding-agent, cfo, tax-advisor, designer, maven, quill, spark, herald, ops-runner. Many of these run frequently (cron jobs, monitors).",
-          "risk": "API costs could be significantly higher than necessary for routine tasks. A task routing optimization could save 40-60% on API costs.",
-          "recommendation": "Audit each agent's actual workload. Route routine/monitoring tasks to cheaper models (gpt-4o-mini, gemini-2.5-flash). Reserve Claude Sonnet for complex reasoning tasks only."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "CST-002",
-          "title": "Free local models underutilized",
-          "detail": "Local ollama has 8 models (95.8GB) and worker has qwen2.5-coder:32b (19.9GB) available at zero API cost. Only 2 agents (echo, beacon) are configured to use local ollama models via fallback paths.",
-          "risk": "Wasting the potential of free local inference. The local qwen3:8b and qwen2.5:14b could handle many lightweight tasks currently routed to paid APIs.",
-          "recommendation": "Create a 'local-first' model tier. Route validation, echo, beacon, sentinel, and pulse to local models as primary. Use cloud APIs only as fallbacks."
-        },
-        {
-          "severity": "LOW",
-          "id": "CST-003",
-          "title": "gpt-oss:120b consumes 65.4GB for likely minimal use",
-          "detail": "The 120B parameter model at 65.4GB is the largest single storage consumer. Its quantization (MXFP4) means it's optimized for size, but 120B may still be overkill for current workloads.",
-          "risk": "65.4GB of disk used for a model that may not be actively in use.",
-          "recommendation": "Verify if gpt-oss:120b is referenced in any agent config. If unused, remove to free 65GB. If needed, consider a smaller alternative like qwen2.5-coder:32b on the worker."
-        }
-      ]
-    },
-    "integrationStability": {
-      "score": 7,
-      "findings": [
-        {
-          "severity": "MEDIUM",
-          "id": "INT-001",
-          "title": "Cron job with consecutive errors: Probe after auto-kickoff deploy",
-          "detail": "The 'Probe after auto-kickoff deploy' cron job (agent=maven) has 1 consecutive error with 13.5s duration. All other 16 cron jobs are healthy.",
-          "risk": "Minor - single error may be transient. If it persists, it indicates an integration issue with the deployment pipeline.",
-          "recommendation": "Monitor for 3 more cycles. If errors persist, investigate maven's deployment probe logic."
-        },
-        {
-          "severity": "MEDIUM",
-          "id": "INT-002",
-          "title": "Worker SSH access broken",
-          "detail": "Worker node (Jarvis-Worker.local, 192.168.100.2) is reachable via ping (<1ms) and HTTP (ollama API), but SSH access is denied. This prevents remote management and debugging.",
-          "risk": "If the worker needs a model reload, service restart, or any maintenance, it requires physical access to the machine.",
-          "recommendation": "Set up SSH key authentication immediately. Test from Mac mini to worker."
-        },
-        {
-          "severity": "LOW",
-          "id": "INT-003",
-          "title": "Mission Control build healthy",
-          "detail": "Mission Control dashboard builds successfully (126 files, 21MB dist). Last build: Apr 22 02:47. Live data (live-data.json: 329KB, projects.json: 98KB, manual-tasks.json: 44KB) all updated.",
-          "risk": "None - this is a positive finding.",
-          "recommendation": "Continue current build schedule. Consider adding build time trend monitoring."
-        },
-        {
-          "severity": "INFO",
-          "id": "INT-004",
-          "title": "Gateway health: operational",
-          "detail": "OpenClaw gateway running on port 18789 with health endpoint responding. API server on port 3000. All system services operational.",
-          "risk": "None",
-          "recommendation": "None required."
-        }
-      ]
-    }
-  },
+  "timestamp": "2026-04-22T13:00:02Z",
+  "healthScore": 83.6,
+  "hasIssues": true,
   "summary": {
-    "totalFindings": 19,
-    "critical": 2,
-    "high": 5,
-    "medium": 7,
-    "low": 3,
-    "info": 2,
-    "healthScore": 62,
-    "interpretation": "Moderate risk. Security posture is the weakest domain with critical credential exposure issues. System is under memory pressure but all core services are operational. Immediate attention needed on secrets management and SSH access."
+    "totalProjects": 5,
+    "totalTasks": 73,
+    "validTasks": 61,
+    "issueCount": 12
   },
-  "executiveSummary": "The agent ecosystem at Culbertson & Gray consists of 23 agents running on a Mac mini with a worker node, backed by 3 API providers (DeepSeek, Google AI, Anthropic Claude) and local ollama models. The system is functional but has significant security gaps (plaintext API keys, no SSH access to worker) and is under memory pressure (87% swap utilization). Cost structure is inefficient with 10 agents using expensive Claude Sonnet for routine tasks. Session data grows unbounded at ~1.5GB. Immediate priorities: secure credentials, establish worker SSH access, and optimize model routing.",
-  "recommendations": {
-    "immediate_30_days": [
-      "Migrate all API keys from openclaw.json/.env to macOS Keychain or openclaw keyring",
-      "Set up SSH key authentication to Jarvis-Worker.local (192.168.100.2)",
-      "Implement 30-day session retention policy and prune old sessions",
-      "Unload unused ollama models to free memory (~60GB potential savings)",
-      "Bind worker ollama to localhost only"
-    ],
-    "short_term_1_3_months": [
-      "Route routine agent tasks to cheaper models (local ollama or gpt-4o-mini)",
-      "Implement automated session archiving with encryption",
-      "Set up backup rotation (keep 7 daily, compress older)",
-      "Remove unused archived agent data",
-      "Clean up deprecated acpx plugin config"
-    ],
-    "medium_term_3_12_months": [
-      "Upgrade Mac mini to 64GB+ RAM for sustainable agent scaling",
-      "Implement multi-node agent deployment with failover",
-      "Build cost dashboards to track per-agent API spending",
-      "Evaluate gpt-oss:120b model necessity vs storage cost"
-    ]
-  }
+  "staleProjects": [],
+  "invalidBlockerTasks": [
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "56a7ee09-b126-42d3-a",
+      "agent": "main",
+      "status": "blocked",
+      "task": "=== TASK CONTEXT ===Task: LinkedIn + SEO growth playbookDescription: Growth agent \u2014 ops-manager targeting, content ca...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "d00d171f-fc17-439d-b",
+      "agent": "coding-agent",
+      "status": "blocked",
+      "task": "=== TASK CONTEXT ===Task: Notion + Confluence export adaptersDescription: Publish SOPs to both platforms; re-sync on ...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "b921270a-8817-49c9-a",
+      "agent": "cfo",
+      "status": "blocked",
+      "task": "=== TASK CONTEXT ===Task: CMD-3: Revenue Command \u2014 Revenue by Business, Growth Initiatives & PipelineDescription: Bui...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "9a520482-be99-4d6a-a",
+      "agent": "beacon",
+      "status": "blocked",
+      "task": "Context: you are being asked about LinkedIn + SEO growth playbook.USER REQUEST:TASK ASSIGNMENT \u2014 you own this and are...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "74dcb843-3172-4a73-8",
+      "agent": "maven",
+      "status": "blocked",
+      "task": "TASK ASSIGNMENT: RESEARCH: Marketing Performance Dashboard Design for Revenue Command",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "cadd9bef-fad1-4556-8",
+      "agent": "pulse",
+      "status": "blocked",
+      "task": "TASK ASSIGNMENT: DESIGN: Build KPI System Across All Businesses & Entities",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "0386e68b-a9c4-415e-9",
+      "agent": "bookkeeper",
+      "status": "blocked",
+      "task": "TASK ASSIGNMENT: CMD-4: Expense & Efficiency Command \u2014 Vendor Spend, Margin Leakage & Waste Reduction",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "bdc4ba6a-413e-4490-8",
+      "agent": "stock-analyst",
+      "status": "blocked",
+      "task": "TASK ASSIGNMENT: CMD-6: Investing & Capital Allocation Command \u2014 Deployment, Returns & Strategy",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "8e577605-155a-45d3-b",
+      "agent": "crypto-analyst",
+      "status": "blocked",
+      "task": "TASK ASSIGNMENT: RESEARCH: Digital Asset & DeFi Investment Tracking Framework for Capital Allocation Command",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "65474d0b-981c-4929-8",
+      "agent": "tax-advisor",
+      "status": "blocked",
+      "task": "Continue where you left off. The previous model attempt failed or timed out.",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "coding",
+      "projectName": "ACP Coding Delegations",
+      "taskId": "e2444961-72de-413e-9",
+      "agent": "validation",
+      "status": "blocked",
+      "task": "Check and validate the cron job settings immediately for any malfunctions or issues due to the execution failure in t...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    },
+    {
+      "projectId": "mission-control",
+      "projectName": "Mission Control Dashboard",
+      "taskId": "d6c68505-2615-4890-b",
+      "agent": "designer",
+      "status": "blocked",
+      "task": "=== TASK CONTEXT ===Task: DESIGN: Rethink Mission Control Navigation & Information ArchitectureDescription: Redesign ...",
+      "issue": "blocked_no_reason",
+      "blocker": null
+    }
+  ],
+  "unassignedTasks": [],
+  "taskCountMismatches": []
 }
