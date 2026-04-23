@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { C } from '../data/constants';
 import { icons, NAV_ITEMS, NAV_GROUPS, SETTINGS_NAV } from './Icons';
@@ -16,7 +16,22 @@ const Layout = () => {
   const currentPage = location.pathname.replace(/^\/+/, "").split("/")[0] || 'north-star';
   const showFabs = ["home", "north-star", "", "tasks", "projects", "command"].includes(currentPage);
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // On mobile: close sidebar after navigation
+  const handleNavigation = useCallback((pageId) => {
+    navigate(`/${pageId}`);
+    setSearchOpen(false);
+    if (isMobile) setSidebarOpen(false);
+  }, [navigate, isMobile]);
+
+  // ── Mobile detection ──
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
@@ -85,23 +100,41 @@ const Layout = () => {
     priority: s.isCron ? "low" : "medium"
   }));
 
-  const handleNavigation = (pageId) => {
-    navigate(`/${pageId}`);
-    setSearchOpen(false);
-  };
+  // (handleNavigation defined above with useCallback)
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: C.bg, color: C.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflow: "hidden" }}>
+    <div style={{ display: "flex", height: "100vh", background: C.bg, color: C.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflow: "hidden", position: "relative" }}>
+      {/* Mobile backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            zIndex: 90,
+          }}
+        />
+      )}
       {/* ── SIDEBAR ── */}
       <div style={{
-        width: sidebarOpen ? 220 : 56, 
-        minWidth: sidebarOpen ? 220 : 56,
-        background: C.surface, 
-        borderRight: `1px solid ${C.border}`,
-        display: "flex", 
-        flexDirection: "column", 
-        transition: "width 0.2s, min-width 0.2s", 
+        width: sidebarOpen ? 220 : (isMobile ? 0 : 56),
+        minWidth: sidebarOpen ? 220 : (isMobile ? 0 : 56),
+        background: C.surface,
+        borderRight: sidebarOpen || !isMobile ? `1px solid ${C.border}` : "none",
+        display: "flex",
+        flexDirection: "column",
+        transition: "width 0.25s ease, min-width 0.25s ease",
         overflow: "hidden",
+        // On mobile, sidebar floats over content as a drawer
+        ...(isMobile ? {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "100vh",
+          zIndex: 100,
+          boxShadow: sidebarOpen ? "4px 0 24px rgba(0,0,0,0.5)" : "none",
+        } : {}),
       }}>
         {/* Logo */}
         <div style={{ 
@@ -262,7 +295,7 @@ const Layout = () => {
       </div>
 
       {/* ── MAIN AREA ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", minWidth: 0 }}>
         {snapshot?.loading && (
           <div style={{ height: 2, background: `linear-gradient(90deg, ${C.accent}, ${C.purple})`, animation: "loading 1s infinite", position: "absolute", top: 0, left: 0, right: 0, zIndex: 10 }} />
         )}
@@ -300,32 +333,36 @@ const Layout = () => {
               display: "flex", 
               alignItems: "center", 
               gap: 8, 
-              padding: "6px 14px",
+              padding: isMobile ? "7px" : "6px 14px",
               background: C.card, 
               border: `1px solid ${C.border}`, 
               borderRadius: 8,
               color: C.muted, 
               cursor: "pointer", 
               fontSize: 13,
+              minWidth: isMobile ? 36 : undefined,
+              justifyContent: "center",
             }}
           >
             {icons.search}
-            <span>Search...</span>
-            <kbd style={{ 
-              fontSize: 10, 
-              background: C.surface, 
-              padding: "2px 6px", 
-              borderRadius: 4, 
-              border: `1px solid ${C.border}`, 
-              color: C.muted, 
-              marginLeft: 8 
-            }}>
-              ⌘K
-            </kbd>
+            {!isMobile && <span>Search...</span>}
+            {!isMobile && (
+              <kbd style={{ 
+                fontSize: 10, 
+                background: C.surface, 
+                padding: "2px 6px", 
+                borderRadius: 4, 
+                border: `1px solid ${C.border}`, 
+                color: C.muted, 
+                marginLeft: 8 
+              }}>
+                ⌘K
+              </kbd>
+            )}
           </button>
           
-          {/* Audit Health Badge */}
-          {auditReport && (
+          {/* Audit Health Badge — hidden on mobile to save space */}
+          {auditReport && !isMobile && (
             <div style={{ position: "relative" }}>
               <button
                 onClick={() => setAuditOpen(o => !o)}
@@ -542,7 +579,7 @@ const Layout = () => {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflow: "auto", padding: 20 }}>
+        <div style={{ flex: 1, overflow: "auto", padding: isMobile ? "12px" : 20 }}>
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
@@ -552,11 +589,13 @@ const Layout = () => {
         {showFabs && (
           <div style={{
             position: "fixed",
-            bottom: 24,
-            right: 24,
+            bottom: isMobile ? 16 : 24,
+            right: isMobile ? 12 : 24,
             display: "flex",
             gap: 8,
-            zIndex: 50
+            zIndex: 50,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: "flex-end",
           }}>
             <button onClick={() => navigate("/tasks")} style={{
               background: C.accent,
@@ -612,7 +651,8 @@ const Layout = () => {
           <div 
             onClick={e => e.stopPropagation()} 
             style={{ 
-              width: 560, 
+              width: isMobile ? "calc(100vw - 24px)" : 560,
+              maxWidth: "100%",
               background: C.card, 
               border: `1px solid ${C.border}`, 
               borderRadius: 16, 

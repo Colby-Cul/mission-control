@@ -40,13 +40,19 @@ const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const MarketingDashboard = lazy(() => import('./pages/MarketingDashboard'));
 const InvestingCommand = lazy(() => import('./pages/InvestingCommand'));
 
+// ── Public guest portal (no auth required) ──
+const GuestPortal = lazy(() => import('./pages/GuestPortal'));
+
 function normalizeBasePath(baseUrl) {
   if (!baseUrl || baseUrl === "/") {
     return "/";
   }
-
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
+
+const Fallback = (
+  <div style={{ padding: 40, color: "#9ca3af", textAlign: "center" }}>Loading...</div>
+);
 
 function App() {
   const basePath = normalizeBasePath(import.meta.env.BASE_URL || "/mission-control/");
@@ -56,55 +62,66 @@ function App() {
   const routerProps = useBrowserRouter ? { basename: basePath } : {};
 
   return (
-    <AuthProvider>
-      <AuthGate>
-        <MissionControlDataProvider>
-          <Router {...routerProps}>
-            <Suspense fallback={<div style={{padding:40,color:"#9ca3af",textAlign:"center"}}>Loading...</div>}>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<NorthStar />} />
-                  <Route path="home" element={<Home />} />
-                  <Route path="north-star" element={<NorthStar />} />
-                  <Route path="vision-board" element={<VisionBoard />} />
-                  <Route path="cash-flow" element={<CashFlowPage />} />
-                  <Route path="tax-center" element={<TaxCenter />} />
-                  <Route path="overview" element={<ExecutiveOverview />} />
-                  <Route path="command" element={<CommandDeck />} />
-                  <Route path="team" element={<Team />} />
-                  <Route path="floor" element={<TheFloor />} />
-                  <Route path="projects" element={<Projects />} />
-                  <Route path="tasks" element={<Tasks />} />
-                  <Route path="finance" element={<FinanceDashboard />} />
-                  <Route path="finance-legacy" element={<Finance />} />
-                  <Route path="xome" element={<XomeDashboard />} />
-                  <Route path="company" element={<CompanyDashboard />} />
-                  <Route path="marketing" element={<MarketingDashboard />} />
-                  <Route path="forge" element={<TheForge />} />
-                  <Route path="skills" element={<SkillLab />} />
-                  <Route path="api-skills" element={<ApiSkills />} />
-                  <Route path="activity" element={<ActivityFeed />} />
-                  <Route path="sessions" element={<Sessions />} />
-                  <Route path="memory" element={<Memory />} />
-                  <Route path="docs" element={<DocsHub />} />
-                  <Route path="files" element={<WorkspaceFiles />} />
-                  <Route path="system" element={<SystemMonitor />} />
-                  <Route path="rentals" element={<Rentals />} />
-                  <Route path="photo-manager" element={<PhotoManager />} />
-                  <Route path="incidents" element={<IncidentRoom />} />
-                  <Route path="integrations" element={<IntegrationsHub />} />
-                  <Route path="accounts" element={<Accounts />} />
-                  <Route path="legal-docs" element={<LegalDocs />} />
-                  <Route path="investing" element={<InvestingCommand />} />
-              <Route path="entity-map" element={<EntityMap />} />
-                  <Route path="settings" element={<Settings />} />
-                </Route>
-              </Routes>
-            </Suspense>
-          </Router>
-        </MissionControlDataProvider>
-      </AuthGate>
-    </AuthProvider>
+    <Router {...routerProps}>
+      <Suspense fallback={Fallback}>
+        <Routes>
+          {/* ── PUBLIC: Guest portal — no auth, no sidebar ── */}
+          <Route path="/guest/:propertySlug" element={<GuestPortal />} />
+
+          {/* ── AUTHENTICATED APP ── */}
+          <Route
+            path="/*"
+            element={
+              <AuthProvider>
+                <AuthGate>
+                  <MissionControlDataProvider>
+                    <Routes>
+                      <Route path="/" element={<Layout />}>
+                        <Route index element={<NorthStar />} />
+                        <Route path="home" element={<Home />} />
+                        <Route path="north-star" element={<NorthStar />} />
+                        <Route path="vision-board" element={<VisionBoard />} />
+                        <Route path="cash-flow" element={<CashFlowPage />} />
+                        <Route path="tax-center" element={<TaxCenter />} />
+                        <Route path="overview" element={<ExecutiveOverview />} />
+                        <Route path="command" element={<CommandDeck />} />
+                        <Route path="team" element={<Team />} />
+                        <Route path="floor" element={<TheFloor />} />
+                        <Route path="projects" element={<Projects />} />
+                        <Route path="tasks" element={<Tasks />} />
+                        <Route path="finance" element={<FinanceDashboard />} />
+                        <Route path="finance-legacy" element={<Finance />} />
+                        <Route path="xome" element={<XomeDashboard />} />
+                        <Route path="company" element={<CompanyDashboard />} />
+                        <Route path="marketing" element={<MarketingDashboard />} />
+                        <Route path="forge" element={<TheForge />} />
+                        <Route path="skills" element={<SkillLab />} />
+                        <Route path="api-skills" element={<ApiSkills />} />
+                        <Route path="activity" element={<ActivityFeed />} />
+                        <Route path="sessions" element={<Sessions />} />
+                        <Route path="memory" element={<Memory />} />
+                        <Route path="docs" element={<DocsHub />} />
+                        <Route path="files" element={<WorkspaceFiles />} />
+                        <Route path="system" element={<SystemMonitor />} />
+                        <Route path="rentals" element={<Rentals />} />
+                        <Route path="photo-manager" element={<PhotoManager />} />
+                        <Route path="incidents" element={<IncidentRoom />} />
+                        <Route path="integrations" element={<IntegrationsHub />} />
+                        <Route path="accounts" element={<Accounts />} />
+                        <Route path="legal-docs" element={<LegalDocs />} />
+                        <Route path="investing" element={<InvestingCommand />} />
+                        <Route path="entity-map" element={<EntityMap />} />
+                        <Route path="settings" element={<Settings />} />
+                      </Route>
+                    </Routes>
+                  </MissionControlDataProvider>
+                </AuthGate>
+              </AuthProvider>
+            }
+          />
+        </Routes>
+      </Suspense>
+    </Router>
   );
 }
 
