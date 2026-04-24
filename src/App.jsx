@@ -39,7 +39,6 @@ const XomeDashboard = lazy(() => import('./pages/XomeDashboard'));
 const CompanyDashboard = lazy(() => import('./pages/CompanyDashboard'));
 const MarketingDashboard = lazy(() => import('./pages/MarketingDashboard'));
 const InvestingCommand = lazy(() => import('./pages/InvestingCommand'));
-const RevenueCommand = lazy(() => import('./pages/RevenueCommand'));
 
 // ── Public guest portal (no auth required) ──
 const GuestPortal = lazy(() => import('./pages/GuestPortal'));
@@ -111,7 +110,6 @@ function App() {
                         <Route path="accounts" element={<Accounts />} />
                         <Route path="legal-docs" element={<LegalDocs />} />
                         <Route path="investing" element={<InvestingCommand />} />
-                        <Route path="revenue" element={<RevenueCommand />} />
                         <Route path="entity-map" element={<EntityMap />} />
                         <Route path="settings" element={<Settings />} />
                       </Route>

@@ -74,7 +74,6 @@ export const NAV_GROUPS = [
   ]},
   { id: "finance-group", label: "Finance", icon: icons.finance, children: [
     { id: "finance", label: "Dashboard", icon: icons.finance },
-    { id: "revenue", label: "Revenue (CMD-3)", icon: icons.dollarSign },
     { id: "xome", label: "Xome Home", icon: icons.dollarSign },
     { id: "company", label: "Company", icon: icons.entityMap },
     { id: "accounts", label: "Accounts", icon: icons.accounts },
