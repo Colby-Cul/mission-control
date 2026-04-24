@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-24T01:47:58Z",
+  "generatedAt": "2026-04-24T01:55:49Z",
   "agents": [
     {
       "id": "beacon",
@@ -52,7 +52,7 @@
     {
       "id": "coding-agent",
       "name": "coding-agent",
-      "sessionCount": 115,
+      "sessionCount": 116,
       "knowledge": {
         "domain": "Software Engineering / Full-Stack Development",
         "xp": 220,
@@ -217,7 +217,7 @@
     {
       "id": "ops-runner",
       "name": "ops-runner",
-      "sessionCount": 184,
+      "sessionCount": 183,
       "knowledge": {
         "domain": "Operations & Infrastructure Management",
         "xp": 200,
@@ -393,6 +393,66 @@
   ],
   "acpSessions": [
     {
+      "id": "67e444b0-a007-43c3-9",
+      "sessionId": "67e444b0-a007-43c3-9436-eb5edc769678",
+      "agent": "coding-agent",
+      "task": "Coding Agent Session",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-24T01:52:02.135Z",
+      "dateFinished": null,
+      "startTime": "2026-04-24T01:52:02.135Z",
+      "endTime": null,
+      "inputTokens": 14,
+      "outputTokens": 19072,
+      "cachedInputTokens": 588996,
+      "tokens": 678321,
+      "model": "claude-sonnet-4-6",
+      "apiModelUsed": "claude-sonnet-4-6",
+      "modelsUsed": [
+        "claude-sonnet-4-6"
+      ],
+      "totalCost": 0.4628,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/coding-agent/sessions/67e444b0-a007-43c3-9436-eb5edc769678.jsonl",
+      "sizeBytes": 197597,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~1 min"
+    },
+    {
+      "id": "76c93226-6edf-47d3-a",
+      "sessionId": "76c93226-6edf-47d3-a000-2059efac12f8",
+      "agent": "executive-assistant",
+      "task": "YOU MUST EXECUTE EVERY STEP BELOW. DO NOT SUMMARIZE. DO NOT SAY \"NEXT STEPS.\" DO EACH STEP NOW.",
+      "status": "in_progress",
+      "lane": "inprogress",
+      "dateCreated": "2026-04-24T01:51:46.697Z",
+      "dateFinished": null,
+      "startTime": "2026-04-24T01:51:46.697Z",
+      "endTime": null,
+      "inputTokens": 16957,
+      "outputTokens": 143,
+      "cachedInputTokens": 14080,
+      "tokens": 31180,
+      "model": "gpt-4o",
+      "apiModelUsed": "gpt-4o",
+      "modelsUsed": [
+        "gpt-4o"
+      ],
+      "totalCost": 0.0614,
+      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/76c93226-6edf-47d3-a000-2059efac12f8.jsonl",
+      "sizeBytes": 14564,
+      "isCron": false,
+      "spawns": 0,
+      "parentSession": "heartbeat",
+      "projectId": "",
+      "estimatedCostToCompletion": 0.0,
+      "estimatedTimeToCompletion": "~1 min"
+    },
+    {
       "id": "ed3283d7-8c00-4f05-b",
       "sessionId": "ed3283d7-8c00-4f05-bdcf-40eaed2a13db",
       "agent": "ops-runner",
@@ -403,10 +463,10 @@
       "dateFinished": null,
       "startTime": "2026-04-24T01:47:52.963Z",
       "endTime": null,
-      "inputTokens": 14463,
-      "outputTokens": 171,
-      "cachedInputTokens": 14208,
-      "tokens": 28842,
+      "inputTokens": 16921,
+      "outputTokens": 428,
+      "cachedInputTokens": 61952,
+      "tokens": 79301,
       "model": "deepseek-chat",
       "apiModelUsed": "deepseek-chat",
       "modelsUsed": [
@@ -414,13 +474,13 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/ed3283d7-8c00-4f05-bdcf-40eaed2a13db.jsonl",
-      "sizeBytes": 4092,
+      "sizeBytes": 21865,
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
       "projectId": "mission-control",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~1 min"
+      "estimatedTimeToCompletion": "~3 min"
     },
     {
       "id": "d95e4d22-bcc4-4197-b",
@@ -433,24 +493,24 @@
       "dateFinished": null,
       "startTime": "2026-04-24T01:43:26.774Z",
       "endTime": null,
-      "inputTokens": 32,
-      "outputTokens": 7794,
-      "cachedInputTokens": 1871945,
-      "tokens": 1973688,
+      "inputTokens": 40,
+      "outputTokens": 28877,
+      "cachedInputTokens": 2688467,
+      "tokens": 2833700,
       "model": "claude-sonnet-4-6",
       "apiModelUsed": "claude-sonnet-4-6",
       "modelsUsed": [
         "claude-sonnet-4-6"
       ],
-      "totalCost": 0.6786,
+      "totalCost": 1.2398,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/cfo/sessions/d95e4d22-bcc4-4197-b51b-77d74b0db408.jsonl",
-      "sizeBytes": 211946,
+      "sizeBytes": 286461,
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~2 min"
+      "estimatedTimeToCompletion": "~4 min"
     },
     {
       "id": "9f4a9835-1d78-4c94-b",
@@ -480,7 +540,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~2 min"
+      "estimatedTimeToCompletion": "~5 min"
     },
     {
       "id": "931d70f7-26f6-47b1-9",
@@ -511,7 +571,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~4 min"
+      "estimatedTimeToCompletion": "~7 min"
     },
     {
       "id": "77c8399d-213d-4fa8-8",
@@ -541,7 +601,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~5 min"
+      "estimatedTimeToCompletion": "~8 min"
     },
     {
       "id": "c2df55fd-a5ef-431d-9",
@@ -571,7 +631,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~9 min"
+      "estimatedTimeToCompletion": "~12 min"
     },
     {
       "id": "b215830f-3ede-4abe-b",
@@ -601,7 +661,7 @@
       "parentSession": "",
       "projectId": "mission-control",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~11 min"
+      "estimatedTimeToCompletion": "~13 min"
     },
     {
       "id": "02d5a064-4777-4991-b",
@@ -631,7 +691,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~13 min"
+      "estimatedTimeToCompletion": "~15 min"
     },
     {
       "id": "8047d191-993f-45f5-a",
@@ -662,7 +722,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~15 min"
+      "estimatedTimeToCompletion": "~17 min"
     },
     {
       "id": "e066f0b3-2b27-4585-9",
@@ -692,7 +752,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~16 min"
+      "estimatedTimeToCompletion": "~19 min"
     },
     {
       "id": "58abe0d1-a072-4b45-a",
@@ -759,12 +819,12 @@
       "sessionId": "ebefd3bb-cce2-460a-8efc-f186cf1fb7cc",
       "agent": "executive-assistant",
       "task": "YOU MUST EXECUTE EVERY STEP BELOW. DO NOT SUMMARIZE. DO NOT SAY \"NEXT STEPS.\" DO EACH STEP NOW.",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:54:29.285Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:54:37.966Z",
       "startTime": "2026-04-24T00:54:29.285Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:54:37.966Z",
       "inputTokens": 16926,
       "outputTokens": 203,
       "cachedInputTokens": 14080,
@@ -780,21 +840,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~19 min"
+      "projectId": ""
     },
     {
       "id": "5750abcd-76d6-41f0-b",
       "sessionId": "5750abcd-76d6-41f0-b105-31a9230dd796",
       "agent": "pulse",
       "task": "Pulse Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:52:35.509Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:53:01.583Z",
       "startTime": "2026-04-24T00:52:35.509Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:53:01.583Z",
       "inputTokens": 30452,
       "outputTokens": 1326,
       "cachedInputTokens": 15104,
@@ -810,21 +868,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~19 min"
+      "projectId": ""
     },
     {
       "id": "75154c2c-95e1-4ddf-9",
       "sessionId": "75154c2c-95e1-4ddf-9b24-ce17910010d3",
       "agent": "maven",
       "task": "Maven Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:52:29.235Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:52:29Z",
       "startTime": "2026-04-24T00:52:29.235Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:52:29Z",
       "inputTokens": 0,
       "outputTokens": 0,
       "cachedInputTokens": 0,
@@ -840,21 +896,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485163052604199013",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "Unknown"
+      "projectId": ""
     },
     {
       "id": "9c9a283c-6cc6-4868-b",
       "sessionId": "9c9a283c-6cc6-4868-b017-d947340dd5ae",
       "agent": "beacon",
       "task": "Beacon Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:52:02.344Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:52:02Z",
       "startTime": "2026-04-24T00:52:02.344Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:52:02Z",
       "inputTokens": 0,
       "outputTokens": 0,
       "cachedInputTokens": 0,
@@ -870,21 +924,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485163052604199013",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "Unknown"
+      "projectId": ""
     },
     {
       "id": "86c46c65-3b1a-4efa-9",
       "sessionId": "86c46c65-3b1a-4efa-9bce-1b8b6752c589",
       "agent": "ops-runner",
       "task": "Ops Runner Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:51:05.458Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:51:33.802Z",
       "startTime": "2026-04-24T00:51:05.458Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:51:33.802Z",
       "inputTokens": 6,
       "outputTokens": 1863,
       "cachedInputTokens": 63439,
@@ -900,21 +952,19 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~20 min"
+      "projectId": ""
     },
     {
       "id": "fb24a029-1d5d-4501-b",
       "sessionId": "fb24a029-1d5d-4501-b74a-1e85c1a3a9fb",
       "agent": "ops-runner",
       "task": "Ops Runner Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:48:05.421Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:48:12.449Z",
       "startTime": "2026-04-24T00:48:05.421Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:48:12.449Z",
       "inputTokens": 4,
       "outputTokens": 304,
       "cachedInputTokens": 16706,
@@ -930,9 +980,7 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~21 min"
+      "projectId": ""
     },
     {
       "id": "a427be60-e00c-4b8e-b",
@@ -995,12 +1043,12 @@
       "sessionId": "511c5c24-07b7-4f73-872a-5cdf246432aa",
       "agent": "quill",
       "task": "Quill Session",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "done",
+      "lane": "done",
       "dateCreated": "2026-04-24T00:37:02.948Z",
-      "dateFinished": null,
+      "dateFinished": "2026-04-24T00:52:21Z",
       "startTime": "2026-04-24T00:37:02.948Z",
-      "endTime": null,
+      "endTime": "2026-04-24T00:52:21Z",
       "inputTokens": 0,
       "outputTokens": 0,
       "cachedInputTokens": 0,
@@ -1016,9 +1064,7 @@
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485163052604199013",
-      "projectId": "",
-      "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "Unknown"
+      "projectId": ""
     },
     {
       "id": "d6d0fc86-ee2a-40b9-8",
@@ -3440,62 +3486,6 @@
       "projectId": ""
     },
     {
-      "id": "d25d6c97-ac58-4bee-9",
-      "sessionId": "d25d6c97-ac58-4bee-991e-bb3aa1c089f0",
-      "agent": "executive-assistant",
-      "task": "YOU MUST EXECUTE EVERY STEP BELOW. DO NOT SUMMARIZE. DO NOT SAY \"NEXT STEPS.\" DO EACH STEP NOW.",
-      "status": "done",
-      "lane": "done",
-      "dateCreated": "2026-04-23T13:31:47.828Z",
-      "dateFinished": "2026-04-23T13:31:55.587Z",
-      "startTime": "2026-04-23T13:31:47.828Z",
-      "endTime": "2026-04-23T13:31:55.587Z",
-      "inputTokens": 16852,
-      "outputTokens": 158,
-      "cachedInputTokens": 14080,
-      "tokens": 31090,
-      "model": "gpt-4o",
-      "apiModelUsed": "gpt-4o",
-      "modelsUsed": [
-        "gpt-4o"
-      ],
-      "totalCost": 0.0613,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/executive-assistant/sessions/d25d6c97-ac58-4bee-991e-bb3aa1c089f0.jsonl",
-      "sizeBytes": 12916,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": "heartbeat",
-      "projectId": ""
-    },
-    {
-      "id": "22c5ec02-be5e-4484-b",
-      "sessionId": "22c5ec02-be5e-4484-b106-1bca4496d5f8",
-      "agent": "coding-agent",
-      "task": "Coding Agent Session",
-      "status": "done",
-      "lane": "done",
-      "dateCreated": "2026-04-23T13:05:30.888Z",
-      "dateFinished": "2026-04-23T13:14:11.073Z",
-      "startTime": "2026-04-23T13:05:30.888Z",
-      "endTime": "2026-04-23T13:14:11.073Z",
-      "inputTokens": 34,
-      "outputTokens": 36291,
-      "cachedInputTokens": 1216313,
-      "tokens": 1401419,
-      "model": "claude-sonnet-4-6",
-      "apiModelUsed": "claude-sonnet-4-6",
-      "modelsUsed": [
-        "claude-sonnet-4-6"
-      ],
-      "totalCost": 0.9094,
-      "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/coding-agent/sessions/22c5ec02-be5e-4484-b106-1bca4496d5f8.jsonl",
-      "sizeBytes": 301965,
-      "isCron": false,
-      "spawns": 0,
-      "parentSession": "",
-      "projectId": ""
-    },
-    {
       "id": "f52c1c9b-2673-49f0-8",
       "sessionId": "f52c1c9b-2673-49f0-810b-ba12cc8e10be",
       "agent": "coding-agent",
@@ -3613,31 +3603,31 @@
       "sessionId": "01c5b3d6-4aae-4dd0-bcc1-e6e4d3c602c0",
       "agent": "main",
       "task": "<<<BEGIN_OPENCLAW_INTERNAL_CONTEXT>>>\nOpenClaw runtime context (internal):",
-      "status": "in_progress",
-      "lane": "inprogress",
+      "status": "blocked",
+      "lane": "blocked",
       "dateCreated": "2026-04-23T05:12:51.095Z",
       "dateFinished": null,
       "startTime": "2026-04-23T05:12:51.095Z",
       "endTime": null,
-      "inputTokens": 490,
-      "outputTokens": 68819,
-      "cachedInputTokens": 21433205,
-      "tokens": 28805022,
+      "inputTokens": 494,
+      "outputTokens": 69312,
+      "cachedInputTokens": 21692924,
+      "tokens": 29325613,
       "model": "claude-sonnet-4-6",
       "apiModelUsed": "claude-sonnet-4-6, delivery-mirror",
       "modelsUsed": [
         "claude-sonnet-4-6",
         "delivery-mirror"
       ],
-      "totalCost": 7.4637,
+      "totalCost": 7.549,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/01c5b3d6-4aae-4dd0-bcc1-e6e4d3c602c0.jsonl",
-      "sizeBytes": 2625288,
+      "sizeBytes": 2633585,
       "isCron": false,
-      "spawns": 30,
+      "spawns": 31,
       "parentSession": "telegram:7923187109",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~7.2 hr"
+      "estimatedTimeToCompletion": "~7.3 hr"
     },
     {
       "id": "eaf5e92d-2a4f-422b-a",
@@ -3746,7 +3736,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/cfo/sessions/fc6acd8e-14a8-4c65-8d2a-f1b55c5da1f9.jsonl",
-      "sizeBytes": 27111,
+      "sizeBytes": 55938,
       "isCron": false,
       "spawns": 0,
       "parentSession": "discord:channel:1485163052604199013",
@@ -4290,7 +4280,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~31.3 hr"
+      "estimatedTimeToCompletion": "~31.4 hr"
     },
     {
       "id": "95182fdb-69a5-46c6-9",
@@ -4853,7 +4843,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/echo/sessions/sessions.json",
-      "sizeBytes": 98855,
+      "sizeBytes": 98852,
       "isCron": false,
       "spawns": 0,
       "parentSession": "telegram:group:@heartbeat",
@@ -4917,7 +4907,7 @@
       "parentSession": "heartbeat",
       "projectId": "str-website",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~46.9 hr"
+      "estimatedTimeToCompletion": "~47.0 hr"
     },
     {
       "id": "12077ad3-06c9-40ad-9",
@@ -5088,7 +5078,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/sessions.json",
-      "sizeBytes": 286002,
+      "sizeBytes": 286003,
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
@@ -5118,7 +5108,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/sessions.json",
-      "sizeBytes": 286002,
+      "sizeBytes": 286003,
       "isCron": false,
       "spawns": 0,
       "parentSession": "",
@@ -5179,7 +5169,7 @@
       ],
       "totalCost": 0.0,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/sessions.json",
-      "sizeBytes": 394180,
+      "sizeBytes": 394183,
       "isCron": false,
       "spawns": 0,
       "parentSession": "telegram:7923187109",
@@ -5217,7 +5207,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~116.6 hr"
+      "estimatedTimeToCompletion": "~116.7 hr"
     },
     {
       "id": "56a7ee09-b126-42d3-a",
@@ -5249,7 +5239,7 @@
       "parentSession": "",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~116.6 hr"
+      "estimatedTimeToCompletion": "~116.7 hr"
     },
     {
       "id": "d6c68505-2615-4890-b",
@@ -5262,10 +5252,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T04:07:33.355Z",
       "endTime": null,
-      "inputTokens": 2031897,
-      "outputTokens": 12951,
-      "cachedInputTokens": 2927232,
-      "tokens": 4972080,
+      "inputTokens": 2093371,
+      "outputTokens": 13019,
+      "cachedInputTokens": 2987392,
+      "tokens": 5093782,
       "model": "gpt-4o",
       "apiModelUsed": "deepseek-reasoner, gpt-4o, gpt-4o-mini, qwen2.5-coder:32b",
       "modelsUsed": [
@@ -5274,9 +5264,9 @@
         "gpt-4o-mini",
         "qwen2.5-coder:32b"
       ],
-      "totalCost": 8.8683,
+      "totalCost": 9.0979,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/d6c68505-2615-4890-b366-b32d37613b5d.jsonl",
-      "sizeBytes": 412842,
+      "sizeBytes": 420502,
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
@@ -5385,17 +5375,17 @@
       "id": "2eb236f0-45da-4f80-b",
       "sessionId": "2eb236f0-45da-4f80-b690-dedbd83db4a3",
       "agent": "ops-runner",
-      "task": "Once the Monday.com API credentials are verified and updated, please let me know so I can proceed with the task.",
+      "task": "Agent-to-agent announce step.",
       "status": "in_progress",
       "lane": "inprogress",
       "dateCreated": "2026-04-10T04:05:04.831Z",
       "dateFinished": null,
       "startTime": "2026-04-10T04:05:04.831Z",
       "endTime": null,
-      "inputTokens": 71559828,
-      "outputTokens": 343810,
-      "cachedInputTokens": 58583040,
-      "tokens": 130486678,
+      "inputTokens": 71592178,
+      "outputTokens": 343868,
+      "cachedInputTokens": 58682624,
+      "tokens": 130618670,
       "model": "gpt-4o",
       "apiModelUsed": "deepseek-chat, deepseek-reasoner, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5404,9 +5394,9 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 255.5665,
+      "totalCost": 255.7724,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/2eb236f0-45da-4f80-b690-dedbd83db4a3.jsonl",
-      "sizeBytes": 5094055,
+      "sizeBytes": 5098280,
       "isCron": false,
       "spawns": 6,
       "parentSession": "heartbeat",
@@ -5482,17 +5472,17 @@
       "id": "b921270a-8817-49c9-a",
       "sessionId": "b921270a-8817-49c9-a977-fae71fa6ddda",
       "agent": "cfo",
-      "task": "Jarvis here. Unblock CMD-3 Revenue Command now.",
+      "task": "Agent-to-agent announce step.",
       "status": "in_progress",
       "lane": "inprogress",
       "dateCreated": "2026-04-10T03:47:44.412Z",
       "dateFinished": null,
       "startTime": "2026-04-10T03:47:44.412Z",
       "endTime": null,
-      "inputTokens": 3363812,
-      "outputTokens": 25997,
-      "cachedInputTokens": 4254537,
-      "tokens": 10315067,
+      "inputTokens": 3440106,
+      "outputTokens": 26123,
+      "cachedInputTokens": 4322889,
+      "tokens": 10459839,
       "model": "gpt-4o",
       "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5500,9 +5490,9 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 13.9877,
+      "totalCost": 14.2651,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/cfo/sessions/b921270a-8817-49c9-a977-fae71fa6ddda.jsonl",
-      "sizeBytes": 727036,
+      "sizeBytes": 730223,
       "isCron": false,
       "spawns": 11,
       "parentSession": "heartbeat",
@@ -5584,10 +5574,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:32:42.185Z",
       "endTime": null,
-      "inputTokens": 3759657,
-      "outputTokens": 19837,
-      "cachedInputTokens": 4614336,
-      "tokens": 8393830,
+      "inputTokens": 3993287,
+      "outputTokens": 20165,
+      "cachedInputTokens": 4925248,
+      "tokens": 8938700,
       "model": "gpt-4o-mini",
       "apiModelUsed": "claude-sonnet-4-6, deepseek-chat, gemini-2.5-flash, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5597,9 +5587,9 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 15.3654,
+      "totalCost": 16.3414,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/beacon/sessions/9a520482-be99-4d6a-a4b3-9388d9189968.jsonl",
-      "sizeBytes": 502580,
+      "sizeBytes": 513288,
       "isCron": false,
       "spawns": 10,
       "parentSession": "heartbeat",
@@ -5618,10 +5608,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:32:35.812Z",
       "endTime": null,
-      "inputTokens": 112650,
-      "outputTokens": 5074,
+      "inputTokens": 112653,
+      "outputTokens": 5079,
       "cachedInputTokens": 760185,
-      "tokens": 3203750,
+      "tokens": 3272391,
       "model": "claude-sonnet-4-6",
       "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5629,9 +5619,9 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 0.6421,
+      "totalCost": 0.6422,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/spark/sessions/1eae378c-0b52-4e70-aa74-11dcf2ee2a90.jsonl",
-      "sizeBytes": 331063,
+      "sizeBytes": 332428,
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
@@ -5643,25 +5633,25 @@
       "id": "97b9bade-efd8-45a4-b",
       "sessionId": "97b9bade-efd8-45a4-b50d-67fbe79a895c",
       "agent": "echo",
-      "task": "The Monday.com API credentials file is still missing.",
+      "task": "The LinkedIn/SEO playbook task has already been completed and successfully posted to Discord channel **14851630526041...",
       "status": "in_progress",
       "lane": "inprogress",
       "dateCreated": "2026-04-10T03:32:28.322Z",
       "dateFinished": null,
       "startTime": "2026-04-10T03:32:28.322Z",
       "endTime": null,
-      "inputTokens": 3269861,
-      "outputTokens": 9063,
-      "cachedInputTokens": 4875264,
-      "tokens": 8154188,
+      "inputTokens": 3510145,
+      "outputTokens": 9668,
+      "cachedInputTokens": 5040128,
+      "tokens": 8559941,
       "model": "gpt-4o-mini",
       "apiModelUsed": "gpt-4o-mini",
       "modelsUsed": [
         "gpt-4o-mini"
       ],
-      "totalCost": 14.3594,
+      "totalCost": 15.1722,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/echo/sessions/97b9bade-efd8-45a4-b50d-67fbe79a895c.jsonl",
-      "sizeBytes": 448511,
+      "sizeBytes": 469711,
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
@@ -5680,10 +5670,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:23:47.199Z",
       "endTime": null,
-      "inputTokens": 288948,
-      "outputTokens": 16748,
-      "cachedInputTokens": 1230152,
-      "tokens": 2125875,
+      "inputTokens": 288952,
+      "outputTokens": 16974,
+      "cachedInputTokens": 1301238,
+      "tokens": 2269751,
       "model": "claude-sonnet-4-6",
       "apiModelUsed": "claude-sonnet-4-6, deepseek-reasoner, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5692,15 +5682,15 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 1.4871,
+      "totalCost": 1.5118,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/quill/sessions/3d4dea8a-5405-4ee0-9ab2-21a043fc2fa4.jsonl",
-      "sizeBytes": 425158,
+      "sizeBytes": 433022,
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "a7e79e01-8243-4a6e-9",
@@ -5766,7 +5756,7 @@
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "a889f680-75b2-499d-8",
@@ -5779,10 +5769,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:23:14.972Z",
       "endTime": null,
-      "inputTokens": 3091735,
-      "outputTokens": 7073,
-      "cachedInputTokens": 1135616,
-      "tokens": 4234424,
+      "inputTokens": 3184343,
+      "outputTokens": 7431,
+      "cachedInputTokens": 1200256,
+      "tokens": 4392030,
       "model": "gpt-4o-mini",
       "apiModelUsed": "deepseek-chat, gemini-2.5-flash, gpt-4o-mini",
       "modelsUsed": [
@@ -5790,15 +5780,15 @@
         "gemini-2.5-flash",
         "gpt-4o-mini"
       ],
-      "totalCost": 9.2196,
+      "totalCost": 9.5355,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/stock-analyst/sessions/a889f680-75b2-499d-8ed2-f4c0dcaedbc0.jsonl",
-      "sizeBytes": 330519,
+      "sizeBytes": 358899,
       "isCron": false,
       "spawns": 2,
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "b561fc78-6820-45c8-b",
@@ -5832,7 +5822,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "25726355-eec4-4675-a",
@@ -5865,7 +5855,7 @@
       "parentSession": "heartbeat",
       "projectId": "",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "cc9c1dc3-bda9-4516-b",
@@ -5878,10 +5868,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:22:43.775Z",
       "endTime": null,
-      "inputTokens": 5263320,
-      "outputTokens": 30597,
-      "cachedInputTokens": 7235482,
-      "tokens": 12529399,
+      "inputTokens": 5362878,
+      "outputTokens": 31769,
+      "cachedInputTokens": 7333530,
+      "tokens": 12728177,
       "model": "gpt-4o",
       "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -5889,15 +5879,15 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 22.5086,
+      "totalCost": 22.8918,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/validation/sessions/cc9c1dc3-bda9-4516-be94-59ecbdbaa7f5.jsonl",
-      "sizeBytes": 1716899,
+      "sizeBytes": 1725577,
       "isCron": false,
       "spawns": 3,
       "parentSession": "heartbeat",
       "projectId": "coding",
       "estimatedCostToCompletion": 0.0,
-      "estimatedTimeToCompletion": "~117.0 hr"
+      "estimatedTimeToCompletion": "~117.1 hr"
     },
     {
       "id": "aca3d094-0faf-4068-8",
@@ -6037,10 +6027,10 @@
       "dateFinished": null,
       "startTime": "2026-04-10T03:20:35.616Z",
       "endTime": null,
-      "inputTokens": 1588081,
-      "outputTokens": 9665,
-      "cachedInputTokens": 5105280,
-      "tokens": 6703026,
+      "inputTokens": 1649403,
+      "outputTokens": 10689,
+      "cachedInputTokens": 5706752,
+      "tokens": 7366844,
       "model": "gpt-4o-mini",
       "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
       "modelsUsed": [
@@ -6048,9 +6038,9 @@
         "gpt-4o",
         "gpt-4o-mini"
       ],
-      "totalCost": 10.4485,
+      "totalCost": 11.3638,
       "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/pulse/sessions/24e4bc1b-0a25-4f70-b78a-0b9eeb2fe729.jsonl",
-      "sizeBytes": 461528,
+      "sizeBytes": 491454,
       "isCron": false,
       "spawns": 0,
       "parentSession": "heartbeat",
@@ -6212,7 +6202,7 @@
       "taskCount": 16,
       "doneCount": 3,
       "activeCount": 13,
-      "totalCost": 936.5062,
+      "totalCost": 938.7499,
       "apiModelsUsed": [
         "claude-sonnet-4-6",
         "deepseek-chat",
@@ -6265,31 +6255,31 @@
           "sessionId": "01c5b3d6-4aae-4dd0-bcc1-e6e4d3c602c0",
           "agent": "main",
           "task": "<<<BEGIN_OPENCLAW_INTERNAL_CONTEXT>>>\nOpenClaw runtime context (internal):",
-          "status": "in_progress",
-          "lane": "inprogress",
+          "status": "blocked",
+          "lane": "blocked",
           "dateCreated": "2026-04-23T05:12:51.095Z",
           "dateFinished": null,
           "startTime": "2026-04-23T05:12:51.095Z",
           "endTime": null,
-          "inputTokens": 490,
-          "outputTokens": 68819,
-          "cachedInputTokens": 21433205,
-          "tokens": 28805022,
+          "inputTokens": 494,
+          "outputTokens": 69312,
+          "cachedInputTokens": 21692924,
+          "tokens": 29325613,
           "model": "claude-sonnet-4-6",
           "apiModelUsed": "claude-sonnet-4-6, delivery-mirror",
           "modelsUsed": [
             "claude-sonnet-4-6",
             "delivery-mirror"
           ],
-          "totalCost": 7.4637,
+          "totalCost": 7.549,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/main/sessions/01c5b3d6-4aae-4dd0-bcc1-e6e4d3c602c0.jsonl",
-          "sizeBytes": 2625288,
+          "sizeBytes": 2633585,
           "isCron": false,
-          "spawns": 30,
+          "spawns": 31,
           "parentSession": "telegram:7923187109",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~7.2 hr"
+          "estimatedTimeToCompletion": "~7.3 hr"
         },
         {
           "id": "d9a88ee1-c312-446f-9",
@@ -6349,7 +6339,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~116.6 hr"
+          "estimatedTimeToCompletion": "~116.7 hr"
         },
         {
           "id": "56a7ee09-b126-42d3-a",
@@ -6381,7 +6371,7 @@
           "parentSession": "",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~116.6 hr"
+          "estimatedTimeToCompletion": "~116.7 hr"
         },
         {
           "id": "d00d171f-fc17-439d-b",
@@ -6418,17 +6408,17 @@
           "id": "2eb236f0-45da-4f80-b",
           "sessionId": "2eb236f0-45da-4f80-b690-dedbd83db4a3",
           "agent": "ops-runner",
-          "task": "Once the Monday.com API credentials are verified and updated, please let me know so I can proceed with the task.",
+          "task": "Agent-to-agent announce step.",
           "status": "in_progress",
           "lane": "inprogress",
           "dateCreated": "2026-04-10T04:05:04.831Z",
           "dateFinished": null,
           "startTime": "2026-04-10T04:05:04.831Z",
           "endTime": null,
-          "inputTokens": 71559828,
-          "outputTokens": 343810,
-          "cachedInputTokens": 58583040,
-          "tokens": 130486678,
+          "inputTokens": 71592178,
+          "outputTokens": 343868,
+          "cachedInputTokens": 58682624,
+          "tokens": 130618670,
           "model": "gpt-4o",
           "apiModelUsed": "deepseek-chat, deepseek-reasoner, gpt-4o, gpt-4o-mini",
           "modelsUsed": [
@@ -6437,9 +6427,9 @@
             "gpt-4o",
             "gpt-4o-mini"
           ],
-          "totalCost": 255.5665,
+          "totalCost": 255.7724,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/2eb236f0-45da-4f80-b690-dedbd83db4a3.jsonl",
-          "sizeBytes": 5094055,
+          "sizeBytes": 5098280,
           "isCron": false,
           "spawns": 6,
           "parentSession": "heartbeat",
@@ -6484,17 +6474,17 @@
           "id": "b921270a-8817-49c9-a",
           "sessionId": "b921270a-8817-49c9-a977-fae71fa6ddda",
           "agent": "cfo",
-          "task": "Jarvis here. Unblock CMD-3 Revenue Command now.",
+          "task": "Agent-to-agent announce step.",
           "status": "in_progress",
           "lane": "inprogress",
           "dateCreated": "2026-04-10T03:47:44.412Z",
           "dateFinished": null,
           "startTime": "2026-04-10T03:47:44.412Z",
           "endTime": null,
-          "inputTokens": 3363812,
-          "outputTokens": 25997,
-          "cachedInputTokens": 4254537,
-          "tokens": 10315067,
+          "inputTokens": 3440106,
+          "outputTokens": 26123,
+          "cachedInputTokens": 4322889,
+          "tokens": 10459839,
           "model": "gpt-4o",
           "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
           "modelsUsed": [
@@ -6502,9 +6492,9 @@
             "gpt-4o",
             "gpt-4o-mini"
           ],
-          "totalCost": 13.9877,
+          "totalCost": 14.2651,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/cfo/sessions/b921270a-8817-49c9-a977-fae71fa6ddda.jsonl",
-          "sizeBytes": 727036,
+          "sizeBytes": 730223,
           "isCron": false,
           "spawns": 11,
           "parentSession": "heartbeat",
@@ -6555,10 +6545,10 @@
           "dateFinished": null,
           "startTime": "2026-04-10T03:32:42.185Z",
           "endTime": null,
-          "inputTokens": 3759657,
-          "outputTokens": 19837,
-          "cachedInputTokens": 4614336,
-          "tokens": 8393830,
+          "inputTokens": 3993287,
+          "outputTokens": 20165,
+          "cachedInputTokens": 4925248,
+          "tokens": 8938700,
           "model": "gpt-4o-mini",
           "apiModelUsed": "claude-sonnet-4-6, deepseek-chat, gemini-2.5-flash, gpt-4o, gpt-4o-mini",
           "modelsUsed": [
@@ -6568,9 +6558,9 @@
             "gpt-4o",
             "gpt-4o-mini"
           ],
-          "totalCost": 15.3654,
+          "totalCost": 16.3414,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/beacon/sessions/9a520482-be99-4d6a-a4b3-9388d9189968.jsonl",
-          "sizeBytes": 502580,
+          "sizeBytes": 513288,
           "isCron": false,
           "spawns": 10,
           "parentSession": "heartbeat",
@@ -6642,7 +6632,7 @@
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~117.0 hr"
+          "estimatedTimeToCompletion": "~117.1 hr"
         },
         {
           "id": "a889f680-75b2-499d-8",
@@ -6655,10 +6645,10 @@
           "dateFinished": null,
           "startTime": "2026-04-10T03:23:14.972Z",
           "endTime": null,
-          "inputTokens": 3091735,
-          "outputTokens": 7073,
-          "cachedInputTokens": 1135616,
-          "tokens": 4234424,
+          "inputTokens": 3184343,
+          "outputTokens": 7431,
+          "cachedInputTokens": 1200256,
+          "tokens": 4392030,
           "model": "gpt-4o-mini",
           "apiModelUsed": "deepseek-chat, gemini-2.5-flash, gpt-4o-mini",
           "modelsUsed": [
@@ -6666,15 +6656,15 @@
             "gemini-2.5-flash",
             "gpt-4o-mini"
           ],
-          "totalCost": 9.2196,
+          "totalCost": 9.5355,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/stock-analyst/sessions/a889f680-75b2-499d-8ed2-f4c0dcaedbc0.jsonl",
-          "sizeBytes": 330519,
+          "sizeBytes": 358899,
           "isCron": false,
           "spawns": 2,
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~117.0 hr"
+          "estimatedTimeToCompletion": "~117.1 hr"
         },
         {
           "id": "cc9c1dc3-bda9-4516-b",
@@ -6687,10 +6677,10 @@
           "dateFinished": null,
           "startTime": "2026-04-10T03:22:43.775Z",
           "endTime": null,
-          "inputTokens": 5263320,
-          "outputTokens": 30597,
-          "cachedInputTokens": 7235482,
-          "tokens": 12529399,
+          "inputTokens": 5362878,
+          "outputTokens": 31769,
+          "cachedInputTokens": 7333530,
+          "tokens": 12728177,
           "model": "gpt-4o",
           "apiModelUsed": "claude-sonnet-4-6, gpt-4o, gpt-4o-mini",
           "modelsUsed": [
@@ -6698,15 +6688,15 @@
             "gpt-4o",
             "gpt-4o-mini"
           ],
-          "totalCost": 22.5086,
+          "totalCost": 22.8918,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/validation/sessions/cc9c1dc3-bda9-4516-be94-59ecbdbaa7f5.jsonl",
-          "sizeBytes": 1716899,
+          "sizeBytes": 1725577,
           "isCron": false,
           "spawns": 3,
           "parentSession": "heartbeat",
           "projectId": "coding",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~117.0 hr"
+          "estimatedTimeToCompletion": "~117.1 hr"
         },
         {
           "id": "aca3d094-0faf-4068-8",
@@ -7842,7 +7832,7 @@
       "taskCount": 9,
       "doneCount": 4,
       "activeCount": 5,
-      "totalCost": 131.22,
+      "totalCost": 131.4496,
       "apiModelsUsed": [
         "claude-sonnet-4-6",
         "deepseek-chat",
@@ -7883,10 +7873,10 @@
           "dateFinished": null,
           "startTime": "2026-04-24T01:47:52.963Z",
           "endTime": null,
-          "inputTokens": 14463,
-          "outputTokens": 171,
-          "cachedInputTokens": 14208,
-          "tokens": 28842,
+          "inputTokens": 16921,
+          "outputTokens": 428,
+          "cachedInputTokens": 61952,
+          "tokens": 79301,
           "model": "deepseek-chat",
           "apiModelUsed": "deepseek-chat",
           "modelsUsed": [
@@ -7894,13 +7884,13 @@
           ],
           "totalCost": 0.0,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/ops-runner/sessions/ed3283d7-8c00-4f05-bdcf-40eaed2a13db.jsonl",
-          "sizeBytes": 4092,
+          "sizeBytes": 21865,
           "isCron": false,
           "spawns": 0,
           "parentSession": "",
           "projectId": "mission-control",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~1 min"
+          "estimatedTimeToCompletion": "~3 min"
         },
         {
           "id": "b215830f-3ede-4abe-b",
@@ -7930,7 +7920,7 @@
           "parentSession": "",
           "projectId": "mission-control",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~11 min"
+          "estimatedTimeToCompletion": "~13 min"
         },
         {
           "id": "3d9b7157-3c64-43f0-8",
@@ -8055,10 +8045,10 @@
           "dateFinished": null,
           "startTime": "2026-04-10T04:07:33.355Z",
           "endTime": null,
-          "inputTokens": 2031897,
-          "outputTokens": 12951,
-          "cachedInputTokens": 2927232,
-          "tokens": 4972080,
+          "inputTokens": 2093371,
+          "outputTokens": 13019,
+          "cachedInputTokens": 2987392,
+          "tokens": 5093782,
           "model": "gpt-4o",
           "apiModelUsed": "deepseek-reasoner, gpt-4o, gpt-4o-mini, qwen2.5-coder:32b",
           "modelsUsed": [
@@ -8067,9 +8057,9 @@
             "gpt-4o-mini",
             "qwen2.5-coder:32b"
           ],
-          "totalCost": 8.8683,
+          "totalCost": 9.0979,
           "transcriptPath": "/Users/jarvisculbertson/.openclaw/agents/designer/sessions/d6c68505-2615-4890-b366-b32d37613b5d.jsonl",
-          "sizeBytes": 412842,
+          "sizeBytes": 420502,
           "isCron": false,
           "spawns": 0,
           "parentSession": "heartbeat",
@@ -8252,7 +8242,7 @@
           "parentSession": "heartbeat",
           "projectId": "str-website",
           "estimatedCostToCompletion": 0.0,
-          "estimatedTimeToCompletion": "~46.9 hr"
+          "estimatedTimeToCompletion": "~47.0 hr"
         }
       ],
       "description": "Next.js website for luxury short-term rental properties (Graeagle Cabin + Northstar Luxury)",
@@ -8590,8 +8580,8 @@
   ],
   "metrics": {
     "totalSessions": 228,
-    "totalTokens": 990846380,
-    "totalCost": 1572.51,
+    "totalTokens": 994136242,
+    "totalCost": 1576.86,
     "activeProjects": 5,
     "cronJobsEnabled": 10
   }
