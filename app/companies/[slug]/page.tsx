@@ -406,7 +406,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
   const pipelineStageOrder = ['Leads', 'Pre-Approved', 'In Process', 'Funded', 'Nurture', 'Dead/DNC']
   const stageColorByName: Record<string, string> = {
     'Leads': 'var(--purple)',
-    'Pre-Approved': 'var(--orange)',
+    'Pre-Approved': 'var(--accent)',
     'In Process': 'var(--amber)',
     'Funded': 'var(--green)',
     'Nurture': 'var(--lime)',
@@ -433,7 +433,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     :root {
       --bg: #060610; --card: rgba(255,255,255,0.025); --border: rgba(255,255,255,0.06);
       --dim: rgba(255,255,255,0.4); --dim2: rgba(255,255,255,0.25);
-      --orange: #f97316; --pink: #ec4899; --purple: #8b5cf6;
+      --orange: #3b82f6; --pink: #ec4899; --purple: #8b5cf6;
       --green: #10b981; --amber: #f59e0b; --red: #ef4444; --lime: #84cc16;
     }
     html, body { width: 100%; height: 100%; background: var(--bg); color: rgba(255,255,255,0.9); font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; overflow-x: hidden; }
@@ -446,20 +446,20 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .main-container { flex: 1; width: 86%; margin: 0 auto; padding: 40px 0; }
 
     /* ── Hero ── */
-    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 28px; border: 1px solid rgba(249,115,22,0.12); background: #050510; min-height: 480px; }
+    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 28px; border: 1px solid rgba(59,130,246,0.12); background: #050510; min-height: 480px; }
     #heroCanvas { position: absolute; inset: 0; z-index: 0; }
-    .hero-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent); animation: scanDown 4s ease-in-out infinite; filter: blur(1px); }
+    .hero-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(139,92,246,0.3), transparent); animation: scanDown 4s ease-in-out infinite; filter: blur(1px); }
     @keyframes scanDown { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     .hud-corner { position: absolute; z-index: 2; width: 24px; height: 24px; }
-    .hud-corner.tl { top: 12px; left: 12px; border-top: 2px solid rgba(249,115,22,0.3); border-left: 2px solid rgba(249,115,22,0.3); }
+    .hud-corner.tl { top: 12px; left: 12px; border-top: 2px solid rgba(59,130,246,0.3); border-left: 2px solid rgba(59,130,246,0.3); }
     .hud-corner.tr { top: 12px; right: 12px; border-top: 2px solid rgba(139,92,246,0.3); border-right: 2px solid rgba(139,92,246,0.3); }
-    .hud-corner.bl { bottom: 12px; left: 12px; border-bottom: 2px solid rgba(249,115,22,0.3); border-left: 2px solid rgba(249,115,22,0.3); }
+    .hud-corner.bl { bottom: 12px; left: 12px; border-bottom: 2px solid rgba(59,130,246,0.3); border-left: 2px solid rgba(59,130,246,0.3); }
     .hud-corner.br { bottom: 12px; right: 12px; border-bottom: 2px solid rgba(139,92,246,0.3); border-right: 2px solid rgba(139,92,246,0.3); }
     .hero-content { position: relative; z-index: 3; display: flex; align-items: stretch; min-height: 480px; }
     .hero-left { flex: 1; padding: 36px 0 36px 40px; display: flex; flex-direction: column; justify-content: center; }
     .hero-badges { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .hero-badge { font-size: 9px; font-weight: 600; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.08em; }
-    .hero-badge.type { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.2); }
+    .hero-badge.type { background: rgba(59,130,246,0.12); color: var(--accent); border: 1px solid rgba(59,130,246,0.2); }
     .hero-badge.state { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
     .hero-badge.operational { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.2); }
     .hero-company-greeting { font-size: 13px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -498,7 +498,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .section-header-left { display: flex; align-items: center; gap: 10px; }
     .section-title { font-size: 18px; font-weight: 600; letter-spacing: 0.02em; }
     .achieve-count { font-size: 12px; color: var(--dim); background: rgba(255,255,255,0.04); padding: 3px 10px; border-radius: 6px; }
-    .xp-earned { font-size: 12px; font-weight: 600; color: var(--orange); background: rgba(249,115,22,0.1); padding: 3px 10px; border-radius: 6px; }
+    .xp-earned { font-size: 12px; font-weight: 600; color: var(--accent); background: rgba(59,130,246,0.1); padding: 3px 10px; border-radius: 6px; }
 
     /* ── Achievements ── */
     .achieve-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: flex-start; padding: 8px 0; }
@@ -510,15 +510,15 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .achieve-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
     .achieve-ring-fill { fill: none; stroke-width: 4; stroke-linecap: round; stroke: url(#achieveGrad); transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
     .achieve-icon-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 30px; line-height: 1; }
-    .achieve-card.earned .achieve-ring-wrap::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%); z-index: 0; }
+    .achieve-card.earned .achieve-ring-wrap::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%); z-index: 0; }
     .achieve-check { position: absolute; bottom: 4px; right: 16px; width: 20px; height: 20px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border: 2px solid var(--bg); z-index: 2; }
     .achieve-name { font-size: 11px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
-    .achieve-xp { font-size: 10px; font-weight: 600; color: var(--orange); }
+    .achieve-xp { font-size: 10px; font-weight: 600; color: var(--accent); }
     .achieve-tooltip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: rgba(12,12,26,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; min-width: 180px; max-width: 220px; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 50; backdrop-filter: blur(12px); }
     .achieve-card:hover .achieve-tooltip { opacity: 1; }
     .achieve-tooltip-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
     .achieve-tooltip-desc { font-size: 11px; color: var(--dim); line-height: 1.4; margin-bottom: 4px; }
-    .achieve-tooltip-xp { font-size: 11px; font-weight: 600; color: var(--orange); }
+    .achieve-tooltip-xp { font-size: 11px; font-weight: 600; color: var(--accent); }
 
     /* ── KPI Grid ── */
     .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 40px; }
@@ -527,7 +527,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .kpi-card { padding: 20px; border-radius: 14px; position: relative; overflow: hidden; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); backdrop-filter: blur(8px); transition: all 0.3s cubic-bezier(0.22,1,0.36,1); }
     .kpi-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; pointer-events: none; }
     .kpi-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.035); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
-    .kpi-card.kpi-orange { border-color: rgba(249,115,22,0.15); } .kpi-card.kpi-orange::after { background: linear-gradient(to top, rgba(249,115,22,0.06), transparent); } .kpi-card.kpi-orange .kpi-num { color: var(--orange); } .kpi-card.kpi-orange .kpi-indicator { background: var(--orange); } .kpi-card.kpi-orange .kpi-bar { background: linear-gradient(to top, rgba(249,115,22,0.15), rgba(249,115,22,0.5)); }
+    .kpi-card.kpi-orange { border-color: rgba(59,130,246,0.15); } .kpi-card.kpi-orange::after { background: linear-gradient(to top, rgba(59,130,246,0.06), transparent); } .kpi-card.kpi-orange .kpi-num { color: var(--accent); } .kpi-card.kpi-orange .kpi-indicator { background: var(--accent); } .kpi-card.kpi-orange .kpi-bar { background: linear-gradient(to top, rgba(59,130,246,0.15), rgba(59,130,246,0.5)); }
     .kpi-card.kpi-green { border-color: rgba(16,185,129,0.15); } .kpi-card.kpi-green::after { background: linear-gradient(to top, rgba(16,185,129,0.06), transparent); } .kpi-card.kpi-green .kpi-num { color: var(--green); } .kpi-card.kpi-green .kpi-indicator { background: var(--green); } .kpi-card.kpi-green .kpi-bar { background: linear-gradient(to top, rgba(16,185,129,0.15), rgba(16,185,129,0.5)); }
     .kpi-card.kpi-purple { border-color: rgba(139,92,246,0.15); } .kpi-card.kpi-purple::after { background: linear-gradient(to top, rgba(139,92,246,0.06), transparent); } .kpi-card.kpi-purple .kpi-num { color: var(--purple); } .kpi-card.kpi-purple .kpi-indicator { background: var(--purple); } .kpi-card.kpi-purple .kpi-bar { background: linear-gradient(to top, rgba(139,92,246,0.15), rgba(139,92,246,0.5)); }
     .kpi-card.kpi-amber { border-color: rgba(245,158,11,0.15); } .kpi-card.kpi-amber::after { background: linear-gradient(to top, rgba(245,158,11,0.06), transparent); } .kpi-card.kpi-amber .kpi-num { color: var(--amber); } .kpi-card.kpi-amber .kpi-indicator { background: var(--amber); } .kpi-card.kpi-amber .kpi-bar { background: linear-gradient(to top, rgba(245,158,11,0.15), rgba(245,158,11,0.5)); }
@@ -548,7 +548,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     /* ── Analytics Grid + Chart Cards ── */
     .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
     .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 28px 24px; overflow: hidden; transition: all 0.3s; position: relative; }
-    .chart-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--orange), var(--pink), transparent); opacity: 0.6; }
+    .chart-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--pink), transparent); opacity: 0.6; }
     .chart-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.035); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
     .chart-label { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
     .chart-svg { width: 100%; height: 180px; }
@@ -559,7 +559,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--purple), var(--pink), transparent); opacity: 0.6; }
     .stat-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.035); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
     .stat-card.green::before { background: linear-gradient(90deg, var(--green), var(--lime), transparent); }
-    .stat-card.amber::before { background: linear-gradient(90deg, var(--amber), var(--orange), transparent); }
+    .stat-card.amber::before { background: linear-gradient(90deg, var(--amber), var(--accent), transparent); }
     .stat-card.pink::before { background: linear-gradient(90deg, var(--pink), var(--purple), transparent); }
     .stat-card.lime::before { background: linear-gradient(90deg, var(--lime), var(--green), transparent); }
     .stat-card-content { text-align: center; }
@@ -594,9 +594,9 @@ export default async function CompanyPage({ params, searchParams }: Props) {
     /* ── Loan-specific widgets ── */
     .officer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
     .officer-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; position: relative; overflow: hidden; transition: all 0.3s; }
-    .officer-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--orange), var(--pink)); opacity: 0.6; }
+    .officer-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--pink)); opacity: 0.6; }
     .officer-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-    .officer-avatar { width: 44px; height: 44px; border-radius: 50%; background: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.25); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--orange); }
+    .officer-avatar { width: 44px; height: 44px; border-radius: 50%; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.25); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--accent); }
     .officer-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
     .officer-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .officer-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); font-weight: 600; margin-bottom: 2px; }
@@ -640,7 +640,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
           <div class="navbar-title" style="font-size:28px;font-weight:700;">${E.fullName}</div>
           ${E.subtitle ? `<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;letter-spacing:0.01em;">${E.subtitle}</div>` : ''}
           <div style="display:flex;gap:8px;margin-top:6px;">
-            <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,0.2);">${E.type}</span>
+            <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(59,130,246,0.12);color:#3b82f6;border:1px solid rgba(59,130,246,0.2);">${E.type}</span>
             <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:5px;background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.2);">${E.state}</span>
             ${entity?.notes ? `<span style="font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">${entity.notes}</span>` : ''}
           </div>
@@ -740,7 +740,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
           ? `<svg width="0" height="0" style="position:absolute">
               <defs>
                 <linearGradient id="achieveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#f97316"/>
+                  <stop offset="0%" stop-color="#3b82f6"/>
                   <stop offset="50%" stop-color="#ec4899"/>
                   <stop offset="100%" stop-color="#8b5cf6"/>
                 </linearGradient>
@@ -855,7 +855,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
             <div class="kpi-header"><div class="kpi-num">${mondayKpis.avg_days_to_close ? mondayKpis.avg_days_to_close + 'd' : '—'}</div><div class="kpi-indicator"></div></div>
             <div class="kpi-label">Avg Days to Close</div>
             <div class="kpi-bars" id="bars-lo4"></div>
-            <div class="kpi-meta"><span class="kpi-meta-item">Goal: 30d</span><div class="kpi-meta-value" style="color:${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'var(--green)' : 'var(--orange)'};">${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'On Track' : 'Needs Attn'}</div></div>
+            <div class="kpi-meta"><span class="kpi-meta-item">Goal: 30d</span><div class="kpi-meta-value" style="color:${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'var(--green)' : 'var(--accent)'};">${(mondayKpis.avg_days_to_close || 99) <= 30 ? 'On Track' : 'Needs Attn'}</div></div>
           </div>
           <div class="kpi-card kpi-lime">
             <div class="kpi-header"><div class="kpi-num">${mondayKpis.loans_funded_mtd ?? '—'}</div><div class="kpi-indicator"></div></div>
@@ -1193,7 +1193,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               const pct = Math.max(4, (s.count / totalP) * 100)
               const color = s.group_name === 'Completed' ? 'var(--green)'
                 : s.group_name === 'Project' ? 'var(--amber)'
-                : s.group_name === 'Proposal' ? 'var(--orange)'
+                : s.group_name === 'Proposal' ? 'var(--accent)'
                 : s.group_name === 'Nurture' ? 'var(--lime)'
                 : s.group_name === 'Dead' ? 'var(--red)'
                 : 'var(--purple)'
@@ -1235,7 +1235,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
               </div>
               <div class="chart-card">
                 <div class="chart-label">Expenses — Last 30 Days</div>
-                <div style="font-size:36px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--orange);margin:24px 0 8px;">${fmtCurrency(expenses30d)}</div>
+                <div style="font-size:36px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--accent);margin:24px 0 8px;">${fmtCurrency(expenses30d)}</div>
                 <div style="font-size:11px;color:var(--dim);">Net: <span style="color:${revenue30d - expenses30d >= 0 ? 'var(--green)' : 'var(--red)'}">${fmtCurrency(Math.abs(revenue30d - expenses30d))} ${revenue30d - expenses30d >= 0 ? 'surplus' : 'deficit'}</span></div>
               </div>
             </div>`
@@ -1259,7 +1259,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
           ? `<div class="team-grid">
               ${team.map((m: any) => `
                 <div class="team-card">
-                  <div style="width:44px;height:44px;border-radius:50%;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:18px;">
+                  <div style="width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.2);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:18px;">
                     ${(m.name ?? '?')[0].toUpperCase()}
                   </div>
                   <div class="team-card-name">${m.name}</div>
@@ -1346,7 +1346,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                   const statusColor: Record<string, string> = {
                     live: 'var(--green)', staging: 'var(--amber)',
                     building: 'var(--blue)', archived: 'var(--dim)',
-                    licensed: 'var(--purple)', internal: 'var(--orange)',
+                    licensed: 'var(--purple)', internal: 'var(--accent)',
                   }
                   const icon = kindIcon[a.kind] ?? '📦'
                   const color = statusColor[a.status] ?? 'var(--dim)'
@@ -1363,7 +1363,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                       <span style="font-size:9px;font-family:'IBM Plex Mono',monospace;padding:3px 8px;border-radius:4px;border:1px solid ${color};color:${color};text-transform:uppercase;letter-spacing:0.06em;">${a.status}</span>
                     </div>
                     ${a.description ? `<div style="font-size:12px;color:var(--t2);line-height:1.45;margin-bottom:10px;">${a.description}</div>` : ''}
-                    ${a.url ? `<a href="${urlEsc}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--orange);text-decoration:none;margin-bottom:8px;">${String(a.url).replace('https://','').replace('http://','')} ↗</a>` : ''}
+                    ${a.url ? `<a href="${urlEsc}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--accent);text-decoration:none;margin-bottom:8px;">${String(a.url).replace('https://','').replace('http://','')} ↗</a>` : ''}
                     ${a.tags && a.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${a.tags.map((t: string) => `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);color:var(--dim);font-family:'IBM Plex Mono',monospace;">${t}</span>`).join('')}</div>` : ''}
                     ${a.monthly_revenue ? `<div style="font-size:11px;color:var(--green);margin-top:8px;font-family:'IBM Plex Mono',monospace;">$${Number(a.monthly_revenue).toLocaleString()}/mo revenue</div>` : ''}
                   </div>`
@@ -1760,7 +1760,7 @@ export default async function CompanyPage({ params, searchParams }: Props) {
                   {([
                     ['Total Assets', qbBS.totalAssets, 'var(--green)'],
                     ['Total Liabilities', qbBS.totalLiabilities, 'var(--red)'],
-                    ['Total Equity', qbBS.totalEquity, 'var(--orange)'],
+                    ['Total Equity', qbBS.totalEquity, 'var(--accent)'],
                   ] as [string, number, string][]).map(([label, val, color]) => (
                     <div
                       key={label}

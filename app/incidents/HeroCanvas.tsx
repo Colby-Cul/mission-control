@@ -44,7 +44,7 @@ export default function HeroCanvas() {
         { x: 0.3,  y: 0.4,  startTime: 0,    maxR: 120, color: '#ef4444', period: 2.5 },
         { x: 0.65, y: 0.55, startTime: 0.8,  maxR: 90,  color: '#f59e0b', period: 3.0 },
         { x: 0.5,  y: 0.3,  startTime: 1.6,  maxR: 100, color: '#ef4444', period: 2.8 },
-        { x: 0.75, y: 0.7,  startTime: 2.1,  maxR: 70,  color: '#f97316', period: 3.5 },
+        { x: 0.75, y: 0.7,  startTime: 2.1,  maxR: 70,  color: '#3b82f6', period: 3.5 },
         { x: 0.2,  y: 0.65, startTime: 0.4,  maxR: 80,  color: '#ef4444', period: 2.2 },
       ]
 
@@ -60,7 +60,7 @@ export default function HeroCanvas() {
         // Dark red ambient background wash
         const bgGrad = ctx!.createLinearGradient(0, 0, w, h)
         bgGrad.addColorStop(0, 'rgba(239,68,68,0.015)')
-        bgGrad.addColorStop(1, 'rgba(249,115,22,0.01)')
+        bgGrad.addColorStop(1, 'rgba(59,130,246,0.01)')
         ctx!.fillStyle = bgGrad
         ctx!.fillRect(0, 0, w, h)
 

@@ -27,7 +27,7 @@ const DEFAULT_ACHIEVEMENTS = [
 
 function agentTypeColor(agent: any): string {
   const name = (agent.name ?? '').toLowerCase()
-  if (name.includes('jarvis') || name.includes('orchestrat')) return '#f97316'
+  if (name.includes('jarvis') || name.includes('orchestrat')) return '#3b82f6'
   if (name.includes('worker') || name.includes('build'))      return '#10b981'
   if (name.includes('victoria') || name.includes('assistant')) return '#8b5cf6'
   if (name.includes('research'))                              return '#06b6d4'
@@ -261,8 +261,8 @@ export default async function AgentsPage() {
                   {agent.knowledge_level && (
                     <span style={{
                       fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 7px', borderRadius: 4,
-                      background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)',
-                      color: 'var(--orange)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                      background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
+                      color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em',
                     }}>{agent.knowledge_level}</span>
                   )}
                 </div>
@@ -526,7 +526,7 @@ export default async function AgentsPage() {
                   {caps.length === 0 ? (
                     <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>no skills declared</span>
                   ) : caps.slice(0, 6).map((c: string) => (
-                    <span key={c} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)', background: 'rgba(249,115,22,0.08)', color: 'var(--orange)', textTransform: 'uppercase' }}>{c}</span>
+                    <span key={c} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)', background: 'rgba(59,130,246,0.08)', color: 'var(--accent)', textTransform: 'uppercase' }}>{c}</span>
                   ))}
                 </div>
               </div>

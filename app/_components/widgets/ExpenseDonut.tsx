@@ -13,7 +13,7 @@ export interface ExpenseSlice { label: string; value: number }
 const PALETTE = [
   'var(--green)',
   'var(--amber)',
-  'var(--orange)',
+  'var(--accent)',
   'var(--red)',
   'var(--pink)',
   'var(--purple)',

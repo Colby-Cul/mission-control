@@ -23,7 +23,7 @@ function isLegalOnly(entity: any): boolean {
 
 function entityAccentColor(entity: any): string {
   const name = (entity.entity_name ?? '').toLowerCase()
-  if (name.includes('xome'))       return '#f97316'  // orange
+  if (name.includes('xome'))       return '#3b82f6'  // orange
   if (name.includes('luxury'))     return '#10b981'  // green
   if (name.includes('openclaw'))   return '#8b5cf6'  // purple
   if (name.includes('culbertson')) return '#f59e0b'  // amber
@@ -132,7 +132,7 @@ export default async function CompaniesPage() {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --bg: #060610; --card: rgba(255,255,255,0.025); --border: rgba(255,255,255,0.06);
-      --dim: rgba(255,255,255,0.4); --orange: #f97316; --pink: #ec4899; --purple: #8b5cf6;
+      --dim: rgba(255,255,255,0.4); --orange: #3b82f6; --pink: #ec4899; --purple: #8b5cf6;
       --green: #10b981; --amber: #f59e0b; --red: #ef4444; --lime: #84cc16;
     }
     html, body { width: 100%; background: var(--bg); color: rgba(255,255,255,0.9); font-family: 'DM Sans', sans-serif; }
@@ -143,18 +143,18 @@ export default async function CompaniesPage() {
     .main-container { width: 86%; margin: 0 auto; padding: 40px 0; }
 
     /* ── Hero ── */
-    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 32px; border: 1px solid rgba(249,115,22,0.12); background: #050510; min-height: 480px; }
+    .hero-banner { position: relative; border-radius: 24px; overflow: hidden; margin-bottom: 32px; border: 1px solid rgba(59,130,246,0.12); background: #050510; min-height: 480px; }
     #mosaicCanvas { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; }
-    .hero-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent); animation: scanDown 4s ease-in-out infinite; filter: blur(1px); }
+    .hero-scanline { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(139,92,246,0.3), transparent); animation: scanDown 4s ease-in-out infinite; filter: blur(1px); }
     @keyframes scanDown { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
     .hud-corner { position: absolute; z-index: 2; width: 24px; height: 24px; }
-    .hud-corner.tl { top:12px;left:12px;border-top:2px solid rgba(249,115,22,0.3);border-left:2px solid rgba(249,115,22,0.3); }
+    .hud-corner.tl { top:12px;left:12px;border-top:2px solid rgba(59,130,246,0.3);border-left:2px solid rgba(59,130,246,0.3); }
     .hud-corner.tr { top:12px;right:12px;border-top:2px solid rgba(139,92,246,0.3);border-right:2px solid rgba(139,92,246,0.3); }
-    .hud-corner.bl { bottom:12px;left:12px;border-bottom:2px solid rgba(249,115,22,0.3);border-left:2px solid rgba(249,115,22,0.3); }
+    .hud-corner.bl { bottom:12px;left:12px;border-bottom:2px solid rgba(59,130,246,0.3);border-left:2px solid rgba(59,130,246,0.3); }
     .hud-corner.br { bottom:12px;right:12px;border-bottom:2px solid rgba(139,92,246,0.3);border-right:2px solid rgba(139,92,246,0.3); }
     .hero-content { position: relative; z-index: 3; padding: 48px 48px; display: flex; align-items: center; justify-content: space-between; min-height: 480px; }
     .hero-left { max-width: 480px; }
-    .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--orange); margin-bottom: 10px; }
+    .hero-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 10px; }
     .hero-title { font-size: 48px; font-weight: 700; line-height: 1.05; margin-bottom: 12px; }
     .hero-subtitle { font-size: 14px; color: var(--dim); margin-bottom: 28px; line-height: 1.5; }
     .hero-kpi-row { display: flex; gap: 24px; flex-wrap: wrap; }
@@ -172,7 +172,7 @@ export default async function CompaniesPage() {
     .portfolio-widgets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
     @media (max-width: 1100px) { .portfolio-widgets { grid-template-columns: 1fr; } }
     .pw-card { position: relative; background: linear-gradient(140deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)); border: 1px solid var(--border); border-radius: 20px; padding: 22px 24px; overflow: hidden; min-height: 260px; }
-    .pw-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--orange), var(--pink), var(--purple), transparent); opacity: 0.6; }
+    .pw-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), var(--pink), var(--purple), transparent); opacity: 0.6; }
     .pw-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; color: var(--dim); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
     .pw-title .pw-dot { width: 6px; height: 6px; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
     .pw-headline { font-size: 30px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; line-height: 1.05; margin-bottom: 2px; }
@@ -182,7 +182,7 @@ export default async function CompaniesPage() {
     .pw-bar-row { display: grid; grid-template-columns: 100px 1fr 68px; align-items: center; gap: 10px; }
     .pw-bar-label { font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pw-bar-track { height: 8px; background: rgba(255,255,255,0.04); border-radius: 4px; overflow: hidden; position: relative; }
-    .pw-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--bar-color, var(--orange)), color-mix(in srgb, var(--bar-color, var(--orange)) 60%, transparent)); box-shadow: 0 0 12px color-mix(in srgb, var(--bar-color, var(--orange)) 50%, transparent); }
+    .pw-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--bar-color, var(--accent)), color-mix(in srgb, var(--bar-color, var(--accent)) 60%, transparent)); box-shadow: 0 0 12px color-mix(in srgb, var(--bar-color, var(--accent)) 50%, transparent); }
     .pw-bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8); text-align: right; }
     /* heatmap */
     .pw-heatmap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 8px; }
@@ -202,9 +202,9 @@ export default async function CompaniesPage() {
     /* ── Entity cards ── */
     .entities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-bottom: 40px; }
     .entity-card { position: relative; background: linear-gradient(160deg, var(--card), rgba(255,255,255,0.008)); border: 1px solid var(--border); border-radius: 22px; padding: 22px; text-decoration: none; color: inherit; display: block; transition: all 0.25s cubic-bezier(0.22,1,0.36,1); overflow: hidden; cursor: pointer; }
-    .entity-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(420px circle at var(--mx,50%) var(--my,0%), color-mix(in srgb, var(--accent, #f97316) 14%, transparent), transparent 55%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .entity-card::after { content: ''; position: absolute; inset: 0; background: radial-gradient(420px circle at var(--mx,50%) var(--my,0%), color-mix(in srgb, var(--accent, #3b82f6) 14%, transparent), transparent 55%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .entity-card:hover::after { opacity: 1; }
-    .entity-card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--accent, #f97316) 40%, var(--border)); box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent, #f97316) 20%, transparent); }
+    .entity-card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--accent, #3b82f6) 40%, var(--border)); box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px color-mix(in srgb, var(--accent, #3b82f6) 20%, transparent); }
     .entity-card.legal { opacity: 0.55; cursor: default; }
     .entity-card.legal:hover { transform: none; box-shadow: none; }
     .entity-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
@@ -230,14 +230,14 @@ export default async function CompaniesPage() {
     .card-kpi-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
     .card-kpi-val { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 700; line-height: 1; }
     .card-kpi-val.big { font-size: 19px; }
-    .card-kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--kpi-accent, var(--accent, #f97316)); opacity: 0.7; }
+    .card-kpi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--kpi-accent, var(--accent, #3b82f6)); opacity: 0.7; }
     .card-spark { width: 100%; height: 48px; display: block; margin: 10px 0 2px; }
     .card-gauge-wrap { position: absolute; top: 16px; right: 14px; width: 52px; height: 52px; }
     .gauge-ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
     .gauge-ring-fill { fill: none; stroke-width: 4; stroke-linecap: round; }
     .gauge-pct { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; fill: rgba(255,255,255,0.9); }
     .card-click-hint { position: absolute; right: 18px; bottom: 16px; font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; display: flex; align-items: center; gap: 4px; transition: all 0.25s; }
-    .entity-card:hover .card-click-hint { color: color-mix(in srgb, var(--accent, #f97316) 90%, white); transform: translateX(4px); }
+    .entity-card:hover .card-click-hint { color: color-mix(in srgb, var(--accent, #3b82f6) 90%, white); transform: translateX(4px); }
 
     /* ── Legal-only separator ── */
     .legal-separator { margin: 48px 0 24px; }
@@ -253,7 +253,7 @@ export default async function CompaniesPage() {
     .ach-header-left { display:flex; align-items:center; gap:10px; }
     .ach-title { font-size:18px; font-weight:600; letter-spacing:0.02em; }
     .ach-count { font-size:12px; color:var(--dim); background:rgba(255,255,255,0.04); padding:3px 10px; border-radius:6px; }
-    .ach-xp { font-size:12px; font-weight:600; color:var(--orange); background:rgba(249,115,22,0.1); padding:3px 10px; border-radius:6px; }
+    .ach-xp { font-size:12px; font-weight:600; color:var(--accent); background:rgba(59,130,246,0.1); padding:3px 10px; border-radius:6px; }
     .ach-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-start; padding:8px 0; }
     .ach-card { display:flex; flex-direction:column; align-items:center; text-align:center; width:110px; position:relative; cursor:pointer; transition:transform 0.2s; }
     .ach-card:hover { transform:translateY(-4px); }
@@ -265,7 +265,7 @@ export default async function CompaniesPage() {
     .ach-icon { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:30px; line-height:1; }
     .ach-check { position:absolute; bottom:4px; right:16px; width:20px; height:20px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; border:2px solid var(--bg); }
     .ach-name { font-size:11px; font-weight:600; margin-bottom:2px; line-height:1.3; }
-    .ach-xp-val { font-size:10px; font-weight:600; color:var(--orange); }
+    .ach-xp-val { font-size:10px; font-weight:600; color:var(--accent); }
   </style>
 </head>
 <body>
@@ -290,7 +290,7 @@ export default async function CompaniesPage() {
             <div class="hero-subtitle">${operational.length} operational · ${legalOnly.length} legal-separation</div>
             <div class="hero-kpi-row">
               <div class="hero-kpi">
-                <div class="hero-kpi-num" style="color:var(--orange)">${entities.length}</div>
+                <div class="hero-kpi-num" style="color:var(--accent)">${entities.length}</div>
                 <div class="hero-kpi-label">Total Entities</div>
               </div>
               <div class="hero-kpi">
@@ -334,8 +334,8 @@ export default async function CompaniesPage() {
         <div class="portfolio-widgets">
           <!-- Widget 1: Cash by Entity (bar chart) -->
           <div class="pw-card">
-            <div class="pw-title"><span class="pw-dot" style="background:var(--orange)"></span>Cash by Entity</div>
-            <div class="pw-headline" style="color:var(--orange)">${fmtCurrency(totalCash)}</div>
+            <div class="pw-title"><span class="pw-dot" style="background:var(--accent)"></span>Cash by Entity</div>
+            <div class="pw-headline" style="color:var(--accent)">${fmtCurrency(totalCash)}</div>
             <div class="pw-sub">Across ${entityBars.length} operational entities · last synced now</div>
             <div class="pw-bars">
               ${entityBars.slice(0, 6).map(b => `
@@ -351,7 +351,7 @@ export default async function CompaniesPage() {
           <!-- Widget 2: Portfolio Heatmap -->
           <div class="pw-card">
             <div class="pw-title"><span class="pw-dot" style="background:var(--pink)"></span>Portfolio Heatmap</div>
-            <div class="pw-headline" style="background:linear-gradient(90deg,var(--orange),var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${entities.length}</div>
+            <div class="pw-headline" style="background:linear-gradient(90deg,var(--accent),var(--pink),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${entities.length}</div>
             <div class="pw-sub">Entities by cash intensity — darker = more</div>
             <div class="pw-heatmap">
               ${heatmapCells.map(c => {
@@ -392,7 +392,7 @@ export default async function CompaniesPage() {
       <svg width="0" height="0" style="position:absolute">
         <defs>
           <linearGradient id="achieveGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f97316"/>
+            <stop offset="0%" stop-color="#3b82f6"/>
             <stop offset="50%" stop-color="#ec4899"/>
             <stop offset="100%" stop-color="#8b5cf6"/>
           </linearGradient>

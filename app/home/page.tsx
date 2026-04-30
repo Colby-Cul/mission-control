@@ -14,7 +14,7 @@ import { getDailyBrief, getOpenTasks } from '../lib/queries'
 export const dynamic = 'force-dynamic'
 
 const QUICK_ACTIONS = [
-  { label: 'Invoke Agent',   href: '/agents',     icon: '🤖', color: 'var(--orange)' },
+  { label: 'Invoke Agent',   href: '/agents',     icon: '🤖', color: 'var(--accent)' },
   { label: 'Create Task',    href: '/tasks',      icon: '✓',  color: 'var(--green)'  },
   { label: 'Cash Flow',      href: '/cash-flow',  icon: '≈',  color: 'var(--amber)'  },
   { label: 'Tax Center',     href: '/tax',        icon: '⚖', color: 'var(--purple)' },
@@ -60,7 +60,7 @@ export default async function HomePage() {
         <SpecCard accent dataSource="derived:daily_brief">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>Daily Briefing</div>
-            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </span>
           </div>
@@ -76,7 +76,7 @@ export default async function HomePage() {
                 `${b.entityCount} active entities under management`,
               ].filter(Boolean).map((line: string, i: number) => (
                 <div key={i} style={{ display: 'flex', gap: 8, fontSize: 12, lineHeight: 1.5 }}>
-                  <span style={{ color: 'var(--orange)', fontFamily: 'var(--mo)' }}>▸</span>
+                  <span style={{ color: 'var(--accent)', fontFamily: 'var(--mo)' }}>▸</span>
                   <span>{line}</span>
                 </div>
               ))}
@@ -123,7 +123,7 @@ export default async function HomePage() {
           </div>
           {focusTasks.length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--dim)', textAlign: 'center', padding: '20px 0' }}>
-              No open tasks. <Link href="/tasks" style={{ color: 'var(--orange)' }}>+ Add task</Link>
+              No open tasks. <Link href="/tasks" style={{ color: 'var(--accent)' }}>+ Add task</Link>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -131,7 +131,7 @@ export default async function HomePage() {
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                   <div style={{
                     width: 22, height: 22, borderRadius: '50%',
-                    background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+                    background: 'linear-gradient(135deg, var(--accent), var(--purple))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0,
                   }}>{i + 1}</div>

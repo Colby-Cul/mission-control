@@ -251,10 +251,10 @@ const iconBtn: React.CSSProperties = {
 }
 
 const primaryBtn: React.CSSProperties = {
-  background: 'rgba(249,115,22,0.15)',
-  border: '1px solid rgba(249,115,22,0.3)',
+  background: 'rgba(59,130,246,0.15)',
+  border: '1px solid rgba(59,130,246,0.3)',
   borderRadius: 10, padding: '10px 22px',
-  fontSize: 13, fontWeight: 700, color: '#f97316',
+  fontSize: 13, fontWeight: 700, color: '#3b82f6',
   cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
 }
 

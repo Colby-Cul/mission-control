@@ -30,7 +30,7 @@ export interface SessionRow {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const CHART_COLORS = [
-  '#f97316', '#8b5cf6', '#10b981', '#f59e0b', '#3b82f6',
+  '#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#3b82f6',
   '#ec4899', '#06b6d4', '#84cc16', '#ef4444', '#a78bfa',
 ]
 
@@ -169,7 +169,7 @@ function OptimizationCard({ stats }: { stats: CronStat[] }) {
               width: 8, height: 8,
               borderRadius: '50%',
               marginTop: 5,
-              background: s.totalCost > 2 ? 'var(--red)' : s.avgCostPerRun > 0.08 ? 'var(--amber)' : 'var(--orange)',
+              background: s.totalCost > 2 ? 'var(--red)' : s.avgCostPerRun > 0.08 ? 'var(--amber)' : 'var(--accent)',
             }} />
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', fontFamily: 'var(--mo)' }}>
@@ -405,7 +405,7 @@ export default function CronAnalytics({
           <button key={w} onClick={() => setWindow(w)} style={{
             padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
             cursor: 'pointer', border: 'none',
-            background: window === w ? 'var(--orange)' : 'rgba(255,255,255,0.05)',
+            background: window === w ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
             color: window === w ? '#fff' : 'var(--t2)',
             transition: 'all 0.15s',
           }}>{w}</button>
@@ -492,7 +492,7 @@ export default function CronAnalytics({
                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', marginTop: 6, paddingTop: 6 }}>
                         <span style={{ color: '#60a5fa' }}>Input: ${d.inputCost.toFixed(4)}</span>
                         {'  '}
-                        <span style={{ color: '#f97316' }}>Output: ${d.outputCost.toFixed(4)}</span>
+                        <span style={{ color: '#3b82f6' }}>Output: ${d.outputCost.toFixed(4)}</span>
                       </div>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Click to drill down →</div>
                     </div>
@@ -500,11 +500,11 @@ export default function CronAnalytics({
                 }}
               />
               <Bar dataKey="inputCost"  name="Input cost"  stackId="cost" radius={[0, 0, 0, 4]} fill="#3b82f6" />
-              <Bar dataKey="outputCost" name="Output cost" stackId="cost" radius={[0, 4, 4, 0]} fill="#f97316">
+              <Bar dataKey="outputCost" name="Output cost" stackId="cost" radius={[0, 4, 4, 0]} fill="#3b82f6">
                 {barData.map((entry, idx) => (
                   <Cell
                     key={idx}
-                    fill={entry.isCritical ? '#ef4444' : entry.isExpensive ? '#f59e0b' : '#f97316'}
+                    fill={entry.isCritical ? '#ef4444' : entry.isExpensive ? '#f59e0b' : '#3b82f6'}
                     opacity={0.9}
                   />
                 ))}
@@ -516,7 +516,7 @@ export default function CronAnalytics({
         {/* Legend */}
         <div style={{ display: 'flex', gap: 20, marginTop: 12, fontSize: 11, color: 'var(--t3)' }}>
           <span><span style={{ color: '#3b82f6' }}>■</span> Input tokens ($3/1M)</span>
-          <span><span style={{ color: '#f97316' }}>■</span> Output tokens ($15/1M)</span>
+          <span><span style={{ color: '#3b82f6' }}>■</span> Output tokens ($15/1M)</span>
           <span><span style={{ color: '#f59e0b' }}>■</span> Expensive (&gt;$1 total)</span>
           <span><span style={{ color: '#ef4444' }}>■</span> Critical (&gt;$5 total)</span>
         </div>
@@ -567,7 +567,7 @@ export default function CronAnalytics({
                       </td>
                       <td style={{ padding: '10px', textAlign: 'right', fontFamily: 'var(--mo)', color: 'var(--t2)' }}>{fmt$(stat.avgCostPerRun)}</td>
                       <td style={{ padding: '10px', textAlign: 'right', color: '#3b82f6', fontFamily: 'var(--mo)' }}>{fmtK(stat.totalInputTokens)}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#f97316', fontFamily: 'var(--mo)' }}>{fmtK(stat.totalOutputTokens)}</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#3b82f6', fontFamily: 'var(--mo)' }}>{fmtK(stat.totalOutputTokens)}</td>
                       <td style={{ padding: '10px', textAlign: 'right' }}>
                         <MiniSparkline trend={stat.trend} color={color} />
                       </td>
@@ -610,7 +610,7 @@ export default function CronAnalytics({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       {s.cron_id && (
-                        <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)', fontWeight: 600, flexShrink: 0 }}>
+                        <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--accent)', fontWeight: 600, flexShrink: 0 }}>
                           {s.cron_id}
                         </span>
                       )}

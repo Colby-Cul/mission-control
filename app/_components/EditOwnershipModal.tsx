@@ -362,7 +362,7 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
                 <>
                   <SectionHeader
                     pill="CHILD"
-                    pillColor="#f97316"
+                    pillColor="#3b82f6"
                     title="THIS ENTITY OWNS"
                     subtitle={`Entities and stakes that ${entityName} holds`}
                   />
@@ -389,7 +389,7 @@ export default function EditOwnershipModal({ entityId, entityName, childType = '
                     </div>
                   )}
 
-                  <button style={{ ...addBtn, color: '#f97316', borderColor: 'rgba(249,115,22,0.25)', background: 'rgba(249,115,22,0.06)' }} onClick={addChildRow}>
+                  <button style={{ ...addBtn, color: '#3b82f6', borderColor: 'rgba(59,130,246,0.25)', background: 'rgba(59,130,246,0.06)' }} onClick={addChildRow}>
                     + Add Child
                   </button>
                 </>
@@ -531,7 +531,7 @@ function ParentRow({ row, entityName, allEntities, entityId, onChange, onDelete 
 /** Sentence: [Entity name] owns [X]% of [child entity/property] · [role] */
 function ChildRow({ row, entityName, allEntities, allProperties = [], entityId, onChange, onDelete }: RowProps) {
   return (
-    <div style={rowContainer('#f97316')}>
+    <div style={rowContainer('#3b82f6')}>
       {/* Entity name label */}
       <div style={{ flex: '0 0 auto', paddingTop: 18 }}>
         <span style={{ fontSize: 12, fontWeight: 600, color: '#fdba74', whiteSpace: 'nowrap' as const }}>
@@ -699,13 +699,13 @@ const addBtn: React.CSSProperties = {
 }
 
 const primaryBtn: React.CSSProperties = {
-  background: 'rgba(249,115,22,0.15)',
-  border: '1px solid rgba(249,115,22,0.3)',
+  background: 'rgba(59,130,246,0.15)',
+  border: '1px solid rgba(59,130,246,0.3)',
   borderRadius: 10,
   padding: '10px 22px',
   fontSize: 13,
   fontWeight: 700,
-  color: '#f97316',
+  color: '#3b82f6',
   cursor: 'pointer',
   fontFamily: 'DM Sans, sans-serif',
 }

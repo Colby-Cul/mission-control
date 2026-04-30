@@ -33,7 +33,7 @@ export default function HeroCanvas() {
 
     const LANES = [
       { label: 'AGENT',  color: '#8b5cf6', yFrac: 0.28, speed: 1.8 },
-      { label: 'USER',   color: '#f97316', yFrac: 0.50, speed: 1.2 },
+      { label: 'USER',   color: '#3b82f6', yFrac: 0.50, speed: 1.2 },
       { label: 'SYSTEM', color: '#10b981', yFrac: 0.72, speed: 2.2 },
     ]
 
@@ -137,7 +137,7 @@ export default function HeroCanvas() {
 
       // Ambient glow
       const ag = ctx!.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, w * 0.4)
-      ag.addColorStop(0, 'rgba(249,115,22,0.03)'); ag.addColorStop(1, 'transparent')
+      ag.addColorStop(0, 'rgba(59,130,246,0.03)'); ag.addColorStop(1, 'transparent')
       ctx!.fillStyle = ag; ctx!.fillRect(0, 0, w, h)
 
       rafId = requestAnimationFrame(draw)

@@ -122,8 +122,8 @@ export default function Step5Review({ state, onPrev, onFinish, saving, saveError
             {ownershipLines.map((line, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                background: 'rgba(249,115,22,0.04)',
-                border: '1px solid rgba(249,115,22,0.12)',
+                background: 'rgba(59,130,246,0.04)',
+                border: '1px solid rgba(59,130,246,0.12)',
                 borderRadius: 10, padding: '11px 14px',
               }}>
                 <span style={{ fontSize: 18, flexShrink: 0 }}>→</span>

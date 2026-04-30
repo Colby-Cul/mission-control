@@ -66,7 +66,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   backlog: 'rgba(255,255,255,0.3)',
   ready: 'var(--purple)',
-  in_progress: 'var(--orange)',
+  in_progress: 'var(--accent)',
   in_review: 'var(--amber)',
   blocked: 'var(--red)',
   done: 'var(--green)',
@@ -76,15 +76,15 @@ const STATUS_COLORS: Record<string, string> = {
 // p0=critical, p1=high, p2=medium, p3=low. Back-compat with legacy strings.
 const PRIORITY_COLORS: Record<string, string> = {
   p0: 'var(--red)',
-  p1: 'var(--orange)',
+  p1: 'var(--accent)',
   p2: 'var(--amber)',
   p3: 'var(--green)',
   critical: 'var(--red)',
-  high: 'var(--orange)',
+  high: 'var(--accent)',
   medium: 'var(--amber)',
   low: 'var(--green)',
   '0': 'var(--red)',
-  '1': 'var(--orange)',
+  '1': 'var(--accent)',
   '2': 'var(--amber)',
   '3': 'var(--green)',
 }
@@ -730,7 +730,7 @@ export default function ProjectDetailTabs({ project, tasks, milestones }: Projec
               fontSize: 13, fontWeight: 600, cursor: 'pointer',
               background: 'none', border: 'none',
               color: activeTab === key ? '#f5f5f7' : 'rgba(255,255,255,0.35)',
-              borderBottom: activeTab === key ? '2px solid var(--orange)' : '2px solid transparent',
+              borderBottom: activeTab === key ? '2px solid var(--accent)' : '2px solid transparent',
               marginBottom: -1,
               transition: 'color 0.15s',
             }}

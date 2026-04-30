@@ -75,8 +75,8 @@ export default function DataTable<T extends Record<string, unknown>>({
   function SortIcon({ col }: { col: Column<T> }) {
     if (!col.sortable) return null
     if (sortKey !== col.key) return <ChevronsUpDown size={12} style={{ opacity: 0.3 }} />
-    if (sortDir === 'asc') return <ChevronUp size={12} style={{ color: 'var(--orange)' }} />
-    return <ChevronDown size={12} style={{ color: 'var(--orange)' }} />
+    if (sortDir === 'asc') return <ChevronUp size={12} style={{ color: 'var(--accent)' }} />
+    return <ChevronDown size={12} style={{ color: 'var(--accent)' }} />
   }
 
   return (

@@ -4,7 +4,7 @@ export default function SecurityPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
       <header>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--orange)', fontFamily: 'var(--mo)', marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--accent)', fontFamily: 'var(--mo)', marginBottom: 6 }}>
           Settings · Security
         </div>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: '#f5f5f7', margin: 0 }}>Security</h1>

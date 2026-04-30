@@ -46,7 +46,7 @@ export default function WhatIfSlider({
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 16, alignItems: 'center' }}>
         <div>
           <label style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', display: 'block', marginBottom: 8, fontFamily: 'var(--mo)' }}>
-            If I cut expenses by <strong style={{ color: '#f97316' }}>{pctCut}%</strong>
+            If I cut expenses by <strong style={{ color: '#3b82f6' }}>{pctCut}%</strong>
           </label>
           <input
             type="range"
@@ -57,7 +57,7 @@ export default function WhatIfSlider({
             onChange={(e) => setPctCut(Number(e.target.value))}
             style={{
               width: '100%',
-              accentColor: '#f97316',
+              accentColor: '#3b82f6',
               height: 8,
             }}
             aria-label="Expense-cut percentage"

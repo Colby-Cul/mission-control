@@ -33,7 +33,7 @@ const CAT_ICONS: Record<string, string> = {
 }
 
 const CAT_COLORS: Record<string, string> = {
-  Legal: 'var(--orange)', Tax: 'var(--amber)', Insurance: 'var(--green)',
+  Legal: 'var(--accent)', Tax: 'var(--amber)', Insurance: 'var(--green)',
   Property: 'var(--purple)', Company: 'var(--pink)', Personal: '#06b6d4',
 }
 
@@ -116,7 +116,7 @@ export default async function DocsPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Docs',    value: String(totalDocs), color: 'var(--orange)' },
+          { label: 'Total Docs',    value: String(totalDocs), color: 'var(--accent)' },
           { label: 'This Month',    value: String(thisMonth), color: 'var(--green)'  },
           { label: 'Awaiting Sign', value: '—',               color: 'var(--amber)'  },
           { label: 'Storage',       value: storageMB + ' MB', color: 'var(--purple)' },

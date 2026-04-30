@@ -226,7 +226,7 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
         aria-labelledby="integration-modal-title"
         style={{
           background: 'var(--bg, #0a0a0b)',
-          border: '1px solid rgba(249,115,22,0.25)',
+          border: '1px solid rgba(59,130,246,0.25)',
           borderRadius: 16,
           padding: 24,
           width: '100%',
@@ -247,13 +247,13 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: 'rgba(249,115,22,0.15)',
+                background: 'rgba(59,130,246,0.15)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 14,
                 fontWeight: 700,
-                color: 'var(--orange)',
+                color: 'var(--accent)',
               }}
             >
               {monogram}
@@ -302,8 +302,8 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
           <div
             style={{
               padding: 14,
-              background: 'rgba(249,115,22,0.06)',
-              border: '1px dashed rgba(249,115,22,0.25)',
+              background: 'rgba(59,130,246,0.06)',
+              border: '1px dashed rgba(59,130,246,0.25)',
               borderRadius: 10,
               fontSize: 12,
               color: 'var(--t2, #ccc)',
@@ -318,7 +318,7 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
                   href={cfg.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: 'var(--orange)', textDecoration: 'underline' }}
+                  style={{ color: 'var(--accent)', textDecoration: 'underline' }}
                 >
                   Open provider docs ↗
                 </a>
@@ -477,7 +477,7 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
                 rel="noopener noreferrer"
                 style={{
                   fontSize: 11,
-                  color: 'var(--orange)',
+                  color: 'var(--accent)',
                   textDecoration: 'underline',
                 }}
               >
@@ -539,7 +539,7 @@ export default function IntegrationKeyModal({ provider, onClose }: Props) {
                 disabled={!canEdit || submitting}
                 style={{
                   flex: '1 1 auto',
-                  background: canEdit ? 'var(--orange, #f97316)' : 'rgba(249,115,22,0.3)',
+                  background: canEdit ? 'var(--accent)' : 'rgba(59,130,246,0.3)',
                   color: '#0a0a0b',
                   border: 'none',
                   borderRadius: 8,

@@ -83,7 +83,7 @@ export default function AvatarMenu({ initials, onClose }: Props) {
         }}>
           <div style={{
             width: 32, height: 32, borderRadius: 10,
-            background: 'linear-gradient(135deg,var(--orange),var(--pink))',
+            background: 'linear-gradient(135deg,var(--accent),var(--pink))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0,
           }}>

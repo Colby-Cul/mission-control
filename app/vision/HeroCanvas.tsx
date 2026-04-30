@@ -29,7 +29,7 @@ export default function HeroCanvas() {
         ctx!.clearRect(0, 0, w, h);
 
         // === Faint grid overlay ===
-        ctx!.strokeStyle = 'rgba(249,115,22,0.025)';
+        ctx!.strokeStyle = 'rgba(59,130,246,0.025)';
         ctx!.lineWidth = 0.5;
         for (let x = 0; x < w; x += 50) {
           ctx!.beginPath(); ctx!.moveTo(x, 0); ctx!.lineTo(x, h); ctx!.stroke();
@@ -102,7 +102,7 @@ export default function HeroCanvas() {
         // === Drifting ambient glow zones ===
         const g1x = w * 0.25 + Math.sin(time * 0.08) * w * 0.05;
         const g1 = ctx!.createRadialGradient(g1x, h * 0.3, 0, g1x, h * 0.3, w * 0.2);
-        g1.addColorStop(0, 'rgba(249,115,22,0.04)'); g1.addColorStop(1, 'transparent');
+        g1.addColorStop(0, 'rgba(59,130,246,0.04)'); g1.addColorStop(1, 'transparent');
         ctx!.fillStyle = g1; ctx!.fillRect(0, 0, w, h);
 
         const g2x = w * 0.75 + Math.cos(time * 0.06) * w * 0.05;

@@ -36,9 +36,9 @@ export default function HeroCanvas() {
 
     const NODES: Node[] = [
       // Root
-      { xFrac: 0.5,  yFrac: 0.85, unlocked: true,  phase: 0,    color: '#f97316', label: 'Core' },
+      { xFrac: 0.5,  yFrac: 0.85, unlocked: true,  phase: 0,    color: '#3b82f6', label: 'Core' },
       // Level 1
-      { xFrac: 0.3,  yFrac: 0.65, unlocked: true,  phase: 0.5,  color: '#f97316', label: 'Finance' },
+      { xFrac: 0.3,  yFrac: 0.65, unlocked: true,  phase: 0.5,  color: '#3b82f6', label: 'Finance' },
       { xFrac: 0.5,  yFrac: 0.65, unlocked: true,  phase: 1.0,  color: '#ec4899', label: 'Strategy' },
       { xFrac: 0.7,  yFrac: 0.65, unlocked: true,  phase: 1.5,  color: '#8b5cf6', label: 'Agents' },
       // Level 2
@@ -49,7 +49,7 @@ export default function HeroCanvas() {
       { xFrac: 0.82, yFrac: 0.45, unlocked: false, phase: 4.0,  color: '#06b6d4', label: 'AI Ops' },
       // Level 3 (locked)
       { xFrac: 0.26, yFrac: 0.25, unlocked: false, phase: 4.5,  color: '#a3e635', label: 'Legacy' },
-      { xFrac: 0.5,  yFrac: 0.22, unlocked: false, phase: 5.0,  color: '#f97316', label: 'Empire' },
+      { xFrac: 0.5,  yFrac: 0.22, unlocked: false, phase: 5.0,  color: '#3b82f6', label: 'Empire' },
       { xFrac: 0.74, yFrac: 0.25, unlocked: false, phase: 5.5,  color: '#8b5cf6', label: 'Automate' },
     ]
 

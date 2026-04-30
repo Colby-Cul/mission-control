@@ -85,7 +85,7 @@ export default function Step4WhoOwnsWhat({ state, update, onNext, onPrev }: Prop
       type: 'business' as const,
       label: b.name,
       sublabel: `Business entity`,
-      color: '#f97316',
+      color: '#3b82f6',
     })),
   ]
 

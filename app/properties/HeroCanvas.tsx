@@ -32,7 +32,7 @@ export default function HeroCanvas() {
 
     type Marker = { xFrac: number; baseYFrac: number; targetHFrac: number; currentH: number; color: string; label: string; value: number; phase: number }
     const markers: Marker[] = [
-      { xFrac: 0.25, baseYFrac: 0.78, targetHFrac: 0.38, currentH: 0, color: '#f97316', label: 'Truckee',  value: 1250000, phase: 0   },
+      { xFrac: 0.25, baseYFrac: 0.78, targetHFrac: 0.38, currentH: 0, color: '#3b82f6', label: 'Truckee',  value: 1250000, phase: 0   },
       { xFrac: 0.50, baseYFrac: 0.78, targetHFrac: 0.52, currentH: 0, color: '#10b981', label: 'Cabo',     value: 875000,  phase: 0.8 },
       { xFrac: 0.75, baseYFrac: 0.78, targetHFrac: 0.44, currentH: 0, color: '#8b5cf6', label: 'Primary',  value: 980000,  phase: 1.6 },
     ]
@@ -41,7 +41,7 @@ export default function HeroCanvas() {
     const particles: Particle[] = Array.from({ length: 40 }, () => ({
       x: Math.random(), y: Math.random(), vy: -(0.1 + Math.random() * 0.3),
       alpha: 0.08 + Math.random() * 0.18, size: 1 + Math.random() * 2,
-      color: ['#f97316','#10b981','#8b5cf6','#f59e0b'][Math.floor(Math.random()*4)],
+      color: ['#3b82f6','#10b981','#8b5cf6','#f59e0b'][Math.floor(Math.random()*4)],
     }))
 
     function drawTerrain(yFrac: number, opacity: number, color: string) {
@@ -66,12 +66,12 @@ export default function HeroCanvas() {
       for (let y = 0; y < h; y += 60) { ctx!.beginPath(); ctx!.moveTo(0,y); ctx!.lineTo(w,y); ctx!.stroke() }
 
       drawTerrain(0.82, 0.04, '#8b5cf6')
-      drawTerrain(0.84, 0.05, '#f97316')
+      drawTerrain(0.84, 0.05, '#3b82f6')
       drawTerrain(0.86, 0.06, '#10b981')
 
       const hg = ctx!.createLinearGradient(0, h * 0.6, 0, h)
-      hg.addColorStop(0, 'rgba(249,115,22,0.0)')
-      hg.addColorStop(1, 'rgba(249,115,22,0.06)')
+      hg.addColorStop(0, 'rgba(59,130,246,0.0)')
+      hg.addColorStop(1, 'rgba(59,130,246,0.06)')
       ctx!.fillStyle = hg; ctx!.fillRect(0, h * 0.6, w, h * 0.4)
 
       particles.forEach(p => {
@@ -112,8 +112,8 @@ export default function HeroCanvas() {
 
       const baseY = h * 0.78
       const bl = ctx!.createLinearGradient(0, baseY, w, baseY)
-      bl.addColorStop(0, 'transparent'); bl.addColorStop(0.2, 'rgba(249,115,22,0.2)')
-      bl.addColorStop(0.8, 'rgba(249,115,22,0.2)'); bl.addColorStop(1, 'transparent')
+      bl.addColorStop(0, 'transparent'); bl.addColorStop(0.2, 'rgba(59,130,246,0.2)')
+      bl.addColorStop(0.8, 'rgba(59,130,246,0.2)'); bl.addColorStop(1, 'transparent')
       ctx!.strokeStyle = bl; ctx!.lineWidth = 1; ctx!.setLineDash([6, 10])
       ctx!.beginPath(); ctx!.moveTo(0, baseY); ctx!.lineTo(w, baseY); ctx!.stroke()
       ctx!.setLineDash([])

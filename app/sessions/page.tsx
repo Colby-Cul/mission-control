@@ -146,7 +146,7 @@ export default async function SessionsPage() {
         {[
           { label: 'Total Spend',     value: `$${totalCostAll.toFixed(4)}`,        color: totalCostAll > 5 ? 'var(--red)' : totalCostAll > 1 ? 'var(--amber)' : 'var(--green)' },
           { label: 'Total Sessions',  value: String(historyList.length),            color: 'var(--blue)' },
-          { label: 'Cron Job Types',  value: String(cronIds.length),                color: 'var(--orange)' },
+          { label: 'Cron Job Types',  value: String(cronIds.length),                color: 'var(--accent)' },
           { label: 'Avg / Session',   value: `$${avgCostPerSession.toFixed(4)}`,    color: 'var(--purple)' },
         ].map(k => (
           <SpecCard key={k.label} accent dataSource="sessions">

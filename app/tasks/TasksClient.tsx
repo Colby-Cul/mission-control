@@ -62,11 +62,11 @@ interface Entity  { id: string; entity_name: string; entity_type: string }
 // legacy critical/high/normal/low values from older rows.
 const PRIORITY_COLORS: Record<string, string> = {
   p0:       '#ef4444',
-  p1:       '#f97316',
+  p1:       '#3b82f6',
   p2:       '#8b5cf6',
   p3:       '#6b7280',
   critical: '#ef4444',
-  high:     '#f97316',
+  high:     '#3b82f6',
   normal:   '#8b5cf6',
   medium:   '#8b5cf6',
   low:      '#6b7280',
@@ -99,7 +99,7 @@ function normalizeStatus(s?: string | null): string {
 const STAGE_META: Record<string, { label: string; color: string }> = {
   backlog:     { label: 'Backlog',     color: 'rgba(255,255,255,0.3)' },
   ready:       { label: 'Ready',       color: '#8b5cf6' },
-  in_progress: { label: 'In Progress', color: '#f97316' },
+  in_progress: { label: 'In Progress', color: '#3b82f6' },
   in_review:   { label: 'In Review',   color: '#f59e0b' },
   blocked:     { label: 'Blocked',     color: '#ef4444' },
   done:        { label: 'Done',        color: '#10b981' },
@@ -187,7 +187,7 @@ function BoardCard({ task, onClick }: { task: Task; onClick: () => void }) {
         <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--t1)', lineHeight: 1.35, flex: 1 }}>{getTaskTitle(task)}</span>
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        {task.project?.name && <span style={{ fontSize: 10, color: 'var(--orange)', fontWeight: 600 }}>{task.project.name}</span>}
+        {task.project?.name && <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>{task.project.name}</span>}
         {task.agent && (
           <span style={{
             fontSize: 9, fontFamily: 'var(--mo)', padding: '2px 6px', borderRadius: 4,
@@ -333,7 +333,7 @@ function QuickAdd({
   return (
     <div className="mc-card accent" style={{ padding: '12px 16px', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Plus size={16} style={{ color: 'var(--orange)', flexShrink: 0 }} />
+        <Plus size={16} style={{ color: 'var(--accent)', flexShrink: 0 }} />
         <input ref={inputRef} value={title} onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleAdd() }}
           placeholder="Quick add task… (Enter to save)"
@@ -343,7 +343,7 @@ function QuickAdd({
           <ChevronDown size={15} style={{ transform: open ? 'rotate(180deg)' : '', transition: 'transform 0.2s' }} />
         </button>
         <button onClick={handleAdd} disabled={!title.trim() || saving}
-          style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600, background: 'linear-gradient(135deg,var(--orange),var(--pink))', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', opacity: title.trim() ? 1 : 0.4 }}>
+          style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600, background: 'linear-gradient(135deg,var(--accent),var(--pink))', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', opacity: title.trim() ? 1 : 0.4 }}>
           {saving ? '…' : 'Add'}
         </button>
       </div>
@@ -417,7 +417,7 @@ function TaskRow({
       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(255,255,255,0.02)' }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '' }}>
       <input type="checkbox" checked={selected} onChange={() => onToggleSelect(task.id)}
-        style={{ accentColor: 'var(--orange)', cursor: 'pointer' }} />
+        style={{ accentColor: 'var(--accent)', cursor: 'pointer' }} />
       <button onClick={() => onComplete(task.id)} style={{ background: 'none', border: 'none', color: isDone ? 'var(--green)' : 'rgba(255,255,255,0.2)', cursor: 'pointer', padding: 0 }}>
         {isDone ? <CheckCircle2 size={16} /> : <Circle size={16} />}
       </button>
@@ -426,7 +426,7 @@ function TaskRow({
           {getTaskTitle(task)}
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-          {task.project?.name && <span style={{ fontSize: 11, color: 'var(--orange)', fontWeight: 600 }}>{task.project.name}</span>}
+          {task.project?.name && <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>{task.project.name}</span>}
           {entity && <span style={{ fontSize: 11, color: 'var(--purple)', fontWeight: 600 }}>{entity.entity_name}</span>}
           {task.due_date && <span style={{ fontSize: 11, color: 'var(--t4)', fontFamily: 'var(--mo)' }}>{String(task.due_date)}</span>}
           <PriorityPill priority={task.priority} />
@@ -475,7 +475,7 @@ function TaskRow({
             </span>
           )}
           {xpReward > 0 && (
-            <span style={{ fontSize: 10, color: 'var(--orange)', fontWeight: 600 }}>+{xpReward} XP</span>
+            <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>+{xpReward} XP</span>
           )}
           {subtaskCount > 0 && (
             <span style={{ fontSize: 10, color: 'var(--t4)' }}>{subtaskCount} subtasks</span>
@@ -528,7 +528,7 @@ function BulkBar({ count, entities, onComplete, onAssignEntity, onAskAgent, onCl
       </button>
       <div style={{ position: 'relative' }}>
         <button onClick={() => setEntityPicker(!entityPicker)}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', fontSize: 12, fontWeight: 600, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 8, color: 'var(--orange)', cursor: 'pointer' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', fontSize: 12, fontWeight: 600, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 8, color: 'var(--accent)', cursor: 'pointer' }}>
           <Filter size={13} /> Set Entity
         </button>
         {entityPicker && (
@@ -693,7 +693,7 @@ export default function TasksClient({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.12em', fontFamily: 'var(--mo)', marginBottom: 6 }}>≈ TASKS · WORKSPACE</div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--t1)', margin: 0, background: 'linear-gradient(135deg,var(--orange),var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tasks</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--t1)', margin: 0, background: 'linear-gradient(135deg,var(--accent),var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Tasks</h1>
           <div style={{ fontSize: 13, color: 'var(--t3)', marginTop: 4 }}>
             {open.length} open · {dueToday.length} due today
             {overdue.length > 0 && <span style={{ color: 'var(--red)', marginLeft: 6 }}>· {overdue.length} overdue</span>}
@@ -709,7 +709,7 @@ export default function TasksClient({
       {/* ── Stats strip ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 12, marginBottom: 20 }}>
         {[
-          { label: 'Open',      value: open.length,      color: 'var(--orange)' },
+          { label: 'Open',      value: open.length,      color: 'var(--accent)' },
           { label: 'Due Today', value: dueToday.length,  color: 'var(--amber)'  },
           { label: 'Overdue',   value: overdue.length,   color: 'var(--red)'    },
           { label: 'Total',     value: tasks.length,     color: 'var(--purple)' },
@@ -728,7 +728,7 @@ export default function TasksClient({
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4, flexWrap: 'wrap' }}>
         {VIEW_TABS.map((tab) => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            style={{ padding: '7px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8, background: activeTab === tab.key ? 'rgba(249,115,22,0.2)' : 'transparent', border: `1px solid ${activeTab === tab.key ? 'rgba(249,115,22,0.4)' : 'transparent'}`, color: activeTab === tab.key ? 'var(--orange)' : 'var(--t4)', cursor: 'pointer' }}>
+            style={{ padding: '7px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8, background: activeTab === tab.key ? 'rgba(59,130,246,0.2)' : 'transparent', border: `1px solid ${activeTab === tab.key ? 'rgba(59,130,246,0.4)' : 'transparent'}`, color: activeTab === tab.key ? 'var(--accent)' : 'var(--t4)', cursor: 'pointer' }}>
             {tab.label}
           </button>
         ))}
@@ -760,7 +760,7 @@ export default function TasksClient({
           {activeTab === 'by_project' && groupedByProject ? (
             Object.entries(groupedByProject).map(([projectName, projectTasks]) => (
               <div key={projectName}>
-                <div style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--orange)', background: 'rgba(249,115,22,0.06)', borderBottom: '1px solid rgba(255,255,255,0.04)', letterSpacing: '.04em' }}>
+                <div style={{ padding: '10px 14px', fontSize: 12, fontWeight: 700, color: 'var(--accent)', background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid rgba(255,255,255,0.04)', letterSpacing: '.04em' }}>
                   {projectName} <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400, marginLeft: 6 }}>({projectTasks.length})</span>
                 </div>
                 {renderTaskList(projectTasks)}

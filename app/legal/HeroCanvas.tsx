@@ -33,7 +33,7 @@ export default function HeroCanvas() {
     const rings: Ring[] = []
 
     function spawnRing() {
-      rings.push({ r: 0, maxR: 80 + Math.random() * 140, speed: 0.6 + Math.random() * 0.8, color: Math.random() > 0.5 ? '#f59e0b' : '#f97316' })
+      rings.push({ r: 0, maxR: 80 + Math.random() * 140, speed: 0.6 + Math.random() * 0.8, color: Math.random() > 0.5 ? '#f59e0b' : '#3b82f6' })
     }
     for (let i = 0; i < 4; i++) rings.push({ r: i * 60, maxR: 60 + i * 60, speed: 0.5, color: '#f59e0b' })
 

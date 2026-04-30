@@ -171,7 +171,7 @@ export default function LodgifyWidgets({
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', fontSize: 11, fontFamily: 'var(--mo)' }}>
-                      <div style={{ color: 'var(--orange)', fontWeight: 600 }}>{c.arrival}</div>
+                      <div style={{ color: 'var(--accent)', fontWeight: 600 }}>{c.arrival}</div>
                       <div style={{ color: 'var(--green)', fontWeight: 600 }}>{USD(c.total)}</div>
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export default function LodgifyWidgets({
                   <div key={r.id} style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                       <span style={{ fontSize: 12, fontWeight: 600 }}>{r.guest_name ?? 'Guest'}</span>
-                      <span style={{ fontSize: 11, color: 'var(--orange)', fontFamily: 'var(--mo)' }}>★ {r.rating ?? '—'}</span>
+                      <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--mo)' }}>★ {r.rating ?? '—'}</span>
                     </div>
                     {r.comment ? (
                       <div style={{ fontSize: 11, color: 'var(--dim)', lineHeight: 1.4 }}>{String(r.comment).slice(0, 160)}</div>
@@ -259,8 +259,8 @@ function CalendarStrip({
           const isMonthStart = dt.getDate() === 1
           return (
             <div key={d} style={{
-              fontSize: 9, color: isMonthStart ? 'var(--orange)' : 'var(--dim)',
-              fontFamily: 'var(--mo)', textAlign: 'center', borderLeft: isMonthStart ? '1px solid rgba(249,115,22,0.35)' : '1px solid transparent',
+              fontSize: 9, color: isMonthStart ? 'var(--accent)' : 'var(--dim)',
+              fontFamily: 'var(--mo)', textAlign: 'center', borderLeft: isMonthStart ? '1px solid rgba(59,130,246,0.35)' : '1px solid transparent',
               paddingBottom: 4,
             }}>
               {isMonthStart ? dt.toLocaleDateString('en-US', { month: 'short' }) : ''}

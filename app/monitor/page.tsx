@@ -97,7 +97,7 @@ export default async function MonitorPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
           { label: 'Uptime',        value: '99.9%',                 color: 'var(--green)'  },
-          { label: 'p95 Latency',   value: '—',                     color: 'var(--orange)' },
+          { label: 'p95 Latency',   value: '—',                     color: 'var(--accent)' },
           { label: 'Error Rate',    value: '—',                     color: 'var(--red)'    },
           { label: 'Active Alerts', value: String(alertList.length),color: alertList.length === 0 ? 'var(--green)' : 'var(--amber)' },
         ].map(k => (

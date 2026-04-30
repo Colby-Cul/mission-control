@@ -133,13 +133,13 @@ export default function CompanyTabs({ tabs, defaultTab = 'overview' }: Props) {
                 padding: '8px 14px',
                 borderRadius: 10,
                 border: isActive
-                  ? '1px solid rgba(249,115,22,0.35)'
+                  ? '1px solid rgba(59,130,246,0.35)'
                   : '1px solid rgba(255,255,255,0.06)',
                 background: isActive
-                  ? 'rgba(249,115,22,0.12)'
+                  ? 'rgba(59,130,246,0.12)'
                   : 'rgba(255,255,255,0.02)',
                 color: isActive
-                  ? '#f97316'
+                  ? '#3b82f6'
                   : isEmpty
                   ? 'rgba(255,255,255,0.25)'
                   : 'rgba(255,255,255,0.75)',
@@ -165,9 +165,9 @@ export default function CompanyTabs({ tabs, defaultTab = 'overview' }: Props) {
                     padding: '1px 7px',
                     borderRadius: 6,
                     background: isActive
-                      ? 'rgba(249,115,22,0.2)'
+                      ? 'rgba(59,130,246,0.2)'
                       : 'rgba(255,255,255,0.06)',
-                    color: isActive ? '#f97316' : 'rgba(255,255,255,0.5)',
+                    color: isActive ? '#3b82f6' : 'rgba(255,255,255,0.5)',
                     fontFamily: 'IBM Plex Mono, monospace',
                     fontWeight: 700,
                   }}

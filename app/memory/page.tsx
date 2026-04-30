@@ -43,7 +43,7 @@ async function getMemories() {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  general: 'var(--orange)', preference: 'var(--purple)', fact: 'var(--green)',
+  general: 'var(--accent)', preference: 'var(--purple)', fact: 'var(--green)',
   feedback: 'var(--pink)', task: 'var(--amber)', context: 'var(--purple)',
 }
 
@@ -116,7 +116,7 @@ export default async function MemoryPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Memories', value: String(totalMemories),  color: 'var(--orange)' },
+          { label: 'Total Memories', value: String(totalMemories),  color: 'var(--accent)' },
           { label: 'Recalls / Week', value: String(weekRecalls),    color: 'var(--green)'  },
           { label: 'Categories',     value: String(categoryCount),  color: 'var(--purple)' },
           { label: 'Top Topic',      value: topCat,                 color: 'var(--amber)'  },

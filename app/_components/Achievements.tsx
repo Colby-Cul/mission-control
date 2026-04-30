@@ -1,7 +1,7 @@
 'use client'
 /**
  * Achievements — spec-locked achievement rings section (DASHBOARD-TEMPLATE-SPEC §2).
- * 88px rings, gradient #f97316→#ec4899→#8b5cf6 via SVG `achieveGrad`.
+ * 88px rings, gradient #3b82f6→#ec4899→#8b5cf6 via SVG `achieveGrad`.
  * Tooltip on hover, earned/locked states, XP chip, "view all" button.
  * Client component (hover state requires JS).
  */
@@ -33,7 +33,7 @@ export default function Achievements({ items, xpEarned, onViewAll }: Achievement
       <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
         <defs>
           <linearGradient id="achieveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stopColor="#f97316" />
+            <stop offset="0%"   stopColor="#3b82f6" />
             <stop offset="50%"  stopColor="#ec4899" />
             <stop offset="100%" stopColor="#8b5cf6" />
           </linearGradient>

@@ -31,7 +31,7 @@ export default function HeroCanvas() {
     if (canvas.parentElement) ro.observe(canvas.parentElement)
 
     const CATEGORY_COLORS: Record<string, string> = {
-      Legal: '#f97316', Tax: '#f59e0b', Insurance: '#10b981',
+      Legal: '#3b82f6', Tax: '#f59e0b', Insurance: '#10b981',
       Property: '#8b5cf6', Company: '#ec4899', Personal: '#06b6d4',
     }
     const CATS = Object.keys(CATEGORY_COLORS)
@@ -110,7 +110,7 @@ export default function HeroCanvas() {
       })
 
       const ag = ctx!.createRadialGradient(w*0.5, h*0.45, 0, w*0.5, h*0.45, w*0.3)
-      ag.addColorStop(0, 'rgba(249,115,22,0.03)'); ag.addColorStop(1, 'transparent')
+      ag.addColorStop(0, 'rgba(59,130,246,0.03)'); ag.addColorStop(1, 'transparent')
       ctx!.fillStyle = ag; ctx!.fillRect(0, 0, w, h)
 
       cards.filter(c => c.depth === 1).forEach(c => {

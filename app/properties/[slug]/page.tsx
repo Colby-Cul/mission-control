@@ -151,7 +151,7 @@ export default async function PropertyPage({ params }: { params: { slug: string 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Current Value',  value: USD(value),    color: 'var(--orange)' },
+          { label: 'Current Value',  value: USD(value),    color: 'var(--accent)' },
           { label: 'Equity',         value: USD(equity),   color: 'var(--green)'  },
           { label: 'Mortgage',       value: USD(mortgage), color: 'var(--red)'    },
           { label: 'Equity %',       value: equityPct.toFixed(1) + '%', color: 'var(--purple)' },

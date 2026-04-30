@@ -37,7 +37,7 @@ function buildProgressSVG(pct: number): string {
   return `<svg width="64" height="64" viewBox="0 0 64 64">
     <circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
     <circle cx="32" cy="32" r="${r}" fill="none" stroke="url(#progGrad)" stroke-width="5" stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}" stroke-linecap="round" transform="rotate(-90 32 32)"/>
-    <defs><linearGradient id="progGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+    <defs><linearGradient id="progGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
   </svg>`
 }
 
@@ -246,7 +246,7 @@ export default async function VisionPage() {
 /* ═══ JARVIS HERO — Holographic Command Interface ═══ */
 .hero-banner {
   position:relative; border-radius:24px; overflow:hidden; margin-bottom:28px;
-  border:1px solid rgba(249,115,22,0.12);
+  border:1px solid rgba(59,130,246,0.12);
   background:#050510; min-height:460px;
 }
 /* Canvas particle field */
@@ -254,7 +254,7 @@ export default async function VisionPage() {
 /* Scan line animation */
 .hero-scanline {
   position:absolute; top:0; left:0; right:0; height:2px; z-index:1;
-  background:linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent);
+  background:linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(139,92,246,0.3), transparent);
   animation:scanDown 4s ease-in-out infinite;
   filter:blur(1px);
 }
@@ -262,9 +262,9 @@ export default async function VisionPage() {
 
 /* HUD corner brackets */
 .hud-corner { position:absolute; z-index:2; width:24px; height:24px; }
-.hud-corner.tl { top:12px; left:12px; border-top:2px solid rgba(249,115,22,0.3); border-left:2px solid rgba(249,115,22,0.3); }
+.hud-corner.tl { top:12px; left:12px; border-top:2px solid rgba(59,130,246,0.3); border-left:2px solid rgba(59,130,246,0.3); }
 .hud-corner.tr { top:12px; right:12px; border-top:2px solid rgba(139,92,246,0.3); border-right:2px solid rgba(139,92,246,0.3); }
-.hud-corner.bl { bottom:12px; left:12px; border-bottom:2px solid rgba(249,115,22,0.3); border-left:2px solid rgba(249,115,22,0.3); }
+.hud-corner.bl { bottom:12px; left:12px; border-bottom:2px solid rgba(59,130,246,0.3); border-left:2px solid rgba(59,130,246,0.3); }
 .hud-corner.br { bottom:12px; right:12px; border-bottom:2px solid rgba(139,92,246,0.3); border-right:2px solid rgba(139,92,246,0.3); }
 
 .hero-content { position:relative; z-index:3; display:flex; align-items:stretch; min-height:460px; }
@@ -384,7 +384,7 @@ export default async function VisionPage() {
 .hero-avatar-ring {
   position:absolute; inset:-3px; border-radius:50%;
   border:2px solid transparent;
-  background:conic-gradient(from 0deg, var(--orange), var(--pink), var(--purple), var(--orange)) border-box;
+  background:conic-gradient(from 0deg, var(--accent), var(--pink), var(--purple), var(--accent)) border-box;
   -webkit-mask:linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor; mask-composite:exclude;
   animation:ringRotate 6s linear infinite;
@@ -404,14 +404,14 @@ export default async function VisionPage() {
 .hero-player-name { font-size:15px; font-weight:600; margin-bottom:2px; }
 .hero-player-title {
   font-size:10px; font-weight:600; letter-spacing:0.08em;
-  background:linear-gradient(90deg, var(--orange), var(--pink));
+  background:linear-gradient(90deg, var(--accent), var(--pink));
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
 .hero-xp-wrap { margin-bottom:4px; }
 .hero-xp-bar-outer { height:6px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; position:relative; }
 .hero-xp-bar-inner {
   height:100%; border-radius:3px;
-  background:linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
+  background:linear-gradient(90deg, var(--accent), var(--pink), var(--purple));
   transition:width 1.2s cubic-bezier(0.22,1,0.36,1); position:relative;
 }
 .hero-xp-bar-inner::after {
@@ -439,11 +439,11 @@ export default async function VisionPage() {
   display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;
 }
 .la-account-group {
-  background:linear-gradient(135deg, rgba(249,115,22,0.08), rgba(139,92,246,0.04));
+  background:linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.04));
   border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:20px;
 }
 .la-group-title {
-  font-size:10px; font-weight:600; color:var(--orange); text-transform:uppercase;
+  font-size:10px; font-weight:600; color:var(--accent); text-transform:uppercase;
   letter-spacing:0.1em; margin-bottom:12px; font-family:'IBM Plex Mono',monospace;
 }
 .la-account-item {
@@ -463,17 +463,17 @@ export default async function VisionPage() {
 .section-title { font-size:20px; font-weight:600; letter-spacing:-0.01em; }
 .section-header-left { display:flex; align-items:center; gap:10px; }
 .achieve-count { font-size:13px; color:var(--dim); background:rgba(255,255,255,0.04); padding:3px 10px; border-radius:6px; }
-.xp-earned { font-size:12px; font-weight:600; color:var(--orange); background:rgba(249,115,22,0.1); padding:3px 10px; border-radius:6px; }
+.xp-earned { font-size:12px; font-weight:600; color:var(--accent); background:rgba(59,130,246,0.1); padding:3px 10px; border-radius:6px; }
 .view-all-btn { background:none; border:none; color:var(--dim); font-size:13px; cursor:pointer; font-family:inherit; }
 .view-all-btn:hover { color:rgba(255,255,255,0.6); }
 .add-milestone-btn {
   display:flex; align-items:center; gap:6px; padding:8px 16px;
-  border-radius:10px; border:1px dashed rgba(249,115,22,0.3);
-  background:rgba(249,115,22,0.05); color:var(--orange);
+  border-radius:10px; border:1px dashed rgba(59,130,246,0.3);
+  background:rgba(59,130,246,0.05); color:var(--accent);
   font-size:13px; font-weight:500; cursor:pointer; font-family:inherit;
   transition:all 0.2s;
 }
-.add-milestone-btn:hover { background:rgba(249,115,22,0.12); border-color:var(--orange); }
+.add-milestone-btn:hover { background:rgba(59,130,246,0.12); border-color:var(--accent); }
 
 /* Achievements — Circular Badges */
 .achieve-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-start; padding:8px 0; }
@@ -508,7 +508,7 @@ export default async function VisionPage() {
 /* Glow behind ring for earned badges */
 .achieve-card.earned .achieve-ring-wrap::before {
   content:''; position:absolute; inset:-4px; border-radius:50%;
-  background:radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+  background:radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
   z-index:0;
 }
 /* Completed check overlay */
@@ -519,7 +519,7 @@ export default async function VisionPage() {
 }
 
 .achieve-name { font-size:11px; font-weight:600; margin-bottom:2px; line-height:1.3; }
-.achieve-xp { font-size:10px; font-weight:600; color:var(--orange); }
+.achieve-xp { font-size:10px; font-weight:600; color:var(--accent); }
 .achieve-desc { display:none; } /* hidden on badges, shown on hover tooltip */
 
 /* Tooltip on hover */
@@ -533,7 +533,7 @@ export default async function VisionPage() {
 .achieve-card:hover .achieve-tooltip { opacity:1; }
 .achieve-tooltip-name { font-size:12px; font-weight:600; margin-bottom:4px; }
 .achieve-tooltip-desc { font-size:11px; color:var(--dim); line-height:1.4; margin-bottom:4px; }
-.achieve-tooltip-xp { font-size:11px; font-weight:600; color:var(--orange); }
+.achieve-tooltip-xp { font-size:11px; font-weight:600; color:var(--accent); }
 
 /* Filter */
 .filter-row { display:flex; gap:8px; }
@@ -544,8 +544,8 @@ export default async function VisionPage() {
 }
 .filter-pill:hover { border-color:rgba(255,255,255,0.15); color:rgba(255,255,255,0.6); }
 .filter-pill.active {
-  background:rgba(249,115,22,0.12); color:var(--orange);
-  border-color:rgba(249,115,22,0.3);
+  background:rgba(59,130,246,0.12); color:var(--accent);
+  border-color:rgba(59,130,246,0.3);
 }
 
 /* Vision Cards Grid */
@@ -568,7 +568,7 @@ export default async function VisionPage() {
   border-radius:6px; font-size:10px; font-weight:700; letter-spacing:0.08em;
   border:1px solid;
 }
-.status-planning { background:rgba(249,115,22,0.15); color:var(--orange); border-color:var(--orange); }
+.status-planning { background:rgba(59,130,246,0.15); color:var(--accent); border-color:var(--accent); }
 .status-future { background:rgba(139,92,246,0.15); color:var(--purple); border-color:var(--purple); }
 .status-active { background:rgba(16,185,129,0.15); color:var(--green); border-color:var(--green); }
 
@@ -576,7 +576,7 @@ export default async function VisionPage() {
 .card-title { font-size:18px; font-weight:600; margin-bottom:4px; letter-spacing:-0.01em; }
 .card-target {
   font-size:14px; font-weight:600; margin-bottom:8px;
-  background:linear-gradient(90deg, var(--orange), var(--pink));
+  background:linear-gradient(90deg, var(--accent), var(--pink));
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   background-clip:text;
 }
@@ -630,7 +630,7 @@ export default async function VisionPage() {
 .add-card-inner { text-align:center; padding:32px; }
 .add-icon {
   width:56px; height:56px; border-radius:50%;
-  background:linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15));
+  background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15));
   display:flex; align-items:center; justify-content:center;
   font-size:28px; color:var(--dim); margin:0 auto 16px;
   border:1px solid rgba(255,255,255,0.08);
@@ -649,7 +649,7 @@ export default async function VisionPage() {
   content:''; position:absolute; top:0; left:0; right:0; height:3px;
   border-radius:20px 20px 0 0;
 }
-.ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--orange)); }
+.ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--accent)); }
 .ms-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
 .ms-body { padding:20px 24px; }
@@ -753,7 +753,7 @@ export default async function VisionPage() {
 .link-input::placeholder { color:rgba(255,255,255,0.25); }
 .link-fetch-btn {
   padding:12px 20px; border-radius:10px;
-  background:linear-gradient(135deg, var(--orange), var(--pink));
+  background:linear-gradient(135deg, var(--accent), var(--pink));
   border:none; color:#fff; font-weight:600; font-size:13px; cursor:pointer;
   white-space:nowrap; font-family:inherit;
 }
@@ -768,12 +768,12 @@ export default async function VisionPage() {
   color:#fff; font-size:13px; outline:none; font-family:inherit;
 }
 .form-input::placeholder { color:rgba(255,255,255,0.2); }
-.form-input:focus { border-color:rgba(249,115,22,0.3); }
+.form-input:focus { border-color:rgba(59,130,246,0.3); }
 select.form-input { appearance:none; cursor:pointer; }
 textarea.form-input { height:72px; resize:vertical; }
 .add-vision-btn {
   width:100%; padding:14px 24px; border-radius:12px; border:none;
-  background:linear-gradient(135deg, var(--orange), var(--pink), var(--purple));
+  background:linear-gradient(135deg, var(--accent), var(--pink), var(--purple));
   color:#fff; font-size:15px; font-weight:600; cursor:pointer; margin-top:20px;
   letter-spacing:-0.01em; font-family:inherit; transition:opacity 0.2s;
 }
@@ -798,7 +798,7 @@ textarea.form-input { height:72px; resize:vertical; }
     <svg width="0" height="0" style="position:absolute">
       <defs>
         <linearGradient id="achieveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f97316"/>
+          <stop offset="0%" stop-color="#3b82f6"/>
           <stop offset="50%" stop-color="#ec4899"/>
           <stop offset="100%" stop-color="#8b5cf6"/>
         </linearGradient>
@@ -946,7 +946,7 @@ textarea.form-input { height:72px; resize:vertical; }
   <svg width="0" height="0" style="position:absolute">
     <defs>
       <linearGradient id="msGradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f97316"/>
+        <stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#3b82f6"/>
       </linearGradient>
       <linearGradient id="msGradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#ec4899"/>
@@ -1269,7 +1269,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
     ctx.clearRect(0, 0, w, h);
 
     // === Faint grid overlay ===
-    ctx.strokeStyle = 'rgba(249,115,22,0.025)';
+    ctx.strokeStyle = 'rgba(59,130,246,0.025)';
     ctx.lineWidth = 0.5;
     for (let x = 0; x < w; x += 50) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
@@ -1350,7 +1350,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
     // === Drifting ambient glow zones ===
     const g1x = w * 0.25 + Math.sin(time * 0.08) * w * 0.05;
     const g1 = ctx.createRadialGradient(g1x, h * 0.3, 0, g1x, h * 0.3, w * 0.2);
-    g1.addColorStop(0, 'rgba(249,115,22,0.04)'); g1.addColorStop(1, 'transparent');
+    g1.addColorStop(0, 'rgba(59,130,246,0.04)'); g1.addColorStop(1, 'transparent');
     ctx.fillStyle = g1; ctx.fillRect(0, 0, w, h);
 
     const g2x = w * 0.75 + Math.cos(time * 0.06) * w * 0.05;
@@ -1401,13 +1401,13 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
     for (let i = 1; i <= 5; i++) {
       const r = (maxR / 5) * i;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = \`rgba(249,115,22,\${i === 5 ? 0.12 : 0.05})\`;
+      ctx.strokeStyle = \`rgba(59,130,246,\${i === 5 ? 0.12 : 0.05})\`;
       ctx.lineWidth = i === 5 ? 1.5 : 0.8;
       ctx.stroke();
     }
 
     // Crosshairs
-    ctx.strokeStyle = 'rgba(249,115,22,0.06)'; ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(59,130,246,0.06)'; ctx.lineWidth = 0.5;
     ctx.beginPath(); ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR); ctx.stroke();
 
@@ -1421,15 +1421,15 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, maxR, a - 0.02, a + 0.02);
       ctx.closePath();
-      ctx.fillStyle = \`rgba(249,115,22,\${trailAlpha})\`;
+      ctx.fillStyle = \`rgba(59,130,246,\${trailAlpha})\`;
       ctx.fill();
     }
     // Sweep line itself
     const sx = cx + Math.cos(sweepAngle) * maxR;
     const sy = cy + Math.sin(sweepAngle) * maxR;
     const sweepGrad = ctx.createLinearGradient(cx, cy, sx, sy);
-    sweepGrad.addColorStop(0, 'rgba(249,115,22,0.6)');
-    sweepGrad.addColorStop(1, 'rgba(249,115,22,0.05)');
+    sweepGrad.addColorStop(0, 'rgba(59,130,246,0.6)');
+    sweepGrad.addColorStop(1, 'rgba(59,130,246,0.05)');
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(sx, sy);
     ctx.strokeStyle = sweepGrad; ctx.lineWidth = 2; ctx.stroke();
 
@@ -1484,9 +1484,9 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
     // Center ping
     const pingPulse = 0.5 + 0.5 * Math.sin(time * 2);
     ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-    ctx.fillStyle = \`rgba(249,115,22,\${0.5 + 0.3 * pingPulse})\`; ctx.fill();
+    ctx.fillStyle = \`rgba(59,130,246,\${0.5 + 0.3 * pingPulse})\`; ctx.fill();
     ctx.beginPath(); ctx.arc(cx, cy, 6 + pingPulse * 4, 0, Math.PI * 2);
-    ctx.strokeStyle = \`rgba(249,115,22,\${0.15 * (1 - pingPulse)})\`; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = \`rgba(59,130,246,\${0.15 * (1 - pingPulse)})\`; ctx.lineWidth = 1; ctx.stroke();
 
     requestAnimationFrame(draw);
   }

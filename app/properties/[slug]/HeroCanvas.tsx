@@ -42,14 +42,14 @@ export default function HeroCanvas() {
       x: Math.random(), y: Math.random(),
       vx: (Math.random() - 0.5) * 0.3, vy: -(0.15 + Math.random() * 0.35),
       alpha: 0.04 + Math.random() * 0.16, size: 1 + Math.random() * 2.5,
-      color: ['#f97316','#f59e0b','#ec4899','#8b5cf6'][Math.floor(Math.random()*4)],
+      color: ['#3b82f6','#f59e0b','#ec4899','#8b5cf6'][Math.floor(Math.random()*4)],
     }))
 
     function drawHouse(cx: number, cy: number) {
       const bw = 140, bh = 100, rh = 55
 
       const sg = ctx!.createRadialGradient(cx, cy + bh/2 + 10, 5, cx, cy + bh/2 + 10, 80)
-      sg.addColorStop(0, 'rgba(249,115,22,0.08)'); sg.addColorStop(1, 'transparent')
+      sg.addColorStop(0, 'rgba(59,130,246,0.08)'); sg.addColorStop(1, 'transparent')
       ctx!.fillStyle = sg
       ctx!.beginPath(); ctx!.ellipse(cx, cy + bh/2 + 10, 80, 18, 0, 0, Math.PI*2); ctx!.fill()
 
@@ -63,9 +63,9 @@ export default function HeroCanvas() {
       ctx!.lineTo(cx + bw/2 + 10, cy - bh/2)
       ctx!.closePath()
       const roofGrad = ctx!.createLinearGradient(cx, cy - bh/2 - rh, cx, cy - bh/2)
-      roofGrad.addColorStop(0, 'rgba(249,115,22,0.25)'); roofGrad.addColorStop(1, 'rgba(249,115,22,0.06)')
+      roofGrad.addColorStop(0, 'rgba(59,130,246,0.25)'); roofGrad.addColorStop(1, 'rgba(59,130,246,0.06)')
       ctx!.fillStyle = roofGrad; ctx!.fill()
-      ctx!.strokeStyle = 'rgba(249,115,22,0.4)'; ctx!.stroke()
+      ctx!.strokeStyle = 'rgba(59,130,246,0.4)'; ctx!.stroke()
 
       // Chimney
       ctx!.fillStyle = 'rgba(255,255,255,0.05)'; ctx!.strokeStyle = 'rgba(255,255,255,0.1)'
@@ -97,7 +97,7 @@ export default function HeroCanvas() {
       })
 
       const og = ctx!.createRadialGradient(cx, cy, 0, cx, cy, 130)
-      og.addColorStop(0, 'rgba(249,115,22,0.04)'); og.addColorStop(1, 'transparent')
+      og.addColorStop(0, 'rgba(59,130,246,0.04)'); og.addColorStop(1, 'transparent')
       ctx!.fillStyle = og; ctx!.fillRect(cx - 160, cy - 140, 320, 280)
     }
 

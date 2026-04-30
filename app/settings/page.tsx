@@ -97,14 +97,14 @@ export default async function SettingsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
                 <div style={{
                   width: 56, height: 56, borderRadius: '50%',
-                  background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+                  background: 'linear-gradient(135deg, var(--accent), var(--purple))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontWeight: 800, fontSize: 20, color: '#fff', flexShrink: 0,
                 }}>{initials}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 18 }}>{displayName}</div>
                   <div style={{ fontSize: 12, color: 'var(--dim)', marginTop: 2 }}>{profile.role ?? 'Chief Executive'}</div>
-                  <div style={{ fontSize: 10, color: 'var(--orange)', fontWeight: 600, marginTop: 2, fontFamily: 'var(--mo)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, marginTop: 2, fontFamily: 'var(--mo)' }}>
                     LVL {profile.level ?? 1}
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default async function SettingsPage() {
                   <span>{(profile.xp_next ?? 1000).toLocaleString()} XP</span>
                 </div>
                 <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${xpPct}%`, background: 'linear-gradient(90deg, var(--orange), var(--pink))', borderRadius: 3 }} />
+                  <div style={{ height: '100%', width: `${xpPct}%`, background: 'linear-gradient(90deg, var(--accent), var(--pink))', borderRadius: 3 }} />
                 </div>
               </div>
 
@@ -212,8 +212,8 @@ export default async function SettingsPage() {
             <>
               <a href="/api/auth/google" style={{
                 fontSize: 11, fontWeight: 600, padding: '5px 14px', borderRadius: 6,
-                background: 'rgba(249,115,22,0.15)', color: 'var(--orange)',
-                border: '1px solid rgba(249,115,22,0.3)', textDecoration: 'none',
+                background: 'rgba(59,130,246,0.15)', color: 'var(--accent)',
+                border: '1px solid rgba(59,130,246,0.3)', textDecoration: 'none',
               }}>
                 {isGoogleConnected ? 'Reconnect' : 'Connect Google'}
               </a>
@@ -248,7 +248,7 @@ export default async function SettingsPage() {
           <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
             Integrations ({connected.length} connected)
           </div>
-          <Link href="/integrations" style={{ fontSize: 11, color: 'var(--orange)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(249,115,22,0.3)', padding: '4px 12px', borderRadius: 6 }}>
+          <Link href="/integrations" style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(59,130,246,0.3)', padding: '4px 12px', borderRadius: 6 }}>
             Manage All
           </Link>
         </div>
@@ -296,7 +296,7 @@ export default async function SettingsPage() {
               { label: 'Google OAuth', val: isGoogleConnected ? 'Connected' : 'Not connected', color: isGoogleConnected ? 'var(--green)' : 'var(--dim)' },
               { label: 'Supabase Auth', val: 'Server-side', color: 'var(--green)' },
               { label: '2FA', val: 'Pending setup', color: 'var(--amber)' },
-              { label: 'Connected Integrations', val: `${connected.length}/${intgList.length}`, color: 'var(--orange)' },
+              { label: 'Connected Integrations', val: `${connected.length}/${intgList.length}`, color: 'var(--accent)' },
             ].map(row => (
               <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ color: 'var(--dim)' }}>{row.label}</span>
@@ -311,7 +311,7 @@ export default async function SettingsPage() {
       <SpecCard accent dataSource="team_members" style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 600 }}>Team Members</div>
-          <Link href="/team" style={{ fontSize: 11, color: 'var(--orange)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(249,115,22,0.3)', padding: '4px 12px', borderRadius: 6 }}>
+          <Link href="/team" style={{ fontSize: 11, color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, border: '1px solid rgba(59,130,246,0.3)', padding: '4px 12px', borderRadius: 6 }}>
             Manage →
           </Link>
         </div>

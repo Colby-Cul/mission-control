@@ -83,7 +83,7 @@ export default async function DashboardPage() {
   const totalAssets = Math.max(1, liquidCash + investments + realEstateEquity)
 
   const portfolioRows = [
-    { label: 'Real Estate (Owned Equity)', val: realEstateEquity, color: 'var(--orange)', pct: Math.round((realEstateEquity / totalAssets) * 100) },
+    { label: 'Real Estate (Owned Equity)', val: realEstateEquity, color: 'var(--accent)', pct: Math.round((realEstateEquity / totalAssets) * 100) },
     { label: 'Liquid Cash',               val: liquidCash,        color: 'var(--green)',  pct: Math.round((liquidCash        / totalAssets) * 100) },
     { label: 'Investments',               val: investments,       color: 'var(--purple)', pct: Math.round((investments       / totalAssets) * 100) },
   ]
@@ -170,7 +170,7 @@ export default async function DashboardPage() {
           </SpecCard>
           <SpecCard accent dataSource="entity_ownership">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Active Companies</div>
-            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{entityCount || 7}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{entityCount || 7}</div>
             <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>LLCs &amp; LPs active</div>
           </SpecCard>
           <SpecCard accent dataSource="coming-soon:property_assets.current_value">
@@ -200,7 +200,7 @@ export default async function DashboardPage() {
                       <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{v.name ?? v.title ?? 'Vision'}</div>
                       <div style={{ fontSize: 11, color: 'var(--dim)' }}>{v.status ?? 'active'}</div>
                     </div>
-                    <div style={{ fontFamily: 'var(--mo)', fontSize: 22, fontWeight: 700, color: 'var(--orange)' }}>{pct}%</div>
+                    <div style={{ fontFamily: 'var(--mo)', fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>{pct}%</div>
                   </div>
                   <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: 'var(--grad)', borderRadius: 2 }} />
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
               <svg width={100} height={100} style={{ position: 'absolute', transform: 'rotate(-90deg)' }}>
                 <defs>
                   <linearGradient id="ns-dg-v7" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%"   stopColor="#f97316" />
+                    <stop offset="0%"   stopColor="#3b82f6" />
                     <stop offset="50%"  stopColor="#ec4899" />
                     <stop offset="100%" stopColor="#8b5cf6" />
                   </linearGradient>
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
                 Next milestone: <strong style={{ color: 'inherit' }}>$10M by 2030</strong>
               </div>
               <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
-                <div style={{ height: '100%', width: `${goalPct}%`, background: 'linear-gradient(90deg,var(--orange),var(--pink),var(--purple))', borderRadius: 3, transition: 'width .6s ease' }} />
+                <div style={{ height: '100%', width: `${goalPct}%`, background: 'linear-gradient(90deg,var(--accent),var(--pink),var(--purple))', borderRadius: 3, transition: 'width .6s ease' }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--dim)', marginBottom: 10 }}>
                 <span>Current: {USD(netWorth)}</span>
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
                 At 18% annual growth, reaching $10M by{' '}
                 <strong style={{ color: 'var(--green)' }}>2031</strong>.{' '}
                 +$8K/mo cash flow accelerates to{' '}
-                <strong style={{ color: 'var(--orange)' }}>2029</strong>.
+                <strong style={{ color: 'var(--accent)' }}>2029</strong>.
               </div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default async function DashboardPage() {
           </div>
           {((agentFeed as any[]) ?? []).length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--dim)', padding: '20px 0', textAlign: 'center' }}>
-              No agent runs yet. <a href="/agents" style={{ color: 'var(--orange)' }}>Invoke an agent →</a>
+              No agent runs yet. <a href="/agents" style={{ color: 'var(--accent)' }}>Invoke an agent →</a>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -375,7 +375,7 @@ export default async function DashboardPage() {
         <SpecCard accent dataSource="derived:daily_brief">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>Daily Brief</div>
-            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--accent)', textTransform: 'uppercase' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
           </div>
@@ -393,7 +393,7 @@ export default async function DashboardPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {lines.map((line: string, i: number) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, lineHeight: 1.5 }}>
-                    <span style={{ color: 'var(--orange)', fontFamily: 'var(--mo)', marginTop: 1 }}>▸</span>
+                    <span style={{ color: 'var(--accent)', fontFamily: 'var(--mo)', marginTop: 1 }}>▸</span>
                     <span>{line}</span>
                   </div>
                 ))}
@@ -433,7 +433,7 @@ export default async function DashboardPage() {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16 }}>Quick Actions</div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[
-            { label: '+ New Vision',  href: '/vision',    color: 'var(--orange)' },
+            { label: '+ New Vision',  href: '/vision',    color: 'var(--accent)' },
             { label: '+ New Task',    href: '/tasks',     color: 'var(--green)'  },
             { label: 'Finance',       href: '/finance',   color: 'var(--purple)' },
             { label: 'Tax Center',    href: '/tax',       color: 'var(--amber)'  },

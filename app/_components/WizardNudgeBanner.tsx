@@ -18,8 +18,8 @@ export default function WizardNudgeBanner({ edgeCount }: Props) {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(249,115,22,0.1) 0%, rgba(139,92,246,0.08) 100%)',
-      border: '1px solid rgba(249,115,22,0.22)',
+      background: 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.08) 100%)',
+      border: '1px solid rgba(59,130,246,0.22)',
       borderRadius: 16,
       padding: '18px 22px',
       marginBottom: 28,
@@ -43,13 +43,13 @@ export default function WizardNudgeBanner({ edgeCount }: Props) {
           href="/setup/ownership"
           style={{
             display: 'inline-block',
-            background: 'rgba(249,115,22,0.18)',
-            border: '1px solid rgba(249,115,22,0.4)',
+            background: 'rgba(59,130,246,0.18)',
+            border: '1px solid rgba(59,130,246,0.4)',
             borderRadius: 10,
             padding: '9px 20px',
             fontSize: 13,
             fontWeight: 700,
-            color: '#f97316',
+            color: '#3b82f6',
             textDecoration: 'none',
             whiteSpace: 'nowrap' as const,
           }}

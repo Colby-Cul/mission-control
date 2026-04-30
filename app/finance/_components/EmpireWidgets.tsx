@@ -47,7 +47,7 @@ export function PortfolioDonut({ buckets, totalAssets, totalDebt }: {
   const segments = buckets.map(b => {
     const pct = b.value / totalAssets
     const len = pct * CIRC
-    const seg = { ...b, pct, len, start: offset, paintColor: paint[b.key] ?? 'var(--orange)' }
+    const seg = { ...b, pct, len, start: offset, paintColor: paint[b.key] ?? 'var(--accent)' }
     offset += len
     return seg
   })
@@ -242,7 +242,7 @@ export function TopRevenueEntities({ entities }: { entities: Array<{ id: string;
         <SectionHeader title="Top Revenue · 90d" subtitle="— link accounts to populate" />
         <div className="mc-card accent">
           <div style={{ padding: '18px 0', fontSize: 13, color: 'var(--dim)', textAlign: 'center', maxWidth: 560, margin: '0 auto', lineHeight: 1.55 }}>
-            Revenue rollup requires <code style={{ fontFamily: 'var(--mo)', color: 'var(--orange)' }}>financial_accounts.entity_id</code> populated. Once each bank account is linked to an entity, 90-day deposits roll up here automatically.
+            Revenue rollup requires <code style={{ fontFamily: 'var(--mo)', color: 'var(--accent)' }}>financial_accounts.entity_id</code> populated. Once each bank account is linked to an entity, 90-day deposits roll up here automatically.
           </div>
         </div>
       </section>
@@ -256,7 +256,7 @@ export function TopRevenueEntities({ entities }: { entities: Array<{ id: string;
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {entities.map((e, i) => (
             <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '22px 1fr 90px', gap: 12, alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: 'var(--orange)', fontFamily: 'var(--mo)', fontWeight: 700 }}>#{i + 1}</span>
+              <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--mo)', fontWeight: 700 }}>#{i + 1}</span>
               <div>
                 <div style={{ fontSize: 13, color: 'var(--t1)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {e.name}

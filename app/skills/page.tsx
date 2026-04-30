@@ -35,7 +35,7 @@ async function getSkillProgress() {
 
 const CATEGORY_COLORS: Record<string, string> = {
   finance: 'var(--green)', strategy: 'var(--pink)', agents: 'var(--purple)',
-  tax: 'var(--amber)', invest: 'var(--orange)', systems: 'var(--purple)',
+  tax: 'var(--amber)', invest: 'var(--accent)', systems: 'var(--purple)',
   automation: 'var(--green)', legal: 'var(--amber)', marketing: 'var(--pink)',
 }
 
@@ -109,7 +109,7 @@ export default async function SkillsPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Skills Unlocked', value: String(unlockedCount),              color: 'var(--orange)' },
+          { label: 'Skills Unlocked', value: String(unlockedCount),              color: 'var(--accent)' },
           { label: 'XP This Week',    value: weekXP > 0 ? String(weekXP) : '—', color: 'var(--purple)' },
           { label: 'Current Streak',  value: `${streak}d`,                       color: 'var(--green)'  },
           { label: 'Next Milestone',  value: nextSkill?.name?.slice(0, 10) ?? '—', color: 'var(--amber)' },
@@ -137,7 +137,7 @@ export default async function SkillsPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
                 {catSkills.map((s: any) => {
                   const isUnlocked = s.unlocked || s.status === 'active'
-                  const catColor = CATEGORY_COLORS[cat.toLowerCase()] ?? 'var(--orange)'
+                  const catColor = CATEGORY_COLORS[cat.toLowerCase()] ?? 'var(--accent)'
                   return (
                     <div key={s.id} style={{
                       padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10,
@@ -182,7 +182,7 @@ export default async function SkillsPage() {
                 <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, fontSize: 12 }}>
                   <span style={{ fontWeight: 600 }}>{p.skill_name ?? p.skill_id ?? 'Skill'}</span>
                   <div style={{ display: 'flex', gap: 16, fontFamily: 'var(--mo)', fontSize: 10 }}>
-                    {p.xp_earned && <span style={{ color: 'var(--orange)' }}>+{p.xp_earned} XP</span>}
+                    {p.xp_earned && <span style={{ color: 'var(--accent)' }}>+{p.xp_earned} XP</span>}
                     <span style={{ color: 'var(--dim)' }}>{p.created_at?.slice(0, 10) ?? '—'}</span>
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default async function SkillsPage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
             {lockedSkills.slice(0, 6).map((s: any) => {
-              const catColor = CATEGORY_COLORS[String(s.category ?? '').toLowerCase()] ?? 'var(--orange)'
+              const catColor = CATEGORY_COLORS[String(s.category ?? '').toLowerCase()] ?? 'var(--accent)'
               return (
                 <div key={s.id} style={{ padding: 12, background: 'rgba(255,255,255,0.025)', borderRadius: 10, border: `1px solid ${catColor}33` }}>
                   <div style={{ fontWeight: 600, fontSize: 12 }}>{s.name}</div>

@@ -80,7 +80,7 @@ export default function HeroCanvas() {
         if (p.y < -10) { p.y = (h || 600) + 10; p.x = Math.random() * (w || 1200) }
         if (p.x < 0 || p.x > (w || 1200)) { p.x = Math.random() * (w || 1200) }
         const pg = ctx!.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2)
-        pg.addColorStop(0, `rgba(249,115,22,${p.alpha})`)
+        pg.addColorStop(0, `rgba(59,130,246,${p.alpha})`)
         pg.addColorStop(1, 'transparent')
         ctx!.fillStyle = pg
         ctx!.beginPath(); ctx!.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2); ctx!.fill()
@@ -91,13 +91,13 @@ export default function HeroCanvas() {
       const gx2 = gx1 - 70, gy2 = gy1 + 15
       const gx3 = gx1 + 68, gy3 = gy1 - 12
 
-      drawGear(gx1, gy1, 55, 44, 12, time * 0.12, '#f9731633', 1)
+      drawGear(gx1, gy1, 55, 44, 12, time * 0.12, '#3b82f633', 1)
       drawGear(gx2, gy2, 28, 22, 8, -time * 0.24 + 0.2, '#8b5cf633', 1)
       drawGear(gx3, gy3, 22, 17, 6, -time * 0.3 + 0.8, '#10b98133', 1)
 
       // Ambient glow behind gears
       const ag = ctx!.createRadialGradient(gx1, gy1, 0, gx1, gy1, 90)
-      ag.addColorStop(0, 'rgba(249,115,22,0.05)'); ag.addColorStop(1, 'transparent')
+      ag.addColorStop(0, 'rgba(59,130,246,0.05)'); ag.addColorStop(1, 'transparent')
       ctx!.fillStyle = ag; ctx!.fillRect(0, 0, w, h)
 
       rafId = requestAnimationFrame(draw)

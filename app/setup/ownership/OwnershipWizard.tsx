@@ -266,8 +266,8 @@ export default function OwnershipWizard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, letterSpacing: '0.12em',
-              color: '#f97316', background: 'rgba(249,115,22,0.1)',
-              border: '1px solid rgba(249,115,22,0.25)',
+              color: '#3b82f6', background: 'rgba(59,130,246,0.1)',
+              border: '1px solid rgba(59,130,246,0.25)',
               borderRadius: 20, padding: '3px 10px',
               fontFamily: 'IBM Plex Mono, monospace',
             }}>
@@ -293,7 +293,7 @@ export default function OwnershipWizard() {
               return (
                 <div key={n} style={{
                   flex: 1, height: 5, borderRadius: 99,
-                  background: n < state.step ? '#f97316' : n === state.step ? 'rgba(249,115,22,0.55)' : 'rgba(255,255,255,0.08)',
+                  background: n < state.step ? '#3b82f6' : n === state.step ? 'rgba(59,130,246,0.55)' : 'rgba(255,255,255,0.08)',
                   transition: 'background 0.3s',
                 }} />
               )
@@ -305,7 +305,7 @@ export default function OwnershipWizard() {
               return (
                 <div key={label} style={{
                   flex: 1, fontSize: 10, textAlign: 'center',
-                  color: n < state.step ? '#f97316' : n === state.step ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.22)',
+                  color: n < state.step ? '#3b82f6' : n === state.step ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.22)',
                   fontWeight: n === state.step ? 700 : 400,
                   letterSpacing: '0.03em',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',

@@ -34,7 +34,7 @@ export default function HeroCanvas() {
 
       // Agent type colors
       const TYPE_COLORS: Record<string, string> = {
-        orchestrator: '#f97316',
+        orchestrator: '#3b82f6',
         worker:       '#10b981',
         assistant:    '#8b5cf6',
         research:     '#06b6d4',
@@ -192,7 +192,7 @@ export default function HeroCanvas() {
 
         // Ambient glow blobs
         const g1 = ctx!.createRadialGradient(w * 0.3, h * 0.4, 0, w * 0.3, h * 0.4, w * 0.3)
-        g1.addColorStop(0, 'rgba(249,115,22,0.04)')
+        g1.addColorStop(0, 'rgba(59,130,246,0.04)')
         g1.addColorStop(1, 'transparent')
         ctx!.fillStyle = g1
         ctx!.fillRect(0, 0, w, h)

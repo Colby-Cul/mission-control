@@ -127,13 +127,13 @@ export default async function ExecutivePage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
             <div style={{
               width: 56, height: 56, borderRadius: 14, flexShrink: 0,
-              background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+              background: 'linear-gradient(135deg, var(--accent), var(--purple))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 22, fontWeight: 800, color: '#fff',
             }}>CC</div>
             <div>
               <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>Colby Culbertson</div>
-              <div style={{ fontSize: 13, color: 'var(--orange)', fontWeight: 600 }}>
+              <div style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>
                 Entrepreneur / Founder / Operator / Investor
               </div>
             </div>
@@ -166,13 +166,13 @@ export default async function ExecutivePage() {
             {STANDING_PRIORITIES.map(p => (
               <div key={p.rank} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8,
-                background: p.rank <= 3 ? 'rgba(249,115,22,0.06)' : 'transparent',
+                background: p.rank <= 3 ? 'rgba(59,130,246,0.06)' : 'transparent',
                 borderBottom: '1px solid rgba(255,255,255,0.03)',
               }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                  background: p.rank <= 3 ? 'var(--orange)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${p.rank <= 3 ? 'var(--orange)' : 'var(--border)'}`,
+                  background: p.rank <= 3 ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${p.rank <= 3 ? 'var(--accent)' : 'var(--border)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 13, fontWeight: 800, color: p.rank <= 3 ? '#fff' : 'var(--dim)',
                 }}>{p.rank}</div>
@@ -236,7 +236,7 @@ export default async function ExecutivePage() {
         <SpecCard accent dataSource="tasks">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>Decision Queue</div>
-            <span style={{ fontSize: 10, color: 'var(--orange)', fontFamily: 'var(--mo)' }}>{decisionTasks.length} needing sign-off</span>
+            <span style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--mo)' }}>{decisionTasks.length} needing sign-off</span>
           </div>
           {decisionTasks.length === 0 ? (
             <div style={{ fontSize: 12, color: 'var(--dim)', textAlign: 'center', padding: '20px 0' }}>No high-priority decisions pending.</div>
@@ -260,7 +260,7 @@ export default async function ExecutivePage() {
               { label: 'Total MTD Revenue', val: USDS(revenueTotal), color: 'var(--green)' },
               { label: 'Total MTD Cash Flow', val: USDS(cashFlowTotal), color: cashFlowTotal >= 0 ? 'var(--green)' : 'var(--red)' },
               { label: 'Avg Runway', val: runwayAvg ? `${runwayAvg}mo` : '—', color: 'var(--amber)' },
-              { label: 'Active Entities', val: String(entityCount), color: 'var(--orange)' },
+              { label: 'Active Entities', val: String(entityCount), color: 'var(--accent)' },
               { label: 'Agent Fleet', val: `${agentCount}/${(agents as any[]).length}`, color: 'var(--purple)' },
             ].map(k => (
               <div key={k.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>

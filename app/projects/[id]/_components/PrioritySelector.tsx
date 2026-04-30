@@ -5,7 +5,7 @@ import { supabase } from '../../../lib/supabase'
 
 const OPTIONS = [
   { v: 'p0', label: 'P0', full: 'P0 — Critical', color: '#ef4444' },
-  { v: 'p1', label: 'P1', full: 'P1 — High',     color: '#f97316' },
+  { v: 'p1', label: 'P1', full: 'P1 — High',     color: '#3b82f6' },
   { v: 'p2', label: 'P2', full: 'P2 — Medium',   color: '#8b5cf6' },
   { v: 'p3', label: 'P3', full: 'P3 — Low',      color: '#6b7280' },
 ]

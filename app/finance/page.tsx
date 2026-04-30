@@ -71,7 +71,7 @@ function catColor(cat?: string | null): { bg: string; text: string } {
   if (c.includes('tech') || c.includes('saas')) return { bg: 'rgba(139,92,246,0.12)', text: '#a78bfa' }
   if (c.includes('health')) return { bg: 'rgba(236,72,153,0.12)', text: '#f9a8d4' }
   if (c.includes('utility')) return { bg: 'rgba(239,68,68,0.12)', text: '#f87171' }
-  return { bg: 'rgba(249,115,22,0.12)', text: '#fb923c' }
+  return { bg: 'rgba(59,130,246,0.12)', text: '#fb923c' }
 }
 
 // ─── build accounts-grid HTML ────────────────────────────────────────────────
@@ -303,28 +303,28 @@ export default async function FinancePage() {
       left: 0;
       right: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--orange), var(--pink), transparent);
+      background: linear-gradient(90deg, var(--accent), var(--pink), transparent);
       opacity: 0.6;
     }
 
     /* === HERO SECTION === */
     .hero-banner {
       position:relative; border-radius:24px; overflow:hidden; margin-bottom:28px;
-      border:1px solid rgba(249,115,22,0.12);
+      border:1px solid rgba(59,130,246,0.12);
       background:#050510; min-height:480px;
     }
     #heroCanvas { position:absolute; inset:0; z-index:0; }
     .hero-scanline {
       position:absolute; top:0; left:0; right:0; height:2px; z-index:1;
-      background:linear-gradient(90deg, transparent, rgba(249,115,22,0.4), rgba(139,92,246,0.3), transparent);
+      background:linear-gradient(90deg, transparent, rgba(59,130,246,0.4), rgba(139,92,246,0.3), transparent);
       animation:scanDown 4s ease-in-out infinite;
       filter:blur(1px);
     }
     @keyframes scanDown { 0%{top:0;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:100%;opacity:0} }
     .hud-corner { position:absolute; z-index:2; width:24px; height:24px; }
-    .hud-corner.tl { top:12px; left:12px; border-top:2px solid rgba(249,115,22,0.3); border-left:2px solid rgba(249,115,22,0.3); }
+    .hud-corner.tl { top:12px; left:12px; border-top:2px solid rgba(59,130,246,0.3); border-left:2px solid rgba(59,130,246,0.3); }
     .hud-corner.tr { top:12px; right:12px; border-top:2px solid rgba(139,92,246,0.3); border-right:2px solid rgba(139,92,246,0.3); }
-    .hud-corner.bl { bottom:12px; left:12px; border-bottom:2px solid rgba(249,115,22,0.3); border-left:2px solid rgba(249,115,22,0.3); }
+    .hud-corner.bl { bottom:12px; left:12px; border-bottom:2px solid rgba(59,130,246,0.3); border-left:2px solid rgba(59,130,246,0.3); }
     .hud-corner.br { bottom:12px; right:12px; border-bottom:2px solid rgba(139,92,246,0.3); border-right:2px solid rgba(139,92,246,0.3); }
 
     .hero-content { position:relative; z-index:3; display:flex; align-items:stretch; min-height:480px; }
@@ -488,7 +488,7 @@ export default async function FinancePage() {
     .xp-earned {
       font-size: 12px;
       font-weight: 600;
-      color: var(--orange);
+      color: var(--accent);
       background: rgba(249, 115, 22, 0.1);
       padding: 3px 10px;
       border-radius: 6px;
@@ -613,7 +613,7 @@ export default async function FinancePage() {
     .achieve-xp {
       font-size: 10px;
       font-weight: 600;
-      color: var(--orange);
+      color: var(--accent);
     }
 
     /* Tooltip on hover */
@@ -655,7 +655,7 @@ export default async function FinancePage() {
     .achieve-tooltip-xp {
       font-size: 11px;
       font-weight: 600;
-      color: var(--orange);
+      color: var(--accent);
     }
 
     /* === SECTIONS === */
@@ -686,7 +686,7 @@ export default async function FinancePage() {
     @media (max-width: 1200px) { .nw-flex-wrap { flex-direction:column; gap:32px; } }
 
     .nw-donut-container { flex:0 0 320px; }
-    .nw-donut-svg { width:100%; height:auto; filter:drop-shadow(0 0 30px rgba(249,115,22,0.15)); }
+    .nw-donut-svg { width:100%; height:auto; filter:drop-shadow(0 0 30px rgba(59,130,246,0.15)); }
     .nw-segment { transition:opacity 0.3s ease; }
     .nw-segment:hover { opacity:0.8; }
 
@@ -694,7 +694,7 @@ export default async function FinancePage() {
       font-family:'IBM Plex Mono', monospace;
       font-size:42px; font-weight:700; fill:url(#nwCenterGrad);
       text-anchor:middle; letter-spacing:-1px;
-      filter:drop-shadow(0 0 20px rgba(249,115,22,0.3));
+      filter:drop-shadow(0 0 20px rgba(59,130,246,0.3));
     }
 
     .nw-center-label {
@@ -731,9 +731,9 @@ export default async function FinancePage() {
       content:''; position:absolute; top:0; left:0; right:0; height:3px;
       border-radius:20px 20px 0 0;
     }
-    .nw-orange::before { background:linear-gradient(90deg, #f97316, #ec4899, transparent); }
+    .nw-orange::before { background:linear-gradient(90deg, #3b82f6, #ec4899, transparent); }
     .nw-green::before { background:linear-gradient(90deg, #10b981, #06b6d4, transparent); }
-    .nw-amber::before { background:linear-gradient(90deg, #f59e0b, #f97316, transparent); }
+    .nw-amber::before { background:linear-gradient(90deg, #f59e0b, #3b82f6, transparent); }
     .nw-purple::before { background:linear-gradient(90deg, #8b5cf6, #ec4899, transparent); }
 
     /* Glowing orb behind each gauge */
@@ -742,7 +742,7 @@ export default async function FinancePage() {
       width:90px; height:90px; border-radius:50%;
       opacity:0.15; filter:blur(30px); pointer-events:none;
     }
-    .nw-orange::after { background:radial-gradient(circle, #f97316, transparent 70%); }
+    .nw-orange::after { background:radial-gradient(circle, #3b82f6, transparent 70%); }
     .nw-green::after { background:radial-gradient(circle, #10b981, transparent 70%); }
     .nw-amber::after { background:radial-gradient(circle, #f59e0b, transparent 70%); }
     .nw-purple::after { background:radial-gradient(circle, #8b5cf6, transparent 70%); }
@@ -767,9 +767,9 @@ export default async function FinancePage() {
       font-family:'IBM Plex Mono', monospace; font-size:18px; font-weight:700;
       letter-spacing:-0.03em;
     }
-    .nw-orange .nwb-gauge-pct { background:linear-gradient(135deg, #f97316, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nw-orange .nwb-gauge-pct { background:linear-gradient(135deg, #3b82f6, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .nw-green .nwb-gauge-pct { background:linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .nw-amber .nwb-gauge-pct { background:linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nw-amber .nwb-gauge-pct { background:linear-gradient(135deg, #f59e0b, #3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .nw-purple .nwb-gauge-pct { background:linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
     .nwb-gauge-sub {
@@ -854,9 +854,9 @@ export default async function FinancePage() {
       content:''; position:absolute; top:0; left:0; right:0; height:3px;
       border-radius:20px 20px 0 0;
     }
-    .ms-card.orange::before { background:linear-gradient(90deg, var(--orange), #ec4899); }
+    .ms-card.orange::before { background:linear-gradient(90deg, var(--accent), #ec4899); }
     .ms-card.green::before { background:linear-gradient(90deg, var(--green), #84cc16); }
-    .ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--orange)); }
+    .ms-card.amber::before { background:linear-gradient(90deg, var(--amber), var(--accent)); }
     .ms-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
     .ms-body { padding: 20px 24px; }
@@ -866,13 +866,13 @@ export default async function FinancePage() {
       width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
       font-size:24px;
     }
-    .ms-card.orange .ms-icon-wrap { background:rgba(249,115,22,0.12); }
+    .ms-card.orange .ms-icon-wrap { background:rgba(59,130,246,0.12); }
     .ms-card.green .ms-icon-wrap { background:rgba(16,185,129,0.12); }
     .ms-card.amber .ms-icon-wrap { background:rgba(245,158,11,0.12); }
     .ms-card.purple .ms-icon-wrap { background:rgba(139,92,246,0.12); }
     .ms-title { font-size:17px; font-weight:600; margin-bottom:3px; letter-spacing:-0.01em; }
     .ms-target-val { font-size:14px; font-weight:700; }
-    .ms-card.orange .ms-target-val { color:var(--orange); }
+    .ms-card.orange .ms-target-val { color:var(--accent); }
     .ms-card.green .ms-target-val { color:var(--green); }
     .ms-card.amber .ms-target-val { color:var(--amber); }
     .ms-card.purple .ms-target-val { color:var(--purple); }
@@ -920,12 +920,12 @@ export default async function FinancePage() {
     .ms-card.purple .ms-chart-line { stroke:url(#msGradPurple); }
     /* Endpoint dot with glow */
     .ms-chart-dot { r:5; filter:drop-shadow(0 0 4px currentColor); }
-    .ms-card.orange .ms-chart-dot { fill:var(--orange); }
+    .ms-card.orange .ms-chart-dot { fill:var(--accent); }
     .ms-card.green .ms-chart-dot { fill:var(--green); }
     .ms-card.amber .ms-chart-dot { fill:var(--amber); }
     .ms-card.purple .ms-chart-dot { fill:var(--purple); }
     .ms-chart-dot-glow { r:10; opacity:0.25; }
-    .ms-card.orange .ms-chart-dot-glow { fill:var(--orange); }
+    .ms-card.orange .ms-chart-dot-glow { fill:var(--accent); }
     .ms-card.green .ms-chart-dot-glow { fill:var(--green); }
     .ms-card.amber .ms-chart-dot-glow { fill:var(--amber); }
     .ms-card.purple .ms-chart-dot-glow { fill:var(--purple); }
@@ -945,7 +945,7 @@ export default async function FinancePage() {
     .ms-stat-label { font-size:9px; font-weight:600; letter-spacing:0.08em; color:var(--dim); text-transform:uppercase; }
     .ms-stat-val.green { color:var(--green); }
     .ms-stat-val.amber-c { color:var(--amber); }
-    .ms-stat-val.orange-c { color:var(--orange); }
+    .ms-stat-val.orange-c { color:var(--accent); }
     .ms-stat-val.purple-c { color:var(--purple); }
 
     /* Insight line at bottom */
@@ -985,7 +985,7 @@ export default async function FinancePage() {
       content:''; position:absolute; top:0; left:0; right:0; height:3px;
       border-radius:20px 20px 0 0;
     }
-    .prop-card.orange::before { background:linear-gradient(90deg, var(--orange), var(--pink)); }
+    .prop-card.orange::before { background:linear-gradient(90deg, var(--accent), var(--pink)); }
     .prop-card.green::before { background:linear-gradient(90deg, var(--green), var(--lime)); }
     .prop-card.purple::before { background:linear-gradient(90deg, var(--purple), var(--pink)); }
 
@@ -995,7 +995,7 @@ export default async function FinancePage() {
       width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center;
       font-size:24px;
     }
-    .prop-card.orange .prop-icon { background:rgba(249,115,22,0.12); }
+    .prop-card.orange .prop-icon { background:rgba(59,130,246,0.12); }
     .prop-card.green .prop-icon { background:rgba(16,185,129,0.12); }
     .prop-card.purple .prop-icon { background:rgba(139,92,246,0.12); }
     .prop-name { font-size:17px; font-weight:600; letter-spacing:-0.01em; }
@@ -1004,7 +1004,7 @@ export default async function FinancePage() {
       font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:600;
       padding:5px 14px; border-radius:8px; border:1px solid;
     }
-    .prop-card.orange .prop-value-badge { color:var(--orange); border-color:rgba(249,115,22,0.25); background:rgba(249,115,22,0.08); }
+    .prop-card.orange .prop-value-badge { color:var(--accent); border-color:rgba(59,130,246,0.25); background:rgba(59,130,246,0.08); }
     .prop-card.green .prop-value-badge { color:var(--green); border-color:rgba(16,185,129,0.25); background:rgba(16,185,129,0.08); }
     .prop-card.purple .prop-value-badge { color:var(--purple); border-color:rgba(139,92,246,0.25); background:rgba(139,92,246,0.08); }
 
@@ -1264,10 +1264,10 @@ export default async function FinancePage() {
       content:''; position:absolute; top:0; left:0; right:0; height:3px;
       border-radius:20px 20px 0 0;
     }
-    .cf-expense-card:nth-child(1)::before { background:linear-gradient(90deg, #f97316, #ec4899, transparent); }
+    .cf-expense-card:nth-child(1)::before { background:linear-gradient(90deg, #3b82f6, #ec4899, transparent); }
     .cf-expense-card:nth-child(2)::before { background:linear-gradient(90deg, #8b5cf6, #ec4899, transparent); }
     .cf-expense-card:nth-child(3)::before { background:linear-gradient(90deg, #10b981, #06b6d4, transparent); }
-    .cf-expense-card:nth-child(4)::before { background:linear-gradient(90deg, #f59e0b, #f97316, transparent); }
+    .cf-expense-card:nth-child(4)::before { background:linear-gradient(90deg, #f59e0b, #3b82f6, transparent); }
 
     /* Glowing orb */
     .cf-expense-card::after {
@@ -1275,7 +1275,7 @@ export default async function FinancePage() {
       width:80px; height:80px; border-radius:50%;
       opacity:0.12; filter:blur(25px); pointer-events:none;
     }
-    .cf-expense-card:nth-child(1)::after { background:#f97316; }
+    .cf-expense-card:nth-child(1)::after { background:#3b82f6; }
     .cf-expense-card:nth-child(2)::after { background:#8b5cf6; }
     .cf-expense-card:nth-child(3)::after { background:#10b981; }
     .cf-expense-card:nth-child(4)::after { background:#f59e0b; }
@@ -1309,10 +1309,10 @@ export default async function FinancePage() {
       font-family:'IBM Plex Mono', monospace; font-size:28px; font-weight:700;
       letter-spacing:-0.03em; margin-bottom:12px; z-index:1;
     }
-    .cf-expense-card:nth-child(1) .cf-expense-amount { background:linear-gradient(135deg, #f97316, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .cf-expense-card:nth-child(1) .cf-expense-amount { background:linear-gradient(135deg, #3b82f6, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .cf-expense-card:nth-child(2) .cf-expense-amount { background:linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .cf-expense-card:nth-child(3) .cf-expense-amount { background:linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .cf-expense-card:nth-child(4) .cf-expense-amount { background:linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .cf-expense-card:nth-child(4) .cf-expense-amount { background:linear-gradient(135deg, #f59e0b, #3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
     .cfe-stats {
       display:flex; gap:16px; z-index:1; width:100%; justify-content:center;
@@ -1352,7 +1352,7 @@ export default async function FinancePage() {
     .account-group-title {
       font-size: 11px;
       font-weight: 600;
-      color: var(--orange);
+      color: var(--accent);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 12px;
@@ -1963,7 +1963,7 @@ export default async function FinancePage() {
       <svg width="0" height="0" style="position:absolute">
         <defs>
           <linearGradient id="achieveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f97316"/>
+            <stop offset="0%" stop-color="#3b82f6"/>
             <stop offset="50%" stop-color="#ec4899"/>
             <stop offset="100%" stop-color="#8b5cf6"/>
           </linearGradient>
@@ -2087,7 +2087,7 @@ export default async function FinancePage() {
               border-radius: 50%;
               background: conic-gradient(
                 from 0deg,
-                #f97316 0deg 220.3deg,
+                #3b82f6 0deg 220.3deg,
                 transparent 220.3deg 222deg,
                 #10b981 222deg 323.5deg,
                 transparent 323.5deg 325.5deg,
@@ -2126,9 +2126,9 @@ export default async function FinancePage() {
                 <svg class="nwb-gauge-svg" viewBox="0 0 88 88">
                   <defs>
                     <linearGradient id="nwb-grad-orange" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#f97316"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#f97316"/>
+                      <stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#3b82f6"/>
                     </linearGradient>
-                    <filter id="nwbGlow-orange"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#f97316" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    <filter id="nwbGlow-orange"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#3b82f6" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                   </defs>
                   <circle cx="44" cy="44" r="36" class="nwb-gauge-bg"/>
                   <circle cx="44" cy="44" r="36" class="nwb-gauge-fill" stroke="url(#nwb-grad-orange)" stroke-dasharray="226.2" stroke-dashoffset="87.8" filter="url(#nwbGlow-orange)"/>
@@ -2198,7 +2198,7 @@ export default async function FinancePage() {
                 <svg class="nwb-gauge-svg" viewBox="0 0 88 88">
                   <defs>
                     <linearGradient id="nwb-grad-amber" x1="0" y1="0" x2="88" y2="88" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#f59e0b"/>
+                      <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#f59e0b"/>
                     </linearGradient>
                     <filter id="nwbGlow-amber"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#f59e0b" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                   </defs>
@@ -2286,12 +2286,12 @@ export default async function FinancePage() {
       <defs>
         <!-- NET WORTH CENTER GRADIENT -->
         <linearGradient id="nwCenterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f97316"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#10b981"/>
+          <stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#10b981"/>
         </linearGradient>
 
         <!-- NET WORTH SEGMENT GRADIENTS (bright, saturated for donut segments) -->
         <linearGradient id="nwSegOrange" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#d97706"/>
+          <stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#d97706"/>
         </linearGradient>
         <linearGradient id="nwSegGreen" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/>
@@ -2305,13 +2305,13 @@ export default async function FinancePage() {
 
         <!-- NET WORTH PROGRESS BAR GRADIENTS -->
         <linearGradient id="nwProgressOrange" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ec4899"/>
+          <stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#ec4899"/>
         </linearGradient>
         <linearGradient id="nwProgressGreen" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/>
         </linearGradient>
         <linearGradient id="nwProgressAmber" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f97316"/>
+          <stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#3b82f6"/>
         </linearGradient>
         <linearGradient id="nwProgressPurple" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#ec4899"/>
@@ -2319,13 +2319,13 @@ export default async function FinancePage() {
 
         <!-- Gauge fill gradients (wide color range for visible circle gradients) -->
         <linearGradient id="msGradOrange" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f97316"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#f97316"/>
+          <stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#3b82f6"/>
         </linearGradient>
         <linearGradient id="msGradGreen" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#10b981"/><stop offset="50%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#10b981"/>
         </linearGradient>
         <linearGradient id="msGradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#f59e0b"/>
+          <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#f59e0b"/>
         </linearGradient>
         <linearGradient id="msGradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#a855f7"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#a855f7"/>
@@ -2380,7 +2380,7 @@ export default async function FinancePage() {
                       <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                   </filter>
-                  <linearGradient id="gauge-grad-orange" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ec4899"/></linearGradient>
+                  <linearGradient id="gauge-grad-orange" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient>
                 </defs>
                 <!-- Background circle -->
                 <circle class="ms-gauge-bg" cx="65" cy="65" r="56"/>
@@ -2398,8 +2398,8 @@ export default async function FinancePage() {
               <svg class="ms-chart-svg" viewBox="0 0 260 80" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="chart-grad-cabo" x1="0" y1="80" x2="0" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="rgba(249,115,22,0.15)"/>
-                    <stop offset="100%" stop-color="rgba(249,115,22,0.4)"/>
+                    <stop offset="0%" stop-color="rgba(59,130,246,0.15)"/>
+                    <stop offset="100%" stop-color="rgba(59,130,246,0.4)"/>
                   </linearGradient>
                 </defs>
                 <!-- Grid lines -->
@@ -2413,10 +2413,10 @@ export default async function FinancePage() {
                 <!-- Projected line (dashed for future) -->
                 <polyline class="ms-chart-line" points="156,35 208,22 260,12" stroke="url(#chart-grad-cabo)" stroke-width="3" stroke-dasharray="6 4" opacity="0.5"/>
                 <!-- Endpoint glow rings -->
-                <circle class="ms-chart-dot-glow" cx="156" cy="35" r="8" fill="none" stroke="rgba(249,115,22,0.3)" stroke-width="2"/>
-                <circle class="ms-chart-dot-glow" cx="156" cy="35" r="5" fill="none" stroke="rgba(249,115,22,0.5)" stroke-width="1.5"/>
+                <circle class="ms-chart-dot-glow" cx="156" cy="35" r="8" fill="none" stroke="rgba(59,130,246,0.3)" stroke-width="2"/>
+                <circle class="ms-chart-dot-glow" cx="156" cy="35" r="5" fill="none" stroke="rgba(59,130,246,0.5)" stroke-width="1.5"/>
                 <!-- Current position dot -->
-                <circle class="ms-chart-dot" cx="156" cy="35" r="3.5" fill="#f97316"/>
+                <circle class="ms-chart-dot" cx="156" cy="35" r="3.5" fill="#3b82f6"/>
               </svg>
             </div>
           </div>
@@ -2551,7 +2551,7 @@ export default async function FinancePage() {
             <div class="ms-gauge-wrap">
               <svg class="ms-gauge-svg" viewBox="0 0 130 130">
                 <defs>
-                  <linearGradient id="gauge-grad-amber" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+                  <linearGradient id="gauge-grad-amber" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
                   <filter id="gaugeGlow-amber" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                     <feMerge>
@@ -2581,18 +2581,18 @@ export default async function FinancePage() {
                 <!-- Gradient area fill with 0.4 opacity -->
                 <defs>
                   <linearGradient id="chart-grad-amber" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#f97316" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
                   </linearGradient>
                 </defs>
                 <path class="ms-chart-area-fill" d="M0,68 L52,62 L104,55 L156,45 L208,35 L260,22 L260,80 L0,80 Z" fill="url(#chart-grad-amber)"/>
                 <!-- Bold gradient line with 3px stroke -->
-                <polyline class="ms-chart-line" points="0,68 52,62 104,55 156,45" stroke="#f97316" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+                <polyline class="ms-chart-line" points="0,68 52,62 104,55 156,45" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
                 <!-- Projected line with 3px stroke -->
-                <polyline class="ms-chart-line" points="156,45 208,35 260,22" stroke="#f97316" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.5"/>
+                <polyline class="ms-chart-line" points="156,45 208,35 260,22" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.5"/>
                 <!-- Glow ring + dot at endpoint -->
-                <circle class="ms-chart-dot-glow" cx="156" cy="45" r="8" fill="none" stroke="#f97316" stroke-width="2" opacity="0.3"/>
-                <circle class="ms-chart-dot" cx="156" cy="45" r="4" fill="#f97316"/>
+                <circle class="ms-chart-dot-glow" cx="156" cy="45" r="8" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.3"/>
+                <circle class="ms-chart-dot" cx="156" cy="45" r="4" fill="#3b82f6"/>
               </svg>
             </div>
           </div>
@@ -2725,7 +2725,7 @@ export default async function FinancePage() {
             <div class="ms-gauge-wrap">
               <svg class="ms-gauge-svg" viewBox="0 0 130 130">
                 <defs>
-                  <linearGradient id="gauge-grad-orange-blc" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ec4899"/></linearGradient>
+                  <linearGradient id="gauge-grad-orange-blc" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="130" y2="130"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#ec4899"/></linearGradient>
                   <filter id="gaugeGlow-orange-blc" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                     <feMerge>
@@ -2755,18 +2755,18 @@ export default async function FinancePage() {
                 <!-- Gradient area fill with 0.4 opacity -->
                 <defs>
                   <linearGradient id="chart-grad-orange-blc" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#f97316" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
                   </linearGradient>
                 </defs>
                 <path class="ms-chart-area-fill" d="M0,55 L52,52 L104,48 L156,44 L208,38 L260,30 L260,80 L0,80 Z" fill="url(#chart-grad-orange-blc)"/>
                 <!-- Bold gradient line with 3px stroke -->
-                <polyline class="ms-chart-line" points="0,55 52,52 104,48 156,44" stroke="#f97316" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+                <polyline class="ms-chart-line" points="0,55 52,52 104,48 156,44" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
                 <!-- Projected line with 3px stroke -->
-                <polyline class="ms-chart-line" points="156,44 208,38 260,30" stroke="#f97316" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.5"/>
+                <polyline class="ms-chart-line" points="156,44 208,38 260,30" stroke="#3b82f6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 4" opacity="0.5"/>
                 <!-- Glow ring + dot at endpoint -->
-                <circle class="ms-chart-dot-glow" cx="156" cy="44" r="8" fill="none" stroke="#f97316" stroke-width="2" opacity="0.3"/>
-                <circle class="ms-chart-dot" cx="156" cy="44" r="4" fill="#f97316"/>
+                <circle class="ms-chart-dot-glow" cx="156" cy="44" r="8" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.3"/>
+                <circle class="ms-chart-dot" cx="156" cy="44" r="4" fill="#3b82f6"/>
               </svg>
             </div>
           </div>
@@ -2895,7 +2895,7 @@ export default async function FinancePage() {
       <svg width="0" height="0" style="position:absolute">
         <defs>
           <linearGradient id="propGradOrange" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#ec4899"/>
+            <stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#ec4899"/>
           </linearGradient>
           <linearGradient id="propGradGreen" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/>
@@ -2954,7 +2954,7 @@ export default async function FinancePage() {
 
           <div class="prop-stats">
             <div class="prop-stat">
-              <span class="prop-stat-val" style="color:var(--orange);">N/A</span>
+              <span class="prop-stat-val" style="color:var(--accent);">N/A</span>
               <span class="prop-stat-label">Cash Flow YTD</span>
             </div>
             <div class="prop-stat">
@@ -3240,9 +3240,9 @@ export default async function FinancePage() {
             <svg class="cfe-gauge-svg" viewBox="0 0 100 100">
               <defs>
                 <linearGradient id="cfe-grad-ops" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#f97316"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#f97316"/>
+                  <stop offset="0%" stop-color="#3b82f6"/><stop offset="50%" stop-color="#ec4899"/><stop offset="100%" stop-color="#3b82f6"/>
                 </linearGradient>
-                <filter id="cfeGlow-ops"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#f97316" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="cfeGlow-ops"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#3b82f6" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>
               <circle cx="50" cy="50" r="40" class="cfe-gauge-bg"/>
               <circle cx="50" cy="50" r="40" class="cfe-gauge-fill" stroke="url(#cfe-grad-ops)" stroke-dasharray="251.3" stroke-dashoffset="88" filter="url(#cfeGlow-ops)"/>
@@ -3321,7 +3321,7 @@ export default async function FinancePage() {
             <svg class="cfe-gauge-svg" viewBox="0 0 100 100">
               <defs>
                 <linearGradient id="cfe-grad-mkt" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#f97316"/><stop offset="100%" stop-color="#f59e0b"/>
+                  <stop offset="0%" stop-color="#f59e0b"/><stop offset="50%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#f59e0b"/>
                 </linearGradient>
                 <filter id="cfeGlow-mkt"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#f59e0b" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>
@@ -3489,14 +3489,14 @@ export default async function FinancePage() {
             <div class="ai-model-card">
               <div class="ai-model-gauge">
                 <svg viewBox="0 0 100 100">
-                  <defs><linearGradient id="mg3" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="#fb923c"/></linearGradient></defs>
+                  <defs><linearGradient id="mg3" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#fb923c"/></linearGradient></defs>
                   <circle cx="50" cy="50" r="32" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5"/>
                   <circle cx="50" cy="50" r="32" fill="none" stroke="url(#mg3)" stroke-width="5" stroke-linecap="round" stroke-dasharray="201.1" stroke-dashoffset="161" style="transform:rotate(-90deg);transform-origin:center;"/>
                 </svg>
                 <div class="gauge-center" style="color:#fb923c;">20%</div>
               </div>
               <div class="ai-model-name">GPT-4o Mini</div>
-              <div class="ai-model-cost" style="background:linear-gradient(135deg,#f97316,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">$312</div>
+              <div class="ai-model-cost" style="background:linear-gradient(135deg,#3b82f6,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">$312</div>
               <div class="ai-model-calls">8,940 calls</div>
             </div>
             <div class="ai-model-card">
@@ -3544,7 +3544,7 @@ export default async function FinancePage() {
             </div>
             <div class="ai-agent-row">
               <div class="ai-agent-name">Crypto Analyst</div>
-              <div class="ai-agent-bar-wrap"><div class="ai-agent-bar" style="width:45%; background:linear-gradient(90deg,#f97316,#fb923c);"></div></div>
+              <div class="ai-agent-bar-wrap"><div class="ai-agent-bar" style="width:45%; background:linear-gradient(90deg,#3b82f6,#fb923c);"></div></div>
               <div class="ai-agent-val">$312</div>
             </div>
             <div class="ai-agent-row">
@@ -3602,10 +3602,10 @@ export default async function FinancePage() {
               </div>
             </div>
             <div class="spend-cat-row">
-              <div class="spend-cat-icon" style="background:rgba(249,115,22,0.15);">🚗</div>
+              <div class="spend-cat-icon" style="background:rgba(59,130,246,0.15);">🚗</div>
               <div class="spend-cat-info">
                 <div class="spend-cat-top"><span class="spend-cat-name">Transportation</span><span class="spend-cat-amt">$1,890</span></div>
-                <div class="spend-cat-bar-bg"><div class="spend-cat-bar-fill" style="width:39%; background:linear-gradient(90deg,#f97316,#fb923c);"></div></div>
+                <div class="spend-cat-bar-bg"><div class="spend-cat-bar-fill" style="width:39%; background:linear-gradient(90deg,#3b82f6,#fb923c);"></div></div>
               </div>
             </div>
             <div class="spend-cat-row">
@@ -3659,7 +3659,7 @@ ___TXN_LIST___
             <svg viewBox="0 0 100 100">
               <defs>
                 <linearGradient id="debtGrad1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#f97316"/>
+                  <stop offset="0%" stop-color="#ef4444"/><stop offset="100%" stop-color="#3b82f6"/>
                 </linearGradient>
                 <filter id="debtGlow1"><feGaussianBlur stdDeviation="3" result="b"/><feFlood flood-color="#ef4444" flood-opacity="0.5"/><feComposite in2="b" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
               </defs>
@@ -3667,7 +3667,7 @@ ___TXN_LIST___
               <circle cx="50" cy="50" r="40" fill="none" stroke="url(#debtGrad1)" stroke-width="6" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="68.9" filter="url(#debtGlow1)" style="transform:rotate(-90deg);transform-origin:center;"/>
             </svg>
             <div class="debt-gauge-center">
-              <div class="debt-gauge-pct" style="background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">127%</div>
+              <div class="debt-gauge-pct" style="background:linear-gradient(135deg,#ef4444,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">127%</div>
               <div class="debt-gauge-label-sm">utilized</div>
             </div>
           </div>
@@ -3823,7 +3823,7 @@ ___ACCOUNTS_GRID___
         time += 0.016; ctx.clearRect(0, 0, w, h);
 
         // Subtle grid
-        ctx.strokeStyle = 'rgba(249,115,22,0.015)'; ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgba(59,130,246,0.015)'; ctx.lineWidth = 0.5;
         for (var x = 0; x < w; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
         for (var y = 0; y < h; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
 
@@ -3833,7 +3833,7 @@ ___ACCOUNTS_GRID___
           if (s.y < -0.05) { s.y = 1.05; s.x = Math.random(); }
           var pulse = 0.5 + 0.5 * Math.sin(time * 0.5 + s.phase);
           ctx.font = s.size + "px 'IBM Plex Mono', monospace";
-          ctx.fillStyle = 'rgba(249,115,22,' + (s.alpha * pulse) + ')';
+          ctx.fillStyle = 'rgba(59,130,246,' + (s.alpha * pulse) + ')';
           ctx.textAlign = 'center';
           ctx.fillText(s.char, s.x * w, s.y * h);
         });
@@ -3847,7 +3847,7 @@ ___ACCOUNTS_GRID___
           var y2 = n2.y * h + Math.cos(time * 0.4 + ci + 2) * 3;
           var pulse = 0.3 + 0.2 * Math.sin(time * 0.8 + ci * 0.5);
           ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-          ctx.strokeStyle = 'rgba(249,115,22,' + (0.04 + pulse * 0.03) + ')';
+          ctx.strokeStyle = 'rgba(59,130,246,' + (0.04 + pulse * 0.03) + ')';
           ctx.lineWidth = 1; ctx.stroke();
         });
 
@@ -3922,7 +3922,7 @@ ___ACCOUNTS_GRID___
         // Ambient glows
         var g1x = w * 0.2 + Math.sin(time * 0.08) * w * 0.05;
         var g1 = ctx.createRadialGradient(g1x, h * 0.3, 0, g1x, h * 0.3, w * 0.25);
-        g1.addColorStop(0, 'rgba(249,115,22,0.03)'); g1.addColorStop(1, 'transparent');
+        g1.addColorStop(0, 'rgba(59,130,246,0.03)'); g1.addColorStop(1, 'transparent');
         ctx.fillStyle = g1; ctx.fillRect(0, 0, w, h);
         var g2x = w * 0.8 + Math.cos(time * 0.06) * w * 0.05;
         var g2 = ctx.createRadialGradient(g2x, h * 0.6, 0, g2x, h * 0.6, w * 0.25);
@@ -3946,7 +3946,7 @@ ___ACCOUNTS_GRID___
       const centerY = height / 2;
       
       const streams = [
-        { color: '#f97316', label: 'Property', value: 2200000 },
+        { color: '#3b82f6', label: 'Property', value: 2200000 },
         { color: '#10b981', label: 'Business', value: 4800000 },
         { color: '#8b5cf6', label: 'Savings', value: 345000 },
         { color: '#ec4899', label: 'Invested', value: 142000 }
@@ -4396,7 +4396,7 @@ ___ACCOUNTS_GRID___
                       fontSize: 20,
                       fontWeight: 700,
                       fontFamily: 'IBM Plex Mono, monospace',
-                      color: 'var(--orange)',
+                      color: 'var(--accent)',
                       marginBottom: 4,
                     }}
                   >

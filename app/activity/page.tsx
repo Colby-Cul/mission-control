@@ -94,7 +94,7 @@ export default async function ActivityPage() {
   } : undefined
 
   const statusColor = (s: string) =>
-    s === 'running' ? 'var(--orange)' : s === 'failed' || s === 'error' ? 'var(--red)' : 'var(--green)'
+    s === 'running' ? 'var(--accent)' : s === 'failed' || s === 'error' ? 'var(--red)' : 'var(--green)'
 
   return (
     <>
@@ -118,7 +118,7 @@ export default async function ActivityPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Events Today',  value: String(eventsToday),   color: 'var(--orange)' },
+          { label: 'Events Today',  value: String(eventsToday),   color: 'var(--accent)' },
           { label: 'This Week',     value: String(runs.length),   color: 'var(--purple)' },
           { label: 'Top Actor',     value: topActor,              color: 'var(--green)'  },
           { label: 'Running Now',   value: String(running.length),color: running.length > 0 ? 'var(--amber)' : 'var(--dim)' },
@@ -176,7 +176,7 @@ export default async function ActivityPage() {
                 : kind === 'fub_deal' ? '💼 FUB Deal'
                 : '🏠 FUB Event'
               const color =
-                kind === 'fub_call' ? 'var(--orange)'
+                kind === 'fub_call' ? 'var(--accent)'
                 : kind === 'fub_appt' ? 'var(--amber)'
                 : kind === 'fub_deal' ? 'var(--green)'
                 : 'var(--lime)'
@@ -321,7 +321,7 @@ export default async function ActivityPage() {
               {activityList.map((evt: any) => {
                 const actor = evt.actor ?? evt.user_id ?? evt.agent_id ?? 'system'
                 const kind = evt.event_type ?? evt.kind ?? evt.action ?? 'event'
-                const kindColor = kind.includes('agent') ? 'var(--purple)' : kind.includes('user') ? 'var(--orange)' : 'var(--green)'
+                const kindColor = kind.includes('agent') ? 'var(--purple)' : kind.includes('user') ? 'var(--accent)' : 'var(--green)'
                 return (
                   <div key={evt.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.04)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>

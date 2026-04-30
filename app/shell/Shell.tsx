@@ -117,7 +117,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="sb-pinned">
           {PINNED.map(item => (
             <Link key={item.href} href={item.href} className={`sb-item ${pathname === item.href ? 'on' : ''}`}>
-              <span className="sb-item-ico" style={item.label === 'The Forge' ? { color: 'var(--orange)' } : undefined}>{item.icon}</span>
+              <span className="sb-item-ico" style={item.label === 'The Forge' ? { color: 'var(--accent)' } : undefined}>{item.icon}</span>
               {item.label}
               {item.badgeKey && (badges[item.badgeKey] ?? 0) > 0 && (
                 <span className="sb-badge">{badges[item.badgeKey]}</span>

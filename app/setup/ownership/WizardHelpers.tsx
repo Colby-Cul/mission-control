@@ -109,7 +109,7 @@ export function Field({
         gap: 2,
       }}>
         {label}
-        {required && <span style={{ color: '#f97316', marginLeft: 3 }}>*</span>}
+        {required && <span style={{ color: '#3b82f6', marginLeft: 3 }}>*</span>}
         {tip && <InfoTip text={tip} />}
       </label>
       {children}
@@ -205,13 +205,13 @@ const prevBtnStyle: React.CSSProperties = {
 }
 
 const nextBtnStyle: React.CSSProperties = {
-  background: 'rgba(249,115,22,0.15)',
-  border: '1px solid rgba(249,115,22,0.3)',
+  background: 'rgba(59,130,246,0.15)',
+  border: '1px solid rgba(59,130,246,0.3)',
   borderRadius: 10,
   padding: '11px 26px',
   fontSize: 14,
   fontWeight: 700,
-  color: '#f97316',
+  color: '#3b82f6',
   fontFamily: 'DM Sans, sans-serif',
 }
 
@@ -233,8 +233,8 @@ export function Toggle({
           width: 44,
           height: 24,
           borderRadius: 12,
-          background: checked ? 'rgba(249,115,22,0.7)' : 'rgba(255,255,255,0.1)',
-          border: `1px solid ${checked ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.15)'}`,
+          background: checked ? 'rgba(59,130,246,0.7)' : 'rgba(255,255,255,0.1)',
+          border: `1px solid ${checked ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.15)'}`,
           position: 'relative',
           transition: 'background 0.2s, border-color 0.2s',
           flexShrink: 0,

@@ -40,7 +40,7 @@ export default function HeroCanvasDefault() {
       y: 0.25 + Math.sin((i / 6) * Math.PI) * 0.5,
       r: 5 + (i % 3) * 2,
       label: ['$', '₿', '€', '¥', '£', '%', '◆'][i],
-      color: ['#f97316', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#84cc16'][i],
+      color: ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#84cc16'][i],
     }))
 
     // Connections (pairs)
@@ -129,7 +129,7 @@ export default function HeroCanvasDefault() {
         f.y -= f.vy
         if (f.y < -0.05) f.y = 1.05
         ctx.globalAlpha = f.alpha
-        ctx.fillStyle = '#f97316'
+        ctx.fillStyle = '#3b82f6'
         ctx.font = `${f.size}px IBM Plex Mono, monospace`
         ctx.fillText(f.sym, f.x * W, f.y * H)
       }

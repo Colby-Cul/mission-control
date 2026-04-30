@@ -84,7 +84,7 @@ export default async function LegalPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Docs',   value: String(totalActive),                    color: 'var(--orange)' },
+          { label: 'Total Docs',   value: String(totalActive),                    color: 'var(--accent)' },
           { label: 'Contracts',    value: String(buckets['Contracts'].length),     color: 'var(--amber)'  },
           { label: 'NDAs',         value: String(buckets['NDAs'].length),          color: 'var(--green)'  },
           { label: 'Filings Due',  value: String(deadlines.length),               color: deadlines.length > 0 ? 'var(--red)' : 'var(--green)' },

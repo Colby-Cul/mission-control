@@ -37,7 +37,7 @@ const PAGES: ResultItem[] = [
 
 const KIND_COLOR: Record<ResultItem['kind'], string> = {
   page:        'var(--purple)',
-  entity:      'var(--orange)',
+  entity:      'var(--accent)',
   vision:      'var(--pink)',
   task:        'var(--green)',
   agent:       'var(--cyan)',

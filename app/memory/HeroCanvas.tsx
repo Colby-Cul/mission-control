@@ -38,7 +38,7 @@ export default function HeroCanvas() {
     const ROWS = 4, COLS = 7
     const nodes: NNode[] = []
     const edges: [number, number][] = []
-    const COLORS = ['#f97316', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4', '#a3e635', '#f59e0b']
+    const COLORS = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#06b6d4', '#a3e635', '#f59e0b']
 
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {

@@ -31,7 +31,7 @@ export default function HeroCanvas() {
       resize()
       window.addEventListener('resize', resize)
 
-      const NODE_COLORS = ['#f97316', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4']
+      const NODE_COLORS = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981', '#f59e0b', '#06b6d4']
 
       interface StarNode {
         angle: number
@@ -43,14 +43,14 @@ export default function HeroCanvas() {
       }
 
       const nodes: StarNode[] = [
-        { angle: 0,    radius: 80,  speed: 0.25, size: 6,  color: '#f97316', label: 'LLC' },
+        { angle: 0,    radius: 80,  speed: 0.25, size: 6,  color: '#3b82f6', label: 'LLC' },
         { angle: 1.05, radius: 120, speed: 0.18, size: 7,  color: '#ec4899', label: 'Corp' },
         { angle: 2.1,  radius: 160, speed: 0.12, size: 5,  color: '#8b5cf6', label: 'Trust' },
         { angle: 3.14, radius: 100, speed: 0.2,  size: 8,  color: '#10b981', label: 'LP' },
         { angle: 4.19, radius: 140, speed: 0.15, size: 5,  color: '#f59e0b', label: 'Hold' },
         { angle: 5.24, radius: 90,  speed: 0.22, size: 6,  color: '#06b6d4', label: 'Op Co' },
         { angle: 0.52, radius: 180, speed: 0.08, size: 7,  color: '#a3e635', label: 'Entity' },
-        { angle: 2.61, radius: 60,  speed: 0.35, size: 4,  color: '#f97316', label: 'Sub' },
+        { angle: 2.61, radius: 60,  speed: 0.35, size: 4,  color: '#3b82f6', label: 'Sub' },
       ]
 
       function draw() {
@@ -84,7 +84,7 @@ export default function HeroCanvas() {
             const dist = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
             if (dist < 180) {
               const alpha = (1 - dist / 180) * 0.15
-              ctx!.strokeStyle = `rgba(249,115,22,${alpha})`
+              ctx!.strokeStyle = `rgba(59,130,246,${alpha})`
               ctx!.lineWidth = 0.8
               ctx!.beginPath()
               ctx!.moveTo(a.x, a.y)
@@ -97,7 +97,7 @@ export default function HeroCanvas() {
         // Central hub
         const hubPulse = 0.7 + 0.3 * Math.sin(time * 1.5)
         const hubGlow = ctx!.createRadialGradient(cx, cy, 0, cx, cy, 30 * hubPulse)
-        hubGlow.addColorStop(0, 'rgba(249,115,22,0.4)')
+        hubGlow.addColorStop(0, 'rgba(59,130,246,0.4)')
         hubGlow.addColorStop(1, 'transparent')
         ctx!.fillStyle = hubGlow
         ctx!.beginPath()
@@ -106,7 +106,7 @@ export default function HeroCanvas() {
 
         ctx!.beginPath()
         ctx!.arc(cx, cy, 6, 0, Math.PI * 2)
-        ctx!.fillStyle = '#f97316'
+        ctx!.fillStyle = '#3b82f6'
         ctx!.fill()
 
         // Draw each node
@@ -142,7 +142,7 @@ export default function HeroCanvas() {
 
         // Ambient glow
         const g1 = ctx!.createRadialGradient(cx, cy, 0, cx, cy, w * 0.4)
-        g1.addColorStop(0, 'rgba(249,115,22,0.05)')
+        g1.addColorStop(0, 'rgba(59,130,246,0.05)')
         g1.addColorStop(1, 'transparent')
         ctx!.fillStyle = g1
         ctx!.fillRect(0, 0, w, h)

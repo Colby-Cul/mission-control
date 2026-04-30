@@ -50,7 +50,7 @@ function typeBadge(type: string, subtype?: string): { bg: string; color: string;
   if (t === 'investment' || t === 'brokerage') return { bg: 'rgba(139,92,246,0.12)', color: '#8b5cf6', label: subtype || 'Brokerage'  }
   if (s === 'utma')                            return { bg: 'rgba(139,92,246,0.12)', color: '#8b5cf6', label: 'UTMA'                  }
   if (t === 'loan')                            return { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: subtype || 'Loan'       }
-  if (s === 'cash management' || s === 'cash') return { bg: 'rgba(249,115,22,0.12)', color: '#f97316', label: subtype || 'Cash'       }
+  if (s === 'cash management' || s === 'cash') return { bg: 'rgba(59,130,246,0.12)', color: '#3b82f6', label: subtype || 'Cash'       }
   return                                              { bg: 'rgba(16,185,129,0.12)',  color: '#10b981', label: subtype || 'Checking'   }
 }
 
@@ -142,7 +142,7 @@ export default async function AccountsPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
           <SpecCard accent dataSource="financial_accounts.balance_current">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Net Worth</div>
-            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', background: 'linear-gradient(135deg,var(--orange),var(--pink),var(--purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{USD(netWorth)}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', background: 'linear-gradient(135deg,var(--accent),var(--pink),var(--purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{USD(netWorth)}</div>
             <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>All accounts combined</div>
           </SpecCard>
           <SpecCard accent dataSource="financial_accounts.balance_current">

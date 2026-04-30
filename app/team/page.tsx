@@ -100,7 +100,7 @@ export default async function TeamPage() {
       {/* KPI summary row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Members',     value: tableExists ? String(members.length) : '—',    color: 'var(--orange)' },
+          { label: 'Total Members',     value: tableExists ? String(members.length) : '—',    color: 'var(--accent)' },
           { label: 'Open Roles',         value: '—',                                             color: 'var(--amber)'  },
           { label: 'Avg Tenure',         value: '—',                                             color: 'var(--green)'  },
           { label: 'Satisfaction',       value: '—',                                             color: 'var(--purple)' },
@@ -139,11 +139,11 @@ export default async function TeamPage() {
                     {/* ── Avatar + name row ── */}
                     <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                       {m.avatar_url
-                        ? <img src={m.avatar_url} alt={initials} style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '2px solid rgba(249,115,22,0.3)' }} />
+                        ? <img src={m.avatar_url} alt={initials} style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, objectFit: 'cover', border: '2px solid rgba(59,130,246,0.3)' }} />
                         : (
                           <div style={{
                             width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                            background: 'linear-gradient(135deg, var(--orange), var(--purple))',
+                            background: 'linear-gradient(135deg, var(--accent), var(--purple))',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontWeight: 700, fontSize: 14, color: '#fff',
                           }}>{initials}</div>
@@ -161,7 +161,7 @@ export default async function TeamPage() {
                             textTransform: 'uppercase', letterSpacing: '0.06em',
                           }}>{m.status ?? 'active'}</div>
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--orange)', marginTop: 1, fontWeight: 500 }}>
+                        <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 1, fontWeight: 500 }}>
                           {m.title ?? m.role ?? '—'}
                         </div>
                         {m.email && (
@@ -211,7 +211,7 @@ export default async function TeamPage() {
                         {skills.slice(0, 5).map((s: string) => (
                           <span key={s} style={{
                             fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--mo)',
-                            background: 'rgba(249,115,22,0.08)', color: 'var(--orange)',
+                            background: 'rgba(59,130,246,0.08)', color: 'var(--accent)',
                             textTransform: 'uppercase', letterSpacing: '0.05em',
                           }}>{s}</span>
                         ))}
@@ -243,7 +243,7 @@ export default async function TeamPage() {
           <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 14 }}>AI fleet + human team</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {tableExists && members.length > 0 && (
-              <div style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--orange)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>Humans ({members.length})</div>
+              <div style={{ fontSize: 10, fontFamily: 'var(--mo)', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 8 }}>Humans ({members.length})</div>
             )}
             {members.slice(0, 6).map((m: any) => (
               <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 11 }}>

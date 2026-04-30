@@ -160,7 +160,7 @@ export default async function TaxPage() {
                 ['YTD Taxes Paid',    USD(totalPaid),       'var(--green)',  'across all entities'],
                 ['YTD Income',        USD(totalIncome),     'inherit',       'all sources'],
                 ['YTD Deductions',    USD(totalDeductions), 'var(--purple)', 'claimed so far'],
-                ['Potential Savings', USD(potentialSavings) + '+', 'var(--orange)', 'from open tax moves'],
+                ['Potential Savings', USD(potentialSavings) + '+', 'var(--accent)', 'from open tax moves'],
               ] as [string, string, string, string][]).map(([label, val, color, sub]) => (
                 <SpecCard key={label} accent dataSource="tax_entities_meta">
                   <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>{label}</div>
@@ -236,7 +236,7 @@ export default async function TaxPage() {
                   {(taxEntities as any[]).map((e: any, i: number) => {
                     const state = e.entity?.state ?? e.state ?? 'US'
                     const stateColor = state === 'CA' ? '#fb923c' : state === 'AL' ? '#34d399' : state === 'NV' ? '#818cf8' : '#fbbf24'
-                    const stateBg   = state === 'CA' ? 'rgba(249,115,22,.08)' : state === 'AL' ? 'rgba(52,211,153,.08)' : state === 'NV' ? 'rgba(129,140,248,.08)' : 'rgba(251,191,36,.08)'
+                    const stateBg   = state === 'CA' ? 'rgba(59,130,246,.08)' : state === 'AL' ? 'rgba(52,211,153,.08)' : state === 'NV' ? 'rgba(129,140,248,.08)' : 'rgba(251,191,36,.08)'
                     return (
                       <tr key={e.id} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
                         <td style={{ padding: '8px 8px', fontWeight: 600 }}>{e.entity?.entity_name ?? e.entity_id ?? 'Entity'}</td>
@@ -275,22 +275,22 @@ export default async function TaxPage() {
           <SpecCard accent dataSource="tax_moves">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 600 }}>Tax Strategy Moves</div>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: 'rgba(249,115,22,0.1)', color: 'var(--orange)' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: 'rgba(59,130,246,0.1)', color: 'var(--accent)' }}>
                 {(taxMoves as any[]).filter((m: any) => m.status === 'open' || m.status === 'upcoming').length} actionable
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 480, overflowY: 'auto' }}>
               {(taxMoves as any[]).map((m: any) => {
-                const priorityColor = m.priority === 'critical' ? '#f43f5e' : m.priority === 'high' ? 'var(--orange)' : 'var(--purple)'
+                const priorityColor = m.priority === 'critical' ? '#f43f5e' : m.priority === 'high' ? 'var(--accent)' : 'var(--purple)'
                 const statusBg    = m.status === 'open'     ? 'rgba(52,211,153,.1)'   :
                                     m.status === 'upcoming' ? 'rgba(251,191,36,.1)'   :
                                     m.status === 'evaluate' ? 'rgba(129,140,248,.1)'  :
-                                    m.status === 'active'   ? 'rgba(249,115,22,.1)'   :
+                                    m.status === 'active'   ? 'rgba(59,130,246,.1)'   :
                                                               'rgba(100,116,139,.06)'
                 const statusColor = m.status === 'open'     ? '#34d399'  :
                                     m.status === 'upcoming' ? '#fbbf24'  :
                                     m.status === 'evaluate' ? '#818cf8'  :
-                                    m.status === 'active'   ? '#f97316'  : 'var(--dim)'
+                                    m.status === 'active'   ? '#3b82f6'  : 'var(--dim)'
                 return (
                   <div key={m.id} style={{
                     background: 'rgba(255,255,255,0.02)',
@@ -305,7 +305,7 @@ export default async function TaxPage() {
                     </div>
                     {m.savings_estimate && (
                       <div style={{ marginBottom: 6 }}>
-                        <span style={{ fontSize: 12, fontFamily: 'var(--mo)', background: 'rgba(249,115,22,0.08)', color: 'var(--orange)', padding: '2px 6px', borderRadius: 4 }}>
+                        <span style={{ fontSize: 12, fontFamily: 'var(--mo)', background: 'rgba(59,130,246,0.08)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4 }}>
                           Saves {USD(Number(m.savings_estimate))}+
                         </span>
                       </div>
@@ -382,7 +382,7 @@ export default async function TaxPage() {
                       style={{
                         fontSize: 10,
                         fontFamily: 'var(--mo)',
-                        color: 'var(--orange)',
+                        color: 'var(--accent)',
                         textDecoration: 'none',
                         letterSpacing: '0.04em',
                       }}
@@ -560,12 +560,12 @@ export default async function TaxPage() {
             const total = candidates.reduce((s, c) => s + c.firstYearBonus, 0)
             return (
               <>
-                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)', marginBottom: 4 }}>{USD(Math.round(total))}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)', marginBottom: 4 }}>{USD(Math.round(total))}</div>
                 <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 14 }}>Estimated Y1 bonus depreciation · {candidates.length} candidate{candidates.length === 1 ? '' : 's'}</div>
                 {candidates.map((c: any) => (
                   <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11, display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 140 }}>{c.name}</span>
-                    <span style={{ fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{USD(Math.round(c.firstYearBonus))}</span>
+                    <span style={{ fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{USD(Math.round(c.firstYearBonus))}</span>
                   </div>
                 ))}
                 <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 10, lineHeight: 1.5 }}>
@@ -582,7 +582,7 @@ export default async function TaxPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
             <div style={{
               width: 48, height: 48, borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--amber), var(--orange))',
+              background: 'linear-gradient(135deg, var(--amber), var(--accent))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 700, fontSize: 16, color: '#fff', flexShrink: 0,
             }}>CPA</div>

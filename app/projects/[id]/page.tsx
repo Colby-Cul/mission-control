@@ -30,7 +30,7 @@ function fmtCurrency(n: number | null | undefined) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  planning: '#8b5cf6', active: '#f97316', in_progress: '#f97316',
+  planning: '#8b5cf6', active: '#3b82f6', in_progress: '#3b82f6',
   review: '#f59e0b', blocked: '#ef4444',
   completed: '#10b981', done: '#10b981', cancelled: 'rgba(255,255,255,0.3)',
 }
@@ -145,7 +145,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
           <StageTile label="Backlog"     count={byStage.backlog}     color="rgba(255,255,255,0.3)" icon={<ListTodo size={14} />} />
           <StageTile label="Ready"       count={byStage.ready}       color="#8b5cf6" icon={<Zap size={14} />} />
-          <StageTile label="In Progress" count={byStage.in_progress} color="#f97316" icon={<Flame size={14} />} />
+          <StageTile label="In Progress" count={byStage.in_progress} color="#3b82f6" icon={<Flame size={14} />} />
           <StageTile label="Review"      count={byStage.in_review}   color="#f59e0b" />
           <StageTile label="Blocked"     count={byStage.blocked}     color="#ef4444" />
           <StageTile label="Done"        count={byStage.done}        color="#10b981" icon={<CheckCircle2 size={14} />} />

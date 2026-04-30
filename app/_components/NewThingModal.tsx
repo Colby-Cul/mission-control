@@ -368,7 +368,7 @@ function SaveButton({
         disabled={saving}
         style={{
           padding: '9px 18px', fontSize: 13, fontWeight: 600,
-          background: 'linear-gradient(135deg,var(--orange),var(--pink))',
+          background: 'linear-gradient(135deg,var(--accent),var(--pink))',
           border: 'none', borderRadius: 10, color: '#fff',
           cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1,
         }}

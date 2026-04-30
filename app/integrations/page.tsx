@@ -245,7 +245,7 @@ export default async function IntegrationsPage() {
         {[
           { label: 'Connected',   value: String(connected.length),   color: 'var(--green)'  },
           { label: 'Pending',     value: String(pending.length),     color: 'var(--amber)'  },
-          { label: 'Syncs Today', value: String(todaySyncs),         color: 'var(--orange)' },
+          { label: 'Syncs Today', value: String(todaySyncs),         color: 'var(--accent)' },
           { label: 'Errors',      value: String(errors.length),      color: errors.length === 0 ? 'var(--green)' : 'var(--red)' },
         ].map(k => (
           <SpecCard key={k.label} accent dataSource="integrations">
@@ -266,8 +266,8 @@ export default async function IntegrationsPage() {
               return (
                 <div key={cat} style={{
                   padding: '5px 12px', borderRadius: 8,
-                  background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)',
-                  fontSize: 11, fontWeight: 600, color: 'var(--orange)',
+                  background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)',
+                  fontSize: 11, fontWeight: 600, color: 'var(--accent)',
                   letterSpacing: '0.04em',
                 }}>
                   {cat} <span style={{ opacity: 0.6 }}>({count})</span>
@@ -341,9 +341,9 @@ export default async function IntegrationsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 8,
-                      background: 'rgba(249,115,22,0.13)',
+                      background: 'rgba(59,130,246,0.13)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 13, fontWeight: 700, color: 'var(--orange)', flexShrink: 0,
+                      fontSize: 13, fontWeight: 700, color: 'var(--accent)', flexShrink: 0,
                     }}>
                       {monogram}
                     </div>
@@ -453,9 +453,9 @@ export default async function IntegrationsPage() {
                     <>
                       <a href="/api/auth/google" data-integration-action style={{
                         fontSize: 10, fontWeight: 600, padding: '4px 12px', borderRadius: 6,
-                        background: isGoogleConnected ? 'rgba(249,115,22,0.12)' : 'rgba(249,115,22,0.15)',
-                        color: 'var(--orange)',
-                        border: '1px solid rgba(249,115,22,0.3)', textDecoration: 'none',
+                        background: isGoogleConnected ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.15)',
+                        color: 'var(--accent)',
+                        border: '1px solid rgba(59,130,246,0.3)', textDecoration: 'none',
                       }}>
                         {isGoogleConnected ? 'Reconnect' : 'Connect Google'}
                       </a>
@@ -506,7 +506,7 @@ export default async function IntegrationsPage() {
                 display: 'flex', flexDirection: 'column', gap: 8,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(249,115,22,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--orange)' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>
                     {monogram}
                   </div>
                   <div>

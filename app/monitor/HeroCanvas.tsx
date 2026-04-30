@@ -34,14 +34,14 @@ export default function HeroCanvas() {
     // EKG traces — each at different y-pos
     const TRACES = [
       { yFrac: 0.28, color: '#10b981', amp: 28, speed: 0.8, label: 'CPU' },
-      { yFrac: 0.50, color: '#f97316', amp: 22, speed: 0.65, label: 'MEM' },
+      { yFrac: 0.50, color: '#3b82f6', amp: 22, speed: 0.65, label: 'MEM' },
       { yFrac: 0.72, color: '#8b5cf6', amp: 18, speed: 0.9, label: 'NET' },
     ]
 
     // Bar chart vitals (right side)
     const VITALS = [
       { key: 'CPU',   pct: 0.42, color: '#10b981' },
-      { key: 'MEM',   pct: 0.67, color: '#f97316' },
+      { key: 'MEM',   pct: 0.67, color: '#3b82f6' },
       { key: 'DISK',  pct: 0.31, color: '#8b5cf6' },
       { key: 'NET',   pct: 0.55, color: '#06b6d4' },
     ]

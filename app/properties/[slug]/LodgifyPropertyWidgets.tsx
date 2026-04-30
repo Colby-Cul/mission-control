@@ -69,7 +69,7 @@ export default function LodgifyPropertyWidgets({
         </SpecCard>
         <SpecCard accent dataSource="lodgify:/v2/reservations/bookings">
           <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Upcoming</div>
-          <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{nextReservations.length}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{nextReservations.length}</div>
           <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 4 }}>Reservations (next 90 d)</div>
         </SpecCard>
         <SpecCard accent dataSource="lodgify:/v2/reservations/bookings">
@@ -144,7 +144,7 @@ export default function LodgifyPropertyWidgets({
               {nextReservations.map((r, i) => (
                 <div key={i} style={{ padding: '6px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)', fontSize: 11 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mo)' }}>
-                    <span style={{ color: 'var(--orange)' }}>{r.arrival}</span>
+                    <span style={{ color: 'var(--accent)' }}>{r.arrival}</span>
                     <span style={{ color: 'var(--green)' }}>{USD(r.total)}</span>
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>
@@ -181,7 +181,7 @@ export default function LodgifyPropertyWidgets({
               <div key={r.id} style={{ padding: 10, background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{r.guest_name ?? 'Guest'}</span>
-                  <span style={{ fontSize: 11, color: 'var(--orange)', fontFamily: 'var(--mo)' }}>★ {r.rating ?? '—'}</span>
+                  <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--mo)' }}>★ {r.rating ?? '—'}</span>
                 </div>
                 {r.comment ? (
                   <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 4, lineHeight: 1.4 }}>
@@ -214,7 +214,7 @@ function SingleRowCalendar({ bookings, days }: { bookings: BookingRow[]; days: n
           return (
             <div key={i} style={{
               position: 'absolute', left: i * cellW, top: 22, bottom: 0, width: cellW,
-              borderLeft: isMonthStart ? '1px solid rgba(249,115,22,0.5)' : '1px solid rgba(255,255,255,0.03)',
+              borderLeft: isMonthStart ? '1px solid rgba(59,130,246,0.5)' : '1px solid rgba(255,255,255,0.03)',
               background: 'rgba(255,255,255,0.02)',
             }} />
           )
@@ -225,7 +225,7 @@ function SingleRowCalendar({ bookings, days }: { bookings: BookingRow[]; days: n
           if (d.getDate() !== 1 && i !== 0) return null
           return (
             <div key={'m' + i} style={{
-              position: 'absolute', left: i * cellW + 2, top: 0, fontSize: 9, fontFamily: 'var(--mo)', color: 'var(--orange)',
+              position: 'absolute', left: i * cellW + 2, top: 0, fontSize: 9, fontFamily: 'var(--mo)', color: 'var(--accent)',
             }}>
               {d.toLocaleDateString('en-US', { month: 'short' })}
             </div>

@@ -21,7 +21,7 @@ const DEFAULT_ACHIEVEMENTS = [
 
 const SEVERITY_COLOR: Record<string, string> = {
   critical: 'var(--red)',
-  high:     '#f97316',
+  high:     '#3b82f6',
   medium:   'var(--amber)',
   low:      'var(--green)',
   info:     'var(--dim)',

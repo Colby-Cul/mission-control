@@ -73,7 +73,7 @@ interface Props {
 const TYPE_COLOR: Record<string, { stroke: string; fill: string; text: string }> = {
   Person:      { stroke: '#8b5cf6', fill: 'rgba(139,92,246,0.18)', text: '#c4b5fd' },
   Trust:       { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.18)', text: '#fcd34d' },
-  LLC:         { stroke: '#f97316', fill: 'rgba(249,115,22,0.18)', text: '#fdba74' },
+  LLC:         { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.18)', text: '#fdba74' },
   'C-Corp':    { stroke: '#10b981', fill: 'rgba(16,185,129,0.18)', text: '#6ee7b7' },
   'S-Corp':    { stroke: '#10b981', fill: 'rgba(16,185,129,0.18)', text: '#6ee7b7' },
   LP:          { stroke: '#84cc16', fill: 'rgba(132,204,22,0.18)', text: '#bef264' },
@@ -118,7 +118,7 @@ const ACCT_COLOR: Record<string, { stroke: string; fill: string; text: string; i
   credit:    { stroke: '#ef4444', fill: 'rgba(239,68,68,0.14)',   text: '#fca5a5', icon: '💳', label: 'Credit Card' },
   brokerage: { stroke: '#8b5cf6', fill: 'rgba(139,92,246,0.14)',  text: '#c4b5fd', icon: '📈', label: 'Brokerage' },
   loan:      { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.14)',  text: '#fcd34d', icon: '🏠', label: 'Loan' },
-  cash:      { stroke: '#f97316', fill: 'rgba(249,115,22,0.14)',  text: '#fdba74', icon: '🪙', label: 'Cash' },
+  cash:      { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.14)',  text: '#fdba74', icon: '🪙', label: 'Cash' },
   utma:      { stroke: '#3b82f6', fill: 'rgba(59,130,246,0.14)',  text: '#93c5fd', icon: '🎓', label: 'UTMA' },
 }
 
@@ -581,7 +581,7 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
 
   // ── Styles helpers ──
   const filterActive = (f: string) => filter === f
-  const chipStyle = (active: boolean, activeColor = '#f97316'): React.CSSProperties => ({
+  const chipStyle = (active: boolean, activeColor = '#3b82f6'): React.CSSProperties => ({
     padding: '5px 13px', borderRadius: 20, border: 'none', cursor: 'pointer',
     fontSize: 11, fontWeight: 600, fontFamily: 'DM Sans, sans-serif',
     textTransform: 'uppercase' as const, letterSpacing: '0.06em', transition: 'all 0.15s',
@@ -707,14 +707,14 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
               >
                 <defs>
                   <linearGradient id="oc-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="rgba(249,115,22,0.5)" />
+                    <stop offset="0%" stopColor="rgba(59,130,246,0.5)" />
                     <stop offset="100%" stopColor="rgba(139,92,246,0.3)" />
                   </linearGradient>
                   <marker id="oc-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(249,115,22,0.45)" />
+                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(59,130,246,0.45)" />
                   </marker>
                   <marker id="oc-arrow-hl" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(249,115,22,0.95)" />
+                    <path d="M0,0 L0,6 L6,3 z" fill="rgba(59,130,246,0.95)" />
                   </marker>
                   <marker id="oc-arrow-prop" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                     <path d="M0,0 L0,6 L6,3 z" fill="rgba(59,130,246,0.5)" />
@@ -738,13 +738,13 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
                       <path
                         d={`M${x1},${y1} C${x1},${midY} ${x2},${midY} ${x2},${y2}`}
                         fill="none"
-                        stroke={isHL ? 'rgba(249,115,22,0.9)' : 'url(#oc-grad)'}
+                        stroke={isHL ? 'rgba(59,130,246,0.9)' : 'url(#oc-grad)'}
                         strokeWidth={isHL ? 2.5 : 1.5}
                         strokeDasharray={isHL ? 'none' : '5 3'}
                         markerEnd={isHL ? 'url(#oc-arrow-hl)' : 'url(#oc-arrow)'}
                         opacity={hovered && !isHL ? 0.2 : isHL ? 1 : 0.65}
                       />
-                      <text x={(x1 + x2) / 2} y={midY - 5} textAnchor="middle" fontSize="8" fill={isHL ? 'rgba(249,115,22,0.9)' : 'rgba(255,255,255,0.35)'} fontFamily="IBM Plex Mono, monospace">
+                      <text x={(x1 + x2) / 2} y={midY - 5} textAnchor="middle" fontSize="8" fill={isHL ? 'rgba(59,130,246,0.9)' : 'rgba(255,255,255,0.35)'} fontFamily="IBM Plex Mono, monospace">
                         {Number(edge.ownership_pct)}%{edge.role ? ` · ${edge.role}` : ''}
                       </text>
                     </g>
@@ -1063,7 +1063,7 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
             {[
               { label: 'Person',   color: '#8b5cf6' },
               { label: 'Trust',    color: '#f59e0b' },
-              { label: 'LLC',      color: '#f97316' },
+              { label: 'LLC',      color: '#3b82f6' },
               { label: 'Corp',     color: '#10b981' },
               { label: 'Holding',  color: '#ec4899' },
             ].map(({ label, color }) => (
@@ -1148,7 +1148,7 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
                 <div>
                   <button onClick={() => { window.location.href = `/accounts#${id}` }}
                     style={{ display: 'block', width: '100%', padding: '8px 14px', textAlign: 'left', background: 'none', border: 'none', fontSize: 12, color: 'rgba(255,255,255,0.75)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', borderTop: '1px solid rgba(255,255,255,0.04)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.08)')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59,130,246,0.08)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                   >Open account details →</button>
                   <button onClick={() => setPopover(null)} style={{ display: 'block', width: '100%', padding: '6px 14px', textAlign: 'left', background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>Dismiss</button>
@@ -1186,7 +1186,7 @@ export default function EntityOrgChart({ entities, edges, properties = [], accou
               {items.map(item => (
                 <button key={item.label} onClick={item.action}
                   style={{ display: 'block', width: '100%', padding: '8px 14px', textAlign: 'left', background: 'none', border: 'none', fontSize: 12, color: 'rgba(255,255,255,0.75)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.08)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(59,130,246,0.08)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
                   {item.label}
@@ -1542,9 +1542,9 @@ function CascadeRow({ entry, rank }: { entry: CascadeEntry; rank: number }) {
       {/* Rank badge */}
       <div style={{
         width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-        background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)',
+        background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 10, fontWeight: 700, color: '#f97316',
+        fontSize: 10, fontWeight: 700, color: '#3b82f6',
         fontFamily: 'IBM Plex Mono, monospace',
         marginTop: 1,
       }}>

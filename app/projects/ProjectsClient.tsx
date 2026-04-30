@@ -63,7 +63,7 @@ interface Entity {
 
 const KANBAN_COLUMNS: KanbanColumn<Project>[] = [
   { key: 'planning',    label: 'Planning',    color: 'var(--purple)' },
-  { key: 'active',      label: 'Active',      color: 'var(--orange)' },
+  { key: 'active',      label: 'Active',      color: 'var(--accent)' },
   { key: 'blocked',     label: 'Blocked',     color: 'var(--red)'    },
   { key: 'review',      label: 'Review',      color: 'var(--amber)'  },
   { key: 'completed',   label: 'Completed',   color: 'var(--green)'  },
@@ -71,7 +71,7 @@ const KANBAN_COLUMNS: KanbanColumn<Project>[] = [
 
 const STATUS_COLORS: Record<string, string> = {
   planning:  'var(--purple)',
-  active:    'var(--orange)',
+  active:    'var(--accent)',
   blocked:   'var(--red)',
   review:    'var(--amber)',
   completed: 'var(--green)',
@@ -107,7 +107,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function ProgressBar({ pct, color = 'var(--orange)' }: { pct: number; color?: string }) {
+function ProgressBar({ pct, color = 'var(--accent)' }: { pct: number; color?: string }) {
   return (
     <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
       <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 4, transition: 'width 0.3s' }} />
@@ -306,7 +306,7 @@ function ProjectCard({
           {modelsArr.slice(0, 2).map((m: string) => (
             <span key={m} style={{
               fontSize: 9, padding: '2px 6px', borderRadius: 4, fontFamily: 'var(--mo)',
-              background: 'rgba(249,115,22,0.08)', color: 'var(--orange)',
+              background: 'rgba(59,130,246,0.08)', color: 'var(--accent)',
               textTransform: 'uppercase', letterSpacing: '0.05em',
             }}>{String(m).split('/').pop()}</span>
           ))}
@@ -458,7 +458,7 @@ function ProjectFormModal({
           <div>
             <label style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.06em', display: 'block', marginBottom: 6 }}>% Complete ({pct}%)</label>
             <input type="range" min={0} max={100} value={pct} onChange={(e) => setPct(e.target.value)}
-              style={{ width: '100%', accentColor: 'var(--orange)' }} />
+              style={{ width: '100%', accentColor: 'var(--accent)' }} />
           </div>
 
           <div>
@@ -474,7 +474,7 @@ function ProjectFormModal({
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button onClick={onClose} style={{ padding: '10px 18px', fontSize: 13, background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t3)', cursor: 'pointer' }}>Cancel</button>
           <button onClick={handleSave} disabled={saving}
-            style={{ padding: '10px 22px', fontSize: 13, fontWeight: 600, background: 'linear-gradient(135deg,var(--orange),var(--pink))', border: 'none', borderRadius: 10, color: '#fff', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            style={{ padding: '10px 22px', fontSize: 13, fontWeight: 600, background: 'linear-gradient(135deg,var(--accent),var(--pink))', border: 'none', borderRadius: 10, color: '#fff', cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : isNew ? 'Create Project' : 'Save Changes'}
           </button>
         </div>
@@ -626,7 +626,7 @@ export default function ProjectsClient({
           <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.12em', fontFamily: 'var(--mo)', marginBottom: 6 }}>
             ≈ PROJECTS · WORKSPACE
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--t1)', margin: 0, background: 'linear-gradient(135deg,var(--orange),var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--t1)', margin: 0, background: 'linear-gradient(135deg,var(--accent),var(--pink))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Projects
           </h1>
           <div style={{ fontSize: 13, color: 'var(--t3)', marginTop: 4 }}>
@@ -635,7 +635,7 @@ export default function ProjectsClient({
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => setFormModal({ open: true, project: null })}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,var(--orange),var(--pink))', border: 'none', borderRadius: 10, color: '#fff', cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 16px', fontSize: 13, fontWeight: 700, background: 'linear-gradient(135deg,var(--accent),var(--pink))', border: 'none', borderRadius: 10, color: '#fff', cursor: 'pointer' }}>
             <Plus size={15} /> New Project
           </button>
           <button onClick={handleRefresh} disabled={refreshing}
@@ -648,8 +648,8 @@ export default function ProjectsClient({
       {/* ── Stats Strip ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12, marginBottom: 24 }}>
         {[
-          { label: 'Total', value: stats.total, color: 'var(--orange)' },
-          { label: 'Active', value: stats.active, color: 'var(--orange)', icon: <Clock size={14} /> },
+          { label: 'Total', value: stats.total, color: 'var(--accent)' },
+          { label: 'Active', value: stats.active, color: 'var(--accent)', icon: <Clock size={14} /> },
           { label: 'Blocked', value: stats.blocked, color: 'var(--red)', icon: <AlertTriangle size={14} /> },
           { label: 'Completed', value: stats.completed, color: 'var(--green)', icon: <CheckCircle2 size={14} /> },
           { label: 'Avg Progress', value: `${stats.avgPct}%`, color: 'var(--purple)' },
@@ -669,9 +669,9 @@ export default function ProjectsClient({
           <button key={v.key} onClick={() => handleSavedView(v)}
             style={{
               padding: '6px 14px', fontSize: 12, fontWeight: 600, borderRadius: 20,
-              background: savedView === v.key ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${savedView === v.key ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
-              color: savedView === v.key ? 'var(--orange)' : 'var(--t3)',
+              background: savedView === v.key ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${savedView === v.key ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
+              color: savedView === v.key ? 'var(--accent)' : 'var(--t3)',
               cursor: 'pointer',
             }}>
             {v.label}
@@ -700,8 +700,8 @@ export default function ProjectsClient({
             <button key={v} onClick={() => setView(v as typeof view)}
               style={{
                 padding: '7px 11px', border: 'none',
-                background: view === v ? 'rgba(249,115,22,0.2)' : 'transparent',
-                color: view === v ? 'var(--orange)' : 'var(--t4)',
+                background: view === v ? 'rgba(59,130,246,0.2)' : 'transparent',
+                color: view === v ? 'var(--accent)' : 'var(--t4)',
                 cursor: 'pointer', display: 'flex', alignItems: 'center',
               }}>
               {icon}
@@ -801,7 +801,7 @@ function GanttView({ projects }: { projects: Project[] }) {
         {dated.map((p) => {
           const offset = ((p.startMs! - minMs) / span) * 100
           const width = Math.max(((p.endMs! - p.startMs!) / span) * 100, 2)
-          const color = STATUS_COLORS[normalizeStatus(p.status)] ?? 'var(--orange)'
+          const color = STATUS_COLORS[normalizeStatus(p.status)] ?? 'var(--accent)'
           return (
             <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, alignItems: 'center' }}>
               <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -83,8 +83,8 @@ export default function TimeRangeSelector({
               style={{
                 display: 'block', width: '100%', textAlign: 'left',
                 padding: '7px 10px', borderRadius: 6,
-                background: r.key === current ? 'rgba(249,115,22,0.12)' : 'transparent',
-                color: r.key === current ? 'var(--orange)' : 'var(--t2)',
+                background: r.key === current ? 'rgba(59,130,246,0.12)' : 'transparent',
+                color: r.key === current ? 'var(--accent)' : 'var(--t2)',
                 border: 'none', cursor: 'pointer',
                 fontSize: 12, fontWeight: r.key === current ? 700 : 500,
               }}

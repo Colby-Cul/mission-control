@@ -55,7 +55,7 @@ export default function CompaniesQuickActions() {
       wrap.style.cssText = 'display:flex;gap:4px;align-items:center;margin-left:auto;'
 
       // Edit entity button
-      const editBtn = makeIconBtn('rgba(249,115,22,0.15)', 'rgba(249,115,22,0.3)', pencilSvg(), 'Edit entity')
+      const editBtn = makeIconBtn('rgba(59,130,246,0.15)', 'rgba(59,130,246,0.3)', pencilSvg(), 'Edit entity')
       editBtn.addEventListener('click', e => {
         e.preventDefault(); e.stopPropagation()
         // dispatch custom event picked up by React state

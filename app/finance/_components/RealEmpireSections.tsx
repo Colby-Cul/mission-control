@@ -25,7 +25,7 @@ export function RealNetWorth({
   // Map to real accent colors from the palette
   const paintOf: Record<string, { color: string; grad: string; glow: string }> = {
     realEstate: { color: 'var(--green)',  grad: 'linear-gradient(135deg, var(--green), var(--cyan))',  glow: '#10b98140' },
-    cash:       { color: 'var(--amber)',  grad: 'linear-gradient(135deg, var(--amber), var(--orange))', glow: '#f59e0b40' },
+    cash:       { color: 'var(--amber)',  grad: 'linear-gradient(135deg, var(--amber), var(--accent))', glow: '#f59e0b40' },
     brokerage:  { color: 'var(--purple)', grad: 'linear-gradient(135deg, var(--purple), var(--pink))', glow: '#8b5cf640' },
   }
 
@@ -57,7 +57,7 @@ export function RealNetWorth({
                   key={s.key}
                   cx={0} cy={0} r={R}
                   fill="none"
-                  stroke={paintOf[s.key]?.color ?? 'var(--orange)'}
+                  stroke={paintOf[s.key]?.color ?? 'var(--accent)'}
                   strokeWidth={26}
                   strokeDasharray={`${s.len} ${CIRC - s.len}`}
                   strokeDashoffset={-s.start}
@@ -127,7 +127,7 @@ export function RealNetWorth({
               }}>
                 <div style={{
                   position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-                  background: 'linear-gradient(135deg, var(--red), var(--orange))',
+                  background: 'linear-gradient(135deg, var(--red), var(--accent))',
                   borderRadius: '14px 14px 0 0',
                 }} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -175,7 +175,7 @@ export function RealBusinessEntities({ entities }: { entities: EntityRow[] }) {
   }
 
   const typeColor: Record<string, string> = {
-    LLC: 'var(--orange)',
+    LLC: 'var(--accent)',
     'S-Corp': 'var(--pink)',
     'C-Corp': 'var(--pink)',
     LP: 'var(--amber)',
@@ -196,7 +196,7 @@ export function RealBusinessEntities({ entities }: { entities: EntityRow[] }) {
       }}>
         {operating.map(e => {
           const net = e.assets - e.debt
-          const color = typeColor[e.entity_type ?? ''] ?? 'var(--orange)'
+          const color = typeColor[e.entity_type ?? ''] ?? 'var(--accent)'
           return (
             <a key={e.id} href={`/companies/${e.id}`} className="mc-card accent" style={{
               padding: '18px 20px', textDecoration: 'none', color: 'inherit',

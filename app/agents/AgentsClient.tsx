@@ -17,9 +17,9 @@ export default function AgentsClient({ agentId, agentName }: AgentsClientProps) 
           width: '100%',
           padding: '8px 0',
           borderRadius: 10,
-          border: '1px solid rgba(249,115,22,0.3)',
-          background: 'rgba(249,115,22,0.08)',
-          color: 'var(--orange)',
+          border: '1px solid rgba(59,130,246,0.3)',
+          background: 'rgba(59,130,246,0.08)',
+          color: 'var(--accent)',
           fontSize: 12,
           fontWeight: 600,
           cursor: 'pointer',
@@ -28,12 +28,12 @@ export default function AgentsClient({ agentId, agentName }: AgentsClientProps) 
           textTransform: 'uppercase',
         }}
         onMouseEnter={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(249,115,22,0.18)'
-          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.6)'
+          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.18)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(59,130,246,0.6)'
         }}
         onMouseLeave={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(249,115,22,0.08)'
-          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(249,115,22,0.3)'
+          ;(e.currentTarget as HTMLButtonElement).style.background = 'rgba(59,130,246,0.08)'
+          ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(59,130,246,0.3)'
         }}
       >
         ⚡ Invoke

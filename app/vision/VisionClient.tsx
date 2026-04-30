@@ -106,7 +106,7 @@ function ProgressRing({ pct }: { pct: number }) {
       <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
       <defs>
         <linearGradient id="progGradClient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="0%" stopColor="#3b82f6" />
           <stop offset="100%" stopColor="#8b5cf6" />
         </linearGradient>
       </defs>
@@ -327,7 +327,7 @@ function Btn({
     opacity: disabled ? 0.5 : 1, fontFamily: 'inherit',
   }
   const vars: Record<string, React.CSSProperties> = {
-    primary: { background: 'linear-gradient(135deg,#f97316,#8b5cf6)', color: '#fff' },
+    primary: { background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', color: '#fff' },
     danger: { background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' },
     ghost: { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' },
   }
@@ -388,10 +388,10 @@ function PhotoUpload({
         onDragLeave={() => setDrag(false)}
         onClick={() => fileRef.current?.click()}
         style={{
-          border: `2px dashed ${drag ? 'rgba(249,115,22,0.5)' : 'rgba(255,255,255,0.08)'}`,
+          border: `2px dashed ${drag ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
           borderRadius: 12, padding: '16px 12px', cursor: 'pointer',
           textAlign: 'center', transition: 'border-color 0.2s',
-          background: drag ? 'rgba(249,115,22,0.04)' : 'transparent',
+          background: drag ? 'rgba(59,130,246,0.04)' : 'transparent',
         }}
       >
         {uploading ? (
@@ -551,9 +551,9 @@ function VisionForm({
                   type="button"
                   onClick={() => toggleAccount(a.name)}
                   style={{
-                    background: linked ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${linked ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    borderRadius: 6, color: linked ? '#f97316' : 'rgba(255,255,255,0.5)',
+                    background: linked ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${linked ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: 6, color: linked ? '#3b82f6' : 'rgba(255,255,255,0.5)',
                     fontSize: 12, padding: '4px 10px', cursor: 'pointer',
                   }}
                 >
@@ -837,9 +837,9 @@ function AddVisionModal({
         <>
           {aiNote && (
             <div style={{
-              background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+              background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)',
               borderRadius: 10, padding: '10px 14px', marginBottom: 16,
-              fontSize: 12, color: 'rgba(249,115,22,0.9)', lineHeight: '1.5',
+              fontSize: 12, color: 'rgba(59,130,246,0.9)', lineHeight: '1.5',
             }}>
               ✦ {aiNote}
             </div>
@@ -887,7 +887,7 @@ interface PlanData {
 const REC_COLORS: Record<PlanRecommendation['category'], string> = {
   savings: 'var(--green)',
   expenses: 'var(--amber)',
-  revenue: 'var(--orange, #f97316)',
+  revenue: 'var(--accent)',
   tax: 'var(--purple)',
   other: 'var(--pink)',
 }
@@ -967,8 +967,8 @@ function PlanTab({ vision }: { vision: Vision }) {
       {/* Headline */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(249,115,22,0.10), rgba(139,92,246,0.10))',
-          border: '1px solid rgba(249,115,22,0.25)', borderRadius: 14, padding: '16px 18px',
+          background: 'linear-gradient(135deg, rgba(59,130,246,0.10), rgba(139,92,246,0.10))',
+          border: '1px solid rgba(59,130,246,0.25)', borderRadius: 14, padding: '16px 18px',
         }}
       >
         <p style={{ margin: 0, fontSize: 14, color: '#fff', lineHeight: '1.55', fontWeight: 500 }}>
@@ -1024,7 +1024,7 @@ function PlanTab({ vision }: { vision: Vision }) {
             style={{
               width: `${midpointPct}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #f97316, #8b5cf6)',
+              background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
               transition: 'width 0.6s ease',
             }}
           />
@@ -1212,7 +1212,7 @@ function EditDrawer({
               onClick={() => setTab(t.id)}
               style={{
                 background: 'transparent', border: 'none',
-                borderBottom: `2px solid ${tab === t.id ? '#f97316' : 'transparent'}`,
+                borderBottom: `2px solid ${tab === t.id ? '#3b82f6' : 'transparent'}`,
                 color: tab === t.id ? '#fff' : 'rgba(255,255,255,0.45)',
                 fontSize: 13, fontWeight: 600, padding: '8px 14px', cursor: 'pointer',
                 fontFamily: 'inherit', marginBottom: -1,
@@ -1383,9 +1383,9 @@ export default function VisionClient({ initialVisions, initialMilestones, accoun
                 className={`filter-pill${filter === tab.value ? ' active' : ''}`}
                 onClick={() => setFilter(tab.value)}
                 style={{
-                  background: filter === tab.value ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${filter === tab.value ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                  color: filter === tab.value ? '#f97316' : 'rgba(255,255,255,0.5)',
+                  background: filter === tab.value ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${filter === tab.value ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  color: filter === tab.value ? '#3b82f6' : 'rgba(255,255,255,0.5)',
                   borderRadius: 8, fontSize: 13, fontWeight: filter === tab.value ? 600 : 400,
                   padding: '6px 14px', cursor: 'pointer', transition: 'all 0.15s',
                 }}

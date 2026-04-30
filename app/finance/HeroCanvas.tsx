@@ -70,7 +70,7 @@ export default function HeroCanvas() {
         time += 0.016; ctx!.clearRect(0, 0, w, h);
 
         // Subtle grid
-        ctx!.strokeStyle = 'rgba(249,115,22,0.015)'; ctx!.lineWidth = 0.5;
+        ctx!.strokeStyle = 'rgba(59,130,246,0.015)'; ctx!.lineWidth = 0.5;
         for (var x = 0; x < w; x += 60) { ctx!.beginPath(); ctx!.moveTo(x, 0); ctx!.lineTo(x, h); ctx!.stroke(); }
         for (var y = 0; y < h; y += 60) { ctx!.beginPath(); ctx!.moveTo(0, y); ctx!.lineTo(w, y); ctx!.stroke(); }
 
@@ -80,7 +80,7 @@ export default function HeroCanvas() {
           if (s.y < -0.05) { s.y = 1.05; s.x = Math.random(); }
           var pulse = 0.5 + 0.5 * Math.sin(time * 0.5 + s.phase);
           ctx!.font = s.size + "px 'IBM Plex Mono', monospace";
-          ctx!.fillStyle = 'rgba(249,115,22,' + (s.alpha * pulse) + ')';
+          ctx!.fillStyle = 'rgba(59,130,246,' + (s.alpha * pulse) + ')';
           ctx!.textAlign = 'center';
           ctx!.fillText(s.char, s.x * w, s.y * h);
         });
@@ -94,7 +94,7 @@ export default function HeroCanvas() {
           var y2 = n2.y * h + Math.cos(time * 0.4 + ci + 2) * 3;
           var pulse = 0.3 + 0.2 * Math.sin(time * 0.8 + ci * 0.5);
           ctx!.beginPath(); ctx!.moveTo(x1, y1); ctx!.lineTo(x2, y2);
-          ctx!.strokeStyle = 'rgba(249,115,22,' + (0.04 + pulse * 0.03) + ')';
+          ctx!.strokeStyle = 'rgba(59,130,246,' + (0.04 + pulse * 0.03) + ')';
           ctx!.lineWidth = 1; ctx!.stroke();
         });
 
@@ -161,7 +161,7 @@ export default function HeroCanvas() {
         // Ambient glows
         var g1x = w * 0.2 + Math.sin(time * 0.08) * w * 0.05;
         var g1 = ctx!.createRadialGradient(g1x, h * 0.3, 0, g1x, h * 0.3, w * 0.25);
-        g1.addColorStop(0, 'rgba(249,115,22,0.03)'); g1.addColorStop(1, 'transparent');
+        g1.addColorStop(0, 'rgba(59,130,246,0.03)'); g1.addColorStop(1, 'transparent');
         ctx!.fillStyle = g1; ctx!.fillRect(0, 0, w, h);
         var g2x = w * 0.8 + Math.cos(time * 0.06) * w * 0.05;
         var g2 = ctx!.createRadialGradient(g2x, h * 0.6, 0, g2x, h * 0.6, w * 0.25);

@@ -81,7 +81,7 @@ export function CalmModeToggle() {
         onClick={toggle}
         style={{
           width: 48, height: 26, borderRadius: 13,
-          background: on ? 'var(--orange)' : 'rgba(255,255,255,0.15)',
+          background: on ? 'var(--accent)' : 'rgba(255,255,255,0.15)',
           border: '1px solid rgba(255,255,255,0.15)',
           padding: 2, cursor: 'pointer', position: 'relative',
           transition: 'background 0.15s',

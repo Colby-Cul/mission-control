@@ -133,7 +133,7 @@ export default async function UpcomingEventsCard() {
           {events.map(ev => {
             const startIso = ev.start?.dateTime ?? ev.start?.date
             const timeLabel = fmtTime(ev.start?.dateTime, ev.start?.date)
-            const color = CALENDAR_COLOR_MAP[ev.colorId ?? ''] ?? '#f97316'
+            const color = CALENDAR_COLOR_MAP[ev.colorId ?? ''] ?? '#3b82f6'
             const guests = ev.attendees?.length ?? 0
             const meet = meetLink(ev)
             return (
@@ -179,7 +179,7 @@ export default async function UpcomingEventsCard() {
                     )}
                     {guests > 0 && <span>👥 {guests}</span>}
                     {meet && (
-                      <span style={{ color: 'var(--orange)' }}>
+                      <span style={{ color: 'var(--accent)' }}>
                         🎥 Meet
                       </span>
                     )}

@@ -33,7 +33,7 @@ export default function CompaniesHeroCanvas({ entityCount, operationalCount }: P
     const legalCount = total - operationalCount
 
     // Build tile definitions
-    const COLORS = ['#f97316','#10b981','#8b5cf6','#f59e0b','#ec4899','#84cc16']
+    const COLORS = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#ec4899','#84cc16']
     const tiles = Array.from({ length: total }, (_, i) => ({
       legal:  i >= operationalCount,
       color:  COLORS[i % COLORS.length],
@@ -56,7 +56,7 @@ export default function CompaniesHeroCanvas({ entityCount, operationalCount }: P
       ctx!.clearRect(0, 0, w, h)
 
       // Draw faint grid
-      ctx!.strokeStyle = 'rgba(249,115,22,0.025)'
+      ctx!.strokeStyle = 'rgba(59,130,246,0.025)'
       ctx!.lineWidth = 0.5
       for (let x = 0; x < w; x += 60) { ctx!.beginPath(); ctx!.moveTo(x, 0); ctx!.lineTo(x, h); ctx!.stroke() }
       for (let y = 0; y < h; y += 60) { ctx!.beginPath(); ctx!.moveTo(0, y); ctx!.lineTo(w, y); ctx!.stroke() }
@@ -111,7 +111,7 @@ export default function CompaniesHeroCanvas({ entityCount, operationalCount }: P
         p.x += p.vx; p.y += p.vy
         if (p.x < 0 || p.x > 1) p.vx *= -1
         if (p.y < 0 || p.y > 1) p.vy *= -1
-        ctx!.fillStyle = 'rgba(249,115,22,0.25)'
+        ctx!.fillStyle = 'rgba(59,130,246,0.25)'
         ctx!.beginPath(); ctx!.arc(p.x * w * 0.38, p.y * h, p.r, 0, Math.PI * 2); ctx!.fill()
       })
 
@@ -134,7 +134,7 @@ export default function CompaniesHeroCanvas({ entityCount, operationalCount }: P
           const dist = Math.hypot(x2 - x1, y2 - y1)
           if (dist < tileW * 2.5) {
             const alpha = (1 - dist / (tileW * 2.5)) * 0.08
-            ctx!.strokeStyle = `rgba(249,115,22,${alpha})`
+            ctx!.strokeStyle = `rgba(59,130,246,${alpha})`
             ctx!.lineWidth = 0.5
             ctx!.beginPath(); ctx!.moveTo(x1, y1); ctx!.lineTo(x2, y2); ctx!.stroke()
           }

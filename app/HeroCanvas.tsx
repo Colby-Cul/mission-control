@@ -33,7 +33,7 @@ export default function HeroCanvas() {
 
       // Satellite nodes — entities orbiting the central star
       const satellites = [
-        { radius: 80,  speed: 0.35, phase: 0,    size: 5,  color: '#f97316', label: 'Cabo Tropic' },
+        { radius: 80,  speed: 0.35, phase: 0,    size: 5,  color: '#3b82f6', label: 'Cabo Tropic' },
         { radius: 120, speed: 0.22, phase: 1.2,  size: 7,  color: '#ec4899', label: 'BLC CA' },
         { radius: 160, speed: 0.15, phase: 2.4,  size: 6,  color: '#8b5cf6', label: 'CA Stays' },
         { radius: 200, speed: 0.10, phase: 0.8,  size: 5,  color: '#10b981', label: 'Xome Home' },
@@ -50,7 +50,7 @@ export default function HeroCanvas() {
         ctx!.clearRect(0, 0, w, h)
 
         // Faint grid
-        ctx!.strokeStyle = 'rgba(249,115,22,0.02)'
+        ctx!.strokeStyle = 'rgba(59,130,246,0.02)'
         ctx!.lineWidth = 0.5
         for (let x = 0; x < w; x += 60) {
           ctx!.beginPath(); ctx!.moveTo(x, 0); ctx!.lineTo(x, h); ctx!.stroke()
@@ -135,7 +135,7 @@ export default function HeroCanvas() {
         const starGrad = ctx!.createRadialGradient(cx, cy, 0, cx, cy, starR)
         starGrad.addColorStop(0, '#ffffff')
         starGrad.addColorStop(0.3, '#f59e0b')
-        starGrad.addColorStop(1, '#f97316')
+        starGrad.addColorStop(1, '#3b82f6')
         ctx!.beginPath()
         ctx!.arc(cx, cy, starR, 0, Math.PI * 2)
         ctx!.fillStyle = starGrad

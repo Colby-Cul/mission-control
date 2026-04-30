@@ -748,7 +748,7 @@ export default function ForgeClient({
           <div style={{ fontSize: 11, color: 'var(--t4)', textTransform: 'uppercase', letterSpacing: '.12em', fontFamily: 'var(--mo)', marginBottom: 6 }}>
             ≈ THE FORGE · IDEA PIPELINE
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, background: 'linear-gradient(135deg,var(--orange),var(--pink),var(--purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, background: 'linear-gradient(135deg,var(--accent),var(--pink),var(--purple))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             The Forge
           </h1>
           <div style={{ fontSize: 13, color: 'var(--t3)', marginTop: 4 }}>
@@ -802,7 +802,7 @@ export default function ForgeClient({
         {/* Panel toggles */}
         {(['review', 'analytics'] as const).map((panel) => (
           <button key={panel} onClick={() => setShowPanel(showPanel === panel ? null : panel)}
-            style={{ padding: '7px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8, background: showPanel === panel ? 'rgba(249,115,22,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${showPanel === panel ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.08)'}`, color: showPanel === panel ? 'var(--orange)' : 'var(--t4)', cursor: 'pointer', textTransform: 'capitalize' }}>
+            style={{ padding: '7px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8, background: showPanel === panel ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)', border: `1px solid ${showPanel === panel ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.08)'}`, color: showPanel === panel ? 'var(--accent)' : 'var(--t4)', cursor: 'pointer', textTransform: 'capitalize' }}>
             {panel === 'analytics' ? <><BarChart2 size={12} style={{ marginRight: 5, verticalAlign: 'middle' }} />Analytics</> : <><PackageCheck size={12} style={{ marginRight: 5, verticalAlign: 'middle' }} />Review Queue</>}
           </button>
         ))}
@@ -816,7 +816,7 @@ export default function ForgeClient({
         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, overflow: 'hidden' }}>
           {([['kanban', <LayoutGrid size={14} />], ['table', <List size={14} />], ['funnel', <TrendingUp size={14} />]] as [string, React.ReactNode][]).map(([v, icon]) => (
             <button key={v} onClick={() => setViewMode(v as typeof viewMode)}
-              style={{ padding: '7px 11px', border: 'none', background: viewMode === v ? 'rgba(249,115,22,0.2)' : 'transparent', color: viewMode === v ? 'var(--orange)' : 'var(--t4)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              style={{ padding: '7px 11px', border: 'none', background: viewMode === v ? 'rgba(59,130,246,0.2)' : 'transparent', color: viewMode === v ? 'var(--accent)' : 'var(--t4)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
               {icon}
             </button>
           ))}
@@ -843,7 +843,7 @@ export default function ForgeClient({
       {showPanel === 'analytics' && (
         <div className="mc-card accent" style={{ marginTop: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BarChart2 size={15} style={{ color: 'var(--orange)' }} /> Analytics
+            <BarChart2 size={15} style={{ color: 'var(--accent)' }} /> Analytics
           </div>
           <AnalyticsPanel ideas={enriched} />
         </div>
@@ -852,7 +852,7 @@ export default function ForgeClient({
       {showPanel === 'review' && (
         <div className="mc-card accent" style={{ marginTop: 20, marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <PackageCheck size={15} style={{ color: 'var(--orange)' }} /> Review Queue
+            <PackageCheck size={15} style={{ color: 'var(--accent)' }} /> Review Queue
             <span style={{ fontSize: 11, color: 'var(--t4)', fontWeight: 400 }}>({stats.review} ideas need review)</span>
           </div>
           <ReviewQueue ideas={enriched} onDeploy={handleDeploy} onKill={handleKill} onAskAgent={(idea) => setAgentModal({ open: true, idea })} onClick={(idea) => setSelectedIdeaId(idea.id)} />

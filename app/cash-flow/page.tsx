@@ -83,7 +83,7 @@ export default async function CashFlowPage() {
   const categoryColors: Record<string, string> = {
     INCOME: 'var(--green)',
     TRANSFER_IN: 'var(--cyan)',
-    FOOD_AND_DRINK: 'var(--orange)',
+    FOOD_AND_DRINK: 'var(--accent)',
     GENERAL_MERCHANDISE: 'var(--purple)',
     TRANSPORTATION: 'var(--amber)',
     BANK_FEES: 'var(--red)',
@@ -315,7 +315,7 @@ export default async function CashFlowPage() {
                       every ~{r.cadenceDays}d · {r.occurrences}× seen
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--orange)', alignSelf: 'center' }}>{USD(r.amount)}</div>
+                  <div style={{ fontSize: 12, fontFamily: 'var(--mo)', color: 'var(--accent)', alignSelf: 'center' }}>{USD(r.amount)}</div>
                 </div>
               ))}
             </div>

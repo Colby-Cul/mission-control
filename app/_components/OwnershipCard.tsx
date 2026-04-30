@@ -40,7 +40,7 @@ const ROLE_OPTIONS = [
 const COLOR: Record<string, string> = {
   Person: 'var(--purple)',
   Trust: 'var(--amber)',
-  LLC: 'var(--orange)',
+  LLC: 'var(--accent)',
   'C-Corp': 'var(--green)',
   'S-Corp': 'var(--green)',
   Partnership: 'var(--lime)',
@@ -87,7 +87,7 @@ function MiniTree({
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', maxWidth: 520, display: 'block', margin: '16px auto 0' }}>
       <defs>
         <linearGradient id="oc-edge-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="rgba(249,115,22,0.6)" />
+          <stop offset="0%" stopColor="rgba(59,130,246,0.6)" />
           <stop offset="100%" stopColor="rgba(139,92,246,0.3)" />
         </linearGradient>
       </defs>
@@ -115,7 +115,7 @@ function MiniTree({
         </g>
       ))}
       {/* root node */}
-      <circle cx={CX} cy={ROOT_Y} r={18} fill="rgba(249,115,22,0.15)" stroke="var(--orange)" strokeWidth="2" />
+      <circle cx={CX} cy={ROOT_Y} r={18} fill="rgba(59,130,246,0.15)" stroke="var(--accent)" strokeWidth="2" />
       <text x={CX} y={ROOT_Y + 4} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.9)" fontFamily="DM Sans, sans-serif" fontWeight="600">
         {entityName.substring(0, 12)}
       </text>
@@ -139,7 +139,7 @@ function MiniTree({
 // crude CSS-var → rgba helper (only handles our known tokens)
 function hexToRgb(cssVar: string): string {
   const map: Record<string, string> = {
-    'var(--orange)': '249,115,22',
+    'var(--accent)': '249,115,22',
     'var(--pink)': '236,72,153',
     'var(--purple)': '139,92,246',
     'var(--green)': '16,185,129',
@@ -254,7 +254,7 @@ function AddEdgeModal({
           {err && <div style={{ fontSize: 12, color: 'var(--red)' }}>{err}</div>}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button style={btnStyle('var(--orange)')} disabled={saving} onClick={handleSave}>
+            <button style={btnStyle('var(--accent)')} disabled={saving} onClick={handleSave}>
               {saving ? 'Saving…' : 'Save Edge'}
             </button>
             <button style={btnStyle('rgba(255,255,255,0.1)')} onClick={onClose}>Cancel</button>
@@ -359,7 +359,7 @@ export default function OwnershipCard({
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...btnStyle('rgba(249,115,22,0.12)'), border: '1px solid rgba(249,115,22,0.2)', color: 'var(--orange)', fontSize: 11, padding: '6px 12px' }}
+            <button style={{ ...btnStyle('rgba(59,130,246,0.12)'), border: '1px solid rgba(59,130,246,0.2)', color: 'var(--accent)', fontSize: 11, padding: '6px 12px' }}
               onClick={() => setModal('parent')}>
               + Add Parent
             </button>
@@ -395,7 +395,7 @@ export default function OwnershipCard({
                     )}
                     {p.role && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.role}</div>}
                   </div>
-                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)' }}>
                     {p.ownership_pct}%
                   </div>
                 </div>
@@ -425,7 +425,7 @@ export default function OwnershipCard({
                       )}
                       {p.role && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{p.role}</div>}
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)' }}>
                       {p.ownership_pct}%
                     </div>
                   </div>

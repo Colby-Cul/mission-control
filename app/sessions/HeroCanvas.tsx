@@ -72,7 +72,7 @@ export default function HeroCanvas() {
         ring.radius = 20 + elapsed * ring.speed
         ring.alpha = Math.max(0, 0.7 - elapsed * 0.15)
         if (ring.alpha <= 0) { rings.splice(i, 1); continue }
-        ctx!.strokeStyle = `rgba(249,115,22,${ring.alpha * 0.5})`
+        ctx!.strokeStyle = `rgba(59,130,246,${ring.alpha * 0.5})`
         ctx!.lineWidth = 1.5
         ctx!.beginPath(); ctx!.arc(cx, cy, ring.radius, 0, Math.PI * 2); ctx!.stroke()
       }
@@ -86,10 +86,10 @@ export default function HeroCanvas() {
 
       // Center node
       const centerGlow = ctx!.createRadialGradient(cx, cy, 0, cx, cy, 30)
-      centerGlow.addColorStop(0, 'rgba(249,115,22,0.4)'); centerGlow.addColorStop(1, 'transparent')
+      centerGlow.addColorStop(0, 'rgba(59,130,246,0.4)'); centerGlow.addColorStop(1, 'transparent')
       ctx!.fillStyle = centerGlow
       ctx!.beginPath(); ctx!.arc(cx, cy, 30, 0, Math.PI * 2); ctx!.fill()
-      ctx!.fillStyle = '#f97316cc'
+      ctx!.fillStyle = '#3b82f6cc'
       ctx!.beginPath(); ctx!.arc(cx, cy, 10, 0, Math.PI * 2); ctx!.fill()
       ctx!.fillStyle = '#ffffff'
       ctx!.beginPath(); ctx!.arc(cx, cy, 4, 0, Math.PI * 2); ctx!.fill()
@@ -102,7 +102,7 @@ export default function HeroCanvas() {
         const pulse = 1 + 0.15 * Math.sin(time * 3 + dev.phase)
 
         // Connection line
-        ctx!.strokeStyle = 'rgba(249,115,22,0.15)'
+        ctx!.strokeStyle = 'rgba(59,130,246,0.15)'
         ctx!.lineWidth = 0.8
         ctx!.beginPath(); ctx!.moveTo(cx, cy); ctx!.lineTo(dx, dy); ctx!.stroke()
 

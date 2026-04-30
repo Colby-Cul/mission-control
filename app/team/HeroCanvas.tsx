@@ -32,7 +32,7 @@ export default function HeroCanvas() {
     if (canvas.parentElement) ro.observe(canvas.parentElement)
 
     const ROLE_COLORS: Record<string, string> = {
-      leadership: '#f97316', engineering: '#8b5cf6', finance: '#10b981',
+      leadership: '#3b82f6', engineering: '#8b5cf6', finance: '#10b981',
       legal: '#f59e0b', operations: '#ec4899', marketing: '#06b6d4', agents: '#a3e635',
     }
     const ROLE_KEYS = Object.keys(ROLE_COLORS)
@@ -129,7 +129,7 @@ export default function HeroCanvas() {
       })
 
       const ag = ctx!.createRadialGradient(w*0.5, h*0.5, 0, w*0.5, h*0.5, w*0.3)
-      ag.addColorStop(0, 'rgba(249,115,22,0.03)'); ag.addColorStop(1, 'transparent')
+      ag.addColorStop(0, 'rgba(59,130,246,0.03)'); ag.addColorStop(1, 'transparent')
       ctx!.fillStyle = ag; ctx!.fillRect(0, 0, w, h)
 
       rafId = requestAnimationFrame(draw)

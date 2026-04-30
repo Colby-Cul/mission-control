@@ -80,7 +80,7 @@ function SortTh({
       onClick={() => onSort(col)}
       style={{
         padding: '8px 6px', textAlign: 'left',
-        color: active ? 'var(--orange)' : 'var(--dim)',
+        color: active ? 'var(--accent)' : 'var(--dim)',
         cursor: 'pointer', borderBottom: '1px solid var(--border)',
         fontWeight: 600, whiteSpace: 'nowrap', userSelect: 'none',
         fontSize: 11,
@@ -272,9 +272,9 @@ export default function RentalsWidgets({ bookings, propertyIdMap = {} }: { booki
                 key={v}
                 onClick={() => setPropFilter(v)}
                 style={{
-                  background: propFilter === v ? 'var(--orange)' : 'rgba(255,255,255,0.04)',
+                  background: propFilter === v ? 'var(--accent)' : 'rgba(255,255,255,0.04)',
                   color: propFilter === v ? '#fff' : 'var(--dim)',
-                  border: `1px solid ${propFilter === v ? 'var(--orange)' : 'var(--border)'}`,
+                  border: `1px solid ${propFilter === v ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: 8,
                   padding: '6px 14px',
                   fontSize: 12,
@@ -297,7 +297,7 @@ export default function RentalsWidgets({ bookings, propertyIdMap = {} }: { booki
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
           <KpiTile label="RevPAR"          value={fmtCurrency(revPAR)}             sub="Rev per avail night"                 color="var(--purple)" />
-          <KpiTile label="Bookings"        value={filtered.length}                 sub={`${bookings.length - filtered.length} declined`} color="var(--orange)" />
+          <KpiTile label="Bookings"        value={filtered.length}                 sub={`${bookings.length - filtered.length} declined`} color="var(--accent)" />
           <KpiTile label="Nights Booked"   value={totalNights}                     sub={`of ${availableNights} available`}   color="var(--cyan)"   />
           <KpiTile label="Avg Guests"      value={avgGuests.toFixed(1)}            sub="Per booking"                         color="var(--amber)"  />
         </div>
@@ -459,7 +459,7 @@ export default function RentalsWidgets({ bookings, propertyIdMap = {} }: { booki
                   ['Revenue',  fmtCurrency(p.revenue),  '#10b981'],
                   ['Expenses', fmtCurrency(p.expenses), '#ef4444'],
                   ['Profit',   fmtCurrency(p.profit),   p.profit > 0 ? '#10b981' : '#ef4444'],
-                  ['Bookings', p.bookings,               'var(--orange)'],
+                  ['Bookings', p.bookings,               'var(--accent)'],
                   ['Nights',   p.nights,                 '#06b6d4'],
                 ] as [string, string | number, string][]).map(([label, val, color]) => (
                   <div key={label}>

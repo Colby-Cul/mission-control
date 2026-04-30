@@ -78,17 +78,17 @@ function PlanTile({
   const accent = tone === 'accent'
   return (
     <div style={{
-      background: accent ? 'rgba(249,115,22,0.06)' : COLORS.card,
-      border: `1px solid ${accent ? 'rgba(249,115,22,0.25)' : COLORS.line}`,
+      background: accent ? 'rgba(59,130,246,0.06)' : COLORS.card,
+      border: `1px solid ${accent ? 'rgba(59,130,246,0.25)' : COLORS.line}`,
       borderRadius: 12,
       padding: '14px 16px',
       display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ color: accent ? 'var(--orange)' : 'var(--purple)', display: 'flex' }}>{icon}</span>
+        <span style={{ color: accent ? 'var(--accent)' : 'var(--purple)', display: 'flex' }}>{icon}</span>
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '.08em',
-          textTransform: 'uppercase', color: accent ? 'var(--orange)' : COLORS.dim,
+          textTransform: 'uppercase', color: accent ? 'var(--accent)' : COLORS.dim,
           fontFamily: 'var(--mo)',
         }}>{label}</span>
       </div>
@@ -106,7 +106,7 @@ export function BuildPlanSection({ idea }: { idea: ForgeIdea | null }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
         <span style={{
           fontSize: 11, fontWeight: 700, letterSpacing: '.12em',
-          textTransform: 'uppercase', color: 'var(--orange)',
+          textTransform: 'uppercase', color: 'var(--accent)',
           fontFamily: 'var(--mo)',
         }}>Build Plan</span>
         <span style={{ fontSize: 11, color: COLORS.dim2 }}>from the Forge</span>
@@ -181,7 +181,7 @@ interface AgentCost {
 }
 
 const AGENT_COLORS = [
-  '#f97316', '#8b5cf6', '#10b981', '#ec4899', '#06b6d4',
+  '#3b82f6', '#8b5cf6', '#10b981', '#ec4899', '#06b6d4',
   '#eab308', '#ef4444', '#14b8a6', '#f59e0b', '#a855f7',
 ]
 
@@ -218,7 +218,7 @@ export function CostBreakdownSection({
       {/* Top-line tiles */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
         <CostTile label="Spent to date" value={fmtMoney(total.cost)} color="var(--green)" mono />
-        <CostTile label="Est. total cost" value={estimatedTotal != null ? fmtMoney(estimatedTotal) : '—'} color="var(--orange)" mono />
+        <CostTile label="Est. total cost" value={estimatedTotal != null ? fmtMoney(estimatedTotal) : '—'} color="var(--accent)" mono />
         <CostTile label="Budget" value={budgetTotal ? fmtMoney(budgetTotal) : '— not set'} color="var(--purple)" mono={!!budgetTotal} />
         <CostTile label="Tokens burned" value={fmtTokens(total.tokens)} color="var(--amber)" mono />
       </div>

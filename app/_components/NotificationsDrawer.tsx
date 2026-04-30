@@ -219,7 +219,7 @@ export default function NotificationsDrawer({ onClose }: { onClose: () => void }
             {unread > 0 && (
               <span style={{
                 fontSize: 10, fontWeight: 700, color: '#fff',
-                background: 'var(--orange)',
+                background: 'var(--accent)',
                 padding: '2px 7px', borderRadius: 10,
               }}>{unread}</span>
             )}
@@ -291,7 +291,7 @@ export default function NotificationsDrawer({ onClose }: { onClose: () => void }
                     {isNew && (
                       <span style={{
                         width: 6, height: 6, borderRadius: '50%',
-                        background: 'var(--orange)', flexShrink: 0,
+                        background: 'var(--accent)', flexShrink: 0,
                         display: 'inline-block',
                       }} />
                     )}

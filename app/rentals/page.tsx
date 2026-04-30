@@ -182,7 +182,7 @@ export default async function RentalsPage() {
           </SpecCard>
           <SpecCard accent dataSource="property_assets.owned_equity">
             <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Owned Equity</div>
-            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{USD(totalEquity)}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{USD(totalEquity)}</div>
             <div style={{ fontSize: 11, color: 'var(--dim)', marginTop: 6 }}>Pro-rated by ownership %</div>
           </SpecCard>
           <SpecCard accent dataSource="property_assets.monthly_expenses">
@@ -242,7 +242,7 @@ export default async function RentalsPage() {
                       height: 140,
                       borderRadius: 12,
                       marginBottom: 14,
-                      background: 'linear-gradient(135deg, rgba(249,115,22,0.12), rgba(139,92,246,0.12))',
+                      background: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(139,92,246,0.12))',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -269,7 +269,7 @@ export default async function RentalsPage() {
                         {owners.map((o: any, i: number) => (
                           <span key={i}>
                             {o.slug ? (
-                              <a href={`/companies/${o.slug}`} style={{ color: 'var(--orange)', textDecoration: 'none', fontWeight: 600 }}>
+                              <a href={`/companies/${o.slug}`} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>
                                 {o.entityName}
                               </a>
                             ) : (
@@ -290,7 +290,7 @@ export default async function RentalsPage() {
                     </div>
                     <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 10, color: 'var(--dim)', marginBottom: 4 }}>Owned Equity</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{USD(Number(p.owned_equity ?? p.equity ?? 0))}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{USD(Number(p.owned_equity ?? p.equity ?? 0))}</div>
                     </div>
                     <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
                       <div style={{ fontSize: 10, color: 'var(--dim)', marginBottom: 4 }}>Monthly Expenses</div>
@@ -331,7 +331,7 @@ export default async function RentalsPage() {
                       </div>
                       {nextCheckin ? (
                         <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 6, fontFamily: 'var(--mo)' }}>
-                          Next check-in · <span style={{ color: 'var(--orange)' }}>{nextCheckin.arrival}</span> · {nextCheckin.guestInitials ?? '—'} · {nextCheckin.nights}n
+                          Next check-in · <span style={{ color: 'var(--accent)' }}>{nextCheckin.arrival}</span> · {nextCheckin.guestInitials ?? '—'} · {nextCheckin.nights}n
                         </div>
                       ) : null}
                     </div>

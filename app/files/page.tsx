@@ -114,7 +114,7 @@ export default async function FilesPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Files',  value: String(totalFiles),                  color: 'var(--orange)' },
+          { label: 'Total Files',  value: String(totalFiles),                  color: 'var(--accent)' },
           { label: 'AI Indexed',   value: String(analyzed),                    color: 'var(--green)'  },
           { label: 'Entities',     value: String(Object.keys(byEntity).length), color: 'var(--purple)' },
           { label: 'Storage',      value: storageMB + ' MB',                   color: 'var(--amber)'  },
@@ -178,7 +178,7 @@ export default async function FilesPage() {
                   <span style={{ fontSize: 20 }}>📁</span>
                   <div style={{ fontWeight: 600, fontSize: 12, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entity}</div>
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--orange)' }}>{list.length}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--mo)', color: 'var(--accent)' }}>{list.length}</div>
                 <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>files</div>
               </div>
             ))}

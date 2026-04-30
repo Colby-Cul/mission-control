@@ -84,8 +84,8 @@ export default function SettingsNav() {
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '7px 10px', borderRadius: 8,
                     fontSize: 13, fontWeight: on ? 600 : 500,
-                    color: on ? 'var(--orange)' : 'rgba(255,255,255,0.65)',
-                    background: on ? 'rgba(249,115,22,0.08)' : 'transparent',
+                    color: on ? 'var(--accent)' : 'rgba(255,255,255,0.65)',
+                    background: on ? 'rgba(59,130,246,0.08)' : 'transparent',
                     textDecoration: 'none',
                     position: 'relative',
                     transition: 'background .1s, color .1s',
@@ -94,10 +94,10 @@ export default function SettingsNav() {
                   {on && (
                     <span aria-hidden style={{
                       position: 'absolute', left: -2, top: 6, bottom: 6, width: 3,
-                      background: 'var(--orange)', borderRadius: '0 2px 2px 0',
+                      background: 'var(--accent)', borderRadius: '0 2px 2px 0',
                     }} />
                   )}
-                  <span style={{ color: on ? 'var(--orange)' : 'rgba(255,255,255,0.4)', display: 'flex' }}>
+                  <span style={{ color: on ? 'var(--accent)' : 'rgba(255,255,255,0.4)', display: 'flex' }}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>

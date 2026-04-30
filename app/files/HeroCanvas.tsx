@@ -29,7 +29,7 @@ export default function HeroCanvas() {
     const ro = new ResizeObserver(resize)
     if (canvas.parentElement) ro.observe(canvas.parentElement)
 
-    const FILE_COLORS = ['#f97316','#f59e0b','#10b981','#8b5cf6','#ec4899','#06b6d4','#a3e635']
+    const FILE_COLORS = ['#3b82f6','#f59e0b','#10b981','#8b5cf6','#ec4899','#06b6d4','#a3e635']
     const FILE_LABELS = ['pdf','doc','xlsx','img','mp4','zip','csv','txt','json','png']
 
     type Icon = {
@@ -141,7 +141,7 @@ export default function HeroCanvas() {
       })
 
       const ag = ctx!.createRadialGradient(w*0.5, h*0.5, 0, w*0.5, h*0.5, w*0.3)
-      ag.addColorStop(0, 'rgba(249,115,22,0.025)'); ag.addColorStop(1, 'transparent')
+      ag.addColorStop(0, 'rgba(59,130,246,0.025)'); ag.addColorStop(1, 'transparent')
       ctx!.fillStyle = ag; ctx!.fillRect(0, 0, w, h)
 
       rafId = requestAnimationFrame(draw)

@@ -628,7 +628,7 @@ export default async function SalesRevenueTab({
                 fontSize: 36,
                 fontWeight: 700,
                 fontFamily: 'IBM Plex Mono, monospace',
-                color: 'var(--orange)',
+                color: 'var(--accent)',
                 marginBottom: 8,
               }}
             >

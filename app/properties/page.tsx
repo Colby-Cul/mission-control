@@ -87,7 +87,7 @@ export default async function PropertiesPage() {
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
         {[
-          { label: 'Total Value',    value: USD(totalValue),    color: 'var(--orange)' },
+          { label: 'Total Value',    value: USD(totalValue),    color: 'var(--accent)' },
           { label: 'Total Equity',   value: USD(totalEquity),   color: 'var(--green)'  },
           { label: 'Total Mortgage', value: USD(totalMortgage), color: 'var(--red)'    },
           { label: 'Properties',     value: String(properties.length), color: 'var(--purple)' },
@@ -124,7 +124,7 @@ export default async function PropertiesPage() {
                 {/* Photo or gradient hero */}
                 <div style={{
                   height: 140, borderRadius: '12px 12px 0 0', overflow: 'hidden',
-                  background: photoUrl ? 'none' : 'linear-gradient(135deg, rgba(249,115,22,0.15), rgba(139,92,246,0.15))',
+                  background: photoUrl ? 'none' : 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 36, position: 'relative',
                 }}>
@@ -166,7 +166,7 @@ export default async function PropertiesPage() {
                         <span style={{ textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>Owned by:</span>
                         {owners.map((o: any, i: number) => (
                           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                            <span style={{ fontWeight: 600, color: 'var(--orange)' }}>{o.entityName}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{o.entityName}</span>
                             <span style={{ color: 'rgba(255,255,255,0.3)' }}> {o.pct}%</span>
                             {i < owners.length - 1 && <span style={{ color: 'rgba(255,255,255,0.2)' }}> · </span>}
                           </span>
@@ -178,7 +178,7 @@ export default async function PropertiesPage() {
                   {/* Core 3-col KPI row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
                     {[
-                      { label: 'VALUE',    value: USD(Number(p.current_value ?? 0)),    color: 'var(--orange)' },
+                      { label: 'VALUE',    value: USD(Number(p.current_value ?? 0)),    color: 'var(--accent)' },
                       { label: 'EQUITY',   value: USD(Number(p.equity ?? 0)),           color: 'var(--green)'  },
                       { label: 'MORTGAGE', value: USD(Number(p.mortgage_balance ?? 0)), color: 'var(--red)'    },
                     ].map(stat => (
@@ -259,7 +259,7 @@ export default async function PropertiesPage() {
                       <span>Equity</span><span style={{ fontFamily: 'var(--mo)', color: 'var(--green)' }}>{equityPct}%</span>
                     </div>
                     <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${equityPct}%`, background: 'linear-gradient(90deg,var(--orange),var(--green))', borderRadius: 2 }} />
+                      <div style={{ height: '100%', width: `${equityPct}%`, background: 'linear-gradient(90deg,var(--accent),var(--green))', borderRadius: 2 }} />
                     </div>
                   </div>
                 </div>

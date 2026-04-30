@@ -168,14 +168,14 @@ export default function HeroCanvas() {
         const angles = [-Math.PI / 2, 0, Math.PI / 2, Math.PI]
         angles.forEach((a, i) => {
           ctx!.font = '700 9px "IBM Plex Mono"'
-          ctx!.fillStyle = i === 0 ? 'rgba(249,115,22,0.6)' : 'rgba(255,255,255,0.25)'
+          ctx!.fillStyle = i === 0 ? 'rgba(59,130,246,0.6)' : 'rgba(255,255,255,0.25)'
           ctx!.textAlign = 'center'
           ctx!.textBaseline = 'middle'
           ctx!.fillText(cardinals[i], Math.cos(a) * crR, Math.sin(a) * crR)
           ctx!.beginPath()
           ctx!.moveTo(Math.cos(a) * 4, Math.sin(a) * 4)
           ctx!.lineTo(Math.cos(a) * (crR - 12), Math.sin(a) * (crR - 12))
-          ctx!.strokeStyle = i === 0 ? 'rgba(249,115,22,0.3)' : 'rgba(255,255,255,0.1)'
+          ctx!.strokeStyle = i === 0 ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.1)'
           ctx!.lineWidth = 0.8
           ctx!.stroke()
         })

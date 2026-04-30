@@ -2,17 +2,26 @@
 
 *{margin:0;padding:0;box-sizing:border-box}
 
-/* ─── Design Tokens (LOCKED per DASHBOARD-TEMPLATE-SPEC v1.0) ──────────────── */
+/* ─── Design Tokens (brand-guidelines.md v1.0) ──────────────────────────────── */
 :root {
-  /* Core palette */
-  --bg: #060610;
-  --card: rgba(255,255,255,0.025);
+  /* Core palette — deep space command center */
+  --bg: #080D1A;
+  --surface-1: #0E1525;
+  --surface-2: #141D30;
+  --surface-3: #1C2840;
+  --card: rgba(14,21,37,0.9);
   --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
   --dim: rgba(255,255,255,0.4);
   --dim2: rgba(255,255,255,0.25);
 
-  /* Brand colors */
-  --orange: #f97316;
+  /* Brand accent — electric blue (primary), gold ONLY for milestones/XP */
+  --accent:      #3b82f6;
+  --accent-dim:  rgba(59,130,246,0.15);
+  --accent-glow: rgba(59,130,246,0.08);
+  --orange:      #F0A500;  /* gold — achievements/XP/milestones ONLY */
+
+  /* Semantic */
   --pink:   #ec4899;
   --purple: #8b5cf6;
   --green:  #10b981;
@@ -22,19 +31,19 @@
   --blue:   #3b82f6;
   --cyan:   #06b6d4;
 
-  /* Text aliases (for legacy page refs still using --t1/t2/t3/t4) */
-  --t1: #f5f5f7;
-  --t2: rgba(255,255,255,0.7);
-  --t3: rgba(255,255,255,0.5);
-  --t4: rgba(255,255,255,0.3);
+  /* Text — warm near-white, NOT pure white */
+  --t1: #F1F5F9;
+  --t2: #94A3B8;
+  --t3: #475569;
+  --t4: #334155;
 
   /* Shell dims */
   --sidebar-w: 68px;
   --topbar-h: 52px;
 
   /* Gradients */
-  --grad: linear-gradient(135deg,#f97316,#ec4899,#8b5cf6);
-  --grad-metric: linear-gradient(135deg, #f59e0b 0%, #a3e635 40%, #10b981 100%);
+  --grad: linear-gradient(135deg,#3b82f6,#6366f1,#8b5cf6);
+  --grad-metric: linear-gradient(135deg, #F0A500 0%, #FFD166 50%, #F0A500 100%);
 
   /* Monospace */
   --mo: 'IBM Plex Mono', monospace;
@@ -72,7 +81,7 @@ a { color: inherit; text-decoration: none; }
 .sb {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #0a0a28, #0d0d20);
+  background: linear-gradient(180deg, #0E1525, #080D1A);
   border-right: 1px solid var(--border);
   width: 68px;
   overflow: hidden;
@@ -85,14 +94,14 @@ a { color: inherit; text-decoration: none; }
   width: 38px;
   height: 38px;
   border-radius: 11px;
-  background: linear-gradient(135deg, var(--orange), var(--pink));
+  background: linear-gradient(135deg, var(--accent), var(--purple));
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 13px;
   color: #fff;
-  box-shadow: 0 4px 16px rgba(249,115,22,0.3);
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
   margin: 14px 14px 12px;
   flex-shrink: 0;
   cursor: pointer;
@@ -152,7 +161,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--t1);
 }
 .sb-group-header.on {
-  background: rgba(249,115,22,0.08);
+  background: rgba(59,130,246,0.08);
   color: var(--t1);
 }
 .sb-group-header.on::before {
@@ -163,7 +172,7 @@ a { color: inherit; text-decoration: none; }
   bottom: 6px;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--orange);
+  background: var(--accent);
 }
 .sb-icon { display: inline-flex; flex-shrink: 0; width: 22px; justify-content: center; }
 .sb-icon-sm { display: inline-flex; flex-shrink: 0; width: 22px; justify-content: center; color: var(--dim); }
@@ -204,8 +213,8 @@ a { color: inherit; text-decoration: none; }
   color: var(--t1);
 }
 .sb-child.on {
-  color: var(--orange);
-  background: rgba(249,115,22,0.06);
+  color: var(--accent);
+  background: rgba(59,130,246,0.06);
 }
 /* Active child gets a 3px left-edge bar so the current page is obvious at
    a glance — required for the collapsed-sidebar flow and ADHD wayfinding. */
@@ -217,7 +226,7 @@ a { color: inherit; text-decoration: none; }
   bottom: 4px;
   width: 3px;
   border-radius: 0 2px 2px 0;
-  background: var(--orange);
+  background: var(--accent);
 }
 
 /* Calm Mode — respects OS-level prefers-reduced-motion AND user-toggled
@@ -249,11 +258,11 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 /* Focus rings — visible focus-visible outlines on all interactive items
    so keyboard-first users know where they are. Disabled for mouse users. */
 *:focus-visible {
-  outline: 2px solid rgba(249,115,22,0.55);
+  outline: 2px solid rgba(59,130,246,0.55);
   outline-offset: 2px;
   border-radius: 4px;
 }
-.sb-child.on .sb-icon-sm { color: var(--orange); }
+.sb-child.on .sb-icon-sm { color: var(--accent); }
 
 .sb-bottom {
   padding: 6px 10px 12px;
@@ -355,7 +364,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   background: var(--grad);
   color: #fff;
   border: none;
-  box-shadow: 0 4px 14px rgba(249,115,22,0.3);
+  box-shadow: 0 4px 14px rgba(59,130,246,0.3);
 }
 .notif {
   width: 32px; height: 32px;
@@ -373,8 +382,8 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 .notif-dot {
   position: absolute; top: 7px; right: 8px;
   width: 7px; height: 7px; border-radius: 50%;
-  background: var(--orange);
-  box-shadow: 0 0 8px var(--orange);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 .xp {
   display: flex; align-items: center; gap: 8px;
@@ -431,7 +440,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
+  background: linear-gradient(90deg, var(--accent), var(--purple));
   border-radius: 20px 20px 0 0;
 }
 
@@ -441,8 +450,8 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   border-radius: 24px;
   overflow: hidden;
   margin-bottom: 28px;
-  border: 1px solid rgba(249,115,22,0.12);
-  background: #050510;
+  border: 1px solid rgba(59,130,246,0.12);
+  background: #080D1A;
   min-height: 480px;
   display: flex;
 }
@@ -470,10 +479,10 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   position: absolute;
   background: currentColor;
 }
-.hud-tl { top: 16px; left: 16px; color: rgba(249,115,22,0.3); }
+.hud-tl { top: 16px; left: 16px; color: rgba(59,130,246,0.3); }
 .hud-tl::before { top: 0; left: 0; width: 100%; height: 2px; }
 .hud-tl::after  { top: 0; left: 0; width: 2px; height: 100%; }
-.hud-bl { bottom: 16px; left: 16px; color: rgba(249,115,22,0.3); }
+.hud-bl { bottom: 16px; left: 16px; color: rgba(59,130,246,0.3); }
 .hud-bl::before { bottom: 0; left: 0; width: 100%; height: 2px; }
 .hud-bl::after  { bottom: 0; left: 0; width: 2px; height: 100%; }
 .hud-tr { top: 16px; right: 16px; color: rgba(139,92,246,0.3); }
@@ -492,7 +501,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   position: absolute;
   left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(249,115,22,0), rgba(249,115,22,0.6), rgba(139,92,246,0.6), rgba(139,92,246,0));
+  background: linear-gradient(90deg, rgba(59,130,246,0), rgba(59,130,246,0.6), rgba(139,92,246,0.6), rgba(139,92,246,0));
   animation: scanline 4s linear infinite;
   pointer-events: none;
   z-index: 4;
@@ -511,7 +520,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   font-family: var(--mo);
   font-size: 11px;
   letter-spacing: 0.25em;
-  color: var(--orange);
+  color: var(--accent);
   text-transform: uppercase;
 }
 .hero-greeting {
@@ -609,8 +618,8 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
   padding: 3px 10px; border-radius: 6px;
 }
 .xp-earned {
-  font-size: 12px; font-weight: 600; color: var(--orange);
-  background: rgba(249,115,22,0.1);
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  background: rgba(59,130,246,0.1);
   padding: 3px 10px; border-radius: 6px;
 }
 .view-all-btn {
@@ -644,7 +653,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 .achieve-card.earned .achieve-ring-wrap::before {
   content: '';
   position: absolute; inset: -4px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%);
   z-index: 0;
 }
 .achieve-check {
@@ -689,7 +698,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 .coming-soon-card::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--orange), var(--pink), var(--purple));
+  background: linear-gradient(90deg, var(--accent), var(--purple));
   border-radius: 20px 20px 0 0;
 }
 .coming-soon-pill {
@@ -704,13 +713,13 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 .coming-soon-title { font-size: 15px; font-weight: 600; color: var(--t1); }
 .coming-soon-reason { font-size: 12px; color: var(--dim); max-width: 260px; line-height: 1.5; }
 .coming-soon-cta {
-  font-size: 11px; font-weight: 600; color: var(--orange);
-  background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.2);
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
   padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s;
   display: inline-flex; align-items: center; gap: 6px;
   text-decoration: none;
 }
-.coming-soon-cta:hover { background: rgba(249,115,22,0.15); }
+.coming-soon-cta:hover { background: rgba(59,130,246,0.15); }
 
 /* skeleton rows */
 .cs-skeleton { display: flex; flex-direction: column; gap: 6px; width: 100%; margin: 8px 0; }
@@ -732,7 +741,7 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 }
 .palette {
   width: 640px; max-width: 92vw;
-  background: #0d0d20;
+  background: var(--surface-1);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
   box-shadow: 0 24px 80px rgba(0,0,0,0.6);
@@ -782,8 +791,8 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 .hero {
   position: relative; min-height: 320px; border-radius: 24px; padding: 36px;
   margin-bottom: 28px;
-  background: linear-gradient(135deg,rgba(249,115,22,.1),rgba(139,92,246,.08));
-  border: 1px solid rgba(249,115,22,.15); overflow: hidden;
+  background: linear-gradient(135deg,rgba(59,130,246,.1),rgba(139,92,246,.08));
+  border: 1px solid rgba(59,130,246,.15); overflow: hidden;
 }
 .hero-legacy-label { font-family: var(--mo); font-size: 11px; letter-spacing: .25em; color: var(--orange); margin-bottom: 10px; }
 .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-bottom: 10px; }
@@ -799,17 +808,17 @@ body[data-calm="true"] canvas.hero-canvas { opacity: 0.35; filter: saturate(0.7)
 @keyframes mc-highlight-pulse {
   0%, 100% {
     box-shadow:
-      0 0 0 0 rgba(249, 115, 22, 0.55),
-      0 0 24px 4px rgba(249, 115, 22, 0.25);
+      0 0 0 0 rgba(59, 130, 246, 0.55),
+      0 0 24px 4px rgba(59, 130, 246, 0.25);
   }
   50% {
     box-shadow:
-      0 0 0 8px rgba(249, 115, 22, 0.00),
-      0 0 28px 8px rgba(249, 115, 22, 0.45);
+      0 0 0 8px rgba(59, 130, 246, 0.00),
+      0 0 28px 8px rgba(59, 130,246, 0.45);
   }
 }
 .mc-highlight-glow {
   animation: mc-highlight-pulse 1.2s ease-in-out infinite;
-  border-color: rgba(249, 115, 22, 0.65) !important;
+  border-color: rgba(59, 130, 246, 0.65) !important;
   transition: box-shadow 0.2s ease;
 }

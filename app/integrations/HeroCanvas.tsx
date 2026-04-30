@@ -35,7 +35,7 @@ export default function HeroCanvas() {
       { name: 'Stripe',     color: '#8b5cf6', connected: true  },
       { name: 'Supabase',   color: '#3ecf8e', connected: true  },
       { name: 'Gmail',      color: '#ef4444', connected: true  },
-      { name: 'Lodgify',    color: '#f97316', connected: false },
+      { name: 'Lodgify',    color: '#3b82f6', connected: false },
       { name: 'Notion',     color: '#e2e8f0', connected: false },
       { name: 'QuickBooks', color: '#2ca01c', connected: false },
       { name: 'Slack',      color: '#e01e5a', connected: true  },
@@ -134,10 +134,10 @@ export default function HeroCanvas() {
 
       // Center hub node
       const hg = ctx!.createRadialGradient(cx, cy, 0, cx, cy, 22)
-      hg.addColorStop(0, 'rgba(249,115,22,0.5)'); hg.addColorStop(1, 'transparent')
+      hg.addColorStop(0, 'rgba(59,130,246,0.5)'); hg.addColorStop(1, 'transparent')
       ctx!.fillStyle = hg
       ctx!.beginPath(); ctx!.arc(cx, cy, 22, 0, Math.PI * 2); ctx!.fill()
-      ctx!.fillStyle = '#f97316dd'
+      ctx!.fillStyle = '#3b82f6dd'
       ctx!.beginPath(); ctx!.arc(cx, cy, 14, 0, Math.PI * 2); ctx!.fill()
       ctx!.fillStyle = '#ffffff'
       ctx!.font = '700 9px "IBM Plex Mono"'

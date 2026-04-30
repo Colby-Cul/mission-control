@@ -73,7 +73,7 @@ export default async function EntitiesPage() {
   })
 
   const TYPE_COLORS: Record<string, string> = {
-    LLC: 'var(--orange)', Corporation: 'var(--pink)', Trust: 'var(--amber)',
+    LLC: 'var(--accent)', Corporation: 'var(--pink)', Trust: 'var(--amber)',
     'C-Corp': 'var(--green)', 'S-Corp': 'var(--green)',
     LP: 'var(--green)', 'S-Corp_2': 'var(--amber)', Other: 'var(--dim)',
     Person: 'var(--purple)',
@@ -157,7 +157,7 @@ export default async function EntitiesPage() {
               </div>
               <h3 style={{ fontSize: 15, margin: '0 0 6px' }}>{e.entity_name}</h3>
               {e.slug ? (
-                <a href={`/companies/${e.slug}`} style={{ fontSize: 12, color: 'var(--orange)', textDecoration: 'none' }}>
+                <a href={`/companies/${e.slug}`} style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
                   View Dashboard →
                 </a>
               ) : null}

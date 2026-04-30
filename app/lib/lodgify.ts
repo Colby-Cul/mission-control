@@ -416,7 +416,7 @@ export async function getLodgifyActivityFeed(opts: { max?: number } = {}): Promi
       items.push({ id: `bk-new-${b.id}`, when: created, kind: 'booking_new', title, propertyId: b.property_id, pill: 'New booking', color: 'var(--green)' })
     }
     if (updated && created && updated !== created) {
-      items.push({ id: `bk-mod-${b.id}`, when: updated, kind: 'booking_modified', title, propertyId: b.property_id, pill: 'Booking modified', color: 'var(--orange)' })
+      items.push({ id: `bk-mod-${b.id}`, when: updated, kind: 'booking_modified', title, propertyId: b.property_id, pill: 'Booking modified', color: 'var(--accent)' })
     }
   }
   items.sort((a, b) => (b.when || '').localeCompare(a.when || ''))

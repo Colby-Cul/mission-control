@@ -258,7 +258,7 @@ export default async function CulbertsonGrayPage() {
   const STAGE_COLORS: Record<string, string> = {
     'Lead': 'var(--purple)',
     'Attempted Contact': 'var(--pink)',
-    'Spoke with customer': 'var(--orange)',
+    'Spoke with customer': 'var(--accent)',
     'Appointment set': 'var(--amber)',
     'Met with customer': 'var(--lime)',
     'Showing Homes': 'var(--green)',
@@ -344,7 +344,7 @@ export default async function CulbertsonGrayPage() {
         }}
       >
         {[
-          { label: 'Active Deals', value: String(kpis?.activeDeals ?? '—'), accent: 'var(--orange)' },
+          { label: 'Active Deals', value: String(kpis?.activeDeals ?? '—'), accent: 'var(--accent)' },
           { label: 'Active Pipeline', value: fmtCurrency(kpis?.activePipelineValue ?? 0), accent: 'var(--green)' },
           { label: 'Closed YTD', value: String(kpis?.closedYtdDeals ?? '—'), accent: 'var(--lime)' },
           { label: 'Agents Active', value: String(kpis?.totalAgents ?? '—'), accent: 'var(--purple)' },
@@ -591,7 +591,7 @@ export default async function CulbertsonGrayPage() {
                         <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)' }}>{r.appointmentsMtd}</td>
                         <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)' }}>{r.dealsActive}</td>
                         <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)' }}>{r.dealsClosedYtd}</td>
-                        <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)', color: 'var(--orange)' }}>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)', color: 'var(--accent)' }}>
                           {fmtCurrency(r.pipelineValue)}
                         </td>
                         <td style={{ padding: '8px 6px', textAlign: 'right', fontFamily: 'var(--mo, monospace)', color: 'var(--green)' }}>
@@ -639,7 +639,7 @@ export default async function CulbertsonGrayPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 14 }}>
               {[
-                { label: 'Calls', value: today.callsToday, color: 'var(--orange)' },
+                { label: 'Calls', value: today.callsToday, color: 'var(--accent)' },
                 { label: 'Appts', value: today.appointmentsToday, color: 'var(--amber)' },
                 { label: 'New Deals', value: today.dealsCreatedToday, color: 'var(--green)' },
               ].map(s => (
@@ -686,7 +686,7 @@ export default async function CulbertsonGrayPage() {
             <svg viewBox="0 0 200 40" preserveAspectRatio="none" style={{ width: '100%', height: 40 }}>
               <polyline
                 fill="none"
-                stroke="var(--orange)"
+                stroke="var(--accent)"
                 strokeWidth="1.5"
                 points={today.spark7d
                   .map((s, i) => {
@@ -699,7 +699,7 @@ export default async function CulbertsonGrayPage() {
               {today.spark7d.map((s, i) => {
                 const x = (i / (today.spark7d.length - 1 || 1)) * 200
                 const y = 38 - (s.count / maxSparkY) * 34
-                return <circle key={s.date} cx={x} cy={y} r="1.5" fill="var(--orange)" />
+                return <circle key={s.date} cx={x} cy={y} r="1.5" fill="var(--accent)" />
               })}
             </svg>
           </SpecCard>
@@ -846,7 +846,7 @@ export default async function CulbertsonGrayPage() {
               const isLast = i === volume.length - 1
               return (
                 <g key={v.date}>
-                  <rect x={x} y={y} width={barW} height={h} fill={isLast ? 'var(--orange)' : 'var(--purple)'} opacity={isLast ? 0.9 : 0.6} rx="1" />
+                  <rect x={x} y={y} width={barW} height={h} fill={isLast ? 'var(--accent)' : 'var(--purple)'} opacity={isLast ? 0.9 : 0.6} rx="1" />
                 </g>
               )
             })}
@@ -1150,7 +1150,7 @@ export default async function CulbertsonGrayPage() {
                 <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
                   Annualized Total
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)' }}>
                   {fmtCurrency(expenseView.total_annual)}
                 </div>
               </div>
@@ -1158,7 +1158,7 @@ export default async function CulbertsonGrayPage() {
                 <div style={{ fontSize: 10, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
                   Monthly Equivalent
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)' }}>
                   {fmtCurrency(expenseView.total_monthly_equiv)}
                 </div>
               </div>
@@ -1170,7 +1170,7 @@ export default async function CulbertsonGrayPage() {
               {expenseView.by_office.map(o => (
                 <div key={o.office} style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{o.office}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)', marginTop: 2 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)', marginTop: 2 }}>
                     {fmtCurrency(o.annual)}
                   </div>
                   <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'IBM Plex Mono, monospace' }}>
@@ -1209,7 +1209,7 @@ export default async function CulbertsonGrayPage() {
                       <td style={{ padding: '6px 8px', color: 'var(--dim)' }}>{r.office}</td>
                       <td style={{ padding: '6px 8px', color: 'var(--dim)' }}>{r.frequency}</td>
                       <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mo)' }}>{fmtCurrency(r.amount)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mo)', color: 'var(--orange)' }}>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mo)', color: 'var(--accent)' }}>
                         {fmtCurrency(r.amount * freqMult)}
                       </td>
                     </tr>
@@ -1259,7 +1259,7 @@ export default async function CulbertsonGrayPage() {
               <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.85)', marginBottom: 14 }}>
                 Expenses — 30d
               </div>
-              <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--orange)' }}>
+              <div style={{ fontSize: 36, fontWeight: 700, fontFamily: 'IBM Plex Mono, monospace', color: 'var(--accent)' }}>
                 {fmtCurrency(expenses30d)}
               </div>
             </SpecCard>

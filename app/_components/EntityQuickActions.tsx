@@ -38,7 +38,7 @@ export default function EntityQuickActions({ entityId, entityName = '', slug, on
         {/* Edit entity metadata */}
         <button
           title="Edit entity"
-          style={btn('rgba(249,115,22,0.12)', 'rgba(249,115,22,0.25)')}
+          style={btn('rgba(59,130,246,0.12)', 'rgba(59,130,246,0.25)')}
           onClick={e => { stopPropagation(e); setShowEditEntity(true) }}
         >
           {/* pencil icon */}

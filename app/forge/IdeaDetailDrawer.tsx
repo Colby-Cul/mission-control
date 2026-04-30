@@ -334,7 +334,7 @@ function QuickStats({ idea }: { idea: ForgeIdeaFull }) {
     {
       value: idea.confidence_score != null ? `${idea.confidence_score}/10` : '—',
       label: 'Confidence',
-      color: 'var(--orange)',
+      color: 'var(--accent)',
     },
     {
       value: idea.monthly_revenue_potential || '—',
@@ -442,12 +442,12 @@ function StageTabs({
                 padding: '7px 4px',
                 fontSize: 11,
                 fontWeight: isActive ? 700 : 400,
-                background: isActive ? 'rgba(249,115,22,0.15)' : 'transparent',
+                background: isActive ? 'rgba(59,130,246,0.15)' : 'transparent',
                 border: 'none',
                 borderRadius: 7,
-                color: isActive ? 'var(--orange)' : 'var(--t4)',
+                color: isActive ? 'var(--accent)' : 'var(--t4)',
                 cursor: 'pointer',
-                borderBottom: isActive ? '2px solid var(--orange)' : '2px solid transparent',
+                borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -459,7 +459,7 @@ function StageTabs({
               {count > 0 && (
                 <span style={{
                   fontSize: 9,
-                  color: isActive ? 'var(--orange)' : 'var(--t4)',
+                  color: isActive ? 'var(--accent)' : 'var(--t4)',
                   fontFamily: 'var(--mo)',
                 }}>
                   {count}
@@ -802,7 +802,7 @@ function DrawerBody({
     evaluating: 'var(--amber)',
     approved:   'var(--purple)',
     building:   '#60a5fa',
-    testing:    'var(--orange)',
+    testing:    'var(--accent)',
     launched:   'var(--green)',
     parked:     'var(--t4)',
     killed:     'var(--red)',
@@ -982,7 +982,7 @@ function DrawerBody({
       <Section
         icon={<Rocket size={13} />}
         label="Path to $100K MRR"
-        accent="var(--orange)"
+        accent="var(--accent)"
       >
         {idea.path_to_100k ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -992,12 +992,12 @@ function DrawerBody({
                 <pre key={i} style={{
                   margin: 0,
                   padding: '8px 12px',
-                  background: 'rgba(249,115,22,0.08)',
-                  border: '1px solid rgba(249,115,22,0.2)',
+                  background: 'rgba(59,130,246,0.08)',
+                  border: '1px solid rgba(59,130,246,0.2)',
                   borderRadius: 8,
                   fontSize: 12,
                   fontFamily: 'var(--mo)',
-                  color: 'var(--orange)',
+                  color: 'var(--accent)',
                   whiteSpace: 'pre-wrap',
                   overflowX: 'auto',
                 }}>

@@ -21,7 +21,7 @@ export interface RevenueTrendChartProps {
 
 const PAINT: Record<string, { stroke: string; fillStart: string }> = {
   green:  { stroke: 'var(--green)',  fillStart: 'rgba(16,185,129,0.40)' },
-  orange: { stroke: 'var(--orange)', fillStart: 'rgba(249,115,22,0.40)' },
+  orange: { stroke: 'var(--accent)', fillStart: 'rgba(59,130,246,0.40)' },
   purple: { stroke: 'var(--purple)', fillStart: 'rgba(139,92,246,0.40)' },
   cyan:   { stroke: 'var(--cyan)',   fillStart: 'rgba(6,182,212,0.40)' },
   pink:   { stroke: 'var(--pink)',   fillStart: 'rgba(236,72,153,0.40)' },
