@@ -1,0 +1,45 @@
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
+
+// redesign-v7 branch (development). Swap envs for prod.
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Server-side queries ran into phantom-row reads on Vercel's warm runtime
+// when using the anon publishable key (fix also applied to the orchestrator
+// tick 2026-04-18). When this module loads in the Node runtime (no window),
+// prefer the service-role JWT — stripped of any stray \n or whitespace
+// Vercel injects. Falls back to anon on the client.
+const isServer = typeof window === 'undefined'
+const rawServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const serviceKey = rawServiceKey
+  .replace(/\\n/g, '')
+  .replace(/[^A-Za-z0-9._-]/g, '')
+  .trim()
+const key = isServer && serviceKey ? serviceKey : anonKey
+
+export const supabase = createClient<Database>(url, key, {
+  auth: { persistSession: false, autoRefreshToken: false },
+})
+
+// Handy typed aliases for the most-queried tables
+export type Tables<T extends keyof Database['public']['Tables']> =
+  Database['public']['Tables'][T]['Row']
+
+export type Vision = Tables<'visions'>
+export type Agent = Tables<'agents'>
+export type Achievement = Tables<'achievements'>
+export type KpiSnapshot = Tables<'kpi_snapshots'>
+export type TaxMove = Tables<'tax_moves'>
+export type TaxDeadline = Tables<'tax_deadlines'>
+export type TaxEntityMeta = Tables<'tax_entities_meta'>
+export type Entity = Tables<'entity_ownership'>
+export type Property = Tables<'property_assets'>
+export type Account = Tables<'financial_accounts'>
+export type Transaction = Tables<'financial_transactions'>
+export type ForgeIdea = Tables<'forge_ideas'>
+export type Project = Tables<'projects'>
+export type Task = Tables<'tasks'>
+export type CompanyKpi = Tables<'company_kpis'>
+export type Integration = Tables<'integrations'>
+export type UserProfile = Tables<'users_profile'>

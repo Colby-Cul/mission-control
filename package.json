@@ -1,54 +1,35 @@
 {
-  "name": "mission-control-dashboard",
-  "version": "1.0.0",
-  "description": "OpenClaw Mission Control Dashboard - Agent Management and Operations",
+  "name": "mission-control-v7",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "prebuild": "bash src/data/generate-live-data.sh",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext js,jsx,ts,tsx",
-    "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix",
-    "start": "vite --host 0.0.0.0 --port 3000"
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "types:gen": "supabase gen types typescript --project-id foeaxtbsigecfyvewkws > app/lib/database.types.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.102.1",
-    "clsx": "^2.0.0",
-    "date-fns": "^2.30.0",
-    "heic2any": "^0.0.4",
-    "lucide-react": "^0.263.1",
-    "plaid": "^41.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@anthropic-ai/sdk": "^0.89.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "cmdk": "^1.1.1",
+    "lucide-react": "^1.8.0",
+    "next": "14.2.5",
+    "open-graph-scraper": "^6.11.0",
+    "plaid": "^42.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-plaid-link": "^4.1.1",
-    "react-router-dom": "^6.8.0",
-    "recharts": "^2.15.4",
-    "vis-network": "^10.0.2"
+    "recharts": "^3.8.1",
+    "use-debounce": "^10.1.1"
   },
   "devDependencies": {
-    "@types/react": "^18.0.28",
-    "@types/react-dom": "^18.0.11",
-    "@vitejs/plugin-react": "^4.0.0",
-    "autoprefixer": "^10.4.14",
-    "eslint": "^8.38.0",
-    "eslint-plugin-react": "^7.32.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "gh-pages": "^6.3.0",
-    "postcss": "^8.4.23",
-    "tailwindcss": "^3.3.0",
-    "vite": "^4.5.14"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "keywords": [
-    "react",
-    "dashboard",
-    "agent-management",
-    "mission-control",
-    "openclaw"
-  ],
-  "author": "Jarvis - Task Master",
-  "license": "MIT"
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  }
 }

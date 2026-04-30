@@ -1,19 +1,15 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install",
   "crons": [
     {
-      "path": "/api/properties/update-all-zestimates",
-      "schedule": "0 8 * * 1"
+      "path": "/api/plaid/sync-all",
+      "schedule": "0 */6 * * *"
     },
     {
-      "path": "/api/drive/poll-inbox",
+      "path": "/api/orchestrator/tick",
       "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/qb/refresh",
-      "schedule": "*/45 * * * *"
     }
-  ],
-  "rewrites": [
-    { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ]
 }

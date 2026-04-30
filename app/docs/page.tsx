@@ -1,0 +1,267 @@
+/**
+ * Docs Hub — central document library.
+ * Hero metric: Total Documents
+ * Animation: floating document cards by category
+ * Sources: documents (via getDocs + getEntityDocuments)
+ */
+import Hero from '../_components/Hero'
+import Achievements from '../_components/Achievements'
+import { SpecCard } from '../_components/SpecCard'
+import ComingSoon from '../_components/ComingSoon'
+import HeroCanvas from './HeroCanvas'
+import Link from 'next/link'
+import { getDocs, getEntityDocuments, getUserProfile, getExpiringDocuments } from '../lib/queries'
+import DocsSearch from './DocsSearch'
+
+export const dynamic = 'force-dynamic'
+
+const ACHIEVEMENTS = [
+  { name: 'First Doc',         description: 'Uploaded the first document.',                 xp: 100, progress: 100, icon: '📄', earned: true  },
+  { name: 'Organized',         description: 'Documents span 3+ categories.',                xp: 200, progress: 100, icon: '🗂️', earned: true  },
+  { name: 'Fully Indexed',     description: 'All docs processed by the AI indexer.',        xp: 300, progress: 60,  icon: '🔍', earned: false },
+  { name: '10 Docs',           description: 'Library holds 10+ documents.',                 xp: 150, progress: 100, icon: '📚', earned: true  },
+  { name: 'Signed & Sealed',   description: 'At least 5 docs have valid signatures.',       xp: 250, progress: 40,  icon: '✍️', earned: false },
+  { name: 'Expiry Hawk',       description: 'No documents expired in the last 90 days.',   xp: 200, progress: 70,  icon: '⏰', earned: false },
+  { name: 'Doc Machine',       description: 'Library holds 50+ documents.',                 xp: 400, progress: 20,  icon: '🏛️', earned: false },
+  { name: 'Zero Pending',      description: 'No documents awaiting signature.',             xp: 300, progress: 30,  icon: '✅', earned: false },
+]
+
+const CATEGORIES = ['Legal', 'Tax', 'Insurance', 'Property', 'Company', 'Personal']
+
+const CAT_ICONS: Record<string, string> = {
+  Legal: '⚖️', Tax: '📊', Insurance: '🛡️', Property: '🏠', Company: '🏢', Personal: '👤',
+}
+
+const CAT_COLORS: Record<string, string> = {
+  Legal: 'var(--accent)', Tax: 'var(--amber)', Insurance: 'var(--green)',
+  Property: 'var(--purple)', Company: 'var(--pink)', Personal: '#06b6d4',
+}
+
+function fmtSize(bytes?: number | null): string {
+  if (!bytes) return '—'
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+export default async function DocsPage() {
+  const [entityDocs, profile, expiring] = await Promise.all([
+    getEntityDocuments().catch(() => []),
+    getUserProfile().catch(() => null),
+    getExpiringDocuments(90).catch(() => []),
+  ])
+
+  const allDocs = entityDocs as any[]
+  const totalDocs = allDocs.length
+
+  // Categorise
+  const byCategory: Record<string, any[]> = {}
+  CATEGORIES.forEach(c => { byCategory[c] = [] })
+  allDocs.forEach((d: any) => {
+    const cat = d.document_type?.charAt(0).toUpperCase() + d.document_type?.slice(1) ?? 'Other'
+    const match = CATEGORIES.find(c => c.toLowerCase() === (d.document_type ?? '').toLowerCase())
+    if (match) byCategory[match].push(d)
+    else byCategory['Company'] = byCategory['Company'] ?? []
+  })
+
+  // Stats
+  const thisMonth = allDocs.filter((d: any) => {
+    const dt = d.created_at ?? ''
+    const now = new Date()
+    return dt.startsWith(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`)
+  }).length
+
+  const totalStorage = allDocs.reduce((s: number, d: any) => s + Number(d.file_size ?? 0), 0)
+  const storageMB = (totalStorage / (1024 * 1024)).toFixed(1)
+
+  const recentDocs = [...allDocs].sort((a, b) =>
+    (b.created_at ?? '').localeCompare(a.created_at ?? '')
+  ).slice(0, 8)
+
+  const xpEarned = ACHIEVEMENTS.filter(a => a.earned).reduce((s, a) => s + a.xp, 0)
+
+  const playerCard = profile ? {
+    name: profile.full_name ?? 'CEO',
+    role: profile.role ?? 'Chief Executive',
+    level: profile.level ?? 1,
+    xpCurrent: profile.xp ?? 0,
+    xpNext: profile.xp_next ?? 1000,
+    stats: [
+      { key: 'Total Docs',  value: String(totalDocs) },
+      { key: 'This Month',  value: String(thisMonth) },
+      { key: 'Storage',     value: storageMB + ' MB' },
+      { key: 'XP',          value: (profile.xp ?? 0).toLocaleString() },
+    ],
+  } : undefined
+
+  return (
+    <>
+      <Hero
+        label="📁 DOCS HUB · DOCUMENT LIBRARY"
+        greeting="Documents & Knowledge"
+        primaryMetric={String(totalDocs)}
+        metricSubtitle="total documents indexed"
+        kpiCards={[
+          { label: 'This Month',       value: String(thisMonth) },
+          { label: 'Awaiting Sign',    value: '—' },
+          { label: 'Expiring Soon',    value: '—' },
+          { label: 'Storage',          value: storageMB + ' MB' },
+        ]}
+        playerCard={playerCard}
+        animationSlot={<HeroCanvas />}
+      />
+
+      <Achievements items={ACHIEVEMENTS} xpEarned={xpEarned} />
+
+      {/* KPI row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+        {[
+          { label: 'Total Docs',    value: String(totalDocs), color: 'var(--accent)' },
+          { label: 'This Month',    value: String(thisMonth), color: 'var(--green)'  },
+          { label: 'Awaiting Sign', value: '—',               color: 'var(--amber)'  },
+          { label: 'Storage',       value: storageMB + ' MB', color: 'var(--purple)' },
+        ].map(k => (
+          <SpecCard key={k.label} accent dataSource="entity_documents">
+            <div style={{ fontSize: 11, color: 'var(--dim)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>{k.label}</div>
+            <div style={{ fontSize: 28, fontWeight: 700, fontFamily: 'var(--mo)', color: k.color }}>{k.value}</div>
+          </SpecCard>
+        ))}
+      </div>
+
+      {/* Category grid */}
+      <SpecCard accent dataSource="entity_documents" style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+          Categories
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+          {CATEGORIES.map(cat => {
+            const count = byCategory[cat]?.length ?? 0
+            return (
+              <div key={cat} style={{
+                padding: 16, background: 'rgba(255,255,255,0.025)', borderRadius: 12,
+                border: `1px solid rgba(255,255,255,0.07)`, textAlign: 'center',
+                cursor: 'pointer', transition: 'transform 0.2s',
+              }}>
+                <div style={{ fontSize: 28, marginBottom: 8 }}>{CAT_ICONS[cat]}</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: CAT_COLORS[cat] }}>{cat}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--mo)', marginTop: 4 }}>{count}</div>
+                <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>documents</div>
+              </div>
+            )
+          })}
+        </div>
+      </SpecCard>
+
+      {/* Recent uploads */}
+      <SpecCard accent dataSource="entity_documents" style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--dim)' }}>
+          Recent Uploads
+        </div>
+        {recentDocs.length === 0 ? (
+          <p style={{ fontSize: 12, color: 'var(--dim)' }}>No documents yet. Add rows to <code>entity_documents</code>.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 0 }}>
+            {recentDocs.map((d: any) => {
+              // Derived doc fields
+              const catTags = Array.isArray(d.category_tags) ? d.category_tags as string[] : []
+              const sigStatus = d.signature_status ?? null
+              const sigColor = sigStatus === 'signed' ? 'var(--green)' : sigStatus === 'pending' ? 'var(--amber)' : sigStatus === 'rejected' ? 'var(--red)' : null
+              const isExpiringSoon = d.expires_at
+                ? (new Date(d.expires_at).getTime() - Date.now()) < 30 * 24 * 3600 * 1000
+                : false
+              return (
+              <div key={d.id} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                padding: '12px 0', borderBottom: '1px solid var(--border)', fontSize: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>
+                    {CAT_ICONS[d.document_type?.charAt(0).toUpperCase() + d.document_type?.slice(1)] ?? '📄'}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {d.filename ?? d.title ?? d.id}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 1 }}>
+                      {d.document_type ?? '—'} · {d.entity_name ?? d.entity_id ?? 'Unfiled'}
+                      {d.version && <span style={{ marginLeft: 8 }}>v{d.version}</span>}
+                    </div>
+                    {/* Tags + sig + expiry sub-row */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                      {catTags.slice(0, 3).map((tag: string) => (
+                        <span key={tag} style={{
+                          fontSize: 9, padding: '1px 5px', borderRadius: 3, fontFamily: 'var(--mo)',
+                          background: 'rgba(255,255,255,0.04)', color: 'var(--dim)',
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                        }}>{tag}</span>
+                      ))}
+                      {sigColor && sigStatus && (
+                        <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 3, color: sigColor, background: sigColor + '14', fontWeight: 600 }}>
+                          {sigStatus}
+                        </span>
+                      )}
+                      {isExpiringSoon && d.expires_at && (
+                        <span style={{ fontSize: 9, color: 'var(--amber)', fontFamily: 'var(--mo)' }}>
+                          expires {new Date(d.expires_at).toLocaleDateString()}
+                        </span>
+                      )}
+                      {d.linked_workflow && (
+                        <span style={{ fontSize: 9, color: 'var(--purple)', fontFamily: 'var(--mo)' }}>
+                          workflow: {String(d.linked_workflow)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+                  <div style={{ fontFamily: 'var(--mo)', fontSize: 11 }}>{fmtSize(d.file_size)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--dim)', marginTop: 2 }}>
+                    {d.last_modified_by
+                      ? <>{d.last_modified_by} · {d.updated_at?.slice(0,10) ?? '—'}</>
+                      : d.created_at?.slice(0,10) ?? '—'}
+                  </div>
+                </div>
+              </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
+
+      {/* Expiring soon — live from entity_documents.expires_at */}
+      <SpecCard accent dataSource="entity_documents.expires_at" style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Expiring Soon</div>
+          <span style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>within 90 days · {((expiring as any[]) ?? []).length} docs</span>
+        </div>
+        {((expiring as any[]) ?? []).length === 0 ? (
+          <div style={{ fontSize: 12, color: 'var(--green)', padding: '12px 0' }}>No documents expire in the next 90 days.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {((expiring as any[]) ?? []).slice(0, 10).map((d: any) => {
+              const days = Math.ceil((new Date(d.expires_at).getTime() - Date.now()) / 86400000)
+              const col = days < 14 ? 'var(--red)' : days < 45 ? 'var(--amber)' : 'var(--dim)'
+              return (
+                <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 12, minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.filename ?? d.title ?? 'Doc'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--dim)', fontFamily: 'var(--mo)', marginTop: 2 }}>
+                      {d.entity_name ?? d.entity_id ?? 'Unfiled'} · {d.document_type ?? '—'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
+                    <div style={{ fontFamily: 'var(--mo)', fontSize: 11, color: col, fontWeight: 600 }}>{days > 0 ? `in ${days}d` : `${Math.abs(days)}d overdue`}</div>
+                    <div style={{ fontSize: 9, color: 'var(--dim)', fontFamily: 'var(--mo)' }}>{new Date(d.expires_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </SpecCard>
+
+      {/* Search — client-side filter on allDocs */}
+      <DocsSearch docs={allDocs} />
+    </>
+  )
+}

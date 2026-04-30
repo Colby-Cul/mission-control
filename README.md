@@ -1,145 +1,105 @@
-# Mission Control Dashboard
+# Mission Control v7
 
-OpenClaw Agent Management and Operations Dashboard - A comprehensive React application for monitoring and managing AI agents, projects, costs, and operations.
+CEO command center for Colby's empire (Cabo Tropic, Culbertson, Xome Home, BLC CA, Alabama Shores, Lincoln Hodl, CA Stays).
 
-## 🚀 Features
+## Status
 
-- **Left Sidebar Navigation** with 12+ screens
-- **Team Org Chart View** with visual hierarchy
-- **Agent Management Interface** showing models, costs, and status
-- **Project Management** with Kanban, Gantt, Calendar, and Table views
-- **Cost Analytics Dashboard** with real-time tracking
-- **Skills Management** and performance metrics
-- **Fleet Operations** monitoring
-- **Financial Overview** and budgeting
-- **Real-time Search** (CMD/Ctrl + K)
-- **Dark Theme** optimized UI
+✅ **Phase 0 — Safety Net** (Supabase branch created, additive migration applied, 22 new tables, 72 seed rows)
+🟡 **Phase 1 — Foundation** (App Shell scaffolded, queries layer written, Dashboard page wired — ready for Claude Code to run `npm install && npm run dev`)
+⬜ Phase 2 — Lock-page data wiring (Vision Board, Finance, Xome)
+⬜ Phase 3 — Core pages
+⬜ Phase 4 — Entity fan-out
+⬜ Phase 5 — Ops / Engineering / Docs / Assets / People pages
+⬜ Phase 6 — Monetization prep
+⬜ Phase 7 — Launch
 
-## 📋 Components Integrated
+## Environments
 
-✅ **MissionControl_App** - Main application with 15 screens  
-✅ **MissionControl_ProjectManagement** - Kanban/Gantt/Calendar/Table views  
-✅ **MissionControl_CostDashboard** - Cost tracking with visualizations  
-✅ **MissionControl_GlobalActions** - Floating action buttons  
+| | Prod | Dev (this repo targets this) |
+|---|---|---|
+| Supabase project ref | `bdlvwfobjqvnrffzxrfz` | `foeaxtbsigecfyvewkws` |
+| URL | `https://bdlvwfobjqvnrffzxrfz.supabase.co` | `https://foeaxtbsigecfyvewkws.supabase.co` |
+| Status | 🔒 untouched | 🟢 active with seed data |
+| Cost | Free + Pro plan | $0.01344/hr branch cost |
 
-## 🛠️ Development
+## Quick start (for Claude Code)
 
-### Prerequisites
-- Node.js 16+ 
-- npm or yarn
-
-### Installation
 ```bash
-# Clone and install
-git clone <repository>
-cd mission-control
+cp .env.local.example .env.local
 npm install
-
-# Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+# open http://localhost:3000
 ```
 
-### Development URLs
-- Local: http://localhost:3000/
-- Network: http://192.168.1.29:3000/
+The Dashboard at `/` will query the dev branch live — you'll see 7 entities, 8 agents, 3 visions, 6 tax deadlines, 16 achievements.
 
-## 🐳 Docker Deployment
+## Structure
 
-### Quick Start
-```bash
-# Build and run with Docker Compose
-docker-compose up -d
-
-# Access at http://localhost:3000
+```
+mission-control-v7/
+├── app/
+│   ├── layout.tsx          # Wraps everything in <Shell>
+│   ├── page.tsx            # Dashboard (live Supabase data)
+│   ├── globals.css         # Design tokens + shell styles
+│   ├── shell/
+│   │   ├── Shell.tsx       # Sidebar + top bar + command palette
+│   │   └── index.html      # Static HTML preview (reference)
+│   └── lib/
+│       ├── supabase.ts     # Typed client
+│       ├── queries.ts      # Canonical query layer — pages use this, never raw SQL
+│       └── database.types.ts  # Generated from Supabase branch
+├── supabase/
+│   └── migrations/
+│       └── 20260414_v7_foundation.sql   # 22 tables, additive, already applied to branch
+├── docs/
+│   └── PHASE-0-RUNBOOK.md  # git tag + Vercel clone steps for CEO
+├── package.json
+├── tsconfig.json
+├── next.config.js
+└── .env.local.example
 ```
 
-### Manual Docker Build
-```bash
-# Build image
-docker build -t mission-control-dashboard .
+## Sidebar architecture (locked)
 
-# Run container
-docker run -p 3000:3000 mission-control-dashboard
-```
+- **📌 Pinned** — Dashboard · Vision Board · 🔥 The Forge
+- 💰 **Finance** — Finance · Cash Flow · Tax Center
+- 💼 **Work** — Projects · Tasks
+- 🏠 **Assets** — Companies · Properties · Rentals · Photo Manager · Entity Map
+- ⚡ **Engineering** — Skill Lab · Activity Feed · Sessions
+- 📄 **Documents** — Docs Hub · Workspace Files · Legal Docs · Memory & Knowledge
+- 🖥 **Operations** — System Monitor · Incident Room · Integrations Hub
+- 👥 **People** — Team · The Floor (agent monitoring)
+- ⚙ **System** — Settings
 
-## 🏗️ Architecture
+## Pages to build next (Phase 3)
 
-### Tech Stack
-- **React 18** - UI framework
-- **Vite** - Build tool and dev server
-- **Recharts** - Data visualization
-- **Tailwind CSS** - Styling (via CDN)
-- **React Router** - Navigation (planned)
+Each one is a `.tsx` file under `app/<route>/page.tsx`. Use the pattern from `app/page.tsx` — call queries from `lib/queries.ts`, render cards from `globals.css`.
 
-### Project Structure
-```
-src/
-├── App.jsx          # Main application component
-├── main.jsx         # React entry point
-├── index.css        # Global styles
-└── components/      # Reusable components (future)
-```
+- `app/vision/page.tsx` — LOCKED visuals, wire to `getVisions()` (ref: `/openclaw/vision-board-v5-option-d-terrain.html`)
+- `app/finance/page.tsx` — LOCKED visuals, wire to `getAccounts()` + `getRecentTransactions()` (ref: `/openclaw/finance-dashboard-v2.html`)
+- `app/tax/page.tsx` — wire to `getTaxEntities()` + `getTaxMoves()` + `getUpcomingTaxDeadlines()`
+- `app/forge/page.tsx` — `getForgeIdeas('new')` + approve flow that writes `converted_project_id`
+- `app/projects/page.tsx` + `app/tasks/page.tsx`
+- `app/companies/page.tsx` + `app/companies/[entity]/page.tsx` (Xome template clone per entity)
+- `app/properties/page.tsx` + `app/properties/[id]/page.tsx`
+- etc.
 
-## 📊 Data Models
+## Rules
 
-### Agents
-- 8 AI agents across 4 departments
-- Models: Claude Opus 4, Sonnet 4, Haiku 4.5
-- Cost tracking: daily/monthly/yearly
-- Status monitoring and session counts
+1. **Every widget declares its Supabase source.** If data isn't ready, render the shared `<ComingSoon>` component (not yet built — stub it).
+2. **Never write hardcoded arrays.** Everything flows through `lib/queries.ts`.
+3. **Hero section is LOCKED** per `DASHBOARD-TEMPLATE-SPEC.md` in `/openclaw`.
+4. **Spec lint blocks PRs** — `qa-reviewer` agent will enforce this.
 
-### Projects  
-- 5 active projects with progress tracking
-- Status: on-track, at-risk, blocked
-- Agent assignments and task management
+## Seed user
 
-### Tasks
-- Priority levels and status tracking
-- Story points and time estimates
-- Agent assignments and dependencies
+The dev branch has a seed CEO user:
+- ID: `00000000-0000-0000-0000-000000000001`
+- Email: `jarvis.culbertson@agentmail.to`
+- Password: `seed-only-replace-in-prod` (dev only — replace for prod)
 
-## 🔧 Configuration
+RLS is enabled on every user-scoped table. In dev you can bypass by signing in as this user or disabling RLS temporarily.
 
-### Environment Variables
-```bash
-NODE_ENV=production
-VITE_API_BASE_URL=http://localhost:3001
-```
+## Prod migration path (when Phase 7 launch happens)
 
-### Build Configuration
-- **Vite** for fast HMR and optimized builds
-- **Tailwind CSS** via CDN for rapid development
-- **ESLint** for code quality
-
-## 📈 Deployment Status
-
-**Board:** https://culbertsonandgray.monday.com/boards/18404980498
-
-**Completed Tasks:**
-✅ Assemble Main MissionControl App Component (11567954332)  
-✅ Implement Left Sidebar Navigation (11567954333)  
-✅ Build Team Org Chart View (11567911702)  
-✅ Create Agent Management Interface (11567937813)  
-✅ Integrate Cost Tracking Dashboard (11567954129)  
-🚧 Deploy React App Infrastructure (11567948129) - **IN PROGRESS**
-
-## 🚨 Production Ready
-
-This application is **PRODUCTION READY** and includes:
-- Complete React component integration
-- All required navigation and views
-- Agent data with cost tracking
-- Project and task management
-- Docker containerization
-- Build optimization
-- Development and production configs
-
-**Deployed by:** Task Master (Jarvis Agent)  
-**Deployment Date:** 2026-03-22  
-**Status:** ✅ OPERATIONAL
+The same `20260414_v7_foundation.sql` can be applied to prod (`bdlvwfobjqvnrffzxrfz`) verbatim — it's additive with `IF NOT EXISTS` guards. Run via Supabase MCP `apply_migration`, verify with the same counts check, then flip the Vercel alias.
