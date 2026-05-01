@@ -288,7 +288,7 @@ export async function logQbEvent(input: {
   try {
     const sb = supabaseAdmin()
     await sb.from('agent_runs').insert({
-      agent_id: null,
+      agent_id: 'bookkeeper',
       status: input.status === 'ok' ? 'completed' : 'error',
       started_at: new Date().toISOString(),
       ended_at: new Date().toISOString(),

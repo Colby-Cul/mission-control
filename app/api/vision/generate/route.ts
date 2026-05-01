@@ -287,6 +287,7 @@ async function logAgentRun(opts: {
 }) {
   try {
     await supabase.from('agent_runs').insert({
+      agent_id: 'cfo',
       input: { kind: opts.kind, ...(opts.input as Record<string, unknown>) },
       output: opts.output as unknown as Record<string, unknown>,
       tokens: opts.tokens,

@@ -323,7 +323,9 @@ function AgentDeployForm({ onClose }: Pick<Props, 'onClose'>) {
   const save = async () => {
     if (!agentName.trim()) { setErr('Agent name required'); return }
     setSaving(true); setErr('')
+    const agentSlug = agentName.trim().toLowerCase().replace(/\s+/g, '-')
     const { error } = await supabase.from('agent_runs').insert({
+      agent_id: agentSlug,
       task: task || agentName.trim(), status: 'queued',
       started_at: new Date().toISOString(),
     })
