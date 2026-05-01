@@ -50,9 +50,13 @@ export default async function AgentsPage() {
   const live = liveDataRaw as Awaited<ReturnType<typeof getOpenclawLiveData>>
   const activityByAgent = buildAgentActivity(live)
 
-  // Merge DB agents with BUILTIN_AGENTS — DB rows override builtins by id/slug
+  // Merge DB agents with BUILTIN_AGENTS — DB rows override builtins by id/slug.
+  // Null/undefined DB values are stripped so they never clobber valid builtin defaults.
   const dbList = agentsRaw as any[]
-  const dbById = new Map(dbList.map((a: any) => [String(a.id ?? a.slug ?? a.name).toLowerCase(), a]))
+  const dbById = new Map(dbList.map((a: any) => [
+    String(a.id ?? a.slug ?? a.name).toLowerCase(),
+    Object.fromEntries(Object.entries(a).filter(([, v]) => v != null)),
+  ]))
   const agents: any[] = [
     ...BUILTIN_AGENTS.map((b: any) => {
       const key = String(b.id).toLowerCase()
