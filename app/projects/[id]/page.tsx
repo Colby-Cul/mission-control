@@ -16,6 +16,7 @@ import {
 import ProjectDetailTabs from './ProjectDetailTabs'
 import PrioritySelector from './_components/PrioritySelector'
 import { BuildPlanSection, CostBreakdownSection, ActivityFeed } from './_components/ProjectPanels'
+import AssignedAgentsPanel from './_components/AssignedAgentsPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -149,6 +150,19 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
           <StageTile label="Review"      count={byStage.in_review}   color="#f59e0b" />
           <StageTile label="Blocked"     count={byStage.blocked}     color="#ef4444" />
           <StageTile label="Done"        count={byStage.done}        color="#10b981" icon={<CheckCircle2 size={14} />} />
+        </div>
+
+        {/* ── Assigned Agents ───────────────────────────────────────── */}
+        <div style={{
+          padding: '14px 16px',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 14,
+        }}>
+          <AssignedAgentsPanel
+            projectId={String(project.id)}
+            initialAgents={Array.isArray(project.agents) ? project.agents as string[] : []}
+          />
         </div>
 
         {/* ── Build Plan (from forge idea) ──────────────────────────── */}
